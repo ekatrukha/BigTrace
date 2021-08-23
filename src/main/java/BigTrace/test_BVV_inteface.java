@@ -54,17 +54,14 @@ import org.scijava.ui.behaviour.io.yaml.YamlConfigIO;
 import org.scijava.ui.behaviour.util.AbstractNamedBehaviour;
 import org.scijava.ui.behaviour.util.Behaviours;
 
+
+import BigTrace.scene.VisTestCubeDiskRed;
+import BigTrace.scene.VisTestCubeTextPoint;
 import animation3d.gui.CroppingPanel;
-import animation3d.gui.CroppingPanel.Listener;
-import animation3d.gui.DoubleSlider;
-import bdv.util.Bdv;
-import bdv.util.BdvFunctions;
-import bdv.util.BdvOverlay;
-import bdv.viewer.Source;
+
 import bdv.viewer.SynchronizedViewerState;
-import bdv.viewer.state.SourceState;
-import bdv.viewer.state.ViewerState;
-import bvv.util.BvvSource;
+
+
 import bvv.util.BvvStackSource;
 import ij.IJ;
 import ij.ImagePlus;
@@ -75,6 +72,7 @@ import bvv.util.Bvv;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.img.Img;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -105,13 +103,15 @@ public class test_BVV_inteface
 	{
 		
 		
-		img = SimplifiedIO.openImage(
-					test_BVV_inteface.class.getResource( "/ExM_MT.tif" ).getFile(),
-					new UnsignedByteType() );
-					
 		//img = SimplifiedIO.openImage(
-				//test_BVV_inteface.class.getResource( "/t1-head.tif" ).getFile(),
-				//new UnsignedByteType() );
+					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
+					//new UnsignedByteType() );
+		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT.tif", new UnsignedByteType());
+		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
+		//img = ImageJFunctions.wrapByte( imp );
+		//img = SimplifiedIO.openImage(
+		//		test_BVV_inteface.class.getResource( "home/t1-head.tif" ).getFile(),
+		//		new UnsignedByteType() );
 		
 		nW=(int)img.dimension(0);
 		nH=(int)img.dimension(1);
@@ -155,11 +155,6 @@ public class test_BVV_inteface
 					view2=Views.interval( img, new long[] { bbx0, bby0, bbz0 }, new long[]{ bbx1, bby1, bbz1 } );						
 					bvv2 = BvvFunctions.show( view2, "crop", Bvv.options().addTo(bvv));
 					
-					handl.setRenderScene( ( gl, data ) -> {
-						
-					} );
-
-					handl.requestRepaint();
 
 				}
 			}
@@ -212,11 +207,14 @@ public class test_BVV_inteface
 		handl.requestRepaint();		
 		view2=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
 		bvv2 = BvvFunctions.show( view2, "crop", Bvv.options().addTo(bvv));
-		BVVCube cube= new BVVCube();
+		VisTestCubeDiskRed points= new VisTestCubeDiskRed();
+		//VisTestCubeTextPoint points= new VisTestCubeTextPoint();
 		
 		handl.setRenderScene( ( gl, data ) -> {
-			final Matrix4f cubetransform = new Matrix4f().translate( 140, 150, 65 ).scale( 80 );
-			cube.draw( gl, new Matrix4f( data.getPv() ).mul( cubetransform ) );
+			//final Matrix4f cubetransform = new Matrix4f().translate( 140, 150, 65 ).scale( 80 );
+			final Matrix4f cubetransform = new Matrix4f().translate( 40, 40, 40 ).scale( 80 );
+			points.draw( gl, new Matrix4f( data.getPv() ).mul( cubetransform ), new double [] {data.getScreenWidth(), data.getScreenHeight()});
+			//points.draw( gl, new Matrix4f( data.getPv() ).mul( cubetransform ));
 		} );
 
 		handl.requestRepaint();
