@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>30.0.0</version>
+		<relativePath />
+	</parent>
+
+	<groupId>sc.fiji</groupId>
+	<artifactId>bigtrace</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<name>BigTrace</name>
+	<description>TODO</description>
+	<url>https://github.com/ekatrukha/bigtrace</url>
+	<inceptionYear>2021</inceptionYear>
+	<organization>
+		<name>BigTrace</name>
+		<url>https://katpyxa.info</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>Simplified BSD License</name>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+    <developers>
+        <developer>
+            <id>ekatrukha</id>
+            <name>Eugene Katrukha</name>
+            <url>http://imagej.net/User:Ekatrukha</url>
+            <roles>
+       		<role>founder</role>
+		<role>lead</role>
+		<role>developer</role>
+		<role>debugger</role>
+		<role>reviewer</role>
+		<role>support</role>
+		<role>maintainer</role>
+            </roles>
+        </developer>
+    </developers>
+	<contributors>
+		<contributor>
+			<name>TODO</name>
+		</contributor>
+	</contributors>
+
+	
+
+
+    <scm>
+        <connection>scm:git:git://github.com/ekatrukha/bigtrace</connection>
+        <developerConnection>scm:git:git@github.com/ekatrukha/bigtrace</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/ekatrukha/bigtrace</url>
+    </scm>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>http://ggithub.com/ekatrukha/bigtrace/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>None</system>
+    </ciManagement>
+
+	<properties>
+		<package-name>BigTrace</package-name>
+      			<license.licenseName>gpl_v3</license.licenseName>
+        <license.copyrightOwners>Fiji distribution of ImageJ for the life sciences.</license.copyrightOwners>
+
+		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
+		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
+		<ST4.version>4.0.8</ST4.version>
+
+		<!-- NB: Deploy releases to the SciJava Maven repository. -->
+		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>scijava.public</id>
+			<url>https://maven.scijava.org/content/groups/public</url>
+		</repository>
+	</repositories>
+
+<dependencies>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-algorithm</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-cache</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-realtransform</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>ST4</artifactId>
+			<version>${ST4.version}</version>
+		</dependency>
+				<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>simplified-io</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigvolumeviewer</artifactId>
+			<version>0.2.0</version>
+		</dependency>
+		<dependency>
+			<!-- only used for linear programming, get rid of this, we only need something extremely simple -->
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jdom</groupId>
+			<artifactId>jdom2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jogamp.gluegen</groupId>
+			<artifactId>gluegen-rt-main</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jogamp.jogl</groupId>
+			<artifactId>jogl-all-main</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.joml</groupId>
+			<artifactId>joml</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>ui-behaviour</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-vistools</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>spim_data</artifactId>
+		</dependency>
+				<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-legacy</artifactId>
+		</dependency>
+
+	
+	</dependencies>
+</project>
