@@ -30,10 +30,16 @@ package BigTrace.scene;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
+
+import net.imglib2.RealPoint;
+
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
-import org.joml.Vector2fc;
+import org.joml.Vector3f;
+
 
 import tpietzsch.backend.jogl.JoglGpuContext;
 import tpietzsch.shadergen.DefaultShader;
@@ -41,24 +47,65 @@ import tpietzsch.shadergen.Shader;
 import tpietzsch.shadergen.generate.Segment;
 import tpietzsch.shadergen.generate.SegmentTemplate;
 
+
 import static com.jogamp.opengl.GL.GL_FLOAT;
 
 
-public class VisTestCubeDiskRed
+public class VisPointsSimple
 {
-
+	//private final String imageFilename;
 
 	private final Shader prog;
 
 	private int vao;
+	
+	private Vector3f l_color;
+	
+	public float  max_pos;
+	public float fPointSize;
+	
+	//private final ArrayList< Point > points = new ArrayList<>();
+	
+	static float vertices[]; 
+	private int nPointsN;
 
 
-	public VisTestCubeDiskRed()
+	public VisPointsSimple(float [] color_in, ArrayList< RealPoint > points, float fPointSize_)
 	{
-		//this.imageFilename = imageFilename;
-		final Segment pointVp = new SegmentTemplate( VisTestCubeDiskRed.class, "/scene/simple_red_point.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisTestCubeDiskRed.class, "/scene/simple_red_point.fp" ).instantiate();
+		int i,j;
 		
+		fPointSize= fPointSize_;
+		
+		l_color = new Vector3f(color_in);
+		
+		nPointsN=points.size();
+		vertices = new float [nPointsN*3];//assime 3D
+		
+		max_pos = Float.MIN_VALUE;
+		
+		for (i=0;i<nPointsN; i++)
+		{
+			for (j=0;j<3; j++)
+			{
+				if(Math.abs(points.get(i).getFloatPosition(j))>max_pos)
+					{max_pos = Math.abs(points.get(i).getFloatPosition(j));}
+				//vertices[i*3+j]=points.get(i).getFloatPosition(j);
+			}
+			
+		}
+		for (i=0;i<nPointsN; i++)
+		{
+			for (j=0;j<3; j++)
+			{
+				vertices[i*3+j]=(points.get(i).getFloatPosition(j)/max_pos)-0.5f;
+			}
+			
+		}
+		
+	
+		final Segment pointVp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_point_color.vp" ).instantiate();
+		final Segment pointFp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_point_color.fp" ).instantiate();
+	
 		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 	}
@@ -71,19 +118,6 @@ public class VisTestCubeDiskRed
 
 		// ..:: VERTEX BUFFER ::..
 
-		final float vertices[] = {
-				// 3 pos
-				-0.5f, -0.5f, -0.5f,
-				-0.5f, -0.5f, 0.5f,
-				-0.5f, 0.5f, -0.5f,
-				-0.5f, 0.5f, 0.5f,
-				0.5f, -0.5f, -0.5f,
-				0.5f, -0.5f, 0.5f,
-				0.5f, 0.5f, -0.5f,
-				0.5f, 0.5f, 0.5f
-				
-
-		};
 		final int[] tmp = new int[ 2 ];
 		gl.glGenBuffers( 1, tmp, 0 );
 		final int vbo = tmp[ 0 ];
@@ -103,14 +137,13 @@ public class VisTestCubeDiskRed
 		gl.glBindVertexArray( 0 );
 	}
 
-	public void draw( GL3 gl, Matrix4fc pvm,  double [] screen_size, double dNear, double dFar)
+	public void draw( GL3 gl, Matrix4fc pvm,  double [] screen_size, double dNear, double dFar )
 	{
 		if ( !initialized )
 			init( gl );
-		Vector2f screen_sizef;//= new Vector2f ((float)screen_size[0], (float)screen_size[1]);
+		Vector2f screen_sizef;
 
 		JoglGpuContext context = JoglGpuContext.get( gl );
-		
 		//scale disk with viewport transform
 
 		if(screen_size[0]>screen_size[1])
@@ -122,6 +155,7 @@ public class VisTestCubeDiskRed
 			screen_sizef =  new Vector2f (0.25f,(float)(Math.pow(0.5*screen_size[0]/screen_size[1],2)));
 		}
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
+		prog.getUniform3f("colorin").set(l_color);
 		prog.getUniform2f("scrnsize").set(screen_sizef);
 		prog.getUniform1f("fNear").set((float)dNear);
 		prog.getUniform1f("fFar").set((float)dFar);
@@ -130,8 +164,8 @@ public class VisTestCubeDiskRed
 
 
 		gl.glBindVertexArray( vao );
-		gl.glPointSize(60);
-		gl.glDrawArrays( GL.GL_POINTS, 0, 8 );
+		gl.glPointSize(fPointSize);
+		gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN);
 		gl.glBindVertexArray( 0 );
 	}
 }

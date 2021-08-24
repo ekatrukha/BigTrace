@@ -2,6 +2,7 @@ out vec4 fragColor;
 
 in float dScale;
 
+uniform vec3 colorin;
 uniform vec2 scrnsize;
 
 void main()
@@ -27,9 +28,9 @@ void main()
 		//t=exp(-(norm*norm)/(2*0.3*0.3));
 	//}
 	//diffuse spot
-    //vec4 ccolor = vec4(1.0, 0.0, 0.0, t);
+    //vec4 ccolor = vec4(colorin, t);
     //just round spot
-    vec4 ccolor = vec4(1.0, 0.0, 0.0, 1.0);
+    vec4 ccolor = vec4(colorin, 1.0);
 
 
     fragColor = ccolor; 

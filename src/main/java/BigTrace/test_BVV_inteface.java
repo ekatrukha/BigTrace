@@ -34,29 +34,22 @@ package BigTrace;
 import java.awt.Dimension;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.List;
+
+import java.util.ArrayList;
+
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 
 import org.joml.Matrix4f;
-import org.scijava.ui.behaviour.BehaviourMap;
-import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.ui.behaviour.DragBehaviour;
-import org.scijava.ui.behaviour.InputTriggerMap;
-import org.scijava.ui.behaviour.MouseAndKeyHandler;
-import org.scijava.ui.behaviour.ScrollBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
-import org.scijava.ui.behaviour.io.InputTriggerDescription;
-import org.scijava.ui.behaviour.io.yaml.YamlConfigIO;
-import org.scijava.ui.behaviour.util.AbstractNamedBehaviour;
-import org.scijava.ui.behaviour.util.Behaviours;
+import org.scijava.ui.behaviour.util.Actions;
 
+import BigTrace.polyline.BTPolylines;
+import BigTrace.scene.VisPointsSimple;
+import BigTrace.scene.VisPolyLineSimple;
 
-import BigTrace.scene.VisTestCubeDiskRed;
-import BigTrace.scene.VisTestCubeTextPoint;
 import animation3d.gui.CroppingPanel;
 
 import bdv.viewer.SynchronizedViewerState;
@@ -69,19 +62,27 @@ import bvv.util.BvvFunctions;
 import bvv.util.BvvHandle;
 import bvv.util.BvvHandleFrame;
 import bvv.util.Bvv;
+import net.imglib2.Cursor;
+import net.imglib2.Interval;
+import net.imglib2.IterableInterval;
+import net.imglib2.Point;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.realtransform.RealViews;
+import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.util.LinAlgHelpers;
+import net.imglib2.util.Intervals;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import sc.fiji.simplifiedio.SimplifiedIO;
 import tpietzsch.example2.VolumeViewerPanel;
-import tpietzsch.scene.TexturedDepthRamp;
+
 
 public class test_BVV_inteface
 {
@@ -97,6 +98,9 @@ public class test_BVV_inteface
 	int nW;
 	int nH;
 	int nD;
+	
+	//ArrayList< RealPoint > point_coords = new ArrayList<>();
+	BTPolylines traces = new BTPolylines ();
 	
 		
 	public void runBVV()
@@ -119,18 +123,11 @@ public class test_BVV_inteface
 	
 
 
-
-		/*
-		 * Display a JPanel with the MouseAndKeyHandler registered.
-		 */
 		final JPanel panel = new JPanel();
 		panel.setPreferredSize( new Dimension( 400, 400 ) );
 		
 		
-		//DoubleSlider slider = new DoubleSlider("X cropping", new int[] {-100, 100}, new int[] {20, 50}, new Color(255, 0, 0, 100));
-		//final JSlider slXaxis = new JSlider(JSlider.HORIZONTAL,
-        //        0, nW, nW);
-		//slXaxis.add
+
 		slider = new CroppingPanel(new int[] { 0, 1000}, nW-1, nH-1, nD-1);
 		
 
@@ -199,7 +196,6 @@ public class test_BVV_inteface
 			scale=600.0/(double)nH;
 		}
 		t.set(scale, 0.0, 0.0, 400.0-(0.5)*scale*(double)nW, 0.0, scale, 0.0, 300.0-(0.5)*scale*(double)nH, 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
-		//t.set(1.1363636363636365, 0.0, 0.0, 103.47727272727269, 0.0, 1.1363636363636365, 0.0, 0.06818181818181301, 0.0, 0.0, 1.1363636363636365, -140.90909090909093);
 		
 
 		handl=bvv.getBvvHandle().getViewerPanel();
@@ -207,48 +203,109 @@ public class test_BVV_inteface
 		handl.requestRepaint();		
 		view2=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
 		bvv2 = BvvFunctions.show( view2, "crop", Bvv.options().addTo(bvv));
-		VisTestCubeDiskRed points= new VisTestCubeDiskRed();
-		//VisTestCubeTextPoint points= new VisTestCubeTextPoint();
 		
-		handl.setRenderScene( ( gl, data ) -> {
-			//final Matrix4f cubetransform = new Matrix4f().translate( 140, 150, 65 ).scale( 80 );
-			final Matrix4f cubetransform = new Matrix4f().translate( 40, 40, 40 ).scale( 80 );
-			points.draw( gl, new Matrix4f( data.getPv() ).mul( cubetransform ), new double [] {data.getScreenWidth(), data.getScreenHeight()});
-			//points.draw( gl, new Matrix4f( data.getPv() ).mul( cubetransform ));
-		} );
 
-		handl.requestRepaint();
 		
-		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
-		behaviours.behaviour(
-				new DragBehaviour()
-				{
-					@Override
-					public void init( final int x, final int y )
-					{
-						System.out.println( "init x = [" + x + "], y = [" + y + "]" );
-					}
+		final Actions actions = new Actions( new InputTriggerConfig() );
+		
+		//actions.
+		actions.runnableAction(
+				() -> {
+					//Point point_mouse = new Point( 2 );
+					java.awt.Point point_mouse  =bvv.getBvvHandle().getViewerPanel().getMousePosition();
+					System.out.println( "drag x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
+					
 
-					@Override
-					public void drag( final int x, final int y )
-					{
-						System.out.println( "drag x = [" + x + "], y = [" + y + "]" );
-					}
+					AffineTransform3D transform = new AffineTransform3D();
+					handl.state().getViewerTransform(transform);
+					
+					//RandomAccessibleInterval< UnsignedByteType > view_tr;
+					//interpolate
+					RealRandomAccessible< UnsignedByteType > view_tr = Views.interpolate( Views.extendZero( view2 ), new NLinearInterpolatorFactory<>());
+					//inverse transform
+					view_tr = RealViews.affine(view_tr,transform);
 
-					@Override
-					public void end( final int x, final int y )
-					{
-						System.out.println( "end x = [" + x + "], y = [" + y + "]" );
-					}
+					RandomAccessible< UnsignedByteType > view_tr_raster = Views.raster( view_tr );
+					IntervalView< UnsignedByteType > intRay = 					
+					 Views.interval(view_tr_raster, Intervals.createMinSize( point_mouse.x-5,point_mouse.y-5, -10000, 5, 5, 20000 ) );
+
+					RealPoint locationMin = new RealPoint( 3 );
+					RealPoint locationMax = new RealPoint( 3 );					
+					computeMinMaxLocation( intRay , locationMin, locationMax );
+					//transform.applyInverse(view_tr,view2);
+					//float [] target = new float [3];
+					RealPoint target = new RealPoint( 3 );
+					
+					//transform.applyInverse(locationMax, target);
+					transform.applyInverse( target,locationMax);
+					//transform.applyInverse(target,new float [] {point_mouse.x,point_mouse.y,0.0f});
+					//point_coords.add(new RealPoint(target[0], target[1], target[2]));
+					traces.addPointToActive(target);
+					
+					render_pl();
+					handl.showMessage("Point added");
+					
 				},
-				"my behaviour",
-				"meta button1", "A" );
-		behaviours.install( bvv.getBvvHandle().getTriggerbindings(), "my behaviours" );
+				"add point",
+				"Z" );
+				
+		actions.runnableAction(
+				() -> {
+					
+				
+					if(traces.removeLastPointFromActive())
+					{
+						render_pl();
+						handl.showMessage("Point removed");
+					}
+					
+				},
+				"remove point",
+				"X" );
+		actions.runnableAction(
+				() -> {
+					
+						traces.addNewLine();
+						render_pl();
+				},
+				"new trace",
+				"A" );
+		//actions.namedAction(action, defaultKeyStrokes);
+		actions.install( bvv.getBvvHandle().getKeybindings(), "my actions" );
+		
+		
+	
 
 //		bdv.getBdvHandle().getKeybindings().removeInputMap( "my actions" );
 
 	}
 
+	public void render_pl()
+	{
+		
+		handl.setRenderScene( ( gl, data ) -> {
+			
+			for (int i=0;i<traces.nLinesN;i++)
+			{
+				ArrayList< RealPoint > point_coords = traces.get(i);
+				VisPointsSimple points= new VisPointsSimple(new float[]{0.0f,1.0f,0.0f},point_coords, 60.0f);
+				VisPolyLineSimple lines;
+				if (i==traces.activeLine)
+					lines = new VisPolyLineSimple(new float[]{1.0f,0.0f,0.0f}, point_coords, 5.0f);
+				else
+					lines = new VisPolyLineSimple(new float[]{0.0f,0.0f,1.0f}, point_coords, 5.0f);
+
+				final Matrix4f pointtransform = new Matrix4f().translate( 0.5f*points.max_pos, 0.5f*points.max_pos, 0.5f*points.max_pos ).scale( points.max_pos );
+				final Matrix4f linestransform = new Matrix4f().translate( 0.5f*lines.max_pos, 0.5f*lines.max_pos, 0.5f*lines.max_pos ).scale( lines.max_pos );
+				points.draw( gl, new Matrix4f( data.getPv() ).mul( pointtransform  ), new double [] {data.getScreenWidth(), data.getScreenHeight()}, data.getDClipNear(), data.getDClipFar());
+				lines.draw( gl, new Matrix4f( data.getPv() ).mul( linestransform  ));
+			}
+		} );
+
+		handl.requestRepaint();
+
+	}
+	
 	public static void main( String... args) throws IOException
 	{
 		
@@ -257,5 +314,47 @@ public class test_BVV_inteface
 		testI.runBVV();
 		
 		
+	}
+	/**
+	 * Compute the location of the minimal and maximal intensity for any IterableInterval,
+	 * like an {@link Img}.
+	 *
+	 * The functionality we need is to iterate and retrieve the location. Therefore we need a
+	 * Cursor that can localize itself.
+	 * Note that we do not use a LocalizingCursor as localization just happens from time to time.
+	 *
+	 * @param input - the input that has to just be {@link IterableInterval}
+	 * @param minLocation - the location for the minimal value
+	 * @param maxLocation - the location of the maximal value
+	 */
+	public < T extends Comparable< T > & Type< T > > void computeMinMaxLocation(
+		final IterableInterval< T > input, final RealPoint minLocation, final RealPoint maxLocation )
+	{
+		// create a cursor for the image (the order does not matter)
+		final Cursor< T > cursor = input.cursor();
+ 
+		// initialize min and max with the first image value
+		T type = cursor.next();
+		T min = type.copy();
+		T max = type.copy();
+ 
+		// loop over the rest of the data and determine min and max value
+		while ( cursor.hasNext() )
+		{
+			// we need this type more than once
+			type = cursor.next();
+ 
+			if ( type.compareTo( min ) < 0 )
+			{
+				min.set( type );
+				minLocation.setPosition( cursor );
+			}
+ 
+			if ( type.compareTo( max ) > 0 )
+			{
+				max.set( type );
+				maxLocation.setPosition( cursor );
+			}
+		}
 	}
 }
