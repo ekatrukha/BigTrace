@@ -282,9 +282,7 @@ public class test_BVV_inteface
 						newboxminmax[0][j]= cornerssort[j][0];
 						newboxminmax[1][j]= cornerssort[j][nCornerN-1];
 					}
-					//Intervals.
-					//transform.apply(boxmin, boxmin);
-					//transform.apply(boxmax, boxmax);
+
 					
 					RealRandomAccessible< UnsignedByteType > view_tr = Views.interpolate(  Views.extendZero(view2) , new NLinearInterpolatorFactory<>());
 					//inverse transform
@@ -292,13 +290,7 @@ public class test_BVV_inteface
 					AffineRandomAccessible<UnsignedByteType, AffineGet > view_trxxx = RealViews.affine(view_tr,transform);
 					
 					IntervalView< UnsignedByteType > intRay = Views.interval(view_trxxx, Intervals.createMinSize( point_mouse.x-5,point_mouse.y-5, (int)((-1.0)*dClipNear), 10, 10, (int)(dClipFar+dClipNear)) );
-
-				
-					//bvv2.removeFromBdv();
-					//System.gc();
-					//view2=Views.interval( img, new long[] { bbx0, bby0, bbz0 }, new long[]{ bbx1, bby1, bbz1 } );						
-					//bvv2 = BvvFunctions.show( intRay, "crop", Bvv.options().addTo(bvv));
-					
+								
 					RealPoint locationMin = new RealPoint( 3 );
 					RealPoint locationMax = new RealPoint( 3 );		
 					boolean bFound=false;
@@ -333,25 +325,16 @@ public class test_BVV_inteface
 					ArrayList<RealPoint> viewclick = new ArrayList<RealPoint>();
 					int dW=5;
 
-					int sW=bvv.getBvvHandle().getViewerPanel().getWidth();
+					/**/
+
+					int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 					int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
 					Matrix4f viewm = MatrixMath.affine( transform, new Matrix4f() );
 					Matrix4f persp = new Matrix4f();
-					//MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp );
-					//MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp ).mul( viewm );
 					MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp ).mul( viewm );
-
-					//persp.unpro
 					Vector3f worldCoords1 = new Vector3f();
 					Vector3f worldCoords2 = new Vector3f();
 
-
-					//persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,(float) ((-1)*dClipNear), 
-					//		  new int[] { 0, 0, sW, sH },worldCoords);
-					//viewclick.add(new RealPoint(point_mouse.x,point_mouse.y, (int)((-1.0)*dClipNear)));
-					//viewclick.add(new RealPoint(point_mouse.x,point_mouse.y, (int)(dClipFar+dClipNear)));
-					//for(int i =0;i<2;i++)
-						//transform.applyInverse( viewclick.get(i),viewclick.get(i));
 					persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,0.01f, 
 							  new int[] { 0, 0, sW, sH },worldCoords1);
 					persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,1.0f, 
@@ -359,7 +342,14 @@ public class test_BVV_inteface
 					
 					viewclick.add(new RealPoint(worldCoords1.x,worldCoords1.y, worldCoords1.z));
 					viewclick.add(new RealPoint(worldCoords2.x,worldCoords2.y, worldCoords2.z));
-
+					/**/
+					
+					/*  //OLD version 
+					viewclick.add(new RealPoint(point_mouse.x,point_mouse.y, (int)((-1.0)*dClipNear)));
+					viewclick.add(new RealPoint(point_mouse.x,point_mouse.y, (int)(0.5*(dClipFar+dClipNear))));
+					for(int i =0;i<2;i++)
+						transform.applyInverse( viewclick.get(i),viewclick.get(i));
+					 */
 
 					for(int i =0;i<2;i+=2)
 					{
@@ -367,23 +357,7 @@ public class test_BVV_inteface
 						traces.addPointToActive(viewclick.get(i));
 						traces.addPointToActive(viewclick.get(i+1));
 					}
-					/*viewclick.add(new RealPoint(point_mouse.x-dW,point_mouse.y-dW, (int)((-1.0)*dClipNear)));
-					viewclick.add(new RealPoint(point_mouse.x-dW,point_mouse.y-dW, (int)(dClipFar+dClipNear)));
-					viewclick.add(new RealPoint(point_mouse.x+dW,point_mouse.y-dW, (int)((-1.0)*dClipNear)));
-					viewclick.add(new RealPoint(point_mouse.x+dW,point_mouse.y-dW, (int)(dClipFar+dClipNear)));
-					viewclick.add(new RealPoint(point_mouse.x-dW,point_mouse.y+dW, (int)((-1.0)*dClipNear)));
-					viewclick.add(new RealPoint(point_mouse.x-dW,point_mouse.y+dW, (int)(dClipFar+dClipNear)));
-					viewclick.add(new RealPoint(point_mouse.x+dW,point_mouse.y+dW, (int)((-1.0)*dClipNear)));
-					viewclick.add(new RealPoint(point_mouse.x+dW,point_mouse.y+dW, (int)(dClipFar+dClipNear)));
-					for(int i =0;i<8;i++)
-						transform.applyInverse( viewclick.get(i),viewclick.get(i));
-					for(int i =0;i<8;i+=2)
-					{
-						traces.addNewLine();
-						traces.addPointToActive(viewclick.get(i));
-						traces.addPointToActive(viewclick.get(i+1));
-					}
-					*/
+
 					render_pl();
 				},
 				"render click",
