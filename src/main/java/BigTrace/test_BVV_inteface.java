@@ -36,13 +36,15 @@ import java.awt.Dimension;
 import java.io.IOException;
 
 import java.util.ArrayList;
-
+import java.util.Arrays;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
@@ -54,7 +56,7 @@ import animation3d.gui.CroppingPanel;
 
 import bdv.viewer.SynchronizedViewerState;
 
-
+import net.imagej.ops.OpService;
 import bvv.util.BvvStackSource;
 import ij.IJ;
 import ij.ImagePlus;
@@ -66,14 +68,18 @@ import net.imglib2.Cursor;
 import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.Point;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.AffineGet;
+import net.imglib2.realtransform.AffineRandomAccessible;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -82,6 +88,7 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import sc.fiji.simplifiedio.SimplifiedIO;
 import tpietzsch.example2.VolumeViewerPanel;
+import tpietzsch.util.MatrixMath;
 
 
 public class test_BVV_inteface
@@ -92,12 +99,16 @@ public class test_BVV_inteface
 	static RandomAccessibleInterval< UnsignedByteType > view2=null;
 	Img< UnsignedByteType > img;
 	VolumeViewerPanel handl;
-	SynchronizedViewerState state;
+	//SynchronizedViewerState state;
 	CroppingPanel slider;
 	
 	int nW;
 	int nH;
 	int nD;
+	double dCam = 2000.;
+	double dClipNear = 1000.;
+	double dClipFar = 1000.;
+	OpService ops;
 	
 	//ArrayList< RealPoint > point_coords = new ArrayList<>();
 	BTPolylines traces = new BTPolylines ();
@@ -125,18 +136,16 @@ public class test_BVV_inteface
 
 		final JPanel panel = new JPanel();
 		panel.setPreferredSize( new Dimension( 400, 400 ) );
-		
-		
-
-		slider = new CroppingPanel(new int[] { 0, 1000}, nW-1, nH-1, nD-1);
-		
-
-		//slider.addCroppingPanelListener((Listener) handler);
+		slider = new CroppingPanel(new int[] { -1000, 1000}, nW-1, nH-1, nD-1);
 		slider.addCroppingPanelListener(new CroppingPanel.Listener() {
 
 			@Override
 			public void nearFarChanged(int near, int far) {
 				// TODO Auto-generated method stub
+				//VolumeViewer
+				dClipNear = Math.abs(near);
+				dClipFar = (double)far;
+				bvv.getBvvHandle().getViewerPanel().setCamParams(2000., dClipNear, dClipFar);
 				
 			}
 
@@ -182,7 +191,7 @@ public class test_BVV_inteface
 		
 		AffineTransform3D t = new AffineTransform3D();
 				
-		bvv = BvvFunctions.show( view, "t1-head" );
+		bvv = BvvFunctions.show( view, "t1-head" ,Bvv.options().dCam(2000.).dClipNear(dClipNear).dClipFar(dClipFar));
 		
 		
 		//scale the view to fit the original dataset
@@ -195,7 +204,8 @@ public class test_BVV_inteface
 		{
 			scale=600.0/(double)nH;
 		}
-		t.set(scale, 0.0, 0.0, 400.0-(0.5)*scale*(double)nW, 0.0, scale, 0.0, 300.0-(0.5)*scale*(double)nH, 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
+		//t.set(scale, 0.0, 0.0, 400.0-(0.5)*scale*(double)nW, 0.0, scale, 0.0, 300.0-(0.5)*scale*(double)nH, 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
+		t.set(1, 0.0, 0.0, 400.0-(0.5)*(double)nW, 0.0, 1.0, 0.0, 300.0-(0.5)*(double)nH, 0.0, 0.0, 1., 0.0);
 		
 
 		handl=bvv.getBvvHandle().getViewerPanel();
@@ -218,28 +228,89 @@ public class test_BVV_inteface
 
 					AffineTransform3D transform = new AffineTransform3D();
 					handl.state().getViewerTransform(transform);
+	
+					//transform bounding box 
+					//assume there are 3 dimensions
+					int nDim = view2.numDimensions();
+					double [][] boxminmax = new double[2][nDim];
+
+					//get min and max coordinates
+					view2.realMin(boxminmax[0]);
+					view2.realMax(boxminmax[1]);	
+					//construct corners
+					int [] counter = new int[nDim];					
+
+					int index=-1;
+					int nCornerN=(int)Math.pow(2, nDim);
+					double [][] corners = new double[nCornerN][nDim];
+					while (counter[0]<2)
+					{
+						index++;											
+						for (int i = 0;i<nDim;i++)
+						{
+							corners[index][i]=boxminmax[counter[i]][i];
+						}
+						//update counter
+						counter[nDim-1]++;
+						for(int i = nDim-1;i>0;i--)
+						{
+							//counter[i]++;
+							if(counter[i]>1)
+							{
+								counter[i]=0;
+								counter[i-1]++;
+							}	
+						}						
+					}
+					double [][] cornerssort = new double [nDim][nCornerN];
+					for(int i=0;i<nCornerN;i++)
+					{
+						transform.apply(corners[i], corners[i]);
+						for(int j=0;j<nDim;j++)
+						{
+							cornerssort[j][i]=corners[i][j];
+						}
+						
+					}
+					for(int j=0;j<nDim;j++)
+					{
+						Arrays.sort(cornerssort[j]);
+					}					
+					double [][] newboxminmax = new double[2][nDim];
+					for(int j=0;j<nDim;j++)
+					{
+						newboxminmax[0][j]= cornerssort[j][0];
+						newboxminmax[1][j]= cornerssort[j][nCornerN-1];
+					}
+					//Intervals.
+					//transform.apply(boxmin, boxmin);
+					//transform.apply(boxmax, boxmax);
 					
-					//RandomAccessibleInterval< UnsignedByteType > view_tr;
-					//interpolate
-					RealRandomAccessible< UnsignedByteType > view_tr = Views.interpolate( Views.extendZero( view2 ), new NLinearInterpolatorFactory<>());
+					RealRandomAccessible< UnsignedByteType > view_tr = Views.interpolate(  Views.extendZero(view2) , new NLinearInterpolatorFactory<>());
 					//inverse transform
-					view_tr = RealViews.affine(view_tr,transform);
+					
+					AffineRandomAccessible<UnsignedByteType, AffineGet > view_trxxx = RealViews.affine(view_tr,transform);
+					
+					IntervalView< UnsignedByteType > intRay = Views.interval(view_trxxx, Intervals.createMinSize( point_mouse.x-5,point_mouse.y-5, (int)((-1.0)*dClipNear), 10, 10, (int)(dClipFar+dClipNear)) );
 
-					RandomAccessible< UnsignedByteType > view_tr_raster = Views.raster( view_tr );
-					IntervalView< UnsignedByteType > intRay = 					
-					 Views.interval(view_tr_raster, Intervals.createMinSize( point_mouse.x-5,point_mouse.y-5, -10000, 5, 5, 20000 ) );
-
+				
+					//bvv2.removeFromBdv();
+					//System.gc();
+					//view2=Views.interval( img, new long[] { bbx0, bby0, bbz0 }, new long[]{ bbx1, bby1, bbz1 } );						
+					//bvv2 = BvvFunctions.show( intRay, "crop", Bvv.options().addTo(bvv));
+					
 					RealPoint locationMin = new RealPoint( 3 );
-					RealPoint locationMax = new RealPoint( 3 );					
-					computeMinMaxLocation( intRay , locationMin, locationMax );
+					RealPoint locationMax = new RealPoint( 3 );		
+					boolean bFound=false;
+					bFound = computeMinMaxLocation( intRay , locationMin, locationMax);
+					System.out.println(bFound);
 					//transform.applyInverse(view_tr,view2);
 					//float [] target = new float [3];
 					RealPoint target = new RealPoint( 3 );
 					
-					//transform.applyInverse(locationMax, target);
+	
 					transform.applyInverse( target,locationMax);
-					//transform.applyInverse(target,new float [] {point_mouse.x,point_mouse.y,0.0f});
-					//point_coords.add(new RealPoint(target[0], target[1], target[2]));
+
 					traces.addPointToActive(target);
 					
 					render_pl();
@@ -248,7 +319,78 @@ public class test_BVV_inteface
 				},
 				"add point",
 				"Z" );
-				
+		
+		
+		actions.runnableAction(
+				() -> {
+					java.awt.Point point_mouse  =bvv.getBvvHandle().getViewerPanel().getMousePosition();
+					System.out.println( "drag x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
+					
+
+					AffineTransform3D transform = new AffineTransform3D();
+					handl.state().getViewerTransform(transform);
+					//transform.concatenate(affine)
+					ArrayList<RealPoint> viewclick = new ArrayList<RealPoint>();
+					int dW=5;
+
+					int sW=bvv.getBvvHandle().getViewerPanel().getWidth();
+					int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
+					Matrix4f viewm = MatrixMath.affine( transform, new Matrix4f() );
+					Matrix4f persp = new Matrix4f();
+					//MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp );
+					//MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp ).mul( viewm );
+					MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp ).mul( viewm );
+
+					//persp.unpro
+					Vector3f worldCoords1 = new Vector3f();
+					Vector3f worldCoords2 = new Vector3f();
+
+
+					//persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,(float) ((-1)*dClipNear), 
+					//		  new int[] { 0, 0, sW, sH },worldCoords);
+					//viewclick.add(new RealPoint(point_mouse.x,point_mouse.y, (int)((-1.0)*dClipNear)));
+					//viewclick.add(new RealPoint(point_mouse.x,point_mouse.y, (int)(dClipFar+dClipNear)));
+					//for(int i =0;i<2;i++)
+						//transform.applyInverse( viewclick.get(i),viewclick.get(i));
+					persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,0.01f, 
+							  new int[] { 0, 0, sW, sH },worldCoords1);
+					persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,1.0f, 
+							  new int[] { 0, 0, sW, sH },worldCoords2);
+					
+					viewclick.add(new RealPoint(worldCoords1.x,worldCoords1.y, worldCoords1.z));
+					viewclick.add(new RealPoint(worldCoords2.x,worldCoords2.y, worldCoords2.z));
+
+
+					for(int i =0;i<2;i+=2)
+					{
+						traces.addNewLine();
+						traces.addPointToActive(viewclick.get(i));
+						traces.addPointToActive(viewclick.get(i+1));
+					}
+					/*viewclick.add(new RealPoint(point_mouse.x-dW,point_mouse.y-dW, (int)((-1.0)*dClipNear)));
+					viewclick.add(new RealPoint(point_mouse.x-dW,point_mouse.y-dW, (int)(dClipFar+dClipNear)));
+					viewclick.add(new RealPoint(point_mouse.x+dW,point_mouse.y-dW, (int)((-1.0)*dClipNear)));
+					viewclick.add(new RealPoint(point_mouse.x+dW,point_mouse.y-dW, (int)(dClipFar+dClipNear)));
+					viewclick.add(new RealPoint(point_mouse.x-dW,point_mouse.y+dW, (int)((-1.0)*dClipNear)));
+					viewclick.add(new RealPoint(point_mouse.x-dW,point_mouse.y+dW, (int)(dClipFar+dClipNear)));
+					viewclick.add(new RealPoint(point_mouse.x+dW,point_mouse.y+dW, (int)((-1.0)*dClipNear)));
+					viewclick.add(new RealPoint(point_mouse.x+dW,point_mouse.y+dW, (int)(dClipFar+dClipNear)));
+					for(int i =0;i<8;i++)
+						transform.applyInverse( viewclick.get(i),viewclick.get(i));
+					for(int i =0;i<8;i+=2)
+					{
+						traces.addNewLine();
+						traces.addPointToActive(viewclick.get(i));
+						traces.addPointToActive(viewclick.get(i+1));
+					}
+					*/
+					render_pl();
+				},
+				"render click",
+				"W" );
+		
+		
+		
 		actions.runnableAction(
 				() -> {
 					
@@ -327,17 +469,16 @@ public class test_BVV_inteface
 	 * @param minLocation - the location for the minimal value
 	 * @param maxLocation - the location of the maximal value
 	 */
-	public < T extends Comparable< T > & Type< T > > void computeMinMaxLocation(
+	public < T extends Comparable< T > & Type< T > > boolean computeMinMaxLocation(
 		final IterableInterval< T > input, final RealPoint minLocation, final RealPoint maxLocation )
 	{
 		// create a cursor for the image (the order does not matter)
 		final Cursor< T > cursor = input.cursor();
- 
+		boolean bFound=false;
 		// initialize min and max with the first image value
 		T type = cursor.next();
 		T min = type.copy();
 		T max = type.copy();
- 
 		// loop over the rest of the data and determine min and max value
 		while ( cursor.hasNext() )
 		{
@@ -354,7 +495,11 @@ public class test_BVV_inteface
 			{
 				max.set( type );
 				maxLocation.setPosition( cursor );
+				bFound=true;
 			}
 		}
+		return bFound;
 	}
+	
+
 }
