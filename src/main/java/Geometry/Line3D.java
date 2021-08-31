@@ -78,24 +78,5 @@ public class Line3D {
 		out[2]=linev[0][2]+linev[1][2]*d;
 	}
 		
-	public boolean planeIntersect(final Plane3D plane, final double [] intersectionPoint)
-	{
-		double dln=LinAlgHelpers.dot(linev[1], plane.n);
-		if (Math.abs(dln)<0.00000001)
-			{return false;}
-		else
-		{
-			for(int i =0; i<3; i++)
-			{
-				intersectionPoint[i]=plane.p0[i]-linev[0][i];
-			}
-			dln=LinAlgHelpers.dot(intersectionPoint, plane.n)/dln;
-			value(dln,intersectionPoint);
-			return true;
-		}
-			
-				
-					
-		
-	}
+
 }
