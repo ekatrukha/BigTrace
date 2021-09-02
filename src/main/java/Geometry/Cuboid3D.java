@@ -22,23 +22,92 @@ public class Cuboid3D {
 		faces = new ArrayList<Plane3D>(); 
 	}
 	/**
+	 *    Creates a cube with vertices_in
+	 *    and calculates bounding box.
+	 *    Sequence of vertices is important for proper
+	 *    initialization of faces/volume check.
+	 *    
+	 *    Does not initializes "faces", use iniFaces()
+	 * **/
+	public Cuboid3D(ArrayList<RealPoint> vertices_in)
+	{
+		vertices = new double [8][3];
+		dMinMax = new double [2][3];
+		//int i;
+		//for (i=0;i<8;i++)
+		//{
+			//vertices_in.get(i).localize(vertices[i]);
+		//}
+		vertices_in.get(0).localize(vertices[1]); // minx.maxy.minz
+		vertices_in.get(1).localize(vertices[5]); // minx.maxy.maxz
+		vertices_in.get(2).localize(vertices[0]); // minx.miny.minz
+		vertices_in.get(3).localize(vertices[4]); // minx.miny.maxz
+		vertices_in.get(4).localize(vertices[2]); // maxx.maxy.minz
+		vertices_in.get(5).localize(vertices[6]); // maxx.maxy.maxz
+		vertices_in.get(6).localize(vertices[3]); // maxx.miny.minz
+		vertices_in.get(7).localize(vertices[7]); // maxx.miny.maxz
+		
+		//range
+		Intersections3D.makeBoundBox(vertices_in, dMinMax);
+		
+		
+	}
+	
+	/**
+	 *    Creates a cube with min coordinates at nMinMax[0]
+	 *    and max coordinates at nMinMax[1].
+	 *    Does not initializes "faces", use iniFaces()
+	 * **/
+	public Cuboid3D(final long [][] nMinMax)
+	{
+		dMinMax = new double [2][3];
+		int i;
+		for(i=0;i<3;i++)
+		{
+			dMinMax[0][i]=(long)Math.round(nMinMax[0][i]);
+			dMinMax[1][i]=(long)Math.round(nMinMax[1][i]);
+		}
+		vertices = new double [8][3];
+		double [] temp = new double[3];
+		double [] diff = new double[3];
+		
+		
+		//range
+		for(i=0;i<3;i++)
+			diff[i]=dMinMax[1][i]-dMinMax[0][i];
+		
+		LinAlgHelpers.scale(dMinMax[0],1.0, vertices[0]);
+		LinAlgHelpers.scale(dMinMax[1],1.0, vertices[6]);
+		temp[1]=diff[1]; 
+		LinAlgHelpers.add(vertices[0],temp,vertices[1]);
+		temp[0]=diff[0]; 
+		LinAlgHelpers.add(vertices[0],temp,vertices[2]);
+		temp[1]=0.0;
+		LinAlgHelpers.add(vertices[0],temp,vertices[3]);
+		temp[0]=0.0;
+		temp[2]=diff[2];
+		LinAlgHelpers.add(vertices[0],temp,vertices[4]);
+		LinAlgHelpers.add(vertices[1],temp,vertices[5]);
+		LinAlgHelpers.add(vertices[3],temp,vertices[7]);
+	}
+	/**
 	 *    Creates a cube with min coordinates at nMinMax[0]
 	 *    and max coordinates at nMinMax[1].
 	 *    Does not initializes "faces", use iniFaces()
 	 * **/
 	public Cuboid3D(final double [][] dMinMaxin)
 	{
-		vertices = new double [8][3];
 		dMinMax = new double [2][3];
-		
-		for(int i=0;i<3;i++)
+		int i;
+		for(i=0;i<3;i++)
 		{
 			dMinMax[0][i]=dMinMaxin[0][i];
 			dMinMax[1][i]=dMinMaxin[1][i];
 		}
+		vertices = new double [8][3];
 		double [] temp = new double[3];
 		double [] diff = new double[3];
-		int i;
+		
 		
 		//range
 		for(i=0;i<3;i++)
@@ -59,43 +128,7 @@ public class Cuboid3D {
 		LinAlgHelpers.add(vertices[3],temp,vertices[7]);
 	}
 	
-	/**
-	 *    Creates a cube with min coordinates at nMinMax[0]
-	 *    and max coordinates at nMinMax[1].
-	 *    Does not initializes "faces", use iniFaces()
-	 * **/
-	public Cuboid3D(final long [][] nMinMax)
-	{
-		dMinMax = new double [2][3];
-		
-		for(int i=0;i<3;i++)
-		{
-			dMinMax[0][i]=(long)Math.round(nMinMax[0][i]);
-			dMinMax[1][i]=(long)Math.round(nMinMax[1][i]);
-		}
-		vertices = new double [8][3];
-		double [] temp = new double[3];
-		double [] diff = new double[3];
-		int i;
-		
-		//range
-		for(i=0;i<3;i++)
-			diff[i]=dMinMax[1][i]-dMinMax[0][i];
-		
-		LinAlgHelpers.scale(dMinMax[0],1.0, vertices[0]);
-		LinAlgHelpers.scale(dMinMax[1],1.0, vertices[6]);
-		temp[1]=diff[1]; 
-		LinAlgHelpers.add(vertices[0],temp,vertices[1]);
-		temp[0]=diff[0]; 
-		LinAlgHelpers.add(vertices[0],temp,vertices[2]);
-		temp[1]=0.0;
-		LinAlgHelpers.add(vertices[0],temp,vertices[3]);
-		temp[0]=0.0;
-		temp[2]=diff[2];
-		LinAlgHelpers.add(vertices[0],temp,vertices[4]);
-		LinAlgHelpers.add(vertices[1],temp,vertices[5]);
-		LinAlgHelpers.add(vertices[3],temp,vertices[7]);
-	}	
+	/** initializes equation for faces **/
 	public void iniFaces()
 	{		
 		faces = new ArrayList<Plane3D>(); 
@@ -106,29 +139,13 @@ public class Cuboid3D {
 		faces.add(new Plane3D(vertices[7],vertices[4],vertices[0]));
 		//left
 		faces.add(new Plane3D(vertices[0],vertices[4],vertices[5]));
-		//put vertex [0] as a vector for the first three planes
-		// j==1 is already 0
-		for(j=1;j<3;j++)
-		{
-			for(i=0;i<3;i++)
-			{
-				faces.get(j).p0[i]=vertices[0][i];
-			}
-		}
 		//back
 		faces.add(new Plane3D(vertices[6],vertices[5],vertices[4]));
 		//top
 		faces.add(new Plane3D(vertices[2],vertices[1],vertices[5]));
 		//right
 		faces.add(new Plane3D(vertices[7],vertices[3],vertices[2]));
-		//put vertex [6] as a vector for the last three planes
-		for(j=3;j<6;j++)
-		{
-			for(i=0;i<3;i++)
-			{
-				faces.get(j).p0[i]=vertices[6][i];
-			}
-		}
+
 		
 		faces_init = true;
 	}
@@ -168,20 +185,13 @@ public class Cuboid3D {
 	{
 		double [] diff = new double [3];
 		int i;
-		//first three planes:front left bottom
-		LinAlgHelpers.subtract(pPoint, vertices[0], diff);
-		for(i=0;i<3;i++)
+		if(!faces_init)
+			iniFaces();
+		
+		for(i=0;i<6;i++)
 		{
-			if(LinAlgHelpers.dot(diff, faces.get(i).n) <0)
-			{
-				return false;
-			}
-		}
-		//last three planes:back right top
-		LinAlgHelpers.subtract(pPoint, vertices[6], diff);
-		for(i=3;i<6;i++)
-		{
-			if(LinAlgHelpers.dot(diff, faces.get(i).n) <0)
+			LinAlgHelpers.subtract(pPoint, faces.get(i).p0, diff);
+			if(LinAlgHelpers.dot(diff, faces.get(i).n) <-0.00000001)//because of the error in line calculation
 			{
 				return false;
 			}

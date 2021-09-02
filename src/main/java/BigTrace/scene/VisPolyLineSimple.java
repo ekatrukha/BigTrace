@@ -60,7 +60,7 @@ public class VisPolyLineSimple
 	
 	private Vector3f l_color;
 	
-	public float  max_pos;
+
 	public float fLineThickness;
 	
 	//private final ArrayList< Point > points = new ArrayList<>();
@@ -78,25 +78,14 @@ public class VisPolyLineSimple
 		l_color = new Vector3f(color_in);
 		
 		nPointsN=points.size();
-		vertices = new float [nPointsN*3];//assime 3D
+		vertices = new float [nPointsN*3];//assume 3D
 		
-		max_pos = Float.MIN_VALUE;
-		
+
 		for (i=0;i<nPointsN; i++)
 		{
 			for (j=0;j<3; j++)
 			{
-				if(Math.abs(points.get(i).getFloatPosition(j))>max_pos)
-					{max_pos = Math.abs(points.get(i).getFloatPosition(j));}
-				//vertices[i*3+j]=points.get(i).getFloatPosition(j);
-			}
-			
-		}
-		for (i=0;i<nPointsN; i++)
-		{
-			for (j=0;j<3; j++)
-			{
-				vertices[i*3+j]=(points.get(i).getFloatPosition(j)/max_pos)-0.5f;
+				vertices[i*3+j]=points.get(i).getFloatPosition(j);
 			}
 			
 		}

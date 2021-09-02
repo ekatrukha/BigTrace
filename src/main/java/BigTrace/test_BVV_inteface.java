@@ -81,15 +81,17 @@ public class test_BVV_inteface
 	int nW;
 	int nH;
 	int nD;
-	static long [] nDimIn = new long [3]; 
+	//static long [] nDimIn = new long [3]; 
 	long [][] nDimCurr = new long [2][3];
-	double dCam = 2000.;
+	double dCam = 1100.;
 	double dClipNear = 1000.;
 	double dClipFar = 1000.;
-	OpService ops;
+	
+	boolean bShowWorldGrid = true;
 	
 	//ArrayList< RealPoint > point_coords = new ArrayList<>();
 	BTPolylines traces = new BTPolylines ();
+	BTPolylines origin_data = new BTPolylines ();
 	
 		
 	public void runBVV()
@@ -109,10 +111,14 @@ public class test_BVV_inteface
 		nW=(int)img.dimension(0);
 		nH=(int)img.dimension(1);
 		nD=(int)img.dimension(2);
-		nDimIn = img.dimensionsAsLongArray();
-		nDimCurr[1] = img.dimensionsAsLongArray();
+		//nDimIn = img.dimensionsAsLongArray();
+		nDimCurr[1][0] = nW-1;
+		nDimCurr[1][1] = nH-1;
+		nDimCurr[1][2] = nD-1;
 
 
+		init(0.25*Math.min(nD, Math.min(nW,nH)));
+		
 		final JPanel panel = new JPanel();
 		panel.setPreferredSize( new Dimension( 400, 400 ) );
 		slider = new CroppingPanel(new int[] { -1000, 1000}, nW-1, nH-1, nD-1);
@@ -124,7 +130,8 @@ public class test_BVV_inteface
 				//VolumeViewer
 				dClipNear = Math.abs(near);
 				dClipFar = (double)far;
-				bvv.getBvvHandle().getViewerPanel().setCamParams(2000., dClipNear, dClipFar);
+				bvv.getBvvHandle().getViewerPanel().setCamParams(dCam, dClipNear, dClipFar);
+				handl.requestRepaint();
 				
 			}
 
@@ -165,15 +172,6 @@ public class test_BVV_inteface
 
 
 		
-
-		view =				 
-				 Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
-		//Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );
-		
-						
-		bvv = BvvFunctions.show( view, "t1-head" ,Bvv.options().dCam(2000.).dClipNear(dClipNear).dClipFar(dClipFar));	
-		
-		resetView(true);
 		
 
 		
@@ -183,7 +181,8 @@ public class test_BVV_inteface
 		// (not really working properly yet
 		actions.runnableAction(
 				() -> {
-					addPoint();
+					//addPoint();
+					addPoint(5);
 				},
 				"add point",
 				"Z" );
@@ -229,10 +228,16 @@ public class test_BVV_inteface
 				"A" );
 		actions.runnableAction(
 				() -> {
-					resetView(false);
+					resetViewXY(false);
 				},
-				"reset view",
-				"R" );
+				"reset view XY",
+				"1" );
+			actions.runnableAction(
+				() -> {
+					resetViewYZ(false);
+				},
+				"reset view YZ",
+				"2" );
 		//actions.namedAction(action, defaultKeyStrokes);
 		actions.install( bvv.getBvvHandle().getKeybindings(), "my actions" );
 		
@@ -241,6 +246,32 @@ public class test_BVV_inteface
 
 //		bdv.getBdvHandle().getKeybindings().removeInputMap( "my actions" );
 
+	}
+	public void init(double axis_length)
+	{
+		int i;
+		
+		//basis vectors 
+		RealPoint basis = new RealPoint(-0.1*axis_length, -0.1*axis_length,-0.1*axis_length);				
+		for(i=0;i<3;i++)
+		{			
+			origin_data.addPointToActive(basis);
+			basis.move(axis_length, i);
+			origin_data.addPointToActive(basis);
+			basis.move((-1.0)*axis_length, i);
+			origin_data.addNewLine();
+		}
+		
+
+		
+		// init bigvolumeviewer
+		view =				 
+				 Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
+		
+						
+		bvv = BvvFunctions.show( view, "t1-head" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
+		
+		resetViewXY(true);
 	}
 
 	public void render_pl()
@@ -258,17 +289,112 @@ public class test_BVV_inteface
 				else
 					lines = new VisPolyLineSimple(new float[]{0.0f,0.0f,1.0f}, point_coords, 5.0f);
 
-				final Matrix4f pointtransform = new Matrix4f().translate( 0.5f*points.max_pos, 0.5f*points.max_pos, 0.5f*points.max_pos ).scale( points.max_pos );
-				final Matrix4f linestransform = new Matrix4f().translate( 0.5f*lines.max_pos, 0.5f*lines.max_pos, 0.5f*lines.max_pos ).scale( lines.max_pos );
-				points.draw( gl, new Matrix4f( data.getPv() ).mul( pointtransform  ), new double [] {data.getScreenWidth(), data.getScreenHeight()}, data.getDClipNear(), data.getDClipFar());
-				lines.draw( gl, new Matrix4f( data.getPv() ).mul( linestransform  ));
+				points.draw( gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()}, data.getDClipNear(), data.getDClipFar());
+				lines.draw( gl, new Matrix4f( data.getPv() ));
 			}
+			
+			//render the origin of coordinates
+			
+			for (int i=0;i<3;i++)
+			{
+				ArrayList< RealPoint > point_coords = origin_data.get(i);
+				VisPolyLineSimple lines;
+				float [] color_orig = new float[]{0.0f,0.0f,0.0f};
+				color_orig[i] = 1.0f;
+				lines = new VisPolyLineSimple(color_orig, point_coords, 3.0f);
+				color_orig[i] = 0.0f;								
+				lines.draw( gl, new Matrix4f( data.getPv() ));
+
+			}
+			
+			//render world grid
+			
+			if(bShowWorldGrid)
+			{
+
+				int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
+				int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
+				Matrix4f  matPerspWorld = new Matrix4f();
+				MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, matPerspWorld );
+				ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
+				//for (int i =0; i<sW; i+=40)
+				float [] world_grid_color = new float[]{0.5f,0.5f,0.5f}; 
+				float world_grith_thickness = 1.0f;
+	
+				//bottom grid
+				float i;
+				//vertical
+				float j=(float)sH;
+				float di=3.0f*(float)sW/20.0f;
+				for (i =-sW; i<2*sW; i+=di)
+				{
+					point_coords.add(new RealPoint(i,j,(float)(-1.0*dClipNear)));
+					point_coords.add(new RealPoint(i,j,(float)(1.0*dClipFar)));
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					lines.draw( gl, matPerspWorld);
+					point_coords.clear();
+				}
+				//horizontal
+				float k=0; 
+				float dk = (float)((dClipFar+dClipNear)/10.0);
+				for (k= (float)(dClipFar*0.99); k>=(-1.0*dClipNear); k-=dk)
+				{
+					point_coords.add(new RealPoint((float)(-sW),j,k));
+					point_coords.add(new RealPoint((float)2*sW,j,k));
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					lines.draw( gl, matPerspWorld);
+					point_coords.clear();
+				}
+				//middle grid
+				// vertical
+				for (i =-sW; i<2*sW; i+=di)
+				{
+					point_coords.add(new RealPoint(i,0,(float)(dClipFar*0.99)));
+					point_coords.add(new RealPoint(i,sH,(float)(dClipFar*0.99)));
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					lines.draw( gl, matPerspWorld);
+					point_coords.clear();
+				}	
+				//horizontal
+				float dj=(float)sH/10.0f;
+				for (j =0; j<=sH; j+=dj)
+				{
+					point_coords.add(new RealPoint((float)(-sW),j,(float)(dClipFar*0.99)));
+					point_coords.add(new RealPoint((float)2*sW,j,(float)(dClipFar*0.99)));
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					lines.draw( gl, matPerspWorld);
+					point_coords.clear();
+				}	
+				
+				//top grid
+				//vertical
+				j=0.0f;
+				//di=3.0f*(float)sW/20.0f;
+				for (i =-sW; i<2*sW; i+=di)
+				{
+					point_coords.add(new RealPoint(i,j,(float)(-1.0*dClipNear)));
+					point_coords.add(new RealPoint(i,j,(float)(1.0*dClipFar)));
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					lines.draw( gl, matPerspWorld);
+					point_coords.clear();
+				}
+				//horizontal			
+				for (k= (float)(dClipFar*0.99); k>=(-1.0*dClipNear); k-=dk)
+				{
+					point_coords.add(new RealPoint((float)(-sW),j,k));
+					point_coords.add(new RealPoint((float)2*sW,j,k));
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					lines.draw( gl, matPerspWorld);
+					point_coords.clear();
+				}
+			}
+			
 		} );
 
 		handl.requestRepaint();
 
 	}
-	public void resetView(boolean firstCall)
+	public void resetViewXY(boolean firstCall)
 	{
 		
 		double scale;
@@ -284,9 +410,56 @@ public class test_BVV_inteface
 		{
 			scale=(double)sH/(double)nH;
 		}
-		
+		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
-		t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nW), 0.0, scale, 0.0, 0.5*scale*((double)sH-scale*(double)nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
+		t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nW), 0.0, scale, 0.0, 0.5*((double)sH-scale*(double)nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
+		//t.set(1, 0.0, 0.0, 0.5*((double)sW-(double)nW), 0.0, 1.0, 0.0, 0.5*((double)sH-(double)nH), 0.0, 0.0, 1., 0.0);
+		//t.identity();
+		
+
+		traces = new BTPolylines ();						
+		
+		
+		handl=bvv.getBvvHandle().getViewerPanel();
+		handl.state().setViewerTransform(t);
+		handl.requestRepaint();
+		if(!firstCall)
+			bvv2.removeFromBdv();
+		
+		view2=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
+		bvv2 = BvvFunctions.show( view2, "cropreset", Bvv.options().addTo(bvv));
+		
+		render_pl();
+	}
+	
+	public void resetViewYZ(boolean firstCall)
+	{
+		
+		double scale;
+		
+		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
+		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
+		
+		if((double)sW/(double)nD<(double)sH/(double)nH)
+		{
+			scale=(double)sW/(double)nD;
+		}
+		else
+		{
+			scale=(double)sH/(double)nH;
+		}
+		scale = 0.9*scale;
+		AffineTransform3D t = new AffineTransform3D();
+		AffineTransform3D t2 = new AffineTransform3D();
+		//t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nD), 0.0, scale, 0.0, 0.5*scale*((double)sH-scale*(double)nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
+		
+		t.rotate(1, (-1)*Math.PI/2.0);
+		//t.identity();
+		t2.set(scale, 0.0, 0.0, 0.0, 0.0, scale, 0.0,0.5*((double)sH-scale*(double)nH) , 0.0, 0.0, scale, -0.5*((double)sW+scale*(double)nD));
+		t.concatenate(t2);
+		//t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nD), 0.0, scale, 0.0, 0.0, 0.0, 0.0, scale, 0.0);
+		//t.identity();
+		
 		//t.set(1, 0.0, 0.0, 0.5*((double)sW-(double)nW), 0.0, 1.0, 0.0, 0.5*((double)sH-(double)nH), 0.0, 0.0, 1., 0.0);
 		
 
@@ -300,76 +473,127 @@ public class test_BVV_inteface
 			bvv2.removeFromBdv();
 		
 		view2=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
-		bvv2 = BvvFunctions.show( view2, "cropreset", Bvv.options().addTo(bvv));
+		bvv2 = BvvFunctions.show( view2, "cropresetYZ", Bvv.options().addTo(bvv));
 		
 		
 	}
 	
-	public void addPoint()
+	public void addPoint(final int nHalfWindow)
 	{
-		//Point point_mouse = new Point( 2 );
-		java.awt.Point point_mouse  =bvv.getBvvHandle().getViewerPanel().getMousePosition();
-		System.out.println( "drag x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
-		
+		int i,j;
 
+		java.awt.Point point_mouse  = bvv.getBvvHandle().getViewerPanel().getMousePosition();
+		System.out.println( "drag x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
+														
+		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
 		handl.state().getViewerTransform(transform);
-		
-		int dW=5;
-
-		/**/
-
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
-		//Matrix4f viewm = MatrixMath.affine( transform, new Matrix4f() );
-		Matrix4f persp = new Matrix4f();
-		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
-		Vector3f worldCoords1 = new Vector3f();
-		Vector3f worldCoords2 = new Vector3f();
-		Vector3f worldCoords1r = new Vector3f();
-		Vector3f worldCoords2r = new Vector3f();
+		Matrix4f matPerspWorld = new Matrix4f();
+		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
 		
-		persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,1.0f, //far from camera
-				  new int[] { 0, 0, sW, sH },worldCoords1);
-		persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,0.0f, //close to camera 
-				  new int[] { 0, 0, sW, sH },worldCoords2);
 		
-		persp.unproject((float)(point_mouse.x+dW),sH-(float)point_mouse.y,1.0f, //far from camera
-				  new int[] { 0, 0, sW, sH },worldCoords1r);
-		persp.unproject((float)(point_mouse.x+dW),sH-(float)point_mouse.y,0.0f, //close to camera 
-				  new int[] { 0, 0, sW, sH },worldCoords2r);
+		ArrayList<RealPoint> clickFrustum = new ArrayList<RealPoint> ();
+		Vector3f temp = new Vector3f(); 
+		
+		//float [] zVals = new float []{0.0f,1.0f,1.0f,0.0f,0.0f,1.0f,1.0f,0.0f};
+		for (i = -nHalfWindow;i<3*nHalfWindow;i+=2*nHalfWindow)
+			for (j = -nHalfWindow;j<3*nHalfWindow;j+=2*nHalfWindow)
+				for (int z =0 ; z<2; z++)
+				{
+					//take coordinates in original data volume space
+					matPerspWorld.unproject((float)point_mouse.x+i,sH-(float)point_mouse.y+j,(float)z, //z=1 ->far from camera z=0 -> close to camera
+							new int[] { 0, 0, sW, sH },temp);
+					//persp.unproject((float)point_mouse.x+i,sH-(float)point_mouse.y+j,zVals[nCount+1], //z=1 ->far from camera z=0 -> close to camera
+					//new int[] { 0, 0, sW, sH },temp);
 
+					clickFrustum.add(new RealPoint(temp.x,temp.y,temp.z));
+					
+				}
+		//build lines (rays)
+		ArrayList<Line3D> frustimLines = new ArrayList<Line3D>();
+		for(i =0;i<clickFrustum.size();i+=2)
+		{
+			frustimLines.add(new Line3D(clickFrustum.get(i),clickFrustum.get(i+1)));
+		}
 		
-/*
-											
+		/*
+		// original lines (rays)
+		for(i =0;i<clickFrustum.size();i+=2)
+		{
+			traces.addNewLine();
+			traces.addPointToActive(clickFrustum.get(i));
+			traces.addPointToActive(clickFrustum.get(i+1));
+		}
+		*/
 		
-		RealRandomAccessible< UnsignedByteType > view_tr = Views.interpolate(  Views.extendZero(view2) , new NLinearInterpolatorFactory<>());
-		AffineRandomAccessible<UnsignedByteType, AffineGet > view_trxxx = RealViews.affine(view_tr,transform);
-		RealInterval intervalBounds = transform.estimateBounds(view2);
+		//current dataset
+		Cuboid3D dataCube = new Cuboid3D(nDimCurr); 
+		dataCube.iniFaces();
+		ArrayList<RealPoint> intersectionPoints = Intersections3D.cuboidLinesIntersect(dataCube, frustimLines);
+		// Lines(rays) truncated to the volume.
+		// For now, all of them must contained inside datacube.
 		
-		int maxX = (int)Math.ceil(Math.max(clickCone.r1, clickCone.r2));
-		double minZ=Math.min(worldCoords1.z, worldCoords2.z);
-		double rangeZ=Math.abs(worldCoords1.z- worldCoords2.z);
-		IntervalView< UnsignedByteType > intRay = Views.interval(view_trxxx, Intervals.createMinSize( point_mouse.x-maxX,point_mouse.y-maxX, (int)(minZ), 2*maxX, 2*maxX, (int)(rangeZ)));
-		//IntervalView< UnsignedByteType > intRayx = Views.interval(view_trxxx, Math.round(intervalBounds.realMin(0)));
+		if(intersectionPoints.size()==8)
+		{
+			/*
+			for(i =0;i<intersectionPoints.size();i+=2)
+			{
+				traces.addNewLine();
+				traces.addPointToActive(intersectionPoints.get(i));
+				traces.addPointToActive(intersectionPoints.get(i+1));
+			}
+			*/
+		}		
+		else
+		{
+			System.out.println( "#intersection points " + intersectionPoints.size());
+			return;
+		}
+		long [][] nClickMinMax = new long[2][3];
 		
-		RealPoint locationMax = new RealPoint( 3 );		
-		boolean bFound=false;
-		bFound = computeMaxLocationConicalFrustum( intRay ,  locationMax,clickCone);
-		System.out.println(bFound);
-		//transform.applyInverse(view_tr,view2);
-		//float [] target = new float [3];
-		RealPoint target = new RealPoint( 3 );
+		if(newBoundBox(intersectionPoints, nClickMinMax))
+		{
+			/*
+			//show volume that was cut-off
+			bvv2.removeFromBdv();
+			System.gc();
+			view2=Views.interval( img, nClickMinMax[0], nClickMinMax[1]);	
+		
+			bvv2 = BvvFunctions.show( view2, "cropclick", Bvv.options().addTo(bvv));
+			*/
+			
+			
+			IntervalView< UnsignedByteType > intRay = Views.interval(view2, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
+																								   nClickMinMax[1][0],nClickMinMax[1][1],nClickMinMax[1][2]));
+			
+			//double [][] singleCube  = new double [2][3];
+			//for(i=0;i<3;i++)
+			//	singleCube[1][i]=1.0;
+			//Cuboid3D clicktest = new Cuboid3D(singleCube);
+			//Cuboid3D clickVolume = new Cuboid3D(intersectionPoints);
+			Cuboid3D clickVolume = new Cuboid3D(clickFrustum);
+			clickVolume.iniFaces();
+			RealPoint target = new RealPoint( 3 );
+			//RealPoint locationMax = new RealPoint( 3 );
+			
+			if(computeMaxLocationCuboid(intRay,target,clickVolume))
+			{
+				traces.addPointToActive(target);
+				handl.showMessage("point found");
+			}
+			else
+			{
+				handl.showMessage("not found :(");
+			}
+				
+
+						
+		}
 		
 
-		transform.applyInverse( target,locationMax);
-
-		
-		traces.addPointToActive(target);
-		
-		render_pl();*/
-		handl.showMessage("Point added");
-		
+		render_pl();		
 		
 	}
 	
@@ -393,6 +617,20 @@ public class test_BVV_inteface
 		//Matrix4f viewm = MatrixMath.affine( transform, new Matrix4f() );
 		Matrix4f persp = new Matrix4f();
 		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
+		
+		
+		Matrix4f matPers = new Matrix4f();
+		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, matPers );
+		
+		Vector3f temp1 = new Vector3f();
+		Vector3f temp2 = new Vector3f(); 
+		matPers.unproject((float)point_mouse.x,sH-(float)point_mouse.y,1.0f, //z=1 ->far from camera z=0 -> close to camera
+				new int[] { 0, 0, sW, sH },temp1);
+		
+		matPers.unproject((float)point_mouse.x,sH-(float)point_mouse.y,0.0f, //z=1 ->far from camera z=0 -> close to camera
+				new int[] { 0, 0, sW, sH },temp2);
+		
+		
 		Vector3f worldCoords1 = new Vector3f();
 		Vector3f worldCoords2 = new Vector3f();
 
@@ -403,14 +641,14 @@ public class test_BVV_inteface
 				  new int[] { 0, 0, sW, sH },worldCoords2);
 
 
-		double [] intersect_point = new double[3];
+		//double [] intersect_point = new double[3];
 		
 		Cuboid3D viewCube = new Cuboid3D(nDimCurr); 
 		viewCube.iniFaces();
 		//dW++;
 		
 		Line3D clickRay = new Line3D(worldCoords1,worldCoords2);
-		for(int i=0;i<6;i++)
+		/*for(int i=0;i<6;i++)
 		{
 			if(Intersections3D.planeLineIntersect(viewCube.faces.get(i), clickRay, intersect_point))
 			{
@@ -418,7 +656,10 @@ public class test_BVV_inteface
 				if(viewCube.isPointInsideMinMax(intersect_point))
 					viewclick.add(new RealPoint(intersect_point));
 			}
-		}
+		}*/
+		ArrayList<Line3D> linex= new ArrayList<Line3D>();
+		linex.add(clickRay);
+		viewclick=Intersections3D.cuboidLinesIntersect(viewCube,linex);
 		System.out.println( "Intersect points #: " + viewclick.size());
 		
 
@@ -431,14 +672,19 @@ public class test_BVV_inteface
 				traces.addPointToActive(viewclick.get(i+1));
 			}
 		}
+		if(viewclick.size()==1)
+		{
+			viewclick=Intersections3D.cuboidLinesIntersect(viewCube,linex);
+		}
 
 		render_pl();
 	}
+	
 	public void viewClickArea(final int nHalfWindow)
 	{
 		int i,j;
 
-		java.awt.Point point_mouse  =bvv.getBvvHandle().getViewerPanel().getMousePosition();
+		java.awt.Point point_mouse  = bvv.getBvvHandle().getViewerPanel().getMousePosition();
 		System.out.println( "drag x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
 														
 		//get perspective matrix:
@@ -446,32 +692,37 @@ public class test_BVV_inteface
 		handl.state().getViewerTransform(transform);
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
-		Matrix4f persp = new Matrix4f();
-		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
+		Matrix4f matPerspWorld = new Matrix4f();
+		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
 
 
 		ArrayList<RealPoint> clickFrustum = new ArrayList<RealPoint> ();
 		Vector3f temp = new Vector3f(); 
-		int nCount = -1;
+
+		//float [] zVals = new float []{0.0f,1.0f,1.0f,0.0f,0.0f,1.0f,1.0f,0.0f};
 		for (i = -nHalfWindow;i<3*nHalfWindow;i+=2*nHalfWindow)
 			for (j = -nHalfWindow;j<3*nHalfWindow;j+=2*nHalfWindow)
 				for (int z =0 ; z<2; z++)
 				{
-					
-					
-					persp.unproject((float)point_mouse.x+i,sH-(float)point_mouse.y+j,(float)z, //far from camera
+					//take coordinates in original data volume space
+					matPerspWorld.unproject((float)point_mouse.x+i,sH-(float)point_mouse.y+j,(float)z, //z=1 ->far from camera z=0 -> close to camera
 							new int[] { 0, 0, sW, sH },temp);
+					//persp.unproject((float)point_mouse.x+i,sH-(float)point_mouse.y+j,zVals[nCount+1], //z=1 ->far from camera z=0 -> close to camera
+					//new int[] { 0, 0, sW, sH },temp);
+
 					clickFrustum.add(new RealPoint(temp.x,temp.y,temp.z));
-					nCount++;
+					
 				}
+		//build lines (rays)
 		ArrayList<Line3D> frustimLines = new ArrayList<Line3D>();
 		for(i =0;i<clickFrustum.size();i+=2)
 		{
 			frustimLines.add(new Line3D(clickFrustum.get(i),clickFrustum.get(i+1)));
 		}
 		
+		
+		// original lines (rays)
 		/*
-		// original lines
 		for(i =0;i<clickFrustum.size();i+=2)
 		{
 			traces.addNewLine();
@@ -479,48 +730,77 @@ public class test_BVV_inteface
 			traces.addPointToActive(clickFrustum.get(i+1));
 		}
 		*/
+		
 		//current dataset
 		Cuboid3D dataCube = new Cuboid3D(nDimCurr); 
 		dataCube.iniFaces();
 		ArrayList<RealPoint> intersectionPoints = Intersections3D.cuboidLinesIntersect(dataCube, frustimLines);
-		// lines truncated to the volume
-		// for now, must all be contained inside
+		// Lines(rays) truncated to the volume.
+		// For now, all of them must contained inside datacube.
+		
+		traces = new BTPolylines ();
+			
+		for(i =0;i<intersectionPoints.size();i+=2)
+		{
+			traces.addNewLine();
+			traces.addPointToActive(intersectionPoints.get(i));
+			if(i<(intersectionPoints.size()-1))
+				traces.addPointToActive(intersectionPoints.get(i+1));
+		}
+		
 		if(intersectionPoints.size()==8)
 		{
-			for(i =0;i<intersectionPoints.size();i+=2)
-			{
-				traces.addNewLine();
-				traces.addPointToActive(intersectionPoints.get(i));
-				traces.addPointToActive(intersectionPoints.get(i+1));
-			}
+
+			
 		}		
 		else
 		{
+			System.out.println( "#intersection points " + intersectionPoints.size());
 			return;
 		}
 		long [][] nClickMinMax = new long[2][3];
+		
 		if(newBoundBox(intersectionPoints, nClickMinMax))
 		{
+			
+			//show volume that was cut-off
 			bvv2.removeFromBdv();
 			System.gc();
 			view2=Views.interval( img, nClickMinMax[0], nClickMinMax[1]);	
 		
 			bvv2 = BvvFunctions.show( view2, "cropclick", Bvv.options().addTo(bvv));
-			handl.showMessage("Cut success");			
+			
+			/*
+			
+			IntervalView< UnsignedByteType > intRay = Views.interval(view2, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
+																								   nClickMinMax[1][0],nClickMinMax[1][1],nClickMinMax[1][2]));
+			
+			//double [][] singleCube  = new double [2][3];
+			//for(i=0;i<3;i++)
+			//	singleCube[1][i]=1.0;
+			//Cuboid3D clicktest = new Cuboid3D(singleCube);
+			
+			//Cuboid3D clickVolume = new Cuboid3D(intersectionPoints); 
+			Cuboid3D clickVolume = new Cuboid3D(clickFrustum);
+			clickVolume.iniFaces();
+			RealPoint target = new RealPoint( 3 );
+			//RealPoint locationMax = new RealPoint( 3 );
+			
+			if(computeMaxLocationCuboid(intRay,target,clickVolume))
+			{
+				traces.addPointToActive(target);
+				handl.showMessage("point found");
+			}
+			else
+			{
+				handl.showMessage("not found :(");
+			}
+				
+			 */
+						
 		}
 		
-		/*
-		long[][] nMinMax = new long [2][3]; 
-		if(newBoundBox(clickFrustum,nMinMax))
-		{
-			bvv2.removeFromBdv();
-			System.gc();
-			view2=Views.interval( img, nMinMax[0], nMinMax[1]);	
-		
-			bvv2 = BvvFunctions.show( view2, "cropclick", Bvv.options().addTo(bvv));
-			handl.showMessage("Cut success");
-		}
-		*/
+
 		render_pl();
 	}
 	public static void main( String... args) throws IOException
@@ -532,64 +812,21 @@ public class test_BVV_inteface
 		
 		
 	}
-	/**
-	 * Compute the location of the minimal and maximal intensity for any IterableInterval,
-	 * like an {@link Img}.
-	 *
-	 * The functionality we need is to iterate and retrieve the location. Therefore we need a
-	 * Cursor that can localize itself.
-	 * Note that we do not use a LocalizingCursor as localization just happens from time to time.
-	 *
-	 * @param input - the input that has to just be {@link IterableInterval}
-	 * @param minLocation - the location for the minimal value
-	 * @param maxLocation - the location of the maximal value
-	 */
-	public < T extends Comparable< T > & Type< T > > boolean computeMinMaxLocation(
-		final IterableInterval< T > input, final RealPoint minLocation, final RealPoint maxLocation )
-	{
-		// create a cursor for the image (the order does not matter)
-		final Cursor< T > cursor = input.cursor();
-		
-		boolean bFound=false;
-		// initialize min and max with the first image value
-		T type = cursor.next();
-		T min = type.copy();
-		T max = type.copy();
-		// loop over the rest of the data and determine min and max value
-		while ( cursor.hasNext() )
-		{
-			// we need this type more than once
-			type = cursor.next();
- 
-			if ( type.compareTo( min ) < 0 )
-			{
-				min.set( type );
-				minLocation.setPosition( cursor );
-			}
- 
-			if ( type.compareTo( max ) > 0 )
-			{
-				max.set( type );
-				maxLocation.setPosition( cursor );
-				bFound=true;
-			}
-		}
-		return bFound;
-	}
+
 	
 	/**
-	 * Compute the location of the minimal and maximal intensity for any IterableInterval,
-	 * like an {@link Img}.
+	 * Compute the location of the maximal intensity for any IterableInterval,
+	 * like an {@link Img}, contained inside Cuboid3D
 	 *
 	 * The functionality we need is to iterate and retrieve the location. Therefore we need a
 	 * Cursor that can localize itself.
 	 * Note that we do not use a LocalizingCursor as localization just happens from time to time.
 	 *
 	 * @param input - the input that has to just be {@link IterableInterval}
-	 * @param minLocation - the location for the minimal value
 	 * @param maxLocation - the location of the maximal value
+	 * @param clickCone - Cuboid3D, limiting search 
 	 */
-	public < T extends Comparable< T > & Type< T > > boolean computeMaxLocationCuboidMinMax(
+	public < T extends Comparable< T > & Type< T > > boolean computeMaxLocationCuboid(
 		final IterableInterval< T > input,  final RealPoint maxLocation, final Cuboid3D clickCone )
 	{
 		// create a cursor for the image (the order does not matter)
@@ -599,7 +836,7 @@ public class test_BVV_inteface
 		// initialize min and max with the first image value
 		T type = cursor.next();
 		T max = type.copy();
-		RealPoint pos = new RealPoint();
+		double [] pos = new double [3];
 		// loop over the rest of the data and determine min and max value
 		while ( cursor.hasNext() )
 		{
@@ -609,7 +846,7 @@ public class test_BVV_inteface
 				if ( type.compareTo( max ) > 0 )
 				{
 					cursor.localize(pos);
-					if(clickCone.isPointInsideMinMax(pos))
+					if(clickCone.isPointInsideShape(pos))
 					{
 						max.set( type );
 						maxLocation.setPosition( cursor );
