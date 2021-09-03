@@ -87,7 +87,8 @@ public class test_BVV_inteface
 	double dClipNear = 1000.;
 	double dClipFar = 1000.;
 	
-	boolean bShowWorldGrid = true;
+	boolean bShowWorldGrid = false;
+	boolean bShowOrigin = true;
 	
 	//ArrayList< RealPoint > point_coords = new ArrayList<>();
 	BTPolylines traces = new BTPolylines ();
@@ -238,6 +239,30 @@ public class test_BVV_inteface
 				},
 				"reset view YZ",
 				"2" );
+			
+			actions.runnableAction(
+					() -> {
+						bShowOrigin=(!bShowOrigin);
+						handl.requestRepaint();
+					},
+					"render origin",
+					"O" );
+			actions.runnableAction(
+					() -> {
+						bShowWorldGrid=(!bShowWorldGrid);
+						handl.requestRepaint();
+					},
+					"render world grid",
+					"P" );
+			
+			actions.runnableAction(
+					() -> {
+						traces = new BTPolylines ();
+						handl.requestRepaint();
+					},
+					"reset tracings",
+					"I" );
+			
 		//actions.namedAction(action, defaultKeyStrokes);
 		actions.install( bvv.getBvvHandle().getKeybindings(), "my actions" );
 		
@@ -262,7 +287,7 @@ public class test_BVV_inteface
 			origin_data.addNewLine();
 		}
 		
-
+		traces = new BTPolylines ();
 		
 		// init bigvolumeviewer
 		view =				 
@@ -294,17 +319,18 @@ public class test_BVV_inteface
 			}
 			
 			//render the origin of coordinates
-			
-			for (int i=0;i<3;i++)
+			if (bShowOrigin)
 			{
-				ArrayList< RealPoint > point_coords = origin_data.get(i);
-				VisPolyLineSimple lines;
-				float [] color_orig = new float[]{0.0f,0.0f,0.0f};
-				color_orig[i] = 1.0f;
-				lines = new VisPolyLineSimple(color_orig, point_coords, 3.0f);
-				color_orig[i] = 0.0f;								
-				lines.draw( gl, new Matrix4f( data.getPv() ));
-
+				for (int i=0;i<3;i++)
+				{
+					ArrayList< RealPoint > point_coords = origin_data.get(i);
+					VisPolyLineSimple lines;
+					float [] color_orig = new float[]{0.0f,0.0f,0.0f};
+					color_orig[i] = 1.0f;
+					lines = new VisPolyLineSimple(color_orig, point_coords, 3.0f);
+					color_orig[i] = 0.0f;								
+					lines.draw( gl, new Matrix4f( data.getPv() ));	
+				}
 			}
 			
 			//render world grid
@@ -417,7 +443,7 @@ public class test_BVV_inteface
 		//t.identity();
 		
 
-		traces = new BTPolylines ();						
+		//traces = new BTPolylines ();						
 		
 		
 		handl=bvv.getBvvHandle().getViewerPanel();
@@ -463,7 +489,7 @@ public class test_BVV_inteface
 		//t.set(1, 0.0, 0.0, 0.5*((double)sW-(double)nW), 0.0, 1.0, 0.0, 0.5*((double)sH-(double)nH), 0.0, 0.0, 1., 0.0);
 		
 
-		traces = new BTPolylines ();						
+		//traces = new BTPolylines ();						
 		//render_pl();
 		
 		handl=bvv.getBvvHandle().getViewerPanel();
