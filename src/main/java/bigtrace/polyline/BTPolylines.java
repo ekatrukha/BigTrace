@@ -1,4 +1,4 @@
-package BigTrace.polyline;
+package bigtrace.polyline;
 
 import java.util.ArrayList;
 

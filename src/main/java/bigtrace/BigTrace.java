@@ -37,11 +37,10 @@ import org.joml.Vector3f;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
-
-import BigTrace.polyline.BTPolylines;
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
+import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsSimple;
 import bigtrace.scene.VisPolyLineSimple;
@@ -451,7 +450,8 @@ public class BigTrace
 			
 			actions.runnableAction(
 					() -> {
-						roiManager.removeAll();
+						//roiManager.removeAll();
+						roiManager.bShowAll=!roiManager.bShowAll;
 						render_pl();
 					},
 					"reset tracings",

@@ -28,6 +28,7 @@ public class RoiManager3D {
 	 public int mode;
 	 public float currLineThickness = 15.0f;
 	 public float currPointSize = 40.0f;
+	 public boolean bShowAll = true;
 		
 	 public RoiManager3D()
 	 {
@@ -69,10 +70,17 @@ public class RoiManager3D {
 	    	   }
 	    	   else
 	    	   {
+	    		   
 	    		   roi.setPointColor(nonActivePointColor);
 	    		   roi.setLineColor(nonActiveLineColor);	    		   
 	    	   }
-	           roi.draw(gl, pvm, screen_size, dNear, dFar);
+	    	   if(bShowAll)
+	    	   {
+	    		   roi.draw(gl, pvm, screen_size, dNear, dFar);
+	    	   }
+	    	   else
+	    		   if(i==activeRoi)
+	    			   roi.draw(gl, pvm, screen_size, dNear, dFar);
 	       }
 	 }
 	 /** adds point to active polyline
