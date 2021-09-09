@@ -20,15 +20,15 @@ import ij.ImagePlus;
 
 public class CroppingPanel extends JPanel {
 
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		ImagePlus imp = IJ.openImage("d:/flybrain.tif");
 		JFrame frame = new JFrame();
 
-		CroppingPanel slider = new CroppingPanel(imp);
-		frame.getContentPane().add(slider);
+		//CroppingPanel slider = new CroppingPanel(imp);
+		//frame.getContentPane().add(slider);
 		frame.pack();
 		frame.setVisible(true);
-	}
+	}*/
 
 	private static final long serialVersionUID = 1L;
 
@@ -42,7 +42,7 @@ public class CroppingPanel extends JPanel {
 	public static interface Listener {
 		public void nearFarChanged(int near, int far);
 		public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1);
-		public void cutOffROI();
+		//public void cutOffROI();
 	}
 
 	private ArrayList<Listener> listeners =	new ArrayList<Listener>();
@@ -85,7 +85,7 @@ public class CroppingPanel extends JPanel {
 	public static double getFar(ImagePlus image) {
 		return -getNear(image);
 	}
-
+/*
 	public CroppingPanel(ImagePlus image) {
 		super();
 		GridBagLayout gridbag = new GridBagLayout();
@@ -96,13 +96,16 @@ public class CroppingPanel extends JPanel {
 		int far = (int)Math.ceil(getFar(image));
 
 		c.gridy = 0;
+		//c.gridwidth = GridBagConstraints.REMAINDER;
+		//c.fill = GridBagConstraints.NONE;
+		
 		nearfar = addDoubleSlider(
 				"near/far",
 				new int[] {near, far},
 				new int[] {near, far},
 				new Color(255, 0, 0, 100),
 				c);
-
+		c.gridy = 1;
 		bbX = addDoubleSlider(
 				"x_range",
 				new int[] {0, image.getWidth()},
@@ -154,6 +157,7 @@ public class CroppingPanel extends JPanel {
 				}.start();
 			}
 		});
+		
 
 		DoubleSlider.Listener bbListener = new DoubleSlider.Listener() {
 			@Override
@@ -170,19 +174,20 @@ public class CroppingPanel extends JPanel {
 		bbX.addSliderChangeListener(bbListener);
 		bbY.addSliderChangeListener(bbListener);
 		bbZ.addSliderChangeListener(bbListener);
-	}
+	}*/
 	public CroppingPanel(int [] nf, int nW, int nH, int nSl) {
 		super();
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
+
 		setLayout(gridbag);
 
-		//int near = (int)Math.floor(getNear(image));
-		//int far = (int)Math.ceil(getFar(image));
 		int near = nf[0];
 		int far = nf[1];
 
 		c.gridy = 0;
+		
+
 		nearfar = addDoubleSlider(
 				"near/far",
 				new int[] {near, far},
@@ -216,6 +221,7 @@ public class CroppingPanel extends JPanel {
 			}
 		});
 
+		/*
 		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
 		allChannels = new JCheckBox("Apply to all channels", true);
 		buttons.add(allChannels);
@@ -230,6 +236,7 @@ public class CroppingPanel extends JPanel {
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		gridbag.setConstraints(buttons, c);
 		add(buttons);
+		
 		b.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -241,7 +248,7 @@ public class CroppingPanel extends JPanel {
 				}.start();
 			}
 		});
-
+*/
 		DoubleSlider.Listener bbListener = new DoubleSlider.Listener() {
 			@Override
 			public void sliderChanged() {
@@ -313,9 +320,9 @@ public class CroppingPanel extends JPanel {
 		for(Listener l : listeners)
 			l.nearFarChanged(near, far);
 	}
-
+/*
 	private void fireCutOffROI() {
 		for(Listener l : listeners)
 			l.cutOffROI();
-	}
+	}*/
 }

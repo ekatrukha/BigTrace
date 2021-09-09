@@ -29,7 +29,7 @@ public class DoubleSlider extends JPanel implements FocusListener, NumberField.L
 		JFrame frame = new JFrame();
 		DoubleSlider slider = new DoubleSlider(new int[] {-100, 100}, new int[] {20, 50}, new Color(255, 0, 0, 100));
 		frame.getContentPane().add(slider);
-		frame.pack();
+		//frame.pack();
 		frame.setVisible(true);
 	}
 
@@ -60,7 +60,7 @@ public class DoubleSlider extends JPanel implements FocusListener, NumberField.L
 		GridBagConstraints c = new GridBagConstraints();
 		setLayout(gridbag);
 
-		c.gridx = 0;
+		c.gridx = 1;
 		c.gridy = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
@@ -72,7 +72,7 @@ public class DoubleSlider extends JPanel implements FocusListener, NumberField.L
 		c.weightx = 0;
 		c.gridwidth = 1;
 		c.insets = new Insets(3, 3, 0, 3);
-		c.gridx = 1;
+		c.gridx = 0;
 		c.anchor = GridBagConstraints.WEST;
 		add(minTF, c);
 		c.gridx = 2;

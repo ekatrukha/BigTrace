@@ -1,4 +1,4 @@
-package BigTrace.scene;
+package bigtrace.scene;
 /*-
  * #%L
  * Volume rendering of bdv datasets
@@ -30,42 +30,72 @@ package BigTrace.scene;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
-import java.io.IOException;
-import java.nio.ByteBuffer;
+
+import net.imglib2.RealPoint;
+
 import java.nio.FloatBuffer;
-import java.util.Collections;
+import java.util.ArrayList;
+
 import org.joml.Matrix4fc;
+import org.joml.Vector3f;
+
+
 import tpietzsch.backend.jogl.JoglGpuContext;
 import tpietzsch.shadergen.DefaultShader;
 import tpietzsch.shadergen.Shader;
 import tpietzsch.shadergen.generate.Segment;
 import tpietzsch.shadergen.generate.SegmentTemplate;
-import tpietzsch.util.Images;
+
 
 import static com.jogamp.opengl.GL.GL_FLOAT;
-import static com.jogamp.opengl.GL.GL_RGB;
-import static com.jogamp.opengl.GL.GL_TEXTURE0;
-import static com.jogamp.opengl.GL.GL_TEXTURE_2D;
-import static com.jogamp.opengl.GL.GL_TRIANGLES;
-import static com.jogamp.opengl.GL.GL_UNSIGNED_BYTE;
 
-public class VisTestCubeLineRed
+
+public class VisPolyLineSimple
 {
 	//private final String imageFilename;
 
 	private final Shader prog;
 
 	private int vao;
+	
+	private Vector3f l_color;
+	
+
+	public float fLineThickness;
+	
+	//private final ArrayList< Point > points = new ArrayList<>();
+	
+	static float vertices[]; 
+	private int nPointsN;
 
 
-	public VisTestCubeLineRed()
+	public VisPolyLineSimple(float [] color_in, ArrayList< RealPoint > points, float fLineThickness_)
 	{
-		//this.imageFilename = imageFilename;
-		final Segment cobeVp = new SegmentTemplate( VisTestCubeLineRed.class, "/scene/simple_red.vp" ).instantiate();
-		final Segment cubeFp = new SegmentTemplate( VisTestCubeLineRed.class, "/scene/simple_red.fp" ).instantiate();
+		int i,j;
 		
+		fLineThickness= fLineThickness_;
 		
-		prog = new DefaultShader( cobeVp.getCode(), cubeFp.getCode() );
+		l_color = new Vector3f(color_in);
+		
+		nPointsN=points.size();
+		vertices = new float [nPointsN*3];//assume 3D
+		
+
+		for (i=0;i<nPointsN; i++)
+		{
+			for (j=0;j<3; j++)
+			{
+				vertices[i*3+j]=points.get(i).getFloatPosition(j);
+			}
+			
+		}
+		
+	
+		final Segment pointVp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.vp" ).instantiate();
+		final Segment pointFp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.fp" ).instantiate();
+	
+		
+		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 	}
 
 	private boolean initialized;
@@ -76,50 +106,6 @@ public class VisTestCubeLineRed
 
 		// ..:: VERTEX BUFFER ::..
 
-		final float vertices[] = {
-				// 3 pos, 2 tex
-				-0.5f, -0.5f, -0.5f,
-				0.5f, -0.5f, -0.5f,
-				0.5f, 0.5f, -0.5f,
-				0.5f, 0.5f, -0.5f, 
-				-0.5f, 0.5f, -0.5f, 
-				-0.5f, -0.5f, -0.5f, 
-
-				-0.5f, -0.5f, 0.5f, 
-				0.5f, -0.5f, 0.5f, 
-				0.5f, 0.5f, 0.5f, 
-				0.5f, 0.5f, 0.5f, 
-				-0.5f, 0.5f, 0.5f, 
-				-0.5f, -0.5f, 0.5f, 
-
-				-0.5f, 0.5f, 0.5f, 
-				-0.5f, 0.5f, -0.5f, 
-				-0.5f, -0.5f, -0.5f, 
-				-0.5f, -0.5f, -0.5f, 
-				-0.5f, -0.5f, 0.5f, 
-				-0.5f, 0.5f, 0.5f, 
-
-				0.5f, 0.5f, 0.5f, 
-				0.5f, 0.5f, -0.5f, 
-				0.5f, -0.5f, -0.5f, 
-				0.5f, -0.5f, -0.5f, 
-				0.5f, -0.5f, 0.5f, 
-				0.5f, 0.5f, 0.5f, 
-
-				-0.5f, -0.5f, -0.5f, 
-				0.5f, -0.5f, -0.5f, 
-				0.5f, -0.5f, 0.5f, 
-				0.5f, -0.5f, 0.5f, 
-				-0.5f, -0.5f, 0.5f,
-				-0.5f, -0.5f, -0.5f, 
-
-				-0.5f, 0.5f, -0.5f, 
-				0.5f, 0.5f, -0.5f, 
-				0.5f, 0.5f, 0.5f, 
-				0.5f, 0.5f, 0.5f, 
-				-0.5f, 0.5f, 0.5f, 
-				-0.5f, 0.5f, -0.5f, 
-		};
 		final int[] tmp = new int[ 2 ];
 		gl.glGenBuffers( 1, tmp, 0 );
 		final int vbo = tmp[ 0 ];
@@ -144,16 +130,19 @@ public class VisTestCubeLineRed
 		if ( !initialized )
 			init( gl );
 
+
 		JoglGpuContext context = JoglGpuContext.get( gl );
 
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
+		prog.getUniform3f("colorin").set(l_color);
 		prog.setUniforms( context );
 		prog.use( context );
 
 
 		gl.glBindVertexArray( vao );
-		//gl.glPointSize(10);
-		gl.glDrawArrays( GL.GL_LINE_STRIP, 0, 36 );
+		gl.glLineWidth(fLineThickness);
+		gl.glEnable(GL.GL_LINE_SMOOTH);
+		gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
 		gl.glBindVertexArray( 0 );
 	}
 }

@@ -1,4 +1,4 @@
-package BigTrace.scene;
+package bigtrace.scene;
 /*-
  * #%L
  * Volume rendering of bdv datasets

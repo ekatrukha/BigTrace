@@ -1,4 +1,4 @@
-package Geometry;
+package bigtrace.geometry;
 
 import org.joml.Vector3f;
 

@@ -1,31 +1,52 @@
 
-package BigTrace;
+package bigtrace;
 
 
 
+import java.awt.Color;
 import java.awt.Dimension;
-
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.FlowLayout;
+import java.awt.Insets;
 import java.io.IOException;
-
+import java.net.URL;
 import java.util.ArrayList;
 
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
-
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
-import BigTrace.polyline.BTPolylines;
-import BigTrace.scene.VisPointsSimple;
-import BigTrace.scene.VisPolyLineSimple;
-import Geometry.Cuboid3D;
-import Geometry.Intersections3D;
-import Geometry.Line3D;
-import animation3d.gui.CroppingPanel;
 
+import BigTrace.polyline.BTPolylines;
+import bigtrace.geometry.Cuboid3D;
+import bigtrace.geometry.Intersections3D;
+import bigtrace.geometry.Line3D;
+import bigtrace.rois.RoiManager3D;
+import bigtrace.scene.VisPointsSimple;
+import bigtrace.scene.VisPolyLineSimple;
+import animation3d.gui.CroppingPanel;
+import animation3d.gui.DoubleSlider;
 import bdv.viewer.SynchronizedViewerState;
 
 import net.imagej.ops.OpService;
@@ -67,7 +88,7 @@ import tpietzsch.example2.VolumeViewerPanel;
 import tpietzsch.util.MatrixMath;
 
 
-public class test_BVV_inteface
+public class BigTrace
 {
 	public  BvvStackSource< ? > bvv;
 	public  BvvStackSource< ? > bvv2;
@@ -76,7 +97,7 @@ public class test_BVV_inteface
 	Img< UnsignedByteType > img;
 	VolumeViewerPanel handl;
 	//SynchronizedViewerState state;
-	CroppingPanel slider;
+	CroppingPanel croppingPanel;
 	
 	int nW;
 	int nH;
@@ -92,8 +113,11 @@ public class test_BVV_inteface
 	
 	//ArrayList< RealPoint > point_coords = new ArrayList<>();
 	BTPolylines traces = new BTPolylines ();
+	RoiManager3D roiManager = new RoiManager3D();
+	
 	BTPolylines origin_data = new BTPolylines ();
 	
+	DefaultListModel listModel;	
 		
 	public void runBVV()
 	{
@@ -106,7 +130,7 @@ public class test_BVV_inteface
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
 		//img = SimplifiedIO.openImage(
-		//		test_BVV_inteface.class.getResource( "home/t1-head.tif" ).getFile(),
+		//		test_BVV_inteface.class.getResource( "/t1-head.tif" ).getFile(),
 		//		new UnsignedByteType() );
 		
 		nW=(int)img.dimension(0);
@@ -120,10 +144,15 @@ public class test_BVV_inteface
 
 		init(0.25*Math.min(nD, Math.min(nW,nH)));
 		
+		
+		
+		//Interface
+		
 		final JPanel panel = new JPanel();
 		panel.setPreferredSize( new Dimension( 400, 400 ) );
-		slider = new CroppingPanel(new int[] { -1000, 1000}, nW-1, nH-1, nD-1);
-		slider.addCroppingPanelListener(new CroppingPanel.Listener() {
+		croppingPanel = new CroppingPanel(new int[] { -1000, 1000}, nW-1, nH-1, nD-1);
+		
+		croppingPanel.addCroppingPanelListener(new CroppingPanel.Listener() {
 
 			@Override
 			public void nearFarChanged(int near, int far) {
@@ -133,6 +162,7 @@ public class test_BVV_inteface
 				dClipFar = (double)far;
 				bvv.getBvvHandle().getViewerPanel().setCamParams(dCam, dClipNear, dClipFar);
 				handl.requestRepaint();
+				//handl.state().setViewerTransform(transform);
 				
 			}
 
@@ -153,29 +183,193 @@ public class test_BVV_inteface
 
 				}
 			}
-
-			@Override
-			public void cutOffROI() {
-				// TODO Auto-generated method stub
-				
-			}
 		
 		});
 		
 		
 		
-		final JFrame frame = new JFrame( "Cropping" );
-		frame.add(slider);
-		//frame.add( panel );
-		frame.pack();
+		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
+		
+		JPanel panNavigation = new JPanel(new GridBagLayout());
+	    
+		GridBagConstraints c = new GridBagConstraints();
+	    
+		//View Panel
+	    TitledBorder titleBorder = BorderFactory.createTitledBorder("View");
+	    titleBorder.setTitleJustification(TitledBorder.CENTER);
+		JPanel panView=new JPanel(new GridBagLayout()); 
+		panView.setBorder(titleBorder);
+	    c.gridx=0;
+	    c.gridy=0;
+		JButton butOrigin = new JButton("Origin (O)");
+		panView.add(butOrigin,c);
+		JButton butWorld = new JButton("World Grid (P)");
+	    c.gridx=1;
+	    c.gridy=0;
+		panView.add(butWorld,c);
+		
+		//Cropping Panel
+	    titleBorder = BorderFactory.createTitledBorder("Cropping");
+	    titleBorder.setTitleJustification(TitledBorder.CENTER);
+		JPanel panCrop=new JPanel(new GridBagLayout()); 
+		panCrop.setBorder(titleBorder);
+
+	    ClassLoader classLoader = getClass().getClassLoader();
+        String icon_path = classLoader.getResource("icons/cube_icon.png").getFile();
+	    ImageIcon tabIcon = new ImageIcon(icon_path);
+	    /*c.gridx=0;
+	    c.gridy=0;
+	    c.anchor = GridBagConstraints.NORTH;
+	    panCrop.add(new JLabel("View"),c);
+	    c.gridx=0;
+	    c.gridy=1;
+	    c.weightx=1.0;
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.gridwidth = GridBagConstraints.REMAINDER;
+	    panCrop.add(new JSeparator(),c);
+	    c.gridx=0;
+	    c.gridy=0;
+	    c.weightx=0;
+	    c.fill = GridBagConstraints.NONE;
+	    c.gridwidth = GridBagConstraints.REMAINDER;
+
+	    panCrop.add(new JLabel("Cropping"),c);*/
+	    c.gridx=0;
+	    c.gridy=0;
+	    c.weightx=1.0;
+	    c.fill=GridBagConstraints.HORIZONTAL;
+	    panCrop.add(croppingPanel,c);
+	    
+	    
+	    //add panels to Navigation
+	    c.insets=new Insets(4,4,2,2);
+	    //View
+	    c.gridx=0;
+	    c.gridy=0;
+	    c.weightx=1.0;
+	    c.gridwidth=1;
+	    c.anchor = GridBagConstraints.WEST;
+	    panNavigation.add(panView,c);
+	    
+	    //Crop
+	    c.gridy++;	
+	    panNavigation.add(panCrop,c);
+        // Blank/filler component
+	    c.gridx++;
+	    c.gridy++;
+	    c.weightx = 0.01;
+        c.weighty = 0.01;
+        panNavigation.add(new JLabel(), c);
+
+	    tabPane.addTab("",tabIcon,panNavigation, "View/Crop");
+
+	    
+		// Add tab with no text
+	    //JTextArea ta=new JTextArea(100,100); 
+	    listModel = new DefaultListModel();
+	    listModel.addElement("Jane Doe");
+	    listModel.addElement("John Smith");
+	    listModel.addElement("Kathy Green");
+	    JList list = new JList(listModel); //data has type Object[]
+	    list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	    list.setLayoutOrientation(JList.VERTICAL);
+	    list.setVisibleRowCount(-1);
+	  
+	    JScrollPane listScroller = new JScrollPane(list);
+	    listScroller.setPreferredSize(new Dimension(250, 80));
+	    
+	    JPanel p2=new JPanel();  
+	    p2.add(listScroller);  
+	    icon_path = classLoader.getResource("icons/polyline1.png").getFile();
+	    tabIcon = new ImageIcon(icon_path);
+	    //tabPane.add(p2,"Lines");
+	    tabPane.addTab("",tabIcon ,p2);
+	    tabPane.setSize(350, 300);
+	    //tabPane.setBounds(0,0,400,300);  
+	    
+		// Create vertical labels to render tab titles
+		/*JLabel labTab1 = new JLabel("");
+		labTab1.setUI(new VerticalLabelUI(false)); // true/false to make it upwards/downwards
+		labTab1.setIcon(tab1Icon);
+		tabPane.setTabComponentAt(0, labTab1); // For component1
+		JLabel labTab2 = new JLabel("Polyline");
+		labTab2.setUI(new VerticalLabelUI(false));
+		tabPane.setTabComponentAt(1, labTab2); // For component2*/
+		//tabPane.setIconAt(2, tab1Icon);
+		
+		//tabPane.setVisible(true);
+	    JProgressBar progressBar;
+	    progressBar = new JProgressBar(0, 100);
+	    progressBar.setValue(0);
+	    //progressBar.setStringPainted(true);
+		
+	    JPanel finalPanel = new JPanel(new GridBagLayout());
+	    GridBagConstraints cv = new GridBagConstraints();
+	    cv.gridx=0;
+	    cv.gridy=0;	    
+	    cv.weightx=0.5;
+	    cv.weighty=1.0;
+	    cv.anchor = GridBagConstraints.NORTHWEST;
+	    cv.gridwidth = GridBagConstraints.REMAINDER;
+	    //cv.gridheight = GridBagConstraints.REMAINDER;
+	    cv.fill = GridBagConstraints.HORIZONTAL;
+	    cv.fill = GridBagConstraints.BOTH;
+	    finalPanel.add(tabPane,cv);
+	    cv.gridx=0;
+	    cv.gridy=1;	    
+	    cv.gridwidth = GridBagConstraints.RELATIVE;
+	    cv.gridheight = GridBagConstraints.RELATIVE;
+	    cv.weighty=0.01;
+	    cv.anchor = GridBagConstraints.SOUTHEAST;
+	    cv.fill = GridBagConstraints.HORIZONTAL;
+	    finalPanel.add(progressBar,cv);
+		final JFrame frame = new JFrame( "BigTrace" );
+		//Border blackline = BorderFactory.createLineBorder(Color.black);
+		//finalPanel.setBorder(blackline);
+		//frame.add(slider);
+		frame.add(finalPanel);
+		//frame.add( tabPane);
+		
+		
+		frame.setSize(400,500);
 		frame.setVisible( true );
 		panel.requestFocusInWindow();
 
 
-		
-		
 
+
+//		bdv.getBdvHandle().getKeybindings().removeInputMap( "my actions" );
+
+	}
+	public void init(double axis_length)
+	{
+		int i;
 		
+		//basis vectors 
+		RealPoint basis = new RealPoint(-0.1*axis_length, -0.1*axis_length,-0.1*axis_length);				
+		for(i=0;i<3;i++)
+		{			
+			origin_data.addPointToActive(basis);
+			basis.move(axis_length, i);
+			origin_data.addPointToActive(basis);
+			basis.move((-1.0)*axis_length, i);
+			origin_data.addNewLine();
+		}
+		
+		//traces = new BTPolylines ();
+		
+		// init bigvolumeviewer
+		view =				 
+				 Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
+		
+						
+		bvv = BvvFunctions.show( view, "t1-head" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
+		installActions();
+		resetViewXY(true);
+	}
+	
+	public void installActions()
+	{
 		final Actions actions = new Actions( new InputTriggerConfig() );
 		
 		//find a brightest pixel in the direction of a click
@@ -183,10 +377,10 @@ public class test_BVV_inteface
 		actions.runnableAction(
 				() -> {
 					//addPoint();
-					addPoint(5);
+					addPointToPolyLine(5);
 				},
 				"add point",
-				"Z" );
+				"Q" );
 		
 		//creates a line along the click taking into account 
 		// frustum projection
@@ -196,7 +390,7 @@ public class test_BVV_inteface
 					addLineAlongTheClick();
 				},
 				"render click",
-				"W" );
+				"T" );
 		//rotates a view along the axis of the click
 		// in frustum projection
 		actions.runnableAction(
@@ -204,29 +398,29 @@ public class test_BVV_inteface
 					viewClickArea(10);
 				},
 				"rotate view click",
-				"E" );
+				"Y" );
 		
 		actions.runnableAction(
 				() -> {
 					
-				
-					if(traces.removeLastPointFromActive())
-					{
-						render_pl();
-						handl.showMessage("Point removed");
-					}
+					roiManager.removePointFromLine();
+					//if(traces.removeLastPointFromActive())
+					//{
+					render_pl();
+					handl.showMessage("Point removed");
+					//}
 					
 				},
 				"remove point",
-				"X" );
+				"W" );
 		actions.runnableAction(
 				() -> {
-					
-						traces.addNewLine();
+						roiManager.activeRoi=-1;
+						//traces.addNewLine();
 						render_pl();
 				},
 				"new trace",
-				"A" );
+				"E" );
 		actions.runnableAction(
 				() -> {
 					resetViewXY(false);
@@ -257,46 +451,15 @@ public class test_BVV_inteface
 			
 			actions.runnableAction(
 					() -> {
-						traces = new BTPolylines ();
-						handl.requestRepaint();
+						roiManager.removeAll();
+						render_pl();
 					},
 					"reset tracings",
 					"I" );
 			
 		//actions.namedAction(action, defaultKeyStrokes);
 		actions.install( bvv.getBvvHandle().getKeybindings(), "my actions" );
-		
-		
-	
 
-//		bdv.getBdvHandle().getKeybindings().removeInputMap( "my actions" );
-
-	}
-	public void init(double axis_length)
-	{
-		int i;
-		
-		//basis vectors 
-		RealPoint basis = new RealPoint(-0.1*axis_length, -0.1*axis_length,-0.1*axis_length);				
-		for(i=0;i<3;i++)
-		{			
-			origin_data.addPointToActive(basis);
-			basis.move(axis_length, i);
-			origin_data.addPointToActive(basis);
-			basis.move((-1.0)*axis_length, i);
-			origin_data.addNewLine();
-		}
-		
-		traces = new BTPolylines ();
-		
-		// init bigvolumeviewer
-		view =				 
-				 Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
-		
-						
-		bvv = BvvFunctions.show( view, "t1-head" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
-		
-		resetViewXY(true);
 	}
 
 	public void render_pl()
@@ -304,7 +467,9 @@ public class test_BVV_inteface
 		
 		handl.setRenderScene( ( gl, data ) -> {
 			
-			for (int i=0;i<traces.nLinesN;i++)
+			/* DEBUG traces helper
+			 * 
+			 * for (int i=0;i<traces.nLinesN;i++)
 			{
 				ArrayList< RealPoint > point_coords = traces.get(i);
 				VisPointsSimple points= new VisPointsSimple(new float[]{0.0f,1.0f,0.0f},point_coords, 30.0f);
@@ -316,8 +481,8 @@ public class test_BVV_inteface
 
 				points.draw( gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()}, data.getDClipNear(), data.getDClipFar());
 				lines.draw( gl, new Matrix4f( data.getPv() ));
-			}
-			
+			}*/
+			roiManager.draw(gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()}, data.getDClipNear(), data.getDClipFar());
 			//render the origin of coordinates
 			if (bShowOrigin)
 			{
@@ -504,7 +669,7 @@ public class test_BVV_inteface
 		
 	}
 	
-	public void addPoint(final int nHalfWindow)
+	public void addPointToPolyLine(final int nHalfWindow)
 	{
 		int i,j;
 
@@ -606,8 +771,9 @@ public class test_BVV_inteface
 			
 			if(computeMaxLocationCuboid(intRay,target,clickVolume))
 			{
-				traces.addPointToActive(target);
+				//traces.addPointToActive(target);
 				handl.showMessage("point found");
+				roiManager.addPointToLine(target);
 			}
 			else
 			{
@@ -832,7 +998,7 @@ public class test_BVV_inteface
 	public static void main( String... args) throws IOException
 	{
 		
-		test_BVV_inteface testI=new test_BVV_inteface(); 
+		BigTrace testI=new BigTrace(); 
 		
 		testI.runBVV();
 		

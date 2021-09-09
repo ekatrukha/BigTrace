@@ -1,4 +1,4 @@
-package BigTrace.scene;
+package bigtrace.scene;
 /*-
  * #%L
  * Volume rendering of bdv datasets
@@ -30,37 +30,42 @@ package BigTrace.scene;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.Collections;
 import org.joml.Matrix4fc;
-import org.joml.Vector2f;
-import org.joml.Vector2fc;
-
 import tpietzsch.backend.jogl.JoglGpuContext;
 import tpietzsch.shadergen.DefaultShader;
 import tpietzsch.shadergen.Shader;
 import tpietzsch.shadergen.generate.Segment;
 import tpietzsch.shadergen.generate.SegmentTemplate;
+import tpietzsch.util.Images;
 
 import static com.jogamp.opengl.GL.GL_FLOAT;
+import static com.jogamp.opengl.GL.GL_RGB;
+import static com.jogamp.opengl.GL.GL_TEXTURE0;
+import static com.jogamp.opengl.GL.GL_TEXTURE_2D;
+import static com.jogamp.opengl.GL.GL_TRIANGLES;
+import static com.jogamp.opengl.GL.GL_UNSIGNED_BYTE;
 
-
-public class VisTestCubeDiskRed
+public class VisTestCubeLineRed
 {
-
+	//private final String imageFilename;
 
 	private final Shader prog;
 
 	private int vao;
 
 
-	public VisTestCubeDiskRed()
+	public VisTestCubeLineRed()
 	{
 		//this.imageFilename = imageFilename;
-		final Segment pointVp = new SegmentTemplate( VisTestCubeDiskRed.class, "/scene/simple_red_point.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisTestCubeDiskRed.class, "/scene/simple_red_point.fp" ).instantiate();
+		final Segment cobeVp = new SegmentTemplate( VisTestCubeLineRed.class, "/scene/simple_red.vp" ).instantiate();
+		final Segment cubeFp = new SegmentTemplate( VisTestCubeLineRed.class, "/scene/simple_red.fp" ).instantiate();
 		
 		
-		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
+		prog = new DefaultShader( cobeVp.getCode(), cubeFp.getCode() );
 	}
 
 	private boolean initialized;
@@ -72,17 +77,48 @@ public class VisTestCubeDiskRed
 		// ..:: VERTEX BUFFER ::..
 
 		final float vertices[] = {
-				// 3 pos
+				// 3 pos, 2 tex
 				-0.5f, -0.5f, -0.5f,
-				-0.5f, -0.5f, 0.5f,
-				-0.5f, 0.5f, -0.5f,
-				-0.5f, 0.5f, 0.5f,
 				0.5f, -0.5f, -0.5f,
-				0.5f, -0.5f, 0.5f,
 				0.5f, 0.5f, -0.5f,
-				0.5f, 0.5f, 0.5f
-				
+				0.5f, 0.5f, -0.5f, 
+				-0.5f, 0.5f, -0.5f, 
+				-0.5f, -0.5f, -0.5f, 
 
+				-0.5f, -0.5f, 0.5f, 
+				0.5f, -0.5f, 0.5f, 
+				0.5f, 0.5f, 0.5f, 
+				0.5f, 0.5f, 0.5f, 
+				-0.5f, 0.5f, 0.5f, 
+				-0.5f, -0.5f, 0.5f, 
+
+				-0.5f, 0.5f, 0.5f, 
+				-0.5f, 0.5f, -0.5f, 
+				-0.5f, -0.5f, -0.5f, 
+				-0.5f, -0.5f, -0.5f, 
+				-0.5f, -0.5f, 0.5f, 
+				-0.5f, 0.5f, 0.5f, 
+
+				0.5f, 0.5f, 0.5f, 
+				0.5f, 0.5f, -0.5f, 
+				0.5f, -0.5f, -0.5f, 
+				0.5f, -0.5f, -0.5f, 
+				0.5f, -0.5f, 0.5f, 
+				0.5f, 0.5f, 0.5f, 
+
+				-0.5f, -0.5f, -0.5f, 
+				0.5f, -0.5f, -0.5f, 
+				0.5f, -0.5f, 0.5f, 
+				0.5f, -0.5f, 0.5f, 
+				-0.5f, -0.5f, 0.5f,
+				-0.5f, -0.5f, -0.5f, 
+
+				-0.5f, 0.5f, -0.5f, 
+				0.5f, 0.5f, -0.5f, 
+				0.5f, 0.5f, 0.5f, 
+				0.5f, 0.5f, 0.5f, 
+				-0.5f, 0.5f, 0.5f, 
+				-0.5f, 0.5f, -0.5f, 
 		};
 		final int[] tmp = new int[ 2 ];
 		gl.glGenBuffers( 1, tmp, 0 );
@@ -103,35 +139,21 @@ public class VisTestCubeDiskRed
 		gl.glBindVertexArray( 0 );
 	}
 
-	public void draw( GL3 gl, Matrix4fc pvm,  double [] screen_size, double dNear, double dFar)
+	public void draw( GL3 gl, Matrix4fc pvm )
 	{
 		if ( !initialized )
 			init( gl );
-		Vector2f screen_sizef;//= new Vector2f ((float)screen_size[0], (float)screen_size[1]);
 
 		JoglGpuContext context = JoglGpuContext.get( gl );
-		
-		//scale disk with viewport transform
 
-		if(screen_size[0]>screen_size[1])
-		{
-			screen_sizef =  new Vector2f ((float)(Math.pow(0.5*screen_size[1]/screen_size[0],2)), 0.25f);
-		}
-		else
-		{
-			screen_sizef =  new Vector2f (0.25f,(float)(Math.pow(0.5*screen_size[0]/screen_size[1],2)));
-		}
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-		prog.getUniform2f("scrnsize").set(screen_sizef);
-		prog.getUniform1f("fNear").set((float)dNear);
-		prog.getUniform1f("fFar").set((float)dFar);
 		prog.setUniforms( context );
 		prog.use( context );
 
 
 		gl.glBindVertexArray( vao );
-		gl.glPointSize(60);
-		gl.glDrawArrays( GL.GL_POINTS, 0, 8 );
+		//gl.glPointSize(10);
+		gl.glDrawArrays( GL.GL_LINE_STRIP, 0, 36 );
 		gl.glBindVertexArray( 0 );
 	}
 }
