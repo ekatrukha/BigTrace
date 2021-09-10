@@ -9,19 +9,24 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
+
 import net.imglib2.RealPoint;
 
 
 
-public class RoiManager3D extends JPanel {
+public class RoiManager3D extends JPanel implements ListSelectionListener {
 	
 	
-	 //private static final long serialVersionUID = 1L;
+
+	private static final long serialVersionUID = -2843907862066423151L;
+	//private static final long serialVersionUID = 1L;
 	 public static final int ADD_POINT=0, ADD_POINT_LINE=1;
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
 	 public int activeRoi = -1;
@@ -42,6 +47,12 @@ public class RoiManager3D extends JPanel {
 	 public DefaultListModel<String> listModel; 
 	 JList<String> jlist;
 	 JScrollPane listScroller;
+	 public static interface Listener {
+		public void activeRoiChanged(int nRoi);				
+	 }
+	 
+	 private ArrayList<Listener> listeners =	new ArrayList<Listener>();
+
 		
 	 public RoiManager3D()
 	 {
@@ -51,9 +62,9 @@ public class RoiManager3D extends JPanel {
 		 jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		 jlist.setLayoutOrientation(JList.VERTICAL);
 		 jlist.setVisibleRowCount(-1);
-		  
+		 jlist.addListSelectionListener(this);
 		 listScroller = new JScrollPane(jlist);
-		 listScroller.setPreferredSize(new Dimension(250, 80));
+		 listScroller.setPreferredSize(new Dimension(200, 150));
 		 add(listScroller);
 	 }
 	 
@@ -61,7 +72,8 @@ public class RoiManager3D extends JPanel {
 	 {
 		 rois.add(roi_in);		 
 		 activeRoi = rois.size()-1;
-		 roi_in.setName("ROI_"+Integer.toString(activeRoi));
+		 
+		 roi_in.setName("polyl"+Integer.toString(roi_in.hashCode()));
 		 listModel.addElement(roi_in.getName());
 		 jlist.setSelectedIndex(activeRoi);
 		
@@ -184,17 +196,52 @@ public class RoiManager3D extends JPanel {
 		 activeRoi=-1;
 		 jlist.clearSelection();
 	 }
-/*
-	@Override
-	public int getSize() {
-		// TODO Auto-generated method stub
-		return rois.size();
+	 
+	 public void addRoiManager3DListener(Listener l) {
+		 listeners.add(l);
+	 }
+	 
+	 private void fireActiveRoiChanged(int nRoi) 
+	 {
+		for(Listener l : listeners)
+			l.activeRoiChanged(nRoi);
 	}
 
 	@Override
-	public String getElementAt(int paramInt) {
-		// TODO Auto-generated method stub
-		return rois.get(paramInt).getName();
-		//return ;
-	}*/
+	public void valueChanged(ListSelectionEvent e) 
+	{
+		
+		if (e.getValueIsAdjusting() == false) 
+		{
+			 
+            if (jlist.getSelectedIndex() == -1) 
+            {
+            	activeRoi=-1;
+            //No selection: disable delete, up, and down buttons.
+                //deleteButton.setEnabled(false);
+                //upButton.setEnabled(false);
+                //downButton.setEnabled(false);
+                //nameField.setText("");
+ 
+            } else if (jlist.getSelectedIndices().length > 1) {
+            //Multiple selection: disable up and down buttons.
+                //deleteButton.setEnabled(true);
+                //upButton.setEnabled(false);
+                //downButton.setEnabled(false);
+ 
+            } else {
+            //Single selection: permit all operations.
+                //deleteButton.setEnabled(true);
+                //upButton.setEnabled(true);
+                //downButton.setEnabled(true);
+                //nameField.setText(list.getSelectedValue().toString());
+            	activeRoi=jlist.getSelectedIndex();
+            	fireActiveRoiChanged(jlist.getSelectedIndex()); 
+            }
+        }
+    }
+		
+		
+		
+	
 }

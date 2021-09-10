@@ -251,6 +251,19 @@ public class BigTrace
 	    icon_path = classLoader.getResource("icons/polyline1.png").getFile();
 	    tabIcon = new ImageIcon(icon_path);
 	    tabPane.addTab("",tabIcon ,roiManager);
+
+	    roiManager.addRoiManager3DListener(new RoiManager3D.Listener() {
+
+			@Override
+			public void activeRoiChanged(int nRoi) {
+				// TODO Auto-generated method stub
+				render_pl();
+				//handl.getDisplay().rep.repaint();//requestRepaint();
+			}
+	    	
+	    });
+	    
+	    
 	    tabPane.setSize(350, 300);
 	    tabPane.setSelectedIndex(1);
 

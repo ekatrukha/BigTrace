@@ -2,7 +2,8 @@ package bigtrace.rois;
 
 import java.awt.Color;
 import java.util.ArrayList;
-
+import java.util.Collection;
+import java.util.function.Predicate;
 
 import org.joml.Matrix4fc;
 
@@ -10,9 +11,17 @@ import com.jogamp.opengl.GL3;
 
 import bigtrace.scene.VisPointsSimple;
 import bigtrace.scene.VisPolyLineSimple;
+import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
+import net.imglib2.roi.MaskPredicate;
+import net.imglib2.roi.Masks;
+import net.imglib2.roi.RealMask;
+import net.imglib2.roi.RealMaskRealInterval;
+import net.imglib2.roi.geom.real.WritablePolyline;
+import net.imglib2.roi.util.RealLocalizableRealPositionable;
 
-public class PolyLine3D implements Roi3D {
+public class PolyLine3D implements Roi3D, WritablePolyline
+{
 	
 	public ArrayList<RealPoint> vertices;
 	public float lineThickness;
@@ -97,6 +106,97 @@ public class PolyLine3D implements Roi3D {
 	public void setName(String name) {
 		
 		this.name = name;
+	}
+
+	
+	/** Methods from imglib2 Polyline, 
+	 * I do not really understand them yet, 
+	 * but added for the future and implemented them
+	 * to the best of my knowledge (and so they do not produce errors)
+	 */
+	@Override
+	public int numVertices() {
+		// TODO Auto-generated method stub
+		return vertices.size();
+	}
+
+	@Override
+	public RealMaskRealInterval and(Predicate<? super RealLocalizable> paramPredicate) {
+		// TODO Auto-generated method stub
+		return Masks.and(this, paramPredicate);
+	}
+
+	@Override
+	public RealMaskRealInterval minus(Predicate<? super RealLocalizable> paramPredicate) {
+		
+		// TODO Auto-generated method stub
+		return Masks.minus(this, paramPredicate);
+	}
+
+	@Override
+	public RealMask negate() {
+		// TODO Auto-generated method stub
+		return Masks.negate(this);
+	}
+
+	@Override
+	public RealMask or(Predicate<? super RealLocalizable> paramPredicate) {
+		// TODO Auto-generated method stub
+		return Masks.or(this, paramPredicate);
+	}
+
+	@Override
+	public RealMask xor(Predicate<? super RealLocalizable> paramPredicate) {
+		// TODO Auto-generated method stub
+		return Masks.xor(this, paramPredicate);
+	}
+
+	@Override
+	public boolean test(RealLocalizable arg0) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public int numDimensions() {
+		// TODO Auto-generated method stub
+		return 3;
+	}
+
+	@Override
+	public double realMin(int d) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double realMax(int d) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public RealLocalizableRealPositionable vertex(int paramInt) {
+		// TODO Auto-generated method stub
+		return (RealLocalizableRealPositionable) vertices.get(paramInt);
+	}
+
+	@Override
+	public void addVertex(int paramInt, RealLocalizable paramRealLocalizable) {
+		// TODO Auto-generated method stub
+		vertices.add((RealPoint) paramRealLocalizable);
+	}
+
+	@Override
+	public void removeVertex(int paramInt) {
+		// TODO Auto-generated method stub
+		vertices.remove(paramInt);
+	}
+
+	@Override
+	public void addVertices(int paramInt, Collection<RealLocalizable> paramCollection) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }
