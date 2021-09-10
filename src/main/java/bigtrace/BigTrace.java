@@ -3,33 +3,31 @@ package bigtrace;
 
 
 
-import java.awt.Color;
+
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.FlowLayout;
+
 import java.awt.Insets;
 import java.io.IOException;
-import java.net.URL;
+
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComponent;
+
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
-import javax.swing.border.Border;
+
 import javax.swing.border.TitledBorder;
 
 import org.joml.Matrix4f;
@@ -112,11 +110,13 @@ public class BigTrace
 	
 	//ArrayList< RealPoint > point_coords = new ArrayList<>();
 	BTPolylines traces = new BTPolylines ();
-	RoiManager3D roiManager = new RoiManager3D();
+	
 	
 	BTPolylines origin_data = new BTPolylines ();
 	
-	DefaultListModel listModel;	
+	//DefaultListModel<String> listModel;
+	RoiManager3D roiManager = new RoiManager3D();
+	
 		
 	public void runBVV()
 	{
@@ -216,23 +216,7 @@ public class BigTrace
 	    ClassLoader classLoader = getClass().getClassLoader();
         String icon_path = classLoader.getResource("icons/cube_icon.png").getFile();
 	    ImageIcon tabIcon = new ImageIcon(icon_path);
-	    /*c.gridx=0;
-	    c.gridy=0;
-	    c.anchor = GridBagConstraints.NORTH;
-	    panCrop.add(new JLabel("View"),c);
-	    c.gridx=0;
-	    c.gridy=1;
-	    c.weightx=1.0;
-	    c.fill = GridBagConstraints.HORIZONTAL;
-	    c.gridwidth = GridBagConstraints.REMAINDER;
-	    panCrop.add(new JSeparator(),c);
-	    c.gridx=0;
-	    c.gridy=0;
-	    c.weightx=0;
-	    c.fill = GridBagConstraints.NONE;
-	    c.gridwidth = GridBagConstraints.REMAINDER;
 
-	    panCrop.add(new JLabel("Cropping"),c);*/
 	    c.gridx=0;
 	    c.gridy=0;
 	    c.weightx=1.0;
@@ -253,6 +237,7 @@ public class BigTrace
 	    //Crop
 	    c.gridy++;	
 	    panNavigation.add(panCrop,c);
+	    
         // Blank/filler component
 	    c.gridx++;
 	    c.gridy++;
@@ -262,41 +247,13 @@ public class BigTrace
 
 	    tabPane.addTab("",tabIcon,panNavigation, "View/Crop");
 
-	    
-		// Add tab with no text
-	    //JTextArea ta=new JTextArea(100,100); 
-	    listModel = new DefaultListModel();
-	    listModel.addElement("Jane Doe");
-	    listModel.addElement("John Smith");
-	    listModel.addElement("Kathy Green");
-	    JList list = new JList(listModel); //data has type Object[]
-	    list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	    list.setLayoutOrientation(JList.VERTICAL);
-	    list.setVisibleRowCount(-1);
-	  
-	    JScrollPane listScroller = new JScrollPane(list);
-	    listScroller.setPreferredSize(new Dimension(250, 80));
-	    
-	    JPanel p2=new JPanel();  
-	    p2.add(listScroller);  
+	    //ROI MANAGER
 	    icon_path = classLoader.getResource("icons/polyline1.png").getFile();
 	    tabIcon = new ImageIcon(icon_path);
-	    //tabPane.add(p2,"Lines");
-	    tabPane.addTab("",tabIcon ,p2);
+	    tabPane.addTab("",tabIcon ,roiManager);
 	    tabPane.setSize(350, 300);
-	    //tabPane.setBounds(0,0,400,300);  
-	    
-		// Create vertical labels to render tab titles
-		/*JLabel labTab1 = new JLabel("");
-		labTab1.setUI(new VerticalLabelUI(false)); // true/false to make it upwards/downwards
-		labTab1.setIcon(tab1Icon);
-		tabPane.setTabComponentAt(0, labTab1); // For component1
-		JLabel labTab2 = new JLabel("Polyline");
-		labTab2.setUI(new VerticalLabelUI(false));
-		tabPane.setTabComponentAt(1, labTab2); // For component2*/
-		//tabPane.setIconAt(2, tab1Icon);
-		
-		//tabPane.setVisible(true);
+	    tabPane.setSelectedIndex(1);
+
 	    JProgressBar progressBar;
 	    progressBar = new JProgressBar(0, 100);
 	    progressBar.setValue(0);
@@ -377,6 +334,7 @@ public class BigTrace
 				() -> {
 					//addPoint();
 					addPointToPolyLine(5);
+					// listModel.addElement("test");
 				},
 				"add point",
 				"Q" );
@@ -414,7 +372,7 @@ public class BigTrace
 				"W" );
 		actions.runnableAction(
 				() -> {
-						roiManager.activeRoi=-1;
+						roiManager.unselect();
 						//traces.addNewLine();
 						render_pl();
 				},

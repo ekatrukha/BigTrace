@@ -1,8 +1,14 @@
 package bigtrace.rois;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.util.ArrayList;
 
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 
 import org.joml.Matrix4fc;
 
@@ -12,8 +18,10 @@ import net.imglib2.RealPoint;
 
 
 
-public class RoiManager3D {
+public class RoiManager3D extends JPanel {
 	
+	
+	 //private static final long serialVersionUID = 1L;
 	 public static final int ADD_POINT=0, ADD_POINT_LINE=1;
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
 	 public int activeRoi = -1;
@@ -29,24 +37,45 @@ public class RoiManager3D {
 	 public float currLineThickness = 15.0f;
 	 public float currPointSize = 40.0f;
 	 public boolean bShowAll = true;
+	 
+	 //GUI
+	 public DefaultListModel<String> listModel; 
+	 JList<String> jlist;
+	 JScrollPane listScroller;
 		
 	 public RoiManager3D()
 	 {
 		 mode = ADD_POINT_LINE;
+		 listModel = new  DefaultListModel<String>();
+		 jlist = new JList<String>(listModel);
+		 jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		 jlist.setLayoutOrientation(JList.VERTICAL);
+		 jlist.setVisibleRowCount(-1);
+		  
+		 listScroller = new JScrollPane(jlist);
+		 listScroller.setPreferredSize(new Dimension(250, 80));
+		 add(listScroller);
 	 }
 	 
 	 public void addRoi(Roi3D roi_in)
 	 {
-		 rois.add(roi_in);
+		 rois.add(roi_in);		 
 		 activeRoi = rois.size()-1;
+		 roi_in.setName("ROI_"+Integer.toString(activeRoi));
+		 listModel.addElement(roi_in.getName());
+		 jlist.setSelectedIndex(activeRoi);
+		
+
 	 }
-	 
+	 /** removes ROI and updates ListModel
+	  * does not update activeRoi index! **/
 	 public void removeRoi(int roiIndex)
 	 {
 		 if(roiIndex<rois.size())
 		 {
 			 rois.remove(roiIndex);
-			 activeRoi = -1;
+			 listModel.removeElementAt(roiIndex);
+			 //activeRoi = -1;
 		 }
 	 }
 	 
@@ -94,8 +123,8 @@ public class RoiManager3D {
 		 {
 			 polyline = new PolyLine3D(currLineThickness, currPointSize, activeLineColor, activePointColor);
 			 polyline.addPointToEnd(point_);
-			 rois.add(polyline);
-			 activeRoi = rois.size()-1; 
+			 addRoi(polyline);
+			 //activeRoi = rois.size()-1; 
 			 return;
 		 }
 		 //active ROI is not a line
@@ -131,15 +160,41 @@ public class RoiManager3D {
 			 polyline = (PolyLine3D) rois.get(activeRoi);
 			 if(!polyline.removeEndPoint())
 			 {
-				 rois.remove(activeRoi);				 
+				 //rois.remove(activeRoi);
+				 removeRoi(activeRoi);
 				 activeRoi--;
 				 if(activeRoi>=0)
 				 {
 					 if(rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
+					 {
 						 activeRoi=-1;
-					 
+						 jlist.clearSelection();
+					 }
+					 else
+					 {
+						 jlist.setSelectedIndex(activeRoi);
+					 }
 				 }
 			 }
 		 }
 	 }
+	 
+	 public void unselect()
+	 {
+		 activeRoi=-1;
+		 jlist.clearSelection();
+	 }
+/*
+	@Override
+	public int getSize() {
+		// TODO Auto-generated method stub
+		return rois.size();
+	}
+
+	@Override
+	public String getElementAt(int paramInt) {
+		// TODO Auto-generated method stub
+		return rois.get(paramInt).getName();
+		//return ;
+	}*/
 }
