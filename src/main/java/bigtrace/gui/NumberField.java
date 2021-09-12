@@ -1,4 +1,4 @@
-package animation3d.gui;
+package bigtrace.gui;
 
 import java.awt.FlowLayout;
 import java.awt.event.FocusListener;

@@ -2,8 +2,6 @@
 package bigtrace;
 
 
-
-
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -27,7 +25,9 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
-
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.TitledBorder;
 
 import org.joml.Matrix4f;
@@ -35,15 +35,18 @@ import org.joml.Vector3f;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
+import bigtrace.gui.CropPanel;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsSimple;
 import bigtrace.scene.VisPolyLineSimple;
-import animation3d.gui.CroppingPanel;
-import animation3d.gui.DoubleSlider;
 import bdv.viewer.SynchronizedViewerState;
 
 import net.imagej.ops.OpService;
@@ -94,7 +97,7 @@ public class BigTrace
 	Img< UnsignedByteType > img;
 	VolumeViewerPanel handl;
 	//SynchronizedViewerState state;
-	CroppingPanel croppingPanel;
+	CropPanel cropPanel;
 	
 	int nW;
 	int nH;
@@ -143,17 +146,23 @@ public class BigTrace
 
 		init(0.25*Math.min(nD, Math.min(nW,nH)));
 		
+		try {
+		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
+		} catch( Exception ex ) {
+		    System.err.println( "Failed to initialize LaF" );
+		}
+		
 		
 		
 		//Interface
 		
 		final JPanel panel = new JPanel();
 		panel.setPreferredSize( new Dimension( 400, 400 ) );
-		croppingPanel = new CroppingPanel(new int[] { -1000, 1000}, nW-1, nH-1, nD-1);
+		cropPanel = new CropPanel( nW-1, nH-1, nD-1);
 		
-		croppingPanel.addCroppingPanelListener(new CroppingPanel.Listener() {
+		cropPanel.addCropPanelListener(new CropPanel.Listener() {
 
-			@Override
+		/*	@Override
 			public void nearFarChanged(int near, int far) {
 				// TODO Auto-generated method stub
 				//VolumeViewer
@@ -164,6 +173,7 @@ public class BigTrace
 				//handl.state().setViewerTransform(transform);
 				
 			}
+			*/
 
 			@Override
 			public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
@@ -221,7 +231,7 @@ public class BigTrace
 	    c.gridy=0;
 	    c.weightx=1.0;
 	    c.fill=GridBagConstraints.HORIZONTAL;
-	    panCrop.add(croppingPanel,c);
+	    panCrop.add(cropPanel,c);
 	    
 	    
 	    //add panels to Navigation
@@ -248,7 +258,7 @@ public class BigTrace
 	    tabPane.addTab("",tabIcon,panNavigation, "View/Crop");
 
 	    //ROI MANAGER
-	    icon_path = classLoader.getResource("icons/polyline1.png").getFile();
+	    icon_path = classLoader.getResource("icons/node.png").getFile();
 	    tabIcon = new ImageIcon(icon_path);
 	    tabPane.addTab("",tabIcon ,roiManager);
 
@@ -440,7 +450,7 @@ public class BigTrace
 			
 			/* DEBUG traces helper
 			 * 
-			 * for (int i=0;i<traces.nLinesN;i++)
+			 for (int i=0;i<traces.nLinesN;i++)
 			{
 				ArrayList< RealPoint > point_coords = traces.get(i);
 				VisPointsSimple points= new VisPointsSimple(new float[]{0.0f,1.0f,0.0f},point_coords, 30.0f);
@@ -452,8 +462,10 @@ public class BigTrace
 
 				points.draw( gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()}, data.getDClipNear(), data.getDClipFar());
 				lines.draw( gl, new Matrix4f( data.getPv() ));
-			}*/
+			}
+			*/
 			roiManager.draw(gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()}, data.getDClipNear(), data.getDClipFar());
+			
 			//render the origin of coordinates
 			if (bShowOrigin)
 			{

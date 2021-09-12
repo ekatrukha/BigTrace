@@ -2,18 +2,30 @@ package bigtrace.rois;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.ArrayList;
 
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.plaf.metal.MetalToggleButtonUI;
 
 import org.joml.Matrix4fc;
 
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.jidesoft.swing.RangeSlider;
 import com.jogamp.opengl.GL3;
 
 
@@ -56,6 +68,45 @@ public class RoiManager3D extends JPanel implements ListSelectionListener {
 		
 	 public RoiManager3D()
 	 {
+			try {
+			    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
+			} catch( Exception ex ) {
+			    System.err.println( "Failed to initialize LaF" );
+			}
+		 int nButtonSize = 28;
+		 GridBagLayout gridbag = new GridBagLayout();
+		 GridBagConstraints c = new GridBagConstraints();
+
+		 setLayout(gridbag);
+		 JPanel panTracing = new JPanel();
+		 ButtonGroup roiTraceMode = new ButtonGroup();
+		 
+		// UIManager.put("ToggleButton.select", Color.WHITE);
+		 ClassLoader classLoader = getClass().getClassLoader();
+	     String icon_path = classLoader.getResource("icons/dot.png").getFile();
+		 ImageIcon tabIcon = new ImageIcon(icon_path);
+		 JToggleButton roiPointMode = new JToggleButton(tabIcon);
+		 roiPointMode.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
+		  
+		 roiPointMode.setSelected(true);
+	
+		 
+	     icon_path = classLoader.getResource("icons/polyline3D.png").getFile();
+		 tabIcon = new ImageIcon(icon_path);
+		 JToggleButton roiPolyLineMode = new JToggleButton(tabIcon);
+		 roiPolyLineMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		// roiPolyLineMode.setContentAreaFilled(false);
+		 
+		 roiTraceMode.add(roiPointMode);
+		 roiTraceMode.add(roiPolyLineMode);
+		 c.gridx=0;
+		 c.gridy=0;
+		 panTracing.add(roiPointMode,c);
+		 panTracing.add(roiPolyLineMode,c);
+
+		 add(panTracing,c);
+
+		 JPanel roiList = new JPanel();
 		 mode = ADD_POINT_LINE;
 		 listModel = new  DefaultListModel<String>();
 		 jlist = new JList<String>(listModel);
@@ -64,8 +115,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener {
 		 jlist.setVisibleRowCount(-1);
 		 jlist.addListSelectionListener(this);
 		 listScroller = new JScrollPane(jlist);
-		 listScroller.setPreferredSize(new Dimension(200, 150));
-		 add(listScroller);
+		 listScroller.setPreferredSize(new Dimension(150, 250));
+		 roiList.add(listScroller);
+		 c.gridy++;
+		 add(roiList,c);
+
 	 }
 	 
 	 public void addRoi(Roi3D roi_in)
