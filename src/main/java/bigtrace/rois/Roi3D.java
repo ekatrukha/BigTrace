@@ -24,5 +24,9 @@ public interface Roi3D
 	public void draw( GL3 gl, Matrix4fc pvm,  final double [] screen_size, double dNear, double dFar );
 	public void setLineColor(Color lineColor_);
 	public void setPointColor(Color pointColor_);
+	public float getLineThickness();
+	public float getPointSize();
+	public void setLineThickness(final float line_thickness);
+	public void setPointSize(final float point_size);
 	
 }

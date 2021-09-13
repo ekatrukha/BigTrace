@@ -141,7 +141,6 @@ public class VisPolyLineSimple
 
 		gl.glBindVertexArray( vao );
 		gl.glLineWidth(fLineThickness);
-		gl.glEnable(GL.GL_LINE_SMOOTH);
 		gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
 		gl.glBindVertexArray( 0 );
 	}

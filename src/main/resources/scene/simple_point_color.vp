@@ -14,7 +14,7 @@ void main()
 	
 	gl_Position = pvm * vec4( aPos, 1.0 );
 
-	//not sure it is correct, but for now ok
+	//this is not correct, but for now ok
 	dScale=1.0-((gl_Position.z+fNear)/(fNear+fFar));
 
 	dScale = max(dScale,minPointScale);

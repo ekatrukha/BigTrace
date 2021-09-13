@@ -98,13 +98,11 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	}
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
 		return name;
 	}
 
 	@Override
 	public void setName(String name) {
-		
 		this.name = name;
 	}
 
@@ -116,7 +114,6 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	 */
 	@Override
 	public int numVertices() {
-		// TODO Auto-generated method stub
 		return vertices.size();
 	}
 
@@ -197,6 +194,30 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	public void addVertices(int paramInt, Collection<RealLocalizable> paramCollection) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public float getLineThickness() {
+
+		return lineThickness;
+	}
+
+	@Override
+	public float getPointSize() {
+
+		return pointSize;
+	}
+
+	@Override
+	public void setLineThickness(float line_thickness) {
+
+		lineThickness=line_thickness;
+	}
+
+	@Override
+	public void setPointSize(float point_size) {
+
+		pointSize=point_size;
 	}
 	
 }

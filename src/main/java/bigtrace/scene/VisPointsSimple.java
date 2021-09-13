@@ -67,8 +67,32 @@ public class VisPointsSimple
 	
 	static float vertices[]; 
 	private int nPointsN;
+	private boolean initialized;
 
+	public VisPointsSimple(float [] color_in, RealPoint point, float fPointSize_)
+	{
+		int j;
+		
+		fPointSize= fPointSize_;
+		
+		l_color = new Vector3f(color_in);
+		
+		nPointsN=1;
+		vertices = new float [nPointsN*3];//assime 3D
+		
 
+		for (j=0;j<3; j++)
+		{
+			//vertices[i*3+j]=(points.get(i).getFloatPosition(j)/max_pos)-0.5f;
+			vertices[j]=point.getFloatPosition(j);
+		}					
+	
+		final Segment pointVp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_point_color.vp" ).instantiate();
+		final Segment pointFp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_point_color.fp" ).instantiate();
+	
+		
+		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
+	}
 	public VisPointsSimple(float [] color_in, ArrayList< RealPoint > points, float fPointSize_)
 	{
 		int i,j;
@@ -80,18 +104,6 @@ public class VisPointsSimple
 		nPointsN=points.size();
 		vertices = new float [nPointsN*3];//assime 3D
 		
-		/*max_pos = Float.MIN_VALUE;
-		
-		for (i=0;i<nPointsN; i++)
-		{
-			for (j=0;j<3; j++)
-			{
-				if(Math.abs(points.get(i).getFloatPosition(j))>max_pos)
-					{max_pos = Math.abs(points.get(i).getFloatPosition(j));}
-				//vertices[i*3+j]=points.get(i).getFloatPosition(j);
-			}
-			
-		}*/
 		for (i=0;i<nPointsN; i++)
 		{
 			for (j=0;j<3; j++)
@@ -109,8 +121,7 @@ public class VisPointsSimple
 		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 	}
-
-	private boolean initialized;
+	
 
 	private void init( GL3 gl )
 	{

@@ -2,11 +2,14 @@
 package bigtrace;
 
 
-import java.awt.Dimension;
+
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
 import java.awt.Insets;
+
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -16,7 +19,7 @@ import javax.swing.DefaultListModel;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -24,10 +27,13 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
 import javax.swing.border.TitledBorder;
 
 import org.joml.Matrix4f;
@@ -43,6 +49,7 @@ import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.CropPanel;
+import bigtrace.gui.PanelTitle;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsSimple;
@@ -154,10 +161,45 @@ public class BigTrace
 		
 		
 		
+		initMainDialog();
+
+
+
+//		bdv.getBdvHandle().getKeybindings().removeInputMap( "BigTrace" );
+
+	}
+	public void init(double axis_length)
+	{
+		int i;
+		
+		//basis vectors 
+		RealPoint basis = new RealPoint(-0.1*axis_length, -0.1*axis_length,-0.1*axis_length);				
+		for(i=0;i<3;i++)
+		{			
+			origin_data.addPointToActive(basis);
+			basis.move(axis_length, i);
+			origin_data.addPointToActive(basis);
+			basis.move((-1.0)*axis_length, i);
+			origin_data.addNewLine();
+		}
+		
+		//traces = new BTPolylines ();
+		
+		// init bigvolumeviewer
+		view =				 
+				 Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
+		
+						
+		bvv = BvvFunctions.show( view, "t1-head" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
+		installActions();
+		resetViewXY(true);
+	}
+	
+	public void initMainDialog()
+	{
 		//Interface
 		
-		final JPanel panel = new JPanel();
-		panel.setPreferredSize( new Dimension( 400, 400 ) );
+		//CropPanel
 		cropPanel = new CropPanel( nW-1, nH-1, nD-1);
 		
 		cropPanel.addCropPanelListener(new CropPanel.Listener() {
@@ -178,7 +220,6 @@ public class BigTrace
 			@Override
 			public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
 				
-				// TODO Auto-generated method stub
 				if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(nW-1) && bby1<=(nH-1) && bbz1<=(nD-1))
 				{
 					nDimCurr[0]=new long[] { bbx0, bby0, bbz0 };
@@ -196,36 +237,69 @@ public class BigTrace
 		});
 		
 		
-		
 		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
 		
 		JPanel panNavigation = new JPanel(new GridBagLayout());
 	    
 		GridBagConstraints c = new GridBagConstraints();
-	    
+
+		ClassLoader classLoader = getClass().getClassLoader();
+
 		//View Panel
-	    TitledBorder titleBorder = BorderFactory.createTitledBorder("View");
-	    titleBorder.setTitleJustification(TitledBorder.CENTER);
+	  
 		JPanel panView=new JPanel(new GridBagLayout()); 
-		panView.setBorder(titleBorder);
+		panView.setBorder(new PanelTitle(" View "));
+		
+		
+		String icon_path = classLoader.getResource("icons/orig.png").getFile();
+	    ImageIcon tabIcon = new ImageIcon(icon_path);
+	    JToggleButton butOrigin = new JToggleButton(tabIcon);
+	    butOrigin.setSelected(bShowOrigin);
+	    butOrigin.setToolTipText("Show XYZ axes");
+	    butOrigin.addItemListener(new ItemListener() {
+	
+	    	@Override
+		public void itemStateChanged(ItemEvent e) {
+	    	      if(e.getStateChange()==ItemEvent.SELECTED){
+	    	    	  bShowOrigin=true;
+	    	    	  render_pl();
+	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
+	    	        	bShowOrigin=false;
+	    	        	render_pl();
+	    	        }
+			}
+	    	});
 	    c.gridx=0;
 	    c.gridy=0;
-		JButton butOrigin = new JButton("Origin (O)");
 		panView.add(butOrigin,c);
-		JButton butWorld = new JButton("World Grid (P)");
+		icon_path = classLoader.getResource("icons/worldgrid.png").getFile();
+	    tabIcon = new ImageIcon(icon_path);
+	    JToggleButton butWorld = new JToggleButton(tabIcon);
+	    butWorld.setSelected(bShowWorldGrid);
+	    butWorld.setToolTipText("World Grid");
+	    butWorld.addItemListener(new ItemListener() {
+	
+	    @Override
+		public void itemStateChanged(ItemEvent e) {
+	    	      if(e.getStateChange()==ItemEvent.SELECTED){
+	    	    	  bShowWorldGrid=true;
+	    	    	  render_pl();
+	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
+	    	        	bShowWorldGrid=false;
+	    	        	render_pl();
+	    	        }
+			}
+	    	});
 	    c.gridx=1;
 	    c.gridy=0;
 		panView.add(butWorld,c);
 		
 		//Cropping Panel
-	    titleBorder = BorderFactory.createTitledBorder("Cropping");
-	    titleBorder.setTitleJustification(TitledBorder.CENTER);
 		JPanel panCrop=new JPanel(new GridBagLayout()); 
-		panCrop.setBorder(titleBorder);
+		panCrop.setBorder(new PanelTitle(" Cropping "));
 
-	    ClassLoader classLoader = getClass().getClassLoader();
-        String icon_path = classLoader.getResource("icons/cube_icon.png").getFile();
-	    ImageIcon tabIcon = new ImageIcon(icon_path);
+        icon_path = classLoader.getResource("icons/cube_icon.png").getFile();
+	    tabIcon = new ImageIcon(icon_path);
 
 	    c.gridx=0;
 	    c.gridy=0;
@@ -260,15 +334,13 @@ public class BigTrace
 	    //ROI MANAGER
 	    icon_path = classLoader.getResource("icons/node.png").getFile();
 	    tabIcon = new ImageIcon(icon_path);
-	    tabPane.addTab("",tabIcon ,roiManager);
+	    tabPane.addTab("",tabIcon ,roiManager,"Tracing");
 
 	    roiManager.addRoiManager3DListener(new RoiManager3D.Listener() {
 
 			@Override
 			public void activeRoiChanged(int nRoi) {
-				// TODO Auto-generated method stub
 				render_pl();
-				//handl.getDisplay().rep.repaint();//requestRepaint();
 			}
 	    	
 	    });
@@ -302,51 +374,30 @@ public class BigTrace
 	    cv.anchor = GridBagConstraints.SOUTHEAST;
 	    cv.fill = GridBagConstraints.HORIZONTAL;
 	    finalPanel.add(progressBar,cv);
-		final JFrame frame = new JFrame( "BigTrace" );
-		//Border blackline = BorderFactory.createLineBorder(Color.black);
-		//finalPanel.setBorder(blackline);
-		//frame.add(slider);
+	    
+	    JFrame bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv.getBvvHandle().getViewerPanel());
+	    //final JDialog mainWindow = new JDialog(bvv_frame,"BigTrace");
+	    
+	    //mainWindow.add(finalPanel);
+	    //mainWindow.setVisible(true);
+	    //mainWindow.setSize(400, 500);
+	    //mainWindow.requestFocusInWindow();
+	    final JFrame frame = new JFrame( "BigTrace" );
+	    roiManager.setParentFrame(frame);
 		frame.add(finalPanel);
-		//frame.add( tabPane);
-		
-		
-		frame.setSize(400,500);
-		frame.setVisible( true );
-		panel.requestFocusInWindow();
+	    frame.setSize(400,500);
 
-
-
-
-//		bdv.getBdvHandle().getKeybindings().removeInputMap( "my actions" );
-
-	}
-	public void init(double axis_length)
-	{
-		int i;
-		
-		//basis vectors 
-		RealPoint basis = new RealPoint(-0.1*axis_length, -0.1*axis_length,-0.1*axis_length);				
-		for(i=0;i<3;i++)
-		{			
-			origin_data.addPointToActive(basis);
-			basis.move(axis_length, i);
-			origin_data.addPointToActive(basis);
-			basis.move((-1.0)*axis_length, i);
-			origin_data.addNewLine();
-		}
-		
-		//traces = new BTPolylines ();
-		
-		// init bigvolumeviewer
-		view =				 
-				 Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
-		
-						
-		bvv = BvvFunctions.show( view, "t1-head" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
-		installActions();
-		resetViewXY(true);
-	}
+	    java.awt.Point bvv_p = bvv_frame.getLocationOnScreen();
+	    java.awt.Dimension bvv_d = bvv_frame.getSize();
 	
+	    frame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
+
+	    
+	    frame.setVisible( true );
+		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	
+		
+	}
 	public void installActions()
 	{
 		final Actions actions = new Actions( new InputTriggerConfig() );
@@ -356,7 +407,7 @@ public class BigTrace
 		actions.runnableAction(
 				() -> {
 					//addPoint();
-					addPointToPolyLine(5);
+					addPointToRoiManager(5);
 					// listModel.addElement("test");
 				},
 				"add point",
@@ -396,8 +447,6 @@ public class BigTrace
 		actions.runnableAction(
 				() -> {
 						roiManager.unselect();
-						//traces.addNewLine();
-						render_pl();
 				},
 				"new trace",
 				"E" );
@@ -416,21 +465,6 @@ public class BigTrace
 			
 			actions.runnableAction(
 					() -> {
-						bShowOrigin=(!bShowOrigin);
-						handl.requestRepaint();
-					},
-					"render origin",
-					"O" );
-			actions.runnableAction(
-					() -> {
-						bShowWorldGrid=(!bShowWorldGrid);
-						handl.requestRepaint();
-					},
-					"render world grid",
-					"P" );
-			
-			actions.runnableAction(
-					() -> {
 						//roiManager.removeAll();
 						roiManager.bShowAll=!roiManager.bShowAll;
 						render_pl();
@@ -439,7 +473,7 @@ public class BigTrace
 					"I" );
 			
 		//actions.namedAction(action, defaultKeyStrokes);
-		actions.install( bvv.getBvvHandle().getKeybindings(), "my actions" );
+		actions.install( bvv.getBvvHandle().getKeybindings(), "BigTrace actions" );
 
 	}
 
@@ -652,7 +686,7 @@ public class BigTrace
 		
 	}
 	
-	public void addPointToPolyLine(final int nHalfWindow)
+	public void addPointToRoiManager(final int nHalfWindow)
 	{
 		int i,j;
 
@@ -756,7 +790,8 @@ public class BigTrace
 			{
 				//traces.addPointToActive(target);
 				handl.showMessage("point found");
-				roiManager.addPointToLine(target);
+				roiManager.addPoint(target);
+				//roiManager.addPointToLine(target);
 			}
 			else
 			{
