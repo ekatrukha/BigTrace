@@ -13,43 +13,39 @@ import java.awt.event.ItemListener;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import javax.swing.BorderFactory;
-import javax.swing.DefaultListModel;
+
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
-import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
-import javax.swing.border.TitledBorder;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.formdev.flatlaf.FlatLightLaf;
+
 
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.CropPanel;
 import bigtrace.gui.PanelTitle;
+import bigtrace.math.EigenvalueDecomposition;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsSimple;
@@ -76,16 +72,30 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccessible;
+import net.imglib2.algorithm.gauss3.Gauss3;
+import net.imglib2.algorithm.gradient.HessianMatrix;
+import net.imglib2.algorithm.linalg.eigen.TensorEigenValues;
+import net.imglib2.converter.Converters;
+import net.imglib2.converter.RealUnsignedByteConverter;
+import net.imglib2.converter.read.ConvertedRandomAccessibleInterval;
 import net.imglib2.img.Img;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.img.array.ArrayImg;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.basictypeaccess.array.DoubleArray;
+import net.imglib2.img.basictypeaccess.array.FloatArray;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+import net.imglib2.outofbounds.OutOfBoundsBorderFactory;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineRandomAccessible;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.Type;
+import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
@@ -97,20 +107,19 @@ import tpietzsch.util.MatrixMath;
 
 public class BigTrace
 {
-	public  BvvStackSource< ? > bvv;
-	public  BvvStackSource< ? > bvv2;
+	public  BvvStackSource< UnsignedByteType > bvv;
+	public  BvvStackSource< UnsignedByteType > bvv2;
 	RandomAccessibleInterval< UnsignedByteType > view;
 	static IntervalView< UnsignedByteType > view2=null;
-	Img< UnsignedByteType > img;
+	IntervalView< FloatType > gauss=null;
+	Img< UnsignedByteType> img;
 	VolumeViewerPanel handl;
 	//SynchronizedViewerState state;
 	CropPanel cropPanel;
 	
-	int nW;
-	int nH;
-	int nD;
-	//static long [] nDimIn = new long [3]; 
+
 	long [][] nDimCurr = new long [2][3];
+	long [][] nDimIni = new long [2][3];
 	double dCam = 1100.;
 	double dClipNear = 1000.;
 	double dClipFar = 1000.;
@@ -123,8 +132,7 @@ public class BigTrace
 	
 	
 	BTPolylines origin_data = new BTPolylines ();
-	
-	//DefaultListModel<String> listModel;
+
 	RoiManager3D roiManager = new RoiManager3D();
 	
 		
@@ -135,23 +143,22 @@ public class BigTrace
 		//img = SimplifiedIO.openImage(
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
-		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT.tif", new UnsignedByteType());
+		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT-1.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
 		//img = SimplifiedIO.openImage(
 		//		test_BVV_inteface.class.getResource( "/t1-head.tif" ).getFile(),
 		//		new UnsignedByteType() );
-		
-		nW=(int)img.dimension(0);
-		nH=(int)img.dimension(1);
-		nD=(int)img.dimension(2);
-		//nDimIn = img.dimensionsAsLongArray();
-		nDimCurr[1][0] = nW-1;
-		nDimCurr[1][1] = nH-1;
-		nDimCurr[1][2] = nD-1;
+	
+
+		img.min(nDimIni[0]);
+		img.max(nDimIni[1]);
+		img.min(nDimCurr[0]);
+		img.max(nDimCurr[1]);
 
 
-		init(0.25*Math.min(nD, Math.min(nW,nH)));
+
+		init(0.25*Math.min(nDimIni[1][2], Math.min(nDimIni[1][0],nDimIni[1][1])));
 		
 		try {
 		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
@@ -186,11 +193,12 @@ public class BigTrace
 		//traces = new BTPolylines ();
 		
 		// init bigvolumeviewer
+		final Img< UnsignedByteType > imgx = ArrayImgs.unsignedBytes( new long[]{ 2, 2, 2 } );
 		view =				 
-				 Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
+				 Views.interval( imgx, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
 		
 						
-		bvv = BvvFunctions.show( view, "t1-head" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
+		bvv = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
 		installActions();
 		resetViewXY(true);
 	}
@@ -200,7 +208,8 @@ public class BigTrace
 		//Interface
 		
 		//CropPanel
-		cropPanel = new CropPanel( nW-1, nH-1, nD-1);
+		//cropPanel = new CropPanel( nW-1, nH-1, nD-1);
+		cropPanel = new CropPanel(nDimIni[1]);
 		
 		cropPanel.addCropPanelListener(new CropPanel.Listener() {
 
@@ -220,7 +229,7 @@ public class BigTrace
 			@Override
 			public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
 				
-				if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(nW-1) && bby1<=(nH-1) && bbz1<=(nD-1))
+				if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(nDimIni[1][0]-1) && bby1<=(nDimIni[1][1]-1) && bbz1<=(nDimIni[1][2]-1))
 				{
 					nDimCurr[0]=new long[] { bbx0, bby0, bbz0 };
 					nDimCurr[1]=new long[] { bbx1, bby1, bbz1 };
@@ -407,7 +416,14 @@ public class BigTrace
 		actions.runnableAction(
 				() -> {
 					//addPoint();
-					addPointToRoiManager(5);
+					RealPoint target = new RealPoint(3);
+					
+					if(findPointLocationFromClick(5,target))
+					{
+						roiManager.addPoint(target);
+						render_pl();
+					}
+					//addPointToRoiManager(5);
 					// listModel.addElement("test");
 				},
 				"add point",
@@ -465,9 +481,26 @@ public class BigTrace
 			
 			actions.runnableAction(
 					() -> {
-						//roiManager.removeAll();
-						roiManager.bShowAll=!roiManager.bShowAll;
-						render_pl();
+						//testHessian3D();
+						testHess();
+						RealPoint target = new RealPoint(3);
+						if(findPointLocationFromClick(5,target))
+						{
+							float [] pos = new float[3];
+							target.localize(pos);
+							long[][] rangeM = new long[3][3];
+							for(int i=0;i<3;i++)
+							{
+								rangeM[0][i]=(long)(pos[i]-1.0f);
+								rangeM[1][i]=(long)(pos[i]+1.0f);
+								rangeM[2][i]=-1*rangeM[0][i];
+							}
+							IntervalView<FloatType> input = Views.translate(Views.interval(gauss, rangeM[0], rangeM[1] ),rangeM[2]);
+							
+	
+							testHessian3D(input);
+							render_pl();
+						}
 					},
 					"reset tracings",
 					"I" );
@@ -476,7 +509,165 @@ public class BigTrace
 		actions.install( bvv.getBvvHandle().getKeybindings(), "BigTrace actions" );
 
 	}
+	public void testHess()
+	{
+		final double sig = 3.0;
+		final double[] sigma = new double[] { 1.0 * sig, 1.0 * sig, 1.0 * sig };
+		calculateGaussian3D(sigma, img);
+		//testHessian3D(gauss);
+		
+	}
+	
+	/** Function calculates 3D gaussian of the whole image **/
+	public void calculateGaussian3D( final double[] sigma, final RandomAccessibleInterval< UnsignedByteType > in)
+	{
+		final long[] dim = Intervals.dimensionsAsLongArray( in );
+		//final ArrayImg< FloatType, FloatArray > gaussian = ArrayImgs.floats( dim );
+		gauss =Views.interval(ArrayImgs.floats( dim ), nDimIni[0], nDimIni[1] );
+		//gauss = new ArrayImgFactory<>().create(dim);
+		Gauss3.gauss( sigma, Views.extendBorder( in ), gauss );						
+		//test it
+		/*
+		float minVal = Float.MAX_VALUE;
+		float maxVal = -Float.MAX_VALUE;
+		for ( final FloatType h : gauss )
+		{
+			final float dd = h.get();
+			minVal = Math.min( dd, minVal );
+			maxVal = Math.max( dd, maxVal );
+		}
 
+		final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
+		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > gaussConv = new ConvertedRandomAccessibleInterval<>( gauss, ( s, t ) -> {
+			cvU.convert(s,t);
+		}, new UnsignedByteType() );
+						
+				
+		bvv2.removeFromBdv();
+		System.gc();			
+		view2 = Views.interval( gaussConv, nDimIni[0], nDimIni[1] );
+		bvv2 = BvvFunctions.show( view2, "hessian", Bvv.options().addTo(bvv));
+		*/
+		
+	}
+	public void testHessian3D(final IntervalView<FloatType> input)
+	{
+		
+		
+		final int nThreads = Runtime.getRuntime().availableProcessors();
+		final ExecutorService es = Executors.newFixedThreadPool( nThreads );
+
+		final long[] dim = Intervals.dimensionsAsLongArray( input );
+		final long[] dimm = input.minAsLongArray();
+		//final ArrayImg< FloatType, FloatArray > gaussian = ArrayImgs.floats( dim );
+		//Gauss3.gauss( sigma, Views.extendBorder( input ), gaussian );
+		
+		/*Cursor< FloatType > cursorInput = input.cursor();
+
+		 
+		// iterate over the input
+		while ( cursorInput.hasNext())
+		{
+			System.out.println(cursorInput.next().get());
+		}
+		*/
+		ArrayImg<FloatType, FloatArray> hss = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
+		ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
+		RandomAccessibleInterval< FloatType > hessian = null;
+		try
+		{
+		hessian =
+				HessianMatrix.calculateMatrix(
+						Views.extendZero( input ),
+						gradient,
+						hss,
+						new OutOfBoundsBorderFactory<>(),
+						nThreads,
+						es );
+		}
+		catch( Exception ex ) {
+		    System.err.println( "HESSIAN SOMETHING" );
+		}
+		
+		System.out.println("Hessian");
+
+
+		
+		long [] dimH = new long[hessian.numDimensions()];
+		hessian.dimensions(dimH);
+		
+		
+		
+		
+		ImgFactory< FloatType > factory;
+		factory = new ArrayImgFactory<>( new FloatType() );
+		final RandomAccessibleInterval< FloatType > evs = TensorEigenValues.calculateEigenValuesSymmetric( hessian, TensorEigenValues.createAppropriateResultImg( hessian, factory), nThreads, es );
+		EigenvalueDecomposition<FloatType> mEV = new EigenvalueDecomposition<FloatType>(3);
+		mEV.computeRAI( hessian );
+		RandomAccess< FloatType >testRA = evs.randomAccess();
+		for (int i=0;i<3;i++)
+		{
+			testRA.setPosition(new int[]{1,1,1,i});
+			System.out.println(testRA.get().get());
+		}
+		
+		
+	/*	final IntervalView< DoubleType > wrappedx = Views.interval(evs,new FinalInterval( (int)img.dimension(0), (int)img.dimension(1), (int)img.dimension(2) ) );
+		final BdvStackSource< DoubleType > raw = BdvFunctions.show( wrappedx, "raw" );
+		final BdvHandle bdv = raw.getBdvHandle();*/
+		//final IntervalView< DoubleType > wrappedx = Views.interval(evs,new FinalInterval( (int)img.dimension(0), (int)img.dimension(1), (int)img.dimension(2) ) );
+		//IntervalView< DoubleType > hs = Views.hyperSlice( evs, evs.numDimensions() - 1, 0 );
+		//final BdvStackSource< DoubleType > raw = BdvFunctions.show( hs, "hs" );
+		//final BdvHandle bdv = raw.getBdvHandle();
+		
+		
+		
+		//new ImageJ();
+		//for ( int d = 0; d < evs.dimension( evs.numDimensions() - 1 ); ++d )
+		
+		int nd = evs.numDimensions();
+		
+		int d=1;
+		//{
+			final IntervalView< FloatType > hs = Views.hyperSlice( evs, evs.numDimensions() - 1, d );
+		   //IntervalView< FloatType > hsx = Views.hyperSlice( evs, evs.numDimensions() - 1, d );
+			float minVal = Float.MAX_VALUE;
+			float maxVal = -Float.MAX_VALUE;
+			for ( final FloatType h : hs )
+			{
+				final float dd = h.get();
+				minVal = Math.min( dd, minVal );
+				maxVal = Math.max( dd, maxVal );
+			}
+
+		
+
+		/*	final ConvertedRandomAccessibleInterval< DoubleType, DoubleType > hsStretched = new ConvertedRandomAccessibleInterval<>( hs, ( s, t ) -> {
+				t.set( s );
+				t.sub( finalMaxVal );
+				t.mul( factor );
+			}, new DoubleType() );*/
+			
+		/*	final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(maxVal,minVal);
+			//Img< UnsignedByteType > output;
+			//cvU.convert(hs, output);
+			final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > hsStretched = new ConvertedRandomAccessibleInterval<>( hs, ( s, t ) -> {
+				//t.set( s );
+				//t.sub( finalMaxVal );
+				//t.mul( factor );
+				cvU.convert(s,t);
+			}, new UnsignedByteType() );		*/	
+		//	ImageJFunctions.show( hs );
+
+		//}
+/*
+		bvv2.removeFromBdv();
+		System.gc();
+		view2=Views.interval( hsStretched, nDimCurr[0], nDimCurr[1] );						
+		bvv2 = BvvFunctions.show( view2, "hessian", Bvv.options().addTo(bvv));
+	*/	
+
+	}
 	public void render_pl()
 	{
 		
@@ -606,6 +797,9 @@ public class BigTrace
 	{
 		
 		double scale;
+		int nW= (int)nDimIni[1][0];
+		int nH= (int)nDimIni[1][1];
+		int nD= (int)nDimIni[1][2];
 		
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
@@ -644,7 +838,9 @@ public class BigTrace
 	{
 		
 		double scale;
-		
+		int nW= (int)nDimIni[1][0];
+		int nH= (int)nDimIni[1][1];
+		int nD= (int)nDimIni[1][2];
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
 		
@@ -686,7 +882,7 @@ public class BigTrace
 		
 	}
 	
-	public void addPointToRoiManager(final int nHalfWindow)
+	public boolean findPointLocationFromClick(final int nHalfWindowSize, final RealPoint target)
 	{
 		int i,j;
 
@@ -706,8 +902,8 @@ public class BigTrace
 		Vector3f temp = new Vector3f(); 
 		
 		//float [] zVals = new float []{0.0f,1.0f,1.0f,0.0f,0.0f,1.0f,1.0f,0.0f};
-		for (i = -nHalfWindow;i<3*nHalfWindow;i+=2*nHalfWindow)
-			for (j = -nHalfWindow;j<3*nHalfWindow;j+=2*nHalfWindow)
+		for (i = -nHalfWindowSize;i<3*nHalfWindowSize;i+=2*nHalfWindowSize)
+			for (j = -nHalfWindowSize;j<3*nHalfWindowSize;j+=2*nHalfWindowSize)
 				for (int z =0 ; z<2; z++)
 				{
 					//take coordinates in original data volume space
@@ -757,7 +953,7 @@ public class BigTrace
 		else
 		{
 			System.out.println( "#intersection points " + intersectionPoints.size());
-			return;
+			return false;
 		}
 		long [][] nClickMinMax = new long[2][3];
 		
@@ -783,27 +979,33 @@ public class BigTrace
 			//Cuboid3D clickVolume = new Cuboid3D(intersectionPoints);
 			Cuboid3D clickVolume = new Cuboid3D(clickFrustum);
 			clickVolume.iniFaces();
-			RealPoint target = new RealPoint( 3 );
+			RealPoint target_found = new RealPoint( 3 );
 			//RealPoint locationMax = new RealPoint( 3 );
 			
-			if(computeMaxLocationCuboid(intRay,target,clickVolume))
+			if(computeMaxLocationCuboid(intRay,target_found,clickVolume))
 			{
 				//traces.addPointToActive(target);
 				handl.showMessage("point found");
-				roiManager.addPoint(target);
+				target.setPosition(target_found);
+				return true;
+				//roiManager.addPoint(target);
 				//roiManager.addPointToLine(target);
 			}
 			else
 			{
 				handl.showMessage("not found :(");
+				return false;
 			}
 				
 
 						
 		}
-		
+		else
+		{
+			return false;
+		}
 
-		render_pl();		
+		//render_pl();		
 		
 	}
 	

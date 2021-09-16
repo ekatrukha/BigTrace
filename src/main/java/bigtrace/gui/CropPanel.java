@@ -24,7 +24,7 @@ public class CropPanel extends JPanel {
 		}
 		JFrame frame = new JFrame();
 
-		CropPanel slider = new CropPanel(60,80,100);
+		CropPanel slider = new CropPanel(new long[] {60,80,100});
 		frame.getContentPane().add(slider);
 		frame.pack();
 		frame.setVisible(true);
@@ -68,7 +68,8 @@ public class CropPanel extends JPanel {
 		return slider;
 	}
 	
-	public CropPanel(int nW, int nH, int nSl) {
+	//public CropPanel(int nW, int nH, int nSl) {
+	public CropPanel(long [] maxDim) {
 		super();
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
@@ -80,18 +81,18 @@ public class CropPanel extends JPanel {
 
 		bbX = addRangeSlider(
 				"X",
-				new int[] {0, nW},
-				new int[] {0, nW},
+				new int[] {0, (int) maxDim[0]},
+				new int[] {0, (int) maxDim[0]},
 				c);
 		bbY = addRangeSlider(
 				"Y",
-				new int[] {0, nH},
-				new int[] {0, nH},
+				new int[] {0, (int) maxDim[1]},
+				new int[] {0, (int) maxDim[1]},
 				c);
 		bbZ = addRangeSlider(
 				"Z",
-				new int[] {0, nSl},
-				new int[] {0, nSl},
+				new int[] {0, (int) maxDim[2]},
+				new int[] {0, (int) maxDim[2]},
 				c);
 
 
@@ -113,6 +114,8 @@ public class CropPanel extends JPanel {
 		bbY.addSliderChangeListener(bbListener);
 		bbZ.addSliderChangeListener(bbListener);
 	}
+
+
 	public int getBBXMin() {
 		return bbX.getMin();
 	}

@@ -129,7 +129,7 @@
 			<artifactId>ST4</artifactId>
 			<version>${ST4.version}</version>
 		</dependency>
-				<dependency>
+		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>simplified-io</artifactId>
 			<version>1.0.1</version>
