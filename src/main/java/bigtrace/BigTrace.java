@@ -516,20 +516,18 @@ public class BigTrace
 								RealPoint eV = new RealPoint(3);
 								float[] evX= new float[3];
 								
-								for(i=-1;i<2;i+=2)
+								for(i=-1;i<2;i+=1)
 								{
 																
-									roiManager.addPoint(target);
-									//origin.setPosition(pos);
 									for(int j=0;j<3;j++)
 									{
 										evX[j]=pos[j]+stretch*vDir[j]*(i);
 									}
 									eV.setPosition(evX);
 									roiManager.addPoint(eV);
-									roiManager.unselect();
 									
 								}
+								roiManager.unselect();
 								
 								render_pl();
 							}
