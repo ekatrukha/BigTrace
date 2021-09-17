@@ -4,6 +4,7 @@ package bigtrace.math;
 
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.algorithm.linalg.matrix.RealCompositeSymmetricMatrix;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 import net.imglib2.view.composite.Composite;
@@ -880,26 +881,31 @@ public class EigenvalueDecomposition<T extends RealType< T >> implements java.io
        e = new double[n];
 
    }
-   public void computeRAI( final RandomAccessibleInterval< T > RAIin)
+   public void computeRAI( final RandomAccessibleInterval< T > RAIin, final float[][] eigenvectors)
    {
 	   //final Cursor< RealComposite< T > > m = Views.iterable( Views.collapseReal( RAIin ) ).cursor();
 	   final Cursor< RealComposite< T > > m = Views.iterable( Views.collapseReal( RAIin ) ).cursor();
+	   //final Cursor< RealComposite< T > > ev = Views.iterable( Views.collapseReal( eigenvectors ) ).cursor();
 	   int [] posss = new int[3];
 	   while ( m.hasNext() )
 	   {
 		   m.localize(posss);
 		   System.out.println("pos "+Integer.toString(posss[0])+" "+Integer.toString(posss[1])+" "+Integer.toString(posss[2]));
-			computeTensor( m.next());
+			//computeTensor( m.next(), ev.next());
+		   computeTensor( m.next(), eigenvectors);
 	   }
    }
-   public void computeTensor( RealComposite< T > tensor)
+   public void computeTensor( RealComposite< T > tensor, final float [][] in_vals)
    {
 	   int nCount=0;
+	   //RealCompositeSymmetricMatrix< T > m = new RealCompositeSymmetricMatrix<T>( null, n);
+	   //m.setData(tensor);
 	   for(int i =0;i<n; i++)
 		   for(int j =i;j<n; j++)
 	   {
 		   V[i][j] = tensor.get((long)(nCount)).getRealFloat();
-		   V[j][i]=V[j][i];
+		   //V[i][j] = m.get(i, j);
+		   V[j][i]=V[i][j];
 		   nCount++;
 	   }
        // Tridiagonalize.
@@ -908,7 +914,36 @@ public class EigenvalueDecomposition<T extends RealType< T >> implements java.io
        // Diagonalize.
        tql2();
        System.out.println("eig "+Double.toString(d[0])+" "+Double.toString(d[1])+" "+Double.toString(d[2]));
+	   for(int i =0;i<n; i++)
+		   for(int j =0;j<n; j++)
+		   {
+			   //tensor.get((long)(nCount))
+			   //in_vals[i][j]=(float) V[i][j];
+			   in_vals[i][j]=(float) V[j][i];
+		   }
       // TTT=0;
+   }
+   
+   public float [] getLineDirection()
+   {
+	   int nIndex=0;
+	   float [] vLineDirection = new float [3];
+	   double dMin=Double.MAX_VALUE;
+	   int i;
+	   for(i=0;i<3;i++)
+	   {
+		   if(Math.abs(d[i])<dMin)
+		   {
+			   dMin=Math.abs(d[i]);
+			   nIndex=i;
+		   }
+	   }
+	   System.out.println("index "+Integer.toString(nIndex));
+	   for(i=0;i<3;i++)
+	   {
+		   vLineDirection[i] = (float) V[i][nIndex];
+	   }
+	   return vLineDirection;
    }
    /*
    public EigenvalueDecomposition (Matrix Arg) {

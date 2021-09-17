@@ -38,13 +38,14 @@ import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
-
+import com.jidesoft.icons.IconSet.View;
 
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.CropPanel;
 import bigtrace.gui.PanelTitle;
+import bigtrace.math.DerivConvolutionKernels;
 import bigtrace.math.EigenvalueDecomposition;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
@@ -72,6 +73,8 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccessible;
+import net.imglib2.algorithm.convolution.kernel.Kernel1D;
+import net.imglib2.algorithm.convolution.kernel.SeparableKernelConvolution;
 import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.algorithm.gradient.HessianMatrix;
 import net.imglib2.algorithm.linalg.eigen.TensorEigenValues;
@@ -83,6 +86,7 @@ import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.basictypeaccess.array.ByteArray;
 import net.imglib2.img.basictypeaccess.array.DoubleArray;
 import net.imglib2.img.basictypeaccess.array.FloatArray;
 import net.imglib2.img.display.imagej.ImageJFunctions;
@@ -143,7 +147,8 @@ public class BigTrace
 		//img = SimplifiedIO.openImage(
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
-		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT-1.tif", new UnsignedByteType());
+		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT.tif", new UnsignedByteType());
+		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
 		//img = SimplifiedIO.openImage(
@@ -229,7 +234,7 @@ public class BigTrace
 			@Override
 			public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
 				
-				if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(nDimIni[1][0]-1) && bby1<=(nDimIni[1][1]-1) && bbz1<=(nDimIni[1][2]-1))
+				if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(nDimIni[1][0]) && bby1<=(nDimIni[1][1]) && bbz1<=(nDimIni[1][2]))
 				{
 					nDimCurr[0]=new long[] { bbx0, bby0, bbz0 };
 					nDimCurr[1]=new long[] { bbx1, bby1, bbz1 };
@@ -481,30 +486,66 @@ public class BigTrace
 			
 			actions.runnableAction(
 					() -> {
-						//testHessian3D();
-						testHess();
+
 						RealPoint target = new RealPoint(3);
+						double range = 20.0;
+						double sigma=2.0;
+						float stretch = (float)range;
 						if(findPointLocationFromClick(5,target))
 						{
 							float [] pos = new float[3];
 							target.localize(pos);
 							long[][] rangeM = new long[3][3];
-							for(int i=0;i<3;i++)
+							int i;
+							for(i=0;i<3;i++)
 							{
-								rangeM[0][i]=(long)(pos[i]-1.0f);
-								rangeM[1][i]=(long)(pos[i]+1.0f);
-								rangeM[2][i]=-1*rangeM[0][i];
+								rangeM[0][i]=(long)(pos[i]-range );
+								rangeM[1][i]=(long)(pos[i]+range);								
+								//rangeM[2][i]=(-1)*rangeM[0][i];
 							}
-							IntervalView<FloatType> input = Views.translate(Views.interval(gauss, rangeM[0], rangeM[1] ),rangeM[2]);
-							
-	
-							testHessian3D(input);
-							render_pl();
+							if(checkBoxInside(rangeM))
+							{
+								for(i=0;i<3;i++)
+									rangeM[2][i]=(-1)*rangeM[0][i];
+								
+								IntervalView<UnsignedByteType> input = Views.translate(Views.interval(img, rangeM[0], rangeM[1] ),rangeM[2]);
+								
+								//float[][] ev =testDeriv(input, sigma,range);								
+								float[] vDir =testDeriv(input, sigma,range);
+								//RealPoint origin = new RealPoint(3);
+								RealPoint eV = new RealPoint(3);
+								float[] evX= new float[3];
+								
+								for(i=-1;i<2;i+=2)
+								{
+																
+									roiManager.addPoint(target);
+									//origin.setPosition(pos);
+									for(int j=0;j<3;j++)
+									{
+										evX[j]=pos[j]+stretch*vDir[j]*(i);
+									}
+									eV.setPosition(evX);
+									roiManager.addPoint(eV);
+									roiManager.unselect();
+									
+								}
+								
+								render_pl();
+							}
 						}
+						
+						
+						
 					},
 					"reset tracings",
 					"I" );
-			
+			actions.runnableAction(
+					() -> {
+						showHessianComponent(view2, 3.0);
+					},
+					"show hessian ",
+					"F" );
 		//actions.namedAction(action, defaultKeyStrokes);
 		actions.install( bvv.getBvvHandle().getKeybindings(), "BigTrace actions" );
 
@@ -526,30 +567,121 @@ public class BigTrace
 		gauss =Views.interval(ArrayImgs.floats( dim ), nDimIni[0], nDimIni[1] );
 		//gauss = new ArrayImgFactory<>().create(dim);
 		Gauss3.gauss( sigma, Views.extendBorder( in ), gauss );						
-		//test it
-		/*
-		float minVal = Float.MAX_VALUE;
-		float maxVal = -Float.MAX_VALUE;
-		for ( final FloatType h : gauss )
-		{
-			final float dd = h.get();
-			minVal = Math.min( dd, minVal );
-			maxVal = Math.max( dd, maxVal );
-		}
-
-		final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
-		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > gaussConv = new ConvertedRandomAccessibleInterval<>( gauss, ( s, t ) -> {
-			cvU.convert(s,t);
-		}, new UnsignedByteType() );
-						
-				
-		bvv2.removeFromBdv();
-		System.gc();			
-		view2 = Views.interval( gaussConv, nDimIni[0], nDimIni[1] );
-		bvv2 = BvvFunctions.show( view2, "hessian", Bvv.options().addTo(bvv));
-		*/
 		
 	}
+	
+	public float[] testDeriv(IntervalView<UnsignedByteType> input, double sigma, double range)
+	//public void testDeriv(IntervalView<UnsignedByteType> input, double sigma, double range)
+	{
+		
+	
+		double [][] kernels;
+		Kernel1D[] derivKernel;
+		final long[] dim = Intervals.dimensionsAsLongArray( input );
+		//ArrayImg<UnsignedByteType, ByteArray> hss = ArrayImgs.unsignedBytes( dim[ 0 ], dim[ 1 ], dim[ 2 ] );
+		ArrayImg<FloatType, FloatArray> hessian = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
+			//ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
+		int count = 0;
+		int [] nDerivOrder; 
+		for (int d1=0;d1<3;d1++)
+		{
+			for ( int d2 = d1; d2 < 3; d2++ )
+			{
+				final IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
+				nDerivOrder = new int [3];
+				nDerivOrder[d1]++;
+				nDerivOrder[d2]++;
+				kernels = DerivConvolutionKernels.convolve_derive_kernel(sigma, nDerivOrder );
+				derivKernel = Kernel1D.centralAsymmetric(kernels);
+				SeparableKernelConvolution.convolution( derivKernel ).process( Views.extendBorder(input), hs2 );		
+				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
+				count++;
+				System.out.println(count);
+			}
+		}
+		final IntervalView< FloatType > hss = Views.hyperSlice( hessian, 3, 5 );
+		float minVal = Float.MAX_VALUE;
+			float maxVal = -Float.MAX_VALUE;
+			for ( final FloatType h : hss )
+			{
+				final float dd = h.get();
+				minVal = Math.min( dd, minVal );
+				maxVal = Math.max( dd, maxVal );
+			}
+		
+		
+		
+		EigenvalueDecomposition<FloatType> mEV = new EigenvalueDecomposition<FloatType>(3);
+		long[][] rangeXM = new long[2][4];
+		for(int i=0;i<3;i++)
+		{
+			rangeXM[0][i] = (long)Math.round(range);
+			rangeXM[1][i] = (long)Math.round(range);			
+		}
+		rangeXM[0][3]=0;
+		rangeXM[1][3]=6;
+		float[][] ev = new float [3][3];
+		float[] vDirv;// = new float [3];
+		mEV.computeRAI( Views.interval(hessian, rangeXM[0],rangeXM[1]),ev );
+		vDirv =mEV.getLineDirection(); 
+		System.out.println("done");
+		return vDirv;		
+	}
+	
+	public void showHessianComponent(IntervalView<UnsignedByteType> input, double sigma)
+	{
+		double [][] kernels;
+		Kernel1D[] derivKernel;
+		final long[] dim = Intervals.dimensionsAsLongArray( input );
+		//ArrayImg<UnsignedByteType, ByteArray> hss = ArrayImgs.unsignedBytes( dim[ 0 ], dim[ 1 ], dim[ 2 ] );
+		ArrayImg<FloatType, FloatArray> hessian = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
+			//ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
+		int count = 0;
+		int [] nDerivOrder; 
+		for (int d1=0;d1<3;d1++)
+		{
+			for ( int d2 = d1; d2 < 3; d2++ )
+			{
+				final IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
+				nDerivOrder = new int [3];
+				nDerivOrder[d1]++;
+				nDerivOrder[d2]++;
+				kernels = DerivConvolutionKernels.convolve_derive_kernel(sigma, nDerivOrder );
+				derivKernel = Kernel1D.centralAsymmetric(kernels);
+				SeparableKernelConvolution.convolution( derivKernel ).process( Views.extendBorder(input), hs2 );		
+				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
+				count++;
+				System.out.println(count);
+			}
+		}
+
+		final IntervalView< FloatType > hss = Views.hyperSlice( hessian, 3, 1 );
+		float minVal = Float.MAX_VALUE;
+			float maxVal = -Float.MAX_VALUE;
+			for ( final FloatType h : hss )
+			{
+				final float dd = h.get();
+				minVal = Math.min( dd, minVal );
+				maxVal = Math.max( dd, maxVal );
+			}
+
+			
+			//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
+			final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal, maxVal);
+			final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > hsStretched = new ConvertedRandomAccessibleInterval<>( hss, ( s, t ) -> {
+				cvU.convert(s,t);
+			}, new UnsignedByteType() );	
+			
+		bvv2.removeFromBdv();
+		System.gc();
+		//view2=Views.interval( hsStretched, nDimCurr[0], nDimCurr[1] );
+		view2=Views.interval(hsStretched,nDimIni[0],nDimIni[1]);
+		bvv2 = BvvFunctions.show( view2, "hessian", Bvv.options().addTo(bvv));
+		
+
+		
+	}
+	
 	public void testHessian3D(final IntervalView<FloatType> input)
 	{
 		
@@ -603,7 +735,7 @@ public class BigTrace
 		factory = new ArrayImgFactory<>( new FloatType() );
 		final RandomAccessibleInterval< FloatType > evs = TensorEigenValues.calculateEigenValuesSymmetric( hessian, TensorEigenValues.createAppropriateResultImg( hessian, factory), nThreads, es );
 		EigenvalueDecomposition<FloatType> mEV = new EigenvalueDecomposition<FloatType>(3);
-		mEV.computeRAI( hessian );
+		//mEV.computeRAI( hessian );
 		RandomAccess< FloatType >testRA = evs.randomAccess();
 		for (int i=0;i<3;i++)
 		{
@@ -1329,6 +1461,17 @@ public class BigTrace
 			maxL[i]=(int)Math.round(maxR[i]);			
 		}
 		return Intervals.createMinMax(minL[0],minL[1],minL[2], maxL[0],maxL[1],maxL[2]);
+	}
+	public boolean checkBoxInside(final long [][] newMinMax)
+	{ 
+		for (int j=0;j<3;j++)
+		{
+				newMinMax[0][j]=Math.max(nDimCurr[0][j],newMinMax[0][j]);
+				newMinMax[1][j]=Math.min(nDimCurr[1][j],newMinMax[1][j]);
+				if(newMinMax[1][j]<newMinMax[0][j])
+					return false;
+		}
+		return true;
 	}
 	
 	public boolean newBoundBox(final ArrayList<RealPoint> pointArray, final long [][] newMinMax)
