@@ -1,13 +1,19 @@
 package bigtrace.math;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import net.imglib2.Cursor;
+import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.algorithm.linalg.matrix.RealCompositeSymmetricMatrix;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-import net.imglib2.view.composite.Composite;
 import net.imglib2.view.composite.RealComposite;
 /** Eigenvalues and eigenvectors of a real matrix. 
 <P>
@@ -26,7 +32,7 @@ import net.imglib2.view.composite.RealComposite;
  * @param <T>
 **/
 
-public class EigenValVecSymmDecomposition<T extends RealType< T >> implements java.io.Serializable {
+public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implements java.io.Serializable {
 
 /* ------------------------
    Class variables
@@ -35,7 +41,7 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >> implements ja
    /**
 	 * 
 	 */
-	private static final long serialVersionUID = -2036425524286417428L;
+	//private static final long serialVersionUID = -2036425524286417428L;
 
 /** Row and column dimension (square matrix).
    @serial matrix dimension.
@@ -70,6 +76,15 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >> implements ja
        e = new double[n];
 
    }
+   
+   private void computeRAIthreaded( final RandomAccessibleInterval< T > RAIin, 
+		   final RandomAccessibleInterval< T > eVector, 
+		   final RandomAccessibleInterval< T > eWeight)
+   {
+	   EigenValVecSymmDecomposition<T> dCalc = new EigenValVecSymmDecomposition<T>(eWeight.numDimensions());
+	   
+	   dCalc.computeRAI(  RAIin, eVector, eWeight);
+   }
    public void computeRAI( final RandomAccessibleInterval< T > RAIin, final RandomAccessibleInterval< T > eVector, final RandomAccessibleInterval< T > eWeight)
    {
 	   //final Cursor< RealComposite< T > > m = Views.iterable( Views.collapseReal( RAIin ) ).cursor();
@@ -91,12 +106,92 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >> implements ja
 		   //computeTensor( m.next(), eigenvectors);
 		   computeVectorWeight(m.next(),eV.next(),eW.next());
 	   }
+	   //return eVector;
    }
+   
+   public void computeRAI( final RandomAccessibleInterval< T > tensor, 
+		   final RandomAccessibleInterval< T > eVector, 
+		   final RandomAccessibleInterval< T > eWeight,
+		   final int nTasks,
+		   final ExecutorService es )
+   {
+	   	assert nTasks > 0: "Passed nTasks < 1";
+
+		final int tensorDims = tensor.numDimensions();
+
+		long dimensionMax = Long.MIN_VALUE;
+		long dimensionMin = Long.MAX_VALUE;
+		int dimensionArgMax = -1;
+
+		for ( int d = 0; d < tensorDims - 1; ++d )
+		{
+			final long size = tensor.dimension( d );
+			if ( size > dimensionMax )
+			{
+				dimensionMax = size;
+				dimensionArgMax = d;
+				dimensionMin= tensor.min(d);
+			}
+		}
+
+		final long stepSize = Math.max( dimensionMax / nTasks, 1 );
+		final long stepSizeMinusOne = stepSize - 1;
+		final long max = dimensionMin+dimensionMax - 1;
+		//final ArrayList< Callable< RandomAccessibleInterval< T > > > tasks = new ArrayList<>();
+		final ArrayList< Runnable > tasks_r = new ArrayList<>();
+		for ( long currentMin = dimensionMin; currentMin < (dimensionMax+dimensionMin); currentMin += stepSize )
+		{
+			final long currentMax = Math.min( currentMin + stepSizeMinusOne, max );
+			final long[] minT = new long[ tensorDims ];
+			final long[] maxT = new long[ tensorDims ];
+			final long[] minE = new long[ tensorDims ];
+			final long[] maxE = new long[ tensorDims ];
+			final long[] minW = new long[ tensorDims -1];
+			final long[] maxW = new long[ tensorDims -1];
+			tensor.min( minT );
+			tensor.max( maxT );
+			eVector.min( minE );
+			eVector.max( maxE );
+			eWeight.min( minW );
+			eWeight.max( maxW );
+			minW[ dimensionArgMax ] = minE[ dimensionArgMax ] = minT[ dimensionArgMax ] = currentMin;
+			maxW[ dimensionArgMax ] = maxE[ dimensionArgMax ] = maxT[ dimensionArgMax ] = currentMax;
+			
+			final IntervalView< T > currentTensor = Views.interval( tensor, new FinalInterval( minT, maxT ) );
+			final IntervalView< T > currentEigenVector = Views.interval( eVector, new FinalInterval( minE, maxE ) );
+			final IntervalView< T > currentWeights = Views.interval( eWeight, new FinalInterval( minW, maxW ) );
+			
+			//tasks_r.add( () -> computeRAI( currentTensor, currentEigenVector, currentWeights ) );
+			//tasks_r.add( () -> computeRAI( currentTensor, currentEigenVector, currentWeights, false ) );
+			tasks_r.add( () -> computeRAIthreaded( currentTensor, currentEigenVector, currentWeights) );
+		}
+		
+
+		Collection < Future  > futures = new HashSet<Future>();
+		for (Runnable r : tasks_r) {
+
+			futures.add(es.submit(r));
+		}
+	    for(Future future : futures) 
+	    {
+	        try {
+	            future.get();
+	        } catch (InterruptedException e) {
+	            // Figure out if the interruption means we should stop.
+	        	e.printStackTrace();
+	        } catch (ExecutionException e) {
+				// print error
+				e.printStackTrace();
+			}
+	    }
+		
+   }
+   
    
    public void computeVectorWeight( RealComposite< T > tensor, RealComposite< T > vector,  T weight)
    {
 	   int nCount=0;
-	   //RealCompositeSymmetricMatrix< T > m = new RealCompositeSymmetricMatrix<T>( null, n);
+	  // RealCompositeSymmetricMatrix< T > m = new RealCompositeSymmetricMatrix<T>( null, n);
 	   //m.setData(tensor);
 	   int i;
 	   for(i =0;i<n; i++)

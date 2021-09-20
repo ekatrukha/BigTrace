@@ -14,10 +14,12 @@ import java.awt.event.ItemListener;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-
+import java.util.concurrent.Future;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -39,7 +41,7 @@ import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.jidesoft.icons.IconSet.View;
+
 
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
@@ -52,7 +54,6 @@ import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsSimple;
 import bigtrace.scene.VisPolyLineSimple;
-import bdv.viewer.SynchronizedViewerState;
 
 import net.imagej.ops.OpService;
 import bvv.util.BvvStackSource;
@@ -74,32 +75,21 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccessible;
+import net.imglib2.algorithm.convolution.Convolution;
 import net.imglib2.algorithm.convolution.kernel.Kernel1D;
 import net.imglib2.algorithm.convolution.kernel.SeparableKernelConvolution;
-import net.imglib2.algorithm.gauss3.Gauss3;
-import net.imglib2.algorithm.gradient.HessianMatrix;
-import net.imglib2.algorithm.linalg.eigen.TensorEigenValues;
-import net.imglib2.converter.Converters;
 import net.imglib2.converter.RealUnsignedByteConverter;
 import net.imglib2.converter.read.ConvertedRandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImg;
-import net.imglib2.img.array.ArrayImgFactory;
+
 import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.basictypeaccess.array.ByteArray;
-import net.imglib2.img.basictypeaccess.array.DoubleArray;
 import net.imglib2.img.basictypeaccess.array.FloatArray;
-import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
-import net.imglib2.outofbounds.OutOfBoundsBorderFactory;
 import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.realtransform.AffineGet;
-import net.imglib2.realtransform.AffineRandomAccessible;
-import net.imglib2.realtransform.RealViews;
+
 import net.imglib2.type.Type;
-import net.imglib2.type.numeric.ARGBType;
-import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
@@ -555,7 +545,6 @@ public class BigTrace
 	public float[] testDeriv(IntervalView<UnsignedByteType> input, double sigma, RealPoint target)
 	//public void testDeriv(IntervalView<UnsignedByteType> input, double sigma, double range)
 	{
-		
 		int i;
 		double [][] kernels;
 		Kernel1D[] derivKernel;
@@ -570,9 +559,12 @@ public class BigTrace
 		
 		ArrayImg<FloatType, FloatArray> hessFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
 		IntervalView<FloatType> hessian = Views.translate(hessFloat, nShift);
+		
+		ArrayImg<FloatType, FloatArray> dummyFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
 		//ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
 		int count = 0;
-		int [] nDerivOrder; 
+		int [] nDerivOrder;
+
 		for (int d1=0;d1<3;d1++)
 		{
 			for ( int d2 = d1; d2 < 3; d2++ )
@@ -590,16 +582,18 @@ public class BigTrace
 			}
 		}
 
-		
+
 		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
 		ArrayImg<FloatType, FloatArray> dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
 		ArrayImg<FloatType, FloatArray> sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
 		IntervalView<FloatType> directionVectors =  Views.translate(dV, nShift);
 		IntervalView<FloatType> salWeights =  Views.translate(sW, minV);
-		
-		mEV.computeRAI( hessian,directionVectors,salWeights);
-
-	
+	    
+		final int nThreads = Runtime.getRuntime().availableProcessors();
+		final ExecutorService es = Executors.newFixedThreadPool( nThreads );		 
+		mEV.computeRAI( hessian,directionVectors,salWeights,nThreads,es);
+		es.shutdown();
+        
 		float[] vDirv = new float[3];
 		RandomAccess< FloatType > rA = directionVectors.randomAccess();		
 
@@ -614,7 +608,7 @@ public class BigTrace
 		
 		return vDirv;		
 	}
-	
+
 	
 	public void showFloat(IntervalView<FloatType> input)
 	{
