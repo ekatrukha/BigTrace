@@ -3,6 +3,7 @@ package bigtrace;
 
 
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
@@ -46,7 +47,7 @@ import bigtrace.geometry.Line3D;
 import bigtrace.gui.CropPanel;
 import bigtrace.gui.PanelTitle;
 import bigtrace.math.DerivConvolutionKernels;
-import bigtrace.math.EigenvalueDecomposition;
+import bigtrace.math.EigenValVecSymmDecomposition;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsSimple;
@@ -97,6 +98,7 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineRandomAccessible;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.Type;
+import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -240,9 +242,13 @@ public class BigTrace
 					nDimCurr[1]=new long[] { bbx1, bby1, bbz1 };
 					
 					bvv2.removeFromBdv();
+					
 					System.gc();
-					view2=Views.interval( img, nDimCurr[0], nDimCurr[1] );						
+					view2=Views.interval( img, nDimCurr[0], nDimCurr[1] );
+					
 					bvv2 = BvvFunctions.show( view2, "cropresize", Bvv.options().addTo(bvv));
+					//bvv2.getConverterSetups().get(0).setColor(new ARGBType( ARGBType.rgba(0, 0, 255, 255)));
+					
 					
 
 				}
@@ -488,8 +494,8 @@ public class BigTrace
 					() -> {
 
 						RealPoint target = new RealPoint(3);
-						double range = 20.0;
-						double sigma=2.0;
+						double range = 60.0;
+						double sigma=3.0;
 						float stretch = (float)range;
 						if(findPointLocationFromClick(5,target))
 						{
@@ -501,17 +507,13 @@ public class BigTrace
 							{
 								rangeM[0][i]=(long)(pos[i]-range );
 								rangeM[1][i]=(long)(pos[i]+range);								
-								//rangeM[2][i]=(-1)*rangeM[0][i];
 							}
 							if(checkBoxInside(rangeM))
 							{
-								for(i=0;i<3;i++)
-									rangeM[2][i]=(-1)*rangeM[0][i];
 								
-								IntervalView<UnsignedByteType> input = Views.translate(Views.interval(img, rangeM[0], rangeM[1] ),rangeM[2]);
+								IntervalView<UnsignedByteType> input = Views.interval(img, rangeM[0], rangeM[1]);
 								
-								//float[][] ev =testDeriv(input, sigma,range);								
-								float[] vDir =testDeriv(input, sigma,range);
+								float[] vDir =testDeriv(input, sigma, target);
 								//RealPoint origin = new RealPoint(3);
 								RealPoint eV = new RealPoint(3);
 								float[] evX= new float[3];
@@ -548,37 +550,27 @@ public class BigTrace
 		actions.install( bvv.getBvvHandle().getKeybindings(), "BigTrace actions" );
 
 	}
-	public void testHess()
-	{
-		final double sig = 3.0;
-		final double[] sigma = new double[] { 1.0 * sig, 1.0 * sig, 1.0 * sig };
-		calculateGaussian3D(sigma, img);
-		//testHessian3D(gauss);
-		
-	}
 	
-	/** Function calculates 3D gaussian of the whole image **/
-	public void calculateGaussian3D( final double[] sigma, final RandomAccessibleInterval< UnsignedByteType > in)
-	{
-		final long[] dim = Intervals.dimensionsAsLongArray( in );
-		//final ArrayImg< FloatType, FloatArray > gaussian = ArrayImgs.floats( dim );
-		gauss =Views.interval(ArrayImgs.floats( dim ), nDimIni[0], nDimIni[1] );
-		//gauss = new ArrayImgFactory<>().create(dim);
-		Gauss3.gauss( sigma, Views.extendBorder( in ), gauss );						
-		
-	}
 	
-	public float[] testDeriv(IntervalView<UnsignedByteType> input, double sigma, double range)
+	public float[] testDeriv(IntervalView<UnsignedByteType> input, double sigma, RealPoint target)
 	//public void testDeriv(IntervalView<UnsignedByteType> input, double sigma, double range)
 	{
 		
-	
+		int i;
 		double [][] kernels;
 		Kernel1D[] derivKernel;
 		final long[] dim = Intervals.dimensionsAsLongArray( input );
-		//ArrayImg<UnsignedByteType, ByteArray> hss = ArrayImgs.unsignedBytes( dim[ 0 ], dim[ 1 ], dim[ 2 ] );
-		ArrayImg<FloatType, FloatArray> hessian = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
-			//ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
+		long[] minV = input.minAsLongArray();
+		long[] nShift = new long [input.numDimensions()+1];
+		
+		for (i=0;i<input.numDimensions();i++)
+		{
+			nShift[i]=minV[i];
+		}
+		
+		ArrayImg<FloatType, FloatArray> hessFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
+		IntervalView<FloatType> hessian = Views.translate(hessFloat, nShift);
+		//ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
 		int count = 0;
 		int [] nDerivOrder; 
 		for (int d1=0;d1<3;d1++)
@@ -597,33 +589,58 @@ public class BigTrace
 				System.out.println(count);
 			}
 		}
-		final IntervalView< FloatType > hss = Views.hyperSlice( hessian, 3, 5 );
-		float minVal = Float.MAX_VALUE;
-			float maxVal = -Float.MAX_VALUE;
-			for ( final FloatType h : hss )
-			{
-				final float dd = h.get();
-				minVal = Math.min( dd, minVal );
-				maxVal = Math.max( dd, maxVal );
-			}
+
 		
+		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
+		ArrayImg<FloatType, FloatArray> dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
+		ArrayImg<FloatType, FloatArray> sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
+		IntervalView<FloatType> directionVectors =  Views.translate(dV, nShift);
+		IntervalView<FloatType> salWeights =  Views.translate(sW, minV);
 		
-		
-		EigenvalueDecomposition<FloatType> mEV = new EigenvalueDecomposition<FloatType>(3);
-		long[][] rangeXM = new long[2][4];
-		for(int i=0;i<3;i++)
+		mEV.computeRAI( hessian,directionVectors,salWeights);
+
+	
+		float[] vDirv = new float[3];
+		RandomAccess< FloatType > rA = directionVectors.randomAccess();		
+
+		for(i=0;i<3;i++)
 		{
-			rangeXM[0][i] = (long)Math.round(range);
-			rangeXM[1][i] = (long)Math.round(range);			
+			rA.setPosition(new long[] {(long)target.getFloatPosition(0), (long)target.getFloatPosition(1), (long)target.getFloatPosition(2) ,(long)i});
+			vDirv[i]=rA.get().get();
 		}
-		rangeXM[0][3]=0;
-		rangeXM[1][3]=6;
-		float[][] ev = new float [3][3];
-		float[] vDirv;// = new float [3];
-		mEV.computeRAI( Views.interval(hessian, rangeXM[0],rangeXM[1]),ev );
-		vDirv =mEV.getLineDirection(); 
+		
 		System.out.println("done");
+		showFloat(Views.interval(salWeights,salWeights.minAsLongArray(),salWeights.maxAsLongArray()));
+		
 		return vDirv;		
+	}
+	
+	
+	public void showFloat(IntervalView<FloatType> input)
+	{
+		float minVal = Float.MAX_VALUE;
+		float maxVal = -Float.MAX_VALUE;
+		for ( final FloatType h : input )
+		{
+			final float dd = h.get();
+			minVal = Math.min( dd, minVal );
+			maxVal = Math.max( dd, maxVal );
+		}
+
+		
+		//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
+		final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal, maxVal);
+		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > inputScaled = new ConvertedRandomAccessibleInterval<>( input, ( s, t ) -> {
+			cvU.convert(s,t);
+		}, new UnsignedByteType() );	
+
+		/*
+		bvv2.removeFromBdv();
+		view2=Views.interval( hsStretched, nDimCurr[0], nDimCurr[1] );
+		view2=Views.interval(inputScaled,inputScaled.minAsLongArray(),inputScaled.maxAsLongArray());		
+		bvv2 = BvvFunctions.show( view2, "weights", Bvv.options().addTo(bvv));
+		*/
+		bvv2 = BvvFunctions.show( Views.interval(inputScaled,inputScaled.minAsLongArray(),inputScaled.maxAsLongArray()), "weights", Bvv.options().addTo(bvv));
 	}
 	
 	public void showHessianComponent(IntervalView<UnsignedByteType> input, double sigma)
@@ -679,125 +696,7 @@ public class BigTrace
 
 		
 	}
-	
-	public void testHessian3D(final IntervalView<FloatType> input)
-	{
-		
-		
-		final int nThreads = Runtime.getRuntime().availableProcessors();
-		final ExecutorService es = Executors.newFixedThreadPool( nThreads );
 
-		final long[] dim = Intervals.dimensionsAsLongArray( input );
-		final long[] dimm = input.minAsLongArray();
-		//final ArrayImg< FloatType, FloatArray > gaussian = ArrayImgs.floats( dim );
-		//Gauss3.gauss( sigma, Views.extendBorder( input ), gaussian );
-		
-		/*Cursor< FloatType > cursorInput = input.cursor();
-
-		 
-		// iterate over the input
-		while ( cursorInput.hasNext())
-		{
-			System.out.println(cursorInput.next().get());
-		}
-		*/
-		ArrayImg<FloatType, FloatArray> hss = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
-		ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
-		RandomAccessibleInterval< FloatType > hessian = null;
-		try
-		{
-		hessian =
-				HessianMatrix.calculateMatrix(
-						Views.extendZero( input ),
-						gradient,
-						hss,
-						new OutOfBoundsBorderFactory<>(),
-						nThreads,
-						es );
-		}
-		catch( Exception ex ) {
-		    System.err.println( "HESSIAN SOMETHING" );
-		}
-		
-		System.out.println("Hessian");
-
-
-		
-		long [] dimH = new long[hessian.numDimensions()];
-		hessian.dimensions(dimH);
-		
-		
-		
-		
-		ImgFactory< FloatType > factory;
-		factory = new ArrayImgFactory<>( new FloatType() );
-		final RandomAccessibleInterval< FloatType > evs = TensorEigenValues.calculateEigenValuesSymmetric( hessian, TensorEigenValues.createAppropriateResultImg( hessian, factory), nThreads, es );
-		EigenvalueDecomposition<FloatType> mEV = new EigenvalueDecomposition<FloatType>(3);
-		//mEV.computeRAI( hessian );
-		RandomAccess< FloatType >testRA = evs.randomAccess();
-		for (int i=0;i<3;i++)
-		{
-			testRA.setPosition(new int[]{1,1,1,i});
-			System.out.println(testRA.get().get());
-		}
-		
-		
-	/*	final IntervalView< DoubleType > wrappedx = Views.interval(evs,new FinalInterval( (int)img.dimension(0), (int)img.dimension(1), (int)img.dimension(2) ) );
-		final BdvStackSource< DoubleType > raw = BdvFunctions.show( wrappedx, "raw" );
-		final BdvHandle bdv = raw.getBdvHandle();*/
-		//final IntervalView< DoubleType > wrappedx = Views.interval(evs,new FinalInterval( (int)img.dimension(0), (int)img.dimension(1), (int)img.dimension(2) ) );
-		//IntervalView< DoubleType > hs = Views.hyperSlice( evs, evs.numDimensions() - 1, 0 );
-		//final BdvStackSource< DoubleType > raw = BdvFunctions.show( hs, "hs" );
-		//final BdvHandle bdv = raw.getBdvHandle();
-		
-		
-		
-		//new ImageJ();
-		//for ( int d = 0; d < evs.dimension( evs.numDimensions() - 1 ); ++d )
-		
-		int nd = evs.numDimensions();
-		
-		int d=1;
-		//{
-			final IntervalView< FloatType > hs = Views.hyperSlice( evs, evs.numDimensions() - 1, d );
-		   //IntervalView< FloatType > hsx = Views.hyperSlice( evs, evs.numDimensions() - 1, d );
-			float minVal = Float.MAX_VALUE;
-			float maxVal = -Float.MAX_VALUE;
-			for ( final FloatType h : hs )
-			{
-				final float dd = h.get();
-				minVal = Math.min( dd, minVal );
-				maxVal = Math.max( dd, maxVal );
-			}
-
-		
-
-		/*	final ConvertedRandomAccessibleInterval< DoubleType, DoubleType > hsStretched = new ConvertedRandomAccessibleInterval<>( hs, ( s, t ) -> {
-				t.set( s );
-				t.sub( finalMaxVal );
-				t.mul( factor );
-			}, new DoubleType() );*/
-			
-		/*	final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(maxVal,minVal);
-			//Img< UnsignedByteType > output;
-			//cvU.convert(hs, output);
-			final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > hsStretched = new ConvertedRandomAccessibleInterval<>( hs, ( s, t ) -> {
-				//t.set( s );
-				//t.sub( finalMaxVal );
-				//t.mul( factor );
-				cvU.convert(s,t);
-			}, new UnsignedByteType() );		*/	
-		//	ImageJFunctions.show( hs );
-
-		//}
-/*
-		bvv2.removeFromBdv();
-		System.gc();
-		view2=Views.interval( hsStretched, nDimCurr[0], nDimCurr[1] );						
-		bvv2 = BvvFunctions.show( view2, "hessian", Bvv.options().addTo(bvv));
-	*/	
-
-	}
 	public void render_pl()
 	{
 		
