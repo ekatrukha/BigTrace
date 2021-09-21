@@ -43,7 +43,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	
 
 	 private static final long serialVersionUID = -2843907862066423151L;
-	 public static final int ADD_POINT=0, ADD_POINT_LINE=1;
+	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2;
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
 	 public int activeRoi = -1;
 	 public Color activeLineColor = Color.RED;
@@ -61,7 +61,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 	 
 	 //GUI
-	 JFrame parent_frame;
 	 public DefaultListModel<String> listModel; 
 	 JList<String> jlist;
 	 JScrollPane listScroller;
@@ -76,6 +75,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 
 	 JToggleButton roiPointMode;
 	 JToggleButton roiPolyLineMode;
+	 JToggleButton roiPolySemiAMode;
 	 
 	 
 	 private ArrayList<Listener> listeners =	new ArrayList<Listener>();
@@ -105,19 +105,28 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 roiPointMode.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		 //roiPointMode.setSelected(true);
 			 
-	     icon_path = classLoader.getResource("icons/polyline1.png").getFile();
+	     icon_path = classLoader.getResource("icons/polyline.png").getFile();
 		 tabIcon = new ImageIcon(icon_path);
 		 roiPolyLineMode = new JToggleButton(tabIcon);
 		 roiPolyLineMode.setToolTipText("Trace polyline");
 		 roiPolyLineMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 		 roiPolyLineMode.setSelected(true);
-		 
+	     
+		 icon_path = classLoader.getResource("icons/semiauto.png").getFile();
+		 tabIcon = new ImageIcon(icon_path);
+		 roiPolySemiAMode = new JToggleButton(tabIcon);
+		 roiPolySemiAMode.setToolTipText("Semi auto trace");
+		 roiPolySemiAMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		 //roiPolySemiAMode.setSelected(true);		 
+
 		 //button group	 
 		 roiTraceMode.add(roiPointMode);
 		 roiTraceMode.add(roiPolyLineMode);
+		 roiTraceMode.add(roiPolySemiAMode);
 		 
 		 roiPointMode.addActionListener(this);
 		 roiPolyLineMode.addActionListener(this);
+		 roiPolySemiAMode.addActionListener(this);
 		 //add to the panel
 		 GridBagConstraints ct = new GridBagConstraints();
 		 ct.gridx=0;
@@ -125,6 +134,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 panTracing.add(roiPointMode,ct);
 		 ct.gridx++;
 		 panTracing.add(roiPolyLineMode,ct);
+		 ct.gridx++;
+		 panTracing.add(roiPolySemiAMode,ct);
 		 //filler
 		 ct.gridx++;
 		 ct.weightx = 0.01;
@@ -217,10 +228,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	     add(new JLabel(), c);
 		 
 	 }
-	 public void setParentFrame(JFrame framein)
-	 {
-		 parent_frame = framein;
-	 }
+
 	 
 	 public void addRoi(Roi3D roi_in)
 	 {
@@ -231,6 +239,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 		 if(roi_in.getType()==Roi3D.POLYLINE)
 			 roi_in.setName("polyl"+Integer.toString(roi_in.hashCode()));
+		 if(roi_in.getType()==Roi3D.LINE_TRACE)
+			 roi_in.setName("trace"+Integer.toString(roi_in.hashCode()));
+
 		 listModel.addElement(roi_in.getName());
 		 jlist.setSelectedIndex(activeRoi);
 		
@@ -305,6 +316,32 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 {
 		 addRoi( new Point3D(currPointSize, activePointColor,point_));
 	 }
+	 
+	 public void addSegment(RealPoint point_, ArrayList<RealPoint> segments_)
+	 {
+		 LineTracing3D tracing;
+		 //new Line
+		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.LINE_TRACE)
+		 {
+			 tracing = new LineTracing3D(currLineThickness, currPointSize, activeLineColor, activePointColor);
+			 addRoi(tracing);
+			 tracing.addFirstPoint(point_);
+			 //activeRoi = rois.size()-1; 
+			 return;
+		 }
+		 //active ROI is not a line
+		 /*if(rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
+		 {
+			 return;
+		 }*/
+		 //add point to line
+		 else
+		 {
+			 tracing = (LineTracing3D) rois.get(activeRoi);
+			 tracing.addPointAndSegment(point_,segments_);
+		 }
+	 }
+
 	 /** adds point to active polyline
 	  *  if active ROI is not a polyline, does nothing
 	  *  if there are no active ROIS, starts new polyline **/
@@ -333,6 +370,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 }
 	 
 	 }
+	 
 	 /** removes point from the active polyline
 	  *  if active ROI is not a polyline, does nothing
 	  *  if it is a last point, removes polyline object
@@ -370,7 +408,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 }
 		 }
 	 }
-	 
+	 public void setTraceMode(boolean bTraceMode)
+	 {
+		 	 boolean bState = !bTraceMode;
+			 roiPointMode.setEnabled(bState);
+			 roiPolyLineMode.setEnabled(bState);
+			 butDelete.setEnabled(bState);
+			 butRename.setEnabled(bState);
+			 butDeselect.setEnabled(bState);
+			 butProperties.setEnabled(bState);
+			 listScroller.setEnabled(bState);
+			 jlist.setEnabled(bState);
+
+	 }
 	 public void unselect()
 	 {
 		 activeRoi=-1;
@@ -430,11 +480,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		if(e.getSource() == roiPointMode)
 		{
 			this.mode = RoiManager3D.ADD_POINT;
+			unselect();
 		}
 		if(e.getSource() == roiPolyLineMode)
 		{
 			this.mode = RoiManager3D.ADD_POINT_LINE;
+			unselect();
 		}
+		if(e.getSource() == roiPolySemiAMode)
+		{
+			this.mode = RoiManager3D.ADD_POINT_SEMIAUTOLINE;
+			unselect();
+		}
+		
 		//SHOW ALL BUTTON
 		if(e.getSource() == butShowAll)
 		{

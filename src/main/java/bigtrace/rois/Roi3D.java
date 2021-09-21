@@ -9,7 +9,7 @@ import com.jogamp.opengl.GL3;
 public interface Roi3D 
 {
 
-	public static final int POINT=0, POLYLINE=1; // Types
+	public static final int POINT=0, POLYLINE=1, LINE_TRACE=2; // Types
 	
 	/** returns ROI type**/
 	public int getType();

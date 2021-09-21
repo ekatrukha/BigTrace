@@ -42,7 +42,7 @@ import org.scijava.ui.behaviour.util.Actions;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
 
-
+import bdv.viewer.DisplayMode;
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
@@ -105,15 +105,22 @@ public class BigTrace
 {
 	public  BvvStackSource< UnsignedByteType > bvv;
 	public  BvvStackSource< UnsignedByteType > bvv2;
+	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	RandomAccessibleInterval< UnsignedByteType > view;
 	static IntervalView< UnsignedByteType > view2=null;
+	static IntervalView< UnsignedByteType > trace_weights=null;
+	static IntervalView< FloatType > trace_vectors=null;
+	static boolean bTraceMode = false;
 	IntervalView< FloatType > gauss=null;
 	Img< UnsignedByteType> img;
 	VolumeViewerPanel handl;
 	//SynchronizedViewerState state;
 	CropPanel cropPanel;
 	
-
+	long lTraceBoxSize = 30;
+	int nHalfClickSizeWindow = 5;
+	double sigmaGlob = 3.0;
+	
 	long [][] nDimCurr = new long [2][3];
 	long [][] nDimIni = new long [2][3];
 	double dCam = 1100.;
@@ -212,7 +219,7 @@ public class BigTrace
 
 		/*	@Override
 			public void nearFarChanged(int near, int far) {
-				// TODO Auto-generated method stub
+				// TO DO Auto-generated method stub
 				//VolumeViewer
 				dClipNear = Math.abs(near);
 				dClipFar = (double)far;
@@ -237,10 +244,7 @@ public class BigTrace
 					view2=Views.interval( img, nDimCurr[0], nDimCurr[1] );
 					
 					bvv2 = BvvFunctions.show( view2, "cropresize", Bvv.options().addTo(bvv));
-					//bvv2.getConverterSetups().get(0).setColor(new ARGBType( ARGBType.rgba(0, 0, 255, 255)));
-					
-					
-
+					//bvv2.getConverterSetups().get(0).setColor(new ARGBType( ARGBType.rgba(0, 0, 255, 255)));										
 				}
 			}
 		
@@ -393,7 +397,7 @@ public class BigTrace
 	    //mainWindow.setSize(400, 500);
 	    //mainWindow.requestFocusInWindow();
 	    final JFrame frame = new JFrame( "BigTrace" );
-	    roiManager.setParentFrame(frame);
+	    //roiManager.setParentFrame(frame);
 		frame.add(finalPanel);
 	    frame.setSize(400,500);
 
@@ -418,11 +422,33 @@ public class BigTrace
 				() -> {
 					//addPoint();
 					RealPoint target = new RealPoint(3);
-					
-					if(findPointLocationFromClick(5,target))
+					if(!bTraceMode)
 					{
-						roiManager.addPoint(target);
-						render_pl();
+						if(findPointLocationFromClick(view2, nHalfClickSizeWindow,target))
+						{
+							//point or line
+							if(roiManager.mode<=RoiManager3D.ADD_POINT_LINE)
+							{
+								roiManager.addPoint(target);
+							}
+							//semi auto tracing initialize
+							else
+							{
+								roiManager.addSegment(target, null);
+								bTraceMode= true;
+								roiManager.setTraceMode(bTraceMode);																
+								initTracing(target);
+							}
+							render_pl();
+						}
+					}
+					//continue to trace
+					else
+					{
+						if(findPointLocationFromClick(trace_weights, nHalfClickSizeWindow, target))
+						{
+							System.out.print("next trace!");
+						}						
 					}
 					//addPointToRoiManager(5);
 					// listModel.addElement("test");
@@ -484,45 +510,36 @@ public class BigTrace
 					() -> {
 
 						RealPoint target = new RealPoint(3);
-						double range = 60.0;
-						double sigma=3.0;
-						float stretch = (float)range;
-						if(findPointLocationFromClick(5,target))
+						long range = 30;
+						float stretch = (float)10.0;
+						if(findPointLocationFromClick(view2,5,target))
 						{
 							float [] pos = new float[3];
 							target.localize(pos);
-							long[][] rangeM = new long[3][3];
-							int i;
-							for(i=0;i<3;i++)
+							long[][] rangeTraceBox = getTraceBox(view2,range,target);
+						
+							IntervalView<UnsignedByteType> input = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
+								
+							float[] vDir =testDeriv(input, sigmaGlob, target);
+							//RealPoint origin = new RealPoint(3);
+							RealPoint eV = new RealPoint(3);
+							float[] evX= new float[3];
+								
+							for(int i=-1;i<2;i+=1)
 							{
-								rangeM[0][i]=(long)(pos[i]-range );
-								rangeM[1][i]=(long)(pos[i]+range);								
-							}
-							if(checkBoxInside(rangeM))
-							{
-								
-								IntervalView<UnsignedByteType> input = Views.interval(img, rangeM[0], rangeM[1]);
-								
-								float[] vDir =testDeriv(input, sigma, target);
-								//RealPoint origin = new RealPoint(3);
-								RealPoint eV = new RealPoint(3);
-								float[] evX= new float[3];
-								
-								for(i=-1;i<2;i+=1)
+															
+								for(int j=0;j<3;j++)
 								{
-																
-									for(int j=0;j<3;j++)
-									{
-										evX[j]=pos[j]+stretch*vDir[j]*(i);
-									}
-									eV.setPosition(evX);
-									roiManager.addPoint(eV);
-									
+									evX[j]=pos[j]+stretch*vDir[j]*(i);
 								}
-								roiManager.unselect();
-								
-								render_pl();
+								eV.setPosition(evX);
+								roiManager.addPoint(eV);
+									
 							}
+							roiManager.unselect();
+							showTraceBox(trace_weights);
+							render_pl();
+
 						}
 						
 						
@@ -541,8 +558,31 @@ public class BigTrace
 
 	}
 	
-	
-	public float[] testDeriv(IntervalView<UnsignedByteType> input, double sigma, RealPoint target)
+	public void initTracing(final RealPoint target)
+	{
+		long[][] rangeTraceBox = getTraceBox(view2,lTraceBoxSize,target);
+		
+		IntervalView<UnsignedByteType> traceInterval = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
+			
+		float[] vDir =testDeriv(traceInterval, sigmaGlob, target);
+		showTraceBox(trace_weights);
+	}
+	//gets a box around "target" with half size of range
+	public long[][] getTraceBox(final IntervalView< UnsignedByteType > viewclick, final long range, final RealPoint target)
+	{
+		long[][] rangeM = new long[3][3];
+		int i;
+		float [] pos = new float[3];
+		target.localize(pos);
+		for(i=0;i<3;i++)
+		{
+			rangeM[0][i]=(long)(pos[i])-range ;
+			rangeM[1][i]=(long)(pos[i])+range;								
+		}
+		checkBoxInside(viewclick, rangeM);
+		return rangeM;							
+	}	
+	public float[] testDeriv(final IntervalView<UnsignedByteType> input, final double sigma, final RealPoint target)
 	//public void testDeriv(IntervalView<UnsignedByteType> input, double sigma, double range)
 	{
 		int i;
@@ -616,14 +656,15 @@ public class BigTrace
 			vDirv[i]=rA.get().get();
 		}
 		
+		trace_weights=convertFloatToUnsignedByte(salWeights);
+		trace_vectors=directionVectors;
 		System.out.println("done");
-		showFloat(Views.interval(salWeights,salWeights.minAsLongArray(),salWeights.maxAsLongArray()));
+		//showFloat(Views.interval(salWeights,salWeights.minAsLongArray(),salWeights.maxAsLongArray()));
 		
 		return vDirv;		
 	}
 
-	
-	public void showFloat(IntervalView<FloatType> input)
+	public IntervalView<UnsignedByteType> convertFloatToUnsignedByte(IntervalView<FloatType> input)
 	{
 		float minVal = Float.MAX_VALUE;
 		float maxVal = -Float.MAX_VALUE;
@@ -640,14 +681,22 @@ public class BigTrace
 		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > inputScaled = new ConvertedRandomAccessibleInterval<>( input, ( s, t ) -> {
 			cvU.convert(s,t);
 		}, new UnsignedByteType() );	
+		return Views.interval(inputScaled,inputScaled.minAsLongArray(),inputScaled.maxAsLongArray());
+		
+	}
+	public void showTraceBox(IntervalView<UnsignedByteType> weights)
+	{
 
-		/*
-		bvv2.removeFromBdv();
-		view2=Views.interval( hsStretched, nDimCurr[0], nDimCurr[1] );
-		view2=Views.interval(inputScaled,inputScaled.minAsLongArray(),inputScaled.maxAsLongArray());		
-		bvv2 = BvvFunctions.show( view2, "weights", Bvv.options().addTo(bvv));
-		*/
-		bvv2 = BvvFunctions.show( Views.interval(inputScaled,inputScaled.minAsLongArray(),inputScaled.maxAsLongArray()), "weights", Bvv.options().addTo(bvv));
+	
+		if(bvv_trace!=null)
+		{
+			bvv_trace.removeFromBdv();
+			System.gc();
+		}
+		bvv_trace = BvvFunctions.show(weights, "weights", Bvv.options().addTo(bvv));
+		bvv_trace.setCurrent();
+		bvv_trace.setDisplayRange(0., 150.0);
+		//handl.setDisplayMode(DisplayMode.SINGLE);
 	}
 	
 	public void showHessianComponent(IntervalView<UnsignedByteType> input, double sigma)
@@ -918,7 +967,7 @@ public class BigTrace
 		
 	}
 	
-	public boolean findPointLocationFromClick(final int nHalfWindowSize, final RealPoint target)
+	public boolean findPointLocationFromClick(final IntervalView< UnsignedByteType > viewclick, final int nHalfWindowSize, final RealPoint target)
 	{
 		int i,j;
 
@@ -993,7 +1042,7 @@ public class BigTrace
 		}
 		long [][] nClickMinMax = new long[2][3];
 		
-		if(newBoundBox(intersectionPoints, nClickMinMax))
+		if(newBoundBox(viewclick, intersectionPoints, nClickMinMax))
 		{
 			/*
 			//show volume that was cut-off
@@ -1005,7 +1054,7 @@ public class BigTrace
 			*/
 			
 			
-			IntervalView< UnsignedByteType > intRay = Views.interval(view2, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
+			IntervalView< UnsignedByteType > intRay = Views.interval(viewclick, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
 																								   nClickMinMax[1][0],nClickMinMax[1][1],nClickMinMax[1][2]));
 			
 			//double [][] singleCube  = new double [2][3];
@@ -1208,7 +1257,7 @@ public class BigTrace
 		}
 		long [][] nClickMinMax = new long[2][3];
 		
-		if(newBoundBox(intersectionPoints, nClickMinMax))
+		if(newBoundBox(view2, intersectionPoints, nClickMinMax))
 		{
 			
 			//show volume that was cut-off
@@ -1366,25 +1415,30 @@ public class BigTrace
 		}
 		return Intervals.createMinMax(minL[0],minL[1],minL[2], maxL[0],maxL[1],maxL[2]);
 	}
-	public boolean checkBoxInside(final long [][] newMinMax)
+	public boolean checkBoxInside(final IntervalView< UnsignedByteType > viewclick, final long [][] newMinMax)
 	{ 
+		long [][] bigBox = new long[2][];
+		bigBox[0]=viewclick.minAsLongArray();
+		bigBox[1]=viewclick.maxAsLongArray();
 		for (int j=0;j<3;j++)
 		{
-				newMinMax[0][j]=Math.max(nDimCurr[0][j],newMinMax[0][j]);
-				newMinMax[1][j]=Math.min(nDimCurr[1][j],newMinMax[1][j]);
+				newMinMax[0][j]=Math.max(bigBox[0][j],newMinMax[0][j]);
+				newMinMax[1][j]=Math.min(bigBox[1][j],newMinMax[1][j]);
 				if(newMinMax[1][j]<newMinMax[0][j])
 					return false;
 		}
 		return true;
 	}
 	
-	public boolean newBoundBox(final ArrayList<RealPoint> pointArray, final long [][] newMinMax)
+	public boolean newBoundBox(final IntervalView< UnsignedByteType > viewclick,final ArrayList<RealPoint> pointArray, final long [][] newMinMax)
 	{ 
 		//= new long [2][3];
 		float [][] newMinMaxF = new float [2][3];
 		int i, j;
 		float temp;
-
+		long [][] bigBox = new long[2][];
+		bigBox[0]=viewclick.minAsLongArray();
+		bigBox[1]=viewclick.maxAsLongArray();
 		for (i=0;i<3;i++)
 		{
 			newMinMaxF[0][i]=Float.MAX_VALUE;
@@ -1405,8 +1459,8 @@ public class BigTrace
 		}
 		for (j=0;j<3;j++)
 		{
-				newMinMax[0][j]=Math.max(nDimCurr[0][j],(long)Math.round(newMinMaxF[0][j]));
-				newMinMax[1][j]=Math.min(nDimCurr[1][j],(long)Math.round(newMinMaxF[1][j]));
+				newMinMax[0][j]=Math.max(bigBox[0][j],(long)Math.round(newMinMaxF[0][j]));
+				newMinMax[1][j]=Math.min(bigBox[1][j],(long)Math.round(newMinMaxF[1][j]));
 				if(newMinMax[1][j]<=newMinMax[0][j])
 					return false;
 		}
