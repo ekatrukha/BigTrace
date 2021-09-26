@@ -49,6 +49,7 @@ import bigtrace.geometry.Line3D;
 import bigtrace.gui.CropPanel;
 import bigtrace.gui.PanelTitle;
 import bigtrace.math.DerivConvolutionKernels;
+import bigtrace.math.Dijkstra;
 import bigtrace.math.EigenValVecSymmDecomposition;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
@@ -117,7 +118,7 @@ public class BigTrace
 	//SynchronizedViewerState state;
 	CropPanel cropPanel;
 	
-	long lTraceBoxSize = 30;
+	long lTraceBoxSize = 40;
 	int nHalfClickSizeWindow = 5;
 	double sigmaGlob = 3.0;
 	
@@ -129,6 +130,7 @@ public class BigTrace
 	
 	boolean bShowWorldGrid = false;
 	boolean bShowOrigin = true;
+	Dijkstra dijk;
 	
 	//ArrayList< RealPoint > point_coords = new ArrayList<>();
 	BTPolylines traces = new BTPolylines ();
@@ -147,7 +149,7 @@ public class BigTrace
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
 		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT.tif", new UnsignedByteType());
-		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest.tif", new UnsignedByteType());
+		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest_horz.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
 		//img = SimplifiedIO.openImage(
@@ -447,7 +449,10 @@ public class BigTrace
 					{
 						if(findPointLocationFromClick(trace_weights, nHalfClickSizeWindow, target))
 						{
+							ArrayList<RealPoint> trace = dijk.getTrace(target);
+							roiManager.addSegment(target, trace);
 							System.out.print("next trace!");
+							render_pl();
 						}						
 					}
 					//addPointToRoiManager(5);
@@ -476,8 +481,14 @@ public class BigTrace
 		
 		actions.runnableAction(
 				() -> {
-					
-					roiManager.removePointFromLine();
+					if(!bTraceMode)
+					{
+						roiManager.removePointFromLine();
+					}
+					else
+					{
+						roiManager.removeSegment();
+					}
 					//if(traces.removeLastPointFromActive())
 					//{
 					render_pl();
@@ -563,9 +574,21 @@ public class BigTrace
 		long[][] rangeTraceBox = getTraceBox(view2,lTraceBoxSize,target);
 		
 		IntervalView<UnsignedByteType> traceInterval = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
-			
+		long start1, end1;
+		
+		start1 = System.currentTimeMillis();
 		float[] vDir =testDeriv(traceInterval, sigmaGlob, target);
+		end1 = System.currentTimeMillis();
+		System.out.println("Deriv part: elapsed Time in milli seconds: "+ (end1-start1));
+		
+		
+		start1 = System.currentTimeMillis();
+		dijk = new Dijkstra(trace_weights, target);
+		end1 = System.currentTimeMillis();
+		System.out.println("Dijkstra: elapsed Time in milli seconds: "+ (end1-start1));
+		
 		showTraceBox(trace_weights);
+
 	}
 	//gets a box around "target" with half size of range
 	public long[][] getTraceBox(final IntervalView< UnsignedByteType > viewclick, final long range, final RealPoint target)
@@ -656,7 +679,7 @@ public class BigTrace
 			vDirv[i]=rA.get().get();
 		}
 		
-		trace_weights=convertFloatToUnsignedByte(salWeights);
+		trace_weights=convertFloatToUnsignedByte(salWeights,false);
 		trace_vectors=directionVectors;
 		System.out.println("done");
 		//showFloat(Views.interval(salWeights,salWeights.minAsLongArray(),salWeights.maxAsLongArray()));
@@ -664,7 +687,7 @@ public class BigTrace
 		return vDirv;		
 	}
 
-	public IntervalView<UnsignedByteType> convertFloatToUnsignedByte(IntervalView<FloatType> input)
+	public IntervalView<UnsignedByteType> convertFloatToUnsignedByte(IntervalView<FloatType> input, boolean inverse)
 	{
 		float minVal = Float.MAX_VALUE;
 		float maxVal = -Float.MAX_VALUE;
@@ -677,7 +700,15 @@ public class BigTrace
 
 		
 		//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
-		final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal, maxVal);
+		final RealUnsignedByteConverter<FloatType> cvU;
+		if (inverse)
+		{
+			cvU = new RealUnsignedByteConverter<FloatType>(maxVal,minVal);
+		}
+		else
+		{
+			cvU = new RealUnsignedByteConverter<FloatType>(minVal, maxVal);
+		}
 		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > inputScaled = new ConvertedRandomAccessibleInterval<>( input, ( s, t ) -> {
 			cvU.convert(s,t);
 		}, new UnsignedByteType() );	

@@ -55,7 +55,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public Color activePointColor = Color.WHITE;
 	 public Color nonActivePointColor = Color.WHITE;*/
 	 public int mode;
-	 public float currLineThickness = 7.0f;
+	 public float currLineThickness = 3.0f;
 	 public float currPointSize = 40.0f;
 	 public boolean bShowAll = true;
 
@@ -340,6 +340,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 tracing = (LineTracing3D) rois.get(activeRoi);
 			 tracing.addPointAndSegment(point_,segments_);
 		 }
+	 }
+	 
+	 public void removeSegment()
+	 {
+		 LineTracing3D tracing;
+		 tracing = (LineTracing3D) rois.get(activeRoi);
+		 tracing.removeLastSegment();
 	 }
 
 	 /** adds point to active polyline

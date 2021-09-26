@@ -52,6 +52,13 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 		vertices.add(new RealPoint(in_));
 		segments.add(segments_);
 	}
+	
+	public void removeLastSegment() 
+	{
+		vertices.remove(vertices.size()-1);
+		segments.remove(segments.size()-1);
+		
+	}
 	/*
 	//adds a point to the "end" of polyline
 	public void addPointToEnd(final RealPoint in_)
@@ -239,6 +246,7 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 
 		pointSize=point_size;
 	}
+
 	
 }
 
