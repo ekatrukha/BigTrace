@@ -108,7 +108,28 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
 	   }
 	   //return eVector;
    }
-   
+   public void computeCornersRAI( final RandomAccessibleInterval< T > RAIin, final RandomAccessibleInterval< T > eHarris)
+   {
+	   //final Cursor< RealComposite< T > > m = Views.iterable( Views.collapseReal( RAIin ) ).cursor();
+	   final Cursor< RealComposite< T > > m = Views.iterable( Views.collapseReal( RAIin ) ).cursor();
+	   final Cursor<  T > eH = Views.iterable(  eHarris  ).cursor();
+	   //final Cursor< RealComposite< T > > ev = Views.iterable( Views.collapseReal( eigenvectors ) ).cursor();
+	  // int [] posss = new int[3];
+	   while ( m.hasNext() )
+	   {
+		  //m.localize(posss);
+		  //System.out.println("posH "+Integer.toString(posss[0])+" "+Integer.toString(posss[1])+" "+Integer.toString(posss[2]));
+		  //eV.localize(posss);
+		  //System.out.println("posV "+Integer.toString(posss[0])+" "+Integer.toString(posss[1])+" "+Integer.toString(posss[2]));
+		  //eV.localize(posss);
+		  //System.out.println("posW "+Integer.toString(posss[0])+" "+Integer.toString(posss[1])+" "+Integer.toString(posss[2]));
+
+			//computeTensor( m.next(), ev.next());
+		   //computeTensor( m.next(), eigenvectors);
+		   computeCorners(m.next(),eH.next());
+	   }
+	   //return eVector;
+   }
    public void computeRAI( final RandomAccessibleInterval< T > tensor, 
 		   final RandomAccessibleInterval< T > eVector, 
 		   final RandomAccessibleInterval< T > eWeight,
@@ -250,6 +271,135 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
     	   weight.setZero();
        }
        
+   }
+   public void computeCorners( RealComposite< T > tensor,  T harris)
+   {
+	   int nCount=0;
+	  // RealCompositeSymmetricMatrix< T > m = new RealCompositeSymmetricMatrix<T>( null, n);
+	   //m.setData(tensor);
+	   int i;
+	   for(i =0;i<n; i++)
+		   for(int j =i;j<n; j++)
+	   {
+		   V[i][j] = tensor.get((long)(nCount)).getRealFloat();
+		   //V[i][j] = m.get(i, j);
+		   V[j][i]=V[i][j];
+		   nCount++;
+	   }
+	   // Do the math
+       // Tridiagonalize.
+       tred2();
+       // Diagonalize.
+       tql2();
+       
+       
+       // organize output
+       // find the smallest absolute eigenvalue
+       // and store corresponding vector
+       int index = 0;
+       double dMax = d[index];
+       double dMin = Math.abs(d[index]);
+       for (i =1;i<n; i++)
+       {
+    	   if(Math.abs(d[i])<dMin)
+    	   {
+    		   index=i;
+    		   dMin=Math.abs(d[index]);
+    	   }
+    	   if(d[i]>dMax)
+    	   {
+    		   dMax=d[i];
+    	   }
+       }
+   
+       
+       if(dMax<0)
+       {
+    	   harris.setReal(dMin);
+       }
+       else
+       {
+    	   harris.setZero();
+       }
+       /*
+       boolean bBothNegative = true;
+       double dWeight = 1.0;
+       for (i =0;i<n; i++)
+       {
+    	   if(i!=index)
+    	   {
+    		   if(d[i]>0)
+    		   {
+    			   bBothNegative = false;
+    		   }
+    		   else
+    		   {
+    			   dWeight*=d[i];
+    		   }
+    	   }
+       }       
+       if(bBothNegative)
+       {
+    	   harris.setReal(dWeight*(-1.0));
+       }
+       else
+       {
+    	   harris.setZero();
+       }
+       */
+       /*
+       int index = 0;
+       double dMax = Math.abs(d[index]);
+       for (i =1;i<n; i++)
+       {
+    	   if(Math.abs(d[i])>dMax)
+    	   {
+    		   index=i;
+    		   dMax=Math.abs(d[index]);
+    	   }
+       }
+
+       if(dMax<0)
+       {
+    	   harris.setReal(dMax*(-1.0));
+    	   
+    	   //return;
+       }
+       else
+       {
+    	   harris.setZero();   
+       }
+       /*
+       if(dMax<0)
+       {
+    	   harris.setZero();
+    	   return;
+       }
+       else
+       {
+	       boolean bBothNegative = true;
+	       for (i =0;i<n; i++)
+	       {
+	    	   if(i!=index)
+	    	   {
+	    		   if(d[i]>0)
+	    		   {
+	    			   bBothNegative = false;
+	    		   }
+	    	   }
+	       }
+	       if(bBothNegative)
+	       {
+
+	    	   harris.setReal(dMax);
+	       }
+	       else
+	       {
+	    	   harris.setZero();
+	       }
+
+       }
+       */
    }
    
    public void computeTensor( RealComposite< T > tensor, final float [][] in_vals)

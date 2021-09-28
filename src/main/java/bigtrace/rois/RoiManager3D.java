@@ -341,6 +341,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 tracing.addPointAndSegment(point_,segments_);
 		 }
 	 }
+	 public RealPoint getLastTracePoint()
+	 { 
+		 LineTracing3D tracing;
+		 tracing = (LineTracing3D) rois.get(activeRoi);
+		 return tracing.vertices.get(tracing.vertices.size()-1);
+	 }
+
 	 
 	 public void removeSegment()
 	 {

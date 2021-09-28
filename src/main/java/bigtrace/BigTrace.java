@@ -49,13 +49,15 @@ import bigtrace.geometry.Line3D;
 import bigtrace.gui.CropPanel;
 import bigtrace.gui.PanelTitle;
 import bigtrace.math.DerivConvolutionKernels;
-import bigtrace.math.Dijkstra;
+import bigtrace.math.DijkstraBinaryHeap;
+import bigtrace.math.DijkstraFibonacciHeap;
+import bigtrace.math.DijkstraRestricted;
 import bigtrace.math.EigenValVecSymmDecomposition;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsSimple;
 import bigtrace.scene.VisPolyLineSimple;
-
+import bigtrace.volume.VolumeMax;
 import net.imagej.ops.OpService;
 import bvv.util.BvvStackSource;
 import ij.IJ;
@@ -79,6 +81,9 @@ import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.convolution.Convolution;
 import net.imglib2.algorithm.convolution.kernel.Kernel1D;
 import net.imglib2.algorithm.convolution.kernel.SeparableKernelConvolution;
+import net.imglib2.algorithm.neighborhood.Neighborhood;
+import net.imglib2.algorithm.neighborhood.RectangleShape;
+import net.imglib2.algorithm.neighborhood.Shape;
 import net.imglib2.converter.RealUnsignedByteConverter;
 import net.imglib2.converter.read.ConvertedRandomAccessibleInterval;
 import net.imglib2.img.Img;
@@ -86,6 +91,7 @@ import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImg;
 
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.basictypeaccess.array.ByteArray;
 import net.imglib2.img.basictypeaccess.array.FloatArray;
 import net.imglib2.realtransform.AffineTransform3D;
 
@@ -130,7 +136,10 @@ public class BigTrace
 	
 	boolean bShowWorldGrid = false;
 	boolean bShowOrigin = true;
-	Dijkstra dijk;
+	DijkstraRestricted dijkR;
+	//DijkstraBinaryHeap dijkBH;
+	//DijkstraFibonacciHeap dijkFib;
+
 	
 	//ArrayList< RealPoint > point_coords = new ArrayList<>();
 	BTPolylines traces = new BTPolylines ();
@@ -139,7 +148,7 @@ public class BigTrace
 	BTPolylines origin_data = new BTPolylines ();
 
 	RoiManager3D roiManager = new RoiManager3D();
-	
+	JProgressBar progressBar;
 		
 	public void runBVV()
 	{
@@ -365,10 +374,11 @@ public class BigTrace
 	    tabPane.setSize(350, 300);
 	    tabPane.setSelectedIndex(1);
 
-	    JProgressBar progressBar;
-	    progressBar = new JProgressBar(0, 100);
+	    
+	    progressBar = new JProgressBar(0,100);
+	    //progressBar.setIndeterminate(true);
 	    progressBar.setValue(0);
-	    //progressBar.setStringPainted(true);
+	    progressBar.setStringPainted(true);
 		
 	    JPanel finalPanel = new JPanel(new GridBagLayout());
 	    GridBagConstraints cv = new GridBagConstraints();
@@ -440,6 +450,7 @@ public class BigTrace
 								bTraceMode= true;
 								roiManager.setTraceMode(bTraceMode);																
 								initTracing(target);
+								
 							}
 							render_pl();
 						}
@@ -449,10 +460,17 @@ public class BigTrace
 					{
 						if(findPointLocationFromClick(trace_weights, nHalfClickSizeWindow, target))
 						{
-							ArrayList<RealPoint> trace = dijk.getTrace(target);
-							roiManager.addSegment(target, trace);
-							System.out.print("next trace!");
-							render_pl();
+							dijkR = new DijkstraRestricted(trace_weights, roiManager.getLastTracePoint());
+							ArrayList<RealPoint> trace = dijkR.getTrace(target);
+							//ArrayList<RealPoint> trace = dijkFib.getTrace(target);
+							//ArrayList<RealPoint> trace = dijkBH.getTrace(target);
+							
+							if(trace.size()>1)
+							{
+								roiManager.addSegment(target, trace);
+								System.out.print("next trace!");
+								render_pl();
+							}
 						}						
 					}
 					//addPointToRoiManager(5);
@@ -500,7 +518,17 @@ public class BigTrace
 				"W" );
 		actions.runnableAction(
 				() -> {
+					if(!bTraceMode)
+					{
 						roiManager.unselect();
+					}
+					else
+					{
+						roiManager.unselect();
+						bTraceMode= false;
+						roiManager.setTraceMode(bTraceMode);	
+						removeTraceBox();
+					}
 				},
 				"new trace",
 				"E" );
@@ -564,6 +592,21 @@ public class BigTrace
 					},
 					"show hessian ",
 					"F" );
+			actions.runnableAction(
+					() -> {
+						RealPoint target = new RealPoint(3);
+						if(findPointLocationFromClick(view2, nHalfClickSizeWindow,target))
+						{
+							long range = 40;
+							float [] pos = new float[3];
+							target.localize(pos);
+							long[][] rangeTraceBox = getTraceBox(view2,range,target);
+							IntervalView<UnsignedByteType> input = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
+							showCorners(input, 3.0, target);
+						}
+					},
+					"show harris",
+					"G" );
 		//actions.namedAction(action, defaultKeyStrokes);
 		actions.install( bvv.getBvvHandle().getKeybindings(), "BigTrace actions" );
 
@@ -581,12 +624,22 @@ public class BigTrace
 		end1 = System.currentTimeMillis();
 		System.out.println("Deriv part: elapsed Time in milli seconds: "+ (end1-start1));
 		
+		/*
+		start1 = System.currentTimeMillis();
+		dijkBH = new DijkstraBinaryHeap(trace_weights, target);
+		end1 = System.currentTimeMillis();
+		System.out.println("Dijkstra binary heap: elapsed Time in milli seconds: "+ (end1-start1));
+
+		start1 = System.currentTimeMillis();
+		dijkFib = new DijkstraFibonacciHeap(trace_weights, target);
+		end1 = System.currentTimeMillis();
+		System.out.println("Dijkstra fibonacci: elapsed Time in milli seconds: "+ (end1-start1));
 		
 		start1 = System.currentTimeMillis();
-		dijk = new Dijkstra(trace_weights, target);
+		dijkR = new DijkstraRestricted(trace_weights, target);
 		end1 = System.currentTimeMillis();
-		System.out.println("Dijkstra: elapsed Time in milli seconds: "+ (end1-start1));
-		
+		System.out.println("Dijkstra fibonacci: elapsed Time in milli seconds: "+ (end1-start1));
+*/
 		showTraceBox(trace_weights);
 
 	}
@@ -604,9 +657,9 @@ public class BigTrace
 		}
 		checkBoxInside(viewclick, rangeM);
 		return rangeM;							
-	}	
-	public float[] testDeriv(final IntervalView<UnsignedByteType> input, final double sigma, final RealPoint target)
-	//public void testDeriv(IntervalView<UnsignedByteType> input, double sigma, double range)
+	}
+	
+	public void showCorners(final IntervalView<UnsignedByteType> input, final double sigma, final RealPoint target)
 	{
 		int i;
 		double [][] kernels;
@@ -642,6 +695,132 @@ public class BigTrace
 		{
 			for ( int d2 = d1; d2 < 3; d2++ )
 			{
+				IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
+				nDerivOrder = new int [3];
+				nDerivOrder[d1]++;
+				nDerivOrder[d2]++;
+				kernels = DerivConvolutionKernels.convolve_derive_kernel(sigma, nDerivOrder );
+				derivKernel = Kernel1D.centralAsymmetric(kernels);
+				convObj=SeparableKernelConvolution.convolution( derivKernel );
+				convObj.setExecutor(es);
+				convObj.process(Views.extendBorder(input), hs2 );
+				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
+				count++;
+				System.out.println(count);
+			}
+		}
+		//end1 = System.currentTimeMillis();
+		//System.out.println("THREADED Elapsed Time in milli seconds: "+ (end1-start1));
+
+		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
+		ArrayImg<FloatType, FloatArray> sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
+
+		IntervalView<FloatType> valHarris =  Views.translate(sW, minV);
+		mEV.computeCornersRAI(hessian, valHarris);
+		trace_weights=convertFloatToUnsignedByte(valHarris,false);
+		IntervalView< UnsignedByteType > maxFiltered =localMaxPoint(trace_weights);
+		showTraceBox(maxFiltered);
+	}
+	public IntervalView< UnsignedByteType > localMaxPoint(final IntervalView< UnsignedByteType > input)
+	{
+		Shape voxShape = new RectangleShape( 1, true);
+		long[] dim = Intervals.dimensionsAsLongArray( input );
+		ArrayImg<UnsignedByteType, ByteArray> outBytes = ArrayImgs.unsignedBytes(dim);
+		IntervalView< UnsignedByteType > output = Views.translate(outBytes, input.minAsLongArray());
+		
+		final RandomAccessible< Neighborhood< UnsignedByteType > > inputNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.extendZero(input) );		
+		final RandomAccess< Neighborhood< UnsignedByteType > > inRA = inputNeighborhoods.randomAccess();
+		
+		
+		Cursor< UnsignedByteType > inC=input.cursor();
+		Cursor< UnsignedByteType > ouC=output.cursor();
+		Cursor< UnsignedByteType > neibC;
+		int nMaxDet = 0;
+		int nMaxNDet = 0;
+		int currVal;
+		boolean isMax;
+		while ( inC.hasNext() )
+		{
+			inC.fwd();
+			ouC.fwd();
+			currVal=inC.get().get();
+			if(currVal>15)
+			{
+				inRA.setPosition(inC.positionAsLongArray());
+				neibC = inRA.get().cursor();
+				isMax= true;
+				while(neibC.hasNext())
+				{
+					neibC.fwd();
+					if(neibC.get().get()>currVal)
+					{
+						isMax = false;
+						break;
+					}
+						
+				}
+				if(isMax)
+				{
+					ouC.get().set(100);
+					nMaxDet++;
+					float [] position = new float[3];
+					ouC.localize(position);
+					roiManager.addPoint(new RealPoint(position));
+					
+				}
+				else
+				{
+					ouC.get().set(0);
+					nMaxNDet++;
+				}
+			}
+		}
+		System.out.println("max det:"+Integer.toString(nMaxDet));
+		System.out.println("max N det:"+Integer.toString(nMaxNDet));
+		return output;
+	}
+
+	
+	public float[] testDeriv(final IntervalView<UnsignedByteType> input, final double sigma, final RealPoint target)
+	//public void testDeriv(IntervalView<UnsignedByteType> input, double sigma, double range)
+	{
+		int i;
+		double [][] kernels;
+		Kernel1D[] derivKernel;
+		final long[] dim = Intervals.dimensionsAsLongArray( input );
+		long[] minV = input.minAsLongArray();
+		long[] nShift = new long [input.numDimensions()+1];
+		
+		for (i=0;i<input.numDimensions();i++)
+		{
+			nShift[i]=minV[i];
+		}
+		
+		ArrayImg<FloatType, FloatArray> hessFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
+		IntervalView<FloatType> hessian = Views.translate(hessFloat, nShift);
+		
+		
+		//ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
+		
+		//long start1, end1;
+		
+		
+		int count = 0;
+		int [] nDerivOrder;
+		/**/
+		Convolution convObj;
+		//start1 = System.currentTimeMillis();
+		final int nThreads = Runtime.getRuntime().availableProcessors();
+		ExecutorService es = Executors.newFixedThreadPool( nThreads );
+		progressBar.setMaximum(6);
+		progressBar.setValue(0);
+		//progressBar.setIndeterminate(false);
+		//second derivatives
+		for (int d1=0;d1<3;d1++)
+		{
+			for ( int d2 = d1; d2 < 3; d2++ )
+			{
+				
 				IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
 				nDerivOrder = new int [3];
 				nDerivOrder[d1]++;
@@ -729,7 +908,18 @@ public class BigTrace
 		bvv_trace.setDisplayRange(0., 150.0);
 		//handl.setDisplayMode(DisplayMode.SINGLE);
 	}
+	public void removeTraceBox()
+	{
+
 	
+		if(bvv_trace!=null)
+		{
+			bvv_trace.removeFromBdv();
+			System.gc();
+		}
+		bvv_trace=null;
+		//handl.setDisplayMode(DisplayMode.SINGLE);
+	}	
 	public void showHessianComponent(IntervalView<UnsignedByteType> input, double sigma)
 	{
 		double [][] kernels;
@@ -1003,7 +1193,7 @@ public class BigTrace
 		int i,j;
 
 		java.awt.Point point_mouse  = bvv.getBvvHandle().getViewerPanel().getMousePosition();
-		System.out.println( "drag x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
+		System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
 														
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
@@ -1098,7 +1288,7 @@ public class BigTrace
 			RealPoint target_found = new RealPoint( 3 );
 			//RealPoint locationMax = new RealPoint( 3 );
 			
-			if(computeMaxLocationCuboid(intRay,target_found,clickVolume))
+			if(VolumeMax.findMaxLocationCuboid(intRay,target_found,clickVolume))
 			{
 				//traces.addPointToActive(target);
 				handl.showMessage("point found");
@@ -1128,7 +1318,7 @@ public class BigTrace
 	public void addLineAlongTheClick()
 	{
 		java.awt.Point point_mouse  =bvv.getBvvHandle().getViewerPanel().getMousePosition();
-		System.out.println( "drag x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
+		System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
 		
 
 		AffineTransform3D transform = new AffineTransform3D();
@@ -1213,7 +1403,7 @@ public class BigTrace
 		int i,j;
 
 		java.awt.Point point_mouse  = bvv.getBvvHandle().getViewerPanel().getMousePosition();
-		System.out.println( "drag x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
+		System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
 														
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
@@ -1342,48 +1532,7 @@ public class BigTrace
 	}
 
 	
-	/**
-	 * Compute the location of the maximal intensity for any IterableInterval,
-	 * like an {@link Img}, contained inside Cuboid3D
-	 *
-	 * The functionality we need is to iterate and retrieve the location. Therefore we need a
-	 * Cursor that can localize itself.
-	 * Note that we do not use a LocalizingCursor as localization just happens from time to time.
-	 *
-	 * @param input - the input that has to just be {@link IterableInterval}
-	 * @param maxLocation - the location of the maximal value
-	 * @param clickCone - Cuboid3D, limiting search 
-	 */
-	public < T extends Comparable< T > & Type< T > > boolean computeMaxLocationCuboid(
-		final IterableInterval< T > input,  final RealPoint maxLocation, final Cuboid3D clickCone )
-	{
-		// create a cursor for the image (the order does not matter)
-		final Cursor< T > cursor = input.cursor();
-		
-		boolean bFound=false;
-		// initialize min and max with the first image value
-		T type = cursor.next();
-		T max = type.copy();
-		double [] pos = new double [3];
-		// loop over the rest of the data and determine min and max value
-		while ( cursor.hasNext() )
-		{
-			// we need this type more than once
-			type = cursor.next();
- 
-				if ( type.compareTo( max ) > 0 )
-				{
-					cursor.localize(pos);
-					if(clickCone.isPointInsideShape(pos))
-					{
-						max.set( type );
-						maxLocation.setPosition( cursor );
-						bFound=true;
-					}
-				}
-		}
-		return bFound;
-	}
+
 	/**  function calculates transform allowing to align two vectors 
 	 * @param align_direction - immobile vector
 	 * @param moving - vector that aligned with align_direction
