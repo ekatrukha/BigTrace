@@ -182,8 +182,12 @@ public class BigTrace
 		}
 		
 		
+		   javax.swing.SwingUtilities.invokeLater(new Runnable() {
+	            public void run() {
+	            	initMainDialog();
+	            }
+	        });
 		
-		initMainDialog();
 
 
 
@@ -446,9 +450,9 @@ public class BigTrace
 							//semi auto tracing initialize
 							else
 							{
-								roiManager.addSegment(target, null);
 								bTraceMode= true;
-								roiManager.setTraceMode(bTraceMode);																
+								roiManager.setTraceMode(bTraceMode);
+								roiManager.addSegment(target, null);																
 								initTracing(target);
 								
 							}
@@ -713,11 +717,16 @@ public class BigTrace
 		//System.out.println("THREADED Elapsed Time in milli seconds: "+ (end1-start1));
 
 		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
+		ArrayImg<FloatType, FloatArray> dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
 		ArrayImg<FloatType, FloatArray> sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
-
-		IntervalView<FloatType> valHarris =  Views.translate(sW, minV);
-		mEV.computeCornersRAI(hessian, valHarris);
-		trace_weights=convertFloatToUnsignedByte(valHarris,false);
+		ArrayImg<FloatType, FloatArray> nC = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
+		IntervalView<FloatType> directionVectors =  Views.translate(dV, nShift);
+		IntervalView<FloatType> salWeights =  Views.translate(sW, minV);
+		IntervalView<FloatType> lineCorners =  Views.translate(nC, minV);
+		
+		mEV.computeVWCRAI(hessian, directionVectors,salWeights, lineCorners,nThreads,es);
+		es.shutdown();
+		trace_weights=convertFloatToUnsignedByte(lineCorners,false);
 		IntervalView< UnsignedByteType > maxFiltered =localMaxPoint(trace_weights);
 		showTraceBox(maxFiltered);
 	}
@@ -812,8 +821,8 @@ public class BigTrace
 		//start1 = System.currentTimeMillis();
 		final int nThreads = Runtime.getRuntime().availableProcessors();
 		ExecutorService es = Executors.newFixedThreadPool( nThreads );
-		progressBar.setMaximum(6);
-		progressBar.setValue(0);
+		//progressBar.setMaximum(6);
+		//progressBar.setValue(0);
 		//progressBar.setIndeterminate(false);
 		//second derivatives
 		for (int d1=0;d1<3;d1++)
@@ -831,6 +840,7 @@ public class BigTrace
 				convObj.setExecutor(es);
 				convObj.process(Views.extendBorder(input), hs2 );
 				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
+				//progressBar.setValue(count);
 				count++;
 				System.out.println(count);
 			}
@@ -846,7 +856,7 @@ public class BigTrace
 	    
 		//direction vectors and saliency weights for each voxel
 		 
-		mEV.computeRAI( hessian,directionVectors,salWeights,nThreads,es);
+		mEV.computeVWRAI( hessian,directionVectors,salWeights,nThreads,es);
 		es.shutdown();
         
 		float[] vDirv = new float[3];
