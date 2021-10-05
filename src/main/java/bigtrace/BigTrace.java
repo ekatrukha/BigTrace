@@ -14,12 +14,9 @@ import java.awt.event.ItemListener;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.concurrent.ExecutionException;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -37,7 +34,7 @@ import javax.swing.WindowConstants;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
+
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
@@ -138,6 +135,7 @@ public class BigTrace
 	
 	boolean bShowWorldGrid = false;
 	boolean bShowOrigin = true;
+	boolean bVolumeBox = true;
 	DijkstraRestricted dijkR;
 	//DijkstraBinaryHeap dijkBH;
 	//DijkstraFibonacciHeap dijkFib;
@@ -159,7 +157,7 @@ public class BigTrace
 		//img = SimplifiedIO.openImage(
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
-		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT_sq.tif", new UnsignedByteType());
+		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT.tif", new UnsignedByteType());
 		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest_horz.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
@@ -303,6 +301,29 @@ public class BigTrace
 	    c.gridx=0;
 	    c.gridy=0;
 		panView.add(butOrigin,c);
+		
+		
+		icon_path = classLoader.getResource("icons/boxvolume.png").getFile();
+	    tabIcon = new ImageIcon(icon_path);
+	    JToggleButton butVBox = new JToggleButton(tabIcon);
+	    butVBox.setSelected(bVolumeBox);
+	    butVBox.setToolTipText("Volume Box");
+	    butVBox.addItemListener(new ItemListener() {
+	
+	    @Override
+		public void itemStateChanged(ItemEvent e) {
+	    	      if(e.getStateChange()==ItemEvent.SELECTED){
+	    	    	  bVolumeBox=true;
+	    	    	  render_pl();
+	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
+	    	        	bVolumeBox=false;
+	    	        	render_pl();
+	    	        }
+			}
+	    	});
+	    c.gridx++;
+	    
+		panView.add(butVBox,c);
 		icon_path = classLoader.getResource("icons/worldgrid.png").getFile();
 	    tabIcon = new ImageIcon(icon_path);
 	    JToggleButton butWorld = new JToggleButton(tabIcon);
@@ -321,9 +342,11 @@ public class BigTrace
 	    	        }
 			}
 	    	});
-	    c.gridx=1;
-	    c.gridy=0;
+	    c.gridx++;
 		panView.add(butWorld,c);
+		
+		
+		
 		
 		//Cropping Panel
 		JPanel panCrop=new JPanel(new GridBagLayout()); 
@@ -1007,7 +1030,7 @@ public class BigTrace
 				lines.draw( gl, new Matrix4f( data.getPv() ));
 			}
 			*/
-			roiManager.draw(gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()}, data.getDClipNear(), data.getDClipFar());
+			roiManager.draw(gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()});
 			
 			//render the origin of coordinates
 			if (bShowOrigin)
@@ -1024,94 +1047,78 @@ public class BigTrace
 				}
 			}
 			
-			//test
-			float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
-			VisPointsScaled pointSX= new VisPointsScaled(colorComp, new RealPoint (150.,150.,0.), 100.0f);
-			int sWz = bvv.getBvvHandle().getViewerPanel().getWidth();
-			int sHz = bvv.getBvvHandle().getViewerPanel().getHeight();
-			Matrix4f  matPersp = new Matrix4f();
-			MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sWz, sHz, 0, matPersp );
-			AffineTransform3D transform = new AffineTransform3D();
-			handl.state().getViewerTransform(transform);
-			Matrix4f mattWorld = MatrixMath.affine( transform, new Matrix4f() );
-			pointSX.draw( gl, data.getPv(), new double [] {data.getScreenWidth(), data.getScreenHeight()});
-		 	
-			Vector4f eyePos = new Vector4f(250.0f,250.0f,-50.0f,1.0f);
-			Vector4f eyePosOrig = new Vector4f(250.0f,250.0f,-50.0f,1.0f);
-			Vector4f shift = new Vector4f(250.0f,250.0f,-50.0f,1.0f);
-			//Vector4f eyePos2 = new Vector4f(5.0f,5.0f,5.0f,1.0f);
-			//Vector3f eyePos3 = new Vector3f(5.0f,5.0f,5.0f);
-			eyePos.mul(mattWorld);
-			eyePos.mul(matPersp);
-			shift = new Vector4f(eyePos);
-			//shift.x=shift.x+10.0f;
-			shift.y=shift.y+10.0f;
-			Matrix4f invW = new Matrix4f ();
-			Matrix4f invP = new Matrix4f ();
-			mattWorld.invert(invW);
-			matPersp.invert(invP);
-			shift.mul(invP);
-			shift.mul(invW);
-			Vector4f dl = new Vector4f();
-			dl = shift.sub(eyePosOrig);
-			float lenfactor=20.0f/dl.length();
-			dl.x=dl.x*lenfactor;
-			dl.y=dl.y*lenfactor;
-			dl.z=dl.z*lenfactor;
-			dl.add(eyePosOrig);
-			dl.mul(mattWorld);
-			dl.mul(matPersp);			
-			
-			
-			//Vector4f projVoxel = new Vector4f(20.0f,20.0f,eyePos.z,eyePos.w);
-			//Vector4f projVoxelZero = new Vector4f(0.0f,0.0f,eyePos.z,eyePos.w);
-			//Vector4f projVoxel = new Vector4f(eyePos.x,eyePos.y,eyePos.z,eyePos.w);
-			//Vector4f projVoxelZero = new Vector4f(eyePos2.x,eyePos2.y,eyePos2.z,eyePos2.w);
-			//projVoxel.mul(matPersp);
-			//projVoxel.x=projVoxel.x+10.0f;
-			//projVoxel.mul(matPersp.invert());
-			
-			//Vector3f fin = new Vector3f(1.0f,1.0f,1.0f);
-			//Vector3f finZero = new Vector3f(1.0f,1.0f,1.0f);
-			//matPersp.project(projVoxel.x, projVoxel.y, projVoxel.z, new int []{0,0,sWz,sHz}, fin);
-			//matPersp.project(projVoxelZero.x, projVoxelZero.y, projVoxelZero.z, new int []{0,0,sWz,sHz}, finZero);
-			//float dx= fin.x - finZero.x;
-			//float dy= fin.y - finZero.y;
-			//projVoxel.mul(matPersp);
-			//projVoxelZero.mul(matPersp);
-			//float xV=projVoxel.x/projVoxel.w*0.5f*(float)sWz;
-			//float xVZ=projVoxelZero.x/projVoxelZero.w*0.5f*(float)sWz;
-			//float dxx= xV-xVZ;
-			float xV=eyePos.x/eyePos.w*0.5f*(float)sWz;
-			float xVZ=dl.x/dl.w*0.5f*(float)sWz;
-			float dxx= xV-xVZ;
-			float yV=eyePos.y/eyePos.w*0.5f*(float)sHz;
-			float yVZ=dl.y/dl.w*0.5f*(float)sHz;
-			float dyy= yV-yVZ;
-			/*
-			projVoxel.mul(matPersp);
-			projVoxelZero.mul(matPersp);
-			float dx= projVoxel.x / projVoxel.w;
-			float dy= projVoxel.y / projVoxel.w;
-			dx=dx*800.0f;
-			dy=dy*600.0f;
-			
-			float dxZ= projVoxelZero.x / projVoxelZero.w;
-			float dyZ= projVoxelZero.y / projVoxelZero.w;
-			dxZ=dxZ*800.0f;
-			dyZ=dyZ*600.0f;
+			//render a box around  the volume 
+			if (bVolumeBox)
+			{
+				float [][] nDimBox = new float [2][3];
+				
+				int i,j,z;
+				for(i=0;i<3;i++)
+				{
+					//why is this shift?! I don't know,
+					// but looks better like this
+					nDimBox[0][i]=nDimIni[0][i]+0.5f;
+					nDimBox[1][i]=nDimIni[1][i]-1.0f;
+				}
+				float [] vbox_color = new float[]{0.4f,0.4f,0.4f};
+				float vbox_thickness = 0.5f;
+				int [][] edgesxy = new int [5][2];
+				edgesxy[0]=new int[]{0,0};
+				edgesxy[1]=new int[]{1,0};
+				edgesxy[2]=new int[]{1,1};
+				edgesxy[3]=new int[]{0,1};
+				edgesxy[4]=new int[]{0,0};
+				
+				//draw front and back
+				RealPoint vertex1=new RealPoint(0,0,0);
+				RealPoint vertex2=new RealPoint(0,0,0);
+				for (z=0;z<2;z++)
+				{
+					for (i=0;i<4;i++)
+					{
+						for (j=0;j<2;j++)
+						{
+							vertex1.setPosition(nDimBox[edgesxy[i][j]][j], j);
+							vertex2.setPosition(nDimBox[edgesxy[i+1][j]][j], j);
+						}
+						//z coord
+						vertex1.setPosition(nDimBox[z][2], 2);
+						vertex2.setPosition(nDimBox[z][2], 2);
+						ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
+						VisPolyLineSimple lines;
+						point_coords.add(new RealPoint(vertex1));
+						point_coords.add(new RealPoint(vertex2));
+						
+						lines = new VisPolyLineSimple(vbox_color, point_coords, vbox_thickness);
+														
+						lines.draw( gl, new Matrix4f( data.getPv() ));	
+					}
+				}
+				//draw the rest 4 edges
+
+				for (i=0;i<4;i++)
+				{
+					for (j=0;j<2;j++)
+					{
+						vertex1.setPosition(nDimBox[edgesxy[i][j]][j], j);
+						vertex2.setPosition(nDimBox[edgesxy[i][j]][j], j);
+					}
+					//z coord
+					vertex1.setPosition(nDimBox[0][2], 2);
+					vertex2.setPosition(nDimBox[1][2], 2);
+					ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
+					VisPolyLineSimple lines;
+					point_coords.add(new RealPoint(vertex1));
+					point_coords.add(new RealPoint(vertex2));
+
+					lines = new VisPolyLineSimple(vbox_color, point_coords, vbox_thickness);
+
+					lines.draw( gl, new Matrix4f( data.getPv() ));	
+				}
+				
+
+			}
 		
-			float dxxx= 0.25f*Math.abs(dx-dxZ);
-			float dyyy= 0.25f*Math.abs(dy-dyZ);
-			
-			eyePos.mul(matPersp);
-			Matrix4f matPerspWorld2 = new Matrix4f();
-			MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sWz, sHz, 0, matPerspWorld2 ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
-			eyePos2.mulProject(matPerspWorld2);
-			eyePos=matPerspWorld2.project(eyePos3, new int []{0,0,sWz,sHz}, eyePos2);
-		    //vec4 projVoxel = projection * vec4(spriteSize,spriteSize,eyePos.z,eyePos.w);
-		    //vec2 projSize = screenSize * projVoxel.xy / projVoxel.w;
-			*/
 			//render world grid			
 			if(bShowWorldGrid)
 			{
@@ -1123,7 +1130,7 @@ public class BigTrace
 				ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
 				//for (int i =0; i<sW; i+=40)
 				float [] world_grid_color = new float[]{0.5f,0.5f,0.5f}; 
-				float world_grith_thickness = 1.0f;
+				float world_grid_thickness = 1.0f;
 	
 				//bottom grid
 				float i;
@@ -1134,7 +1141,7 @@ public class BigTrace
 				{
 					point_coords.add(new RealPoint(i,j,(float)(-1.0*dClipNear)));
 					point_coords.add(new RealPoint(i,j,(float)(1.0*dClipFar)));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
 					lines.draw( gl, matPerspWorld);
 					point_coords.clear();
 				}
@@ -1145,7 +1152,7 @@ public class BigTrace
 				{
 					point_coords.add(new RealPoint((float)(-sW),j,k));
 					point_coords.add(new RealPoint((float)2*sW,j,k));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
 					lines.draw( gl, matPerspWorld);
 					point_coords.clear();
 				}
@@ -1155,7 +1162,7 @@ public class BigTrace
 				{
 					point_coords.add(new RealPoint(i,0,(float)(dClipFar*0.99)));
 					point_coords.add(new RealPoint(i,sH,(float)(dClipFar*0.99)));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
 					lines.draw( gl, matPerspWorld);
 					point_coords.clear();
 				}	
@@ -1165,7 +1172,7 @@ public class BigTrace
 				{
 					point_coords.add(new RealPoint((float)(-sW),j,(float)(dClipFar*0.99)));
 					point_coords.add(new RealPoint((float)2*sW,j,(float)(dClipFar*0.99)));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
 					lines.draw( gl, matPerspWorld);
 					point_coords.clear();
 				}	
@@ -1178,7 +1185,7 @@ public class BigTrace
 				{
 					point_coords.add(new RealPoint(i,j,(float)(-1.0*dClipNear)));
 					point_coords.add(new RealPoint(i,j,(float)(1.0*dClipFar)));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
 					lines.draw( gl, matPerspWorld);
 					point_coords.clear();
 				}
@@ -1187,7 +1194,7 @@ public class BigTrace
 				{
 					point_coords.add(new RealPoint((float)(-sW),j,k));
 					point_coords.add(new RealPoint((float)2*sW,j,k));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grith_thickness );
+					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
 					lines.draw( gl, matPerspWorld);
 					point_coords.clear();
 				}
@@ -1217,7 +1224,7 @@ public class BigTrace
 		{
 			scale=(double)sH/(double)nH;
 		}
-		scale = 0.1*scale;
+		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
 		t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nW), 0.0, scale, 0.0, 0.5*((double)sH-scale*(double)nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
 		//t.set(1, 0.0, 0.0, 0.5*((double)sW-(double)nW), 0.0, 1.0, 0.0, 0.5*((double)sH-(double)nH), 0.0, 0.0, 1., 0.0);

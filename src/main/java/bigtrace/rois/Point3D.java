@@ -7,7 +7,6 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.scene.VisPointsScaled;
-import bigtrace.scene.VisPointsSimple;
 import net.imglib2.RealPoint;
 
 public class Point3D implements Roi3D {
