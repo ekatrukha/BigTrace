@@ -9,11 +9,10 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
-import bigtrace.scene.VisPointsSimple;
+import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineSimple;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.Masks;
 import net.imglib2.roi.RealMask;
 import net.imglib2.roi.RealMaskRealInterval;
@@ -66,16 +65,16 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 
 
 	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, double[] screen_size, double dNear, double dFar) {
+	public void draw(GL3 gl, Matrix4fc pvm, double[] screen_size) {
 		
 		
 		float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
 		pointColor.getComponents(colorComp);
-		VisPointsSimple points= new VisPointsSimple(colorComp, vertices, pointSize);
+		VisPointsScaled points= new VisPointsScaled(colorComp, vertices, pointSize);
 		VisPolyLineSimple lines;
 		lineColor.getComponents(colorComp);
 		lines = new VisPolyLineSimple(colorComp, vertices, lineThickness);
-		points.draw( gl, pvm, screen_size, dNear, dFar);
+		points.draw( gl, pvm, screen_size);
 		lines.draw( gl, pvm);
 	}
 

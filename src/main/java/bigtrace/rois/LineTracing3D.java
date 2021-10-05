@@ -9,7 +9,7 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
-import bigtrace.scene.VisPointsSimple;
+import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineSimple;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
@@ -85,13 +85,13 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 */
 
 	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, double[] screen_size, double dNear, double dFar) {
+	public void draw(GL3 gl, Matrix4fc pvm, double[] screen_size) {
 		
 		
 		float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
 		pointColor.getComponents(colorComp);
-		VisPointsSimple points= new VisPointsSimple(colorComp, vertices, pointSize);
-		points.draw( gl, pvm, screen_size, dNear, dFar);		
+		VisPointsScaled points= new VisPointsScaled(colorComp, vertices, pointSize);
+		points.draw( gl, pvm, screen_size);		
 		VisPolyLineSimple lines;
 		lineColor.getComponents(colorComp);
 		for (int i=0;i<segments.size();i++)

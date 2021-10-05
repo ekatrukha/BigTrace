@@ -37,6 +37,7 @@ import javax.swing.WindowConstants;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
@@ -55,6 +56,7 @@ import bigtrace.math.DijkstraRestricted;
 import bigtrace.math.EigenValVecSymmDecomposition;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
+import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPointsSimple;
 import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMax;
@@ -157,7 +159,7 @@ public class BigTrace
 		//img = SimplifiedIO.openImage(
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
-		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT.tif", new UnsignedByteType());
+		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT_sq.tif", new UnsignedByteType());
 		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest_horz.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
@@ -1022,8 +1024,95 @@ public class BigTrace
 				}
 			}
 			
-			//render world grid
+			//test
+			float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
+			VisPointsScaled pointSX= new VisPointsScaled(colorComp, new RealPoint (150.,150.,0.), 100.0f);
+			int sWz = bvv.getBvvHandle().getViewerPanel().getWidth();
+			int sHz = bvv.getBvvHandle().getViewerPanel().getHeight();
+			Matrix4f  matPersp = new Matrix4f();
+			MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sWz, sHz, 0, matPersp );
+			AffineTransform3D transform = new AffineTransform3D();
+			handl.state().getViewerTransform(transform);
+			Matrix4f mattWorld = MatrixMath.affine( transform, new Matrix4f() );
+			pointSX.draw( gl, data.getPv(), new double [] {data.getScreenWidth(), data.getScreenHeight()});
+		 	
+			Vector4f eyePos = new Vector4f(250.0f,250.0f,-50.0f,1.0f);
+			Vector4f eyePosOrig = new Vector4f(250.0f,250.0f,-50.0f,1.0f);
+			Vector4f shift = new Vector4f(250.0f,250.0f,-50.0f,1.0f);
+			//Vector4f eyePos2 = new Vector4f(5.0f,5.0f,5.0f,1.0f);
+			//Vector3f eyePos3 = new Vector3f(5.0f,5.0f,5.0f);
+			eyePos.mul(mattWorld);
+			eyePos.mul(matPersp);
+			shift = new Vector4f(eyePos);
+			//shift.x=shift.x+10.0f;
+			shift.y=shift.y+10.0f;
+			Matrix4f invW = new Matrix4f ();
+			Matrix4f invP = new Matrix4f ();
+			mattWorld.invert(invW);
+			matPersp.invert(invP);
+			shift.mul(invP);
+			shift.mul(invW);
+			Vector4f dl = new Vector4f();
+			dl = shift.sub(eyePosOrig);
+			float lenfactor=20.0f/dl.length();
+			dl.x=dl.x*lenfactor;
+			dl.y=dl.y*lenfactor;
+			dl.z=dl.z*lenfactor;
+			dl.add(eyePosOrig);
+			dl.mul(mattWorld);
+			dl.mul(matPersp);			
 			
+			
+			//Vector4f projVoxel = new Vector4f(20.0f,20.0f,eyePos.z,eyePos.w);
+			//Vector4f projVoxelZero = new Vector4f(0.0f,0.0f,eyePos.z,eyePos.w);
+			//Vector4f projVoxel = new Vector4f(eyePos.x,eyePos.y,eyePos.z,eyePos.w);
+			//Vector4f projVoxelZero = new Vector4f(eyePos2.x,eyePos2.y,eyePos2.z,eyePos2.w);
+			//projVoxel.mul(matPersp);
+			//projVoxel.x=projVoxel.x+10.0f;
+			//projVoxel.mul(matPersp.invert());
+			
+			//Vector3f fin = new Vector3f(1.0f,1.0f,1.0f);
+			//Vector3f finZero = new Vector3f(1.0f,1.0f,1.0f);
+			//matPersp.project(projVoxel.x, projVoxel.y, projVoxel.z, new int []{0,0,sWz,sHz}, fin);
+			//matPersp.project(projVoxelZero.x, projVoxelZero.y, projVoxelZero.z, new int []{0,0,sWz,sHz}, finZero);
+			//float dx= fin.x - finZero.x;
+			//float dy= fin.y - finZero.y;
+			//projVoxel.mul(matPersp);
+			//projVoxelZero.mul(matPersp);
+			//float xV=projVoxel.x/projVoxel.w*0.5f*(float)sWz;
+			//float xVZ=projVoxelZero.x/projVoxelZero.w*0.5f*(float)sWz;
+			//float dxx= xV-xVZ;
+			float xV=eyePos.x/eyePos.w*0.5f*(float)sWz;
+			float xVZ=dl.x/dl.w*0.5f*(float)sWz;
+			float dxx= xV-xVZ;
+			float yV=eyePos.y/eyePos.w*0.5f*(float)sHz;
+			float yVZ=dl.y/dl.w*0.5f*(float)sHz;
+			float dyy= yV-yVZ;
+			/*
+			projVoxel.mul(matPersp);
+			projVoxelZero.mul(matPersp);
+			float dx= projVoxel.x / projVoxel.w;
+			float dy= projVoxel.y / projVoxel.w;
+			dx=dx*800.0f;
+			dy=dy*600.0f;
+			
+			float dxZ= projVoxelZero.x / projVoxelZero.w;
+			float dyZ= projVoxelZero.y / projVoxelZero.w;
+			dxZ=dxZ*800.0f;
+			dyZ=dyZ*600.0f;
+		
+			float dxxx= 0.25f*Math.abs(dx-dxZ);
+			float dyyy= 0.25f*Math.abs(dy-dyZ);
+			
+			eyePos.mul(matPersp);
+			Matrix4f matPerspWorld2 = new Matrix4f();
+			MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sWz, sHz, 0, matPerspWorld2 ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
+			eyePos2.mulProject(matPerspWorld2);
+			eyePos=matPerspWorld2.project(eyePos3, new int []{0,0,sWz,sHz}, eyePos2);
+		    //vec4 projVoxel = projection * vec4(spriteSize,spriteSize,eyePos.z,eyePos.w);
+		    //vec2 projSize = screenSize * projVoxel.xy / projVoxel.w;
+			*/
+			//render world grid			
 			if(bShowWorldGrid)
 			{
 
@@ -1128,7 +1217,7 @@ public class BigTrace
 		{
 			scale=(double)sH/(double)nH;
 		}
-		scale = 0.9*scale;
+		scale = 0.1*scale;
 		AffineTransform3D t = new AffineTransform3D();
 		t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nW), 0.0, scale, 0.0, 0.5*((double)sH-scale*(double)nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
 		//t.set(1, 0.0, 0.0, 0.5*((double)sW-(double)nW), 0.0, 1.0, 0.0, 0.5*((double)sH-(double)nH), 0.0, 0.0, 1., 0.0);

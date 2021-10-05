@@ -6,6 +6,7 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
+import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPointsSimple;
 import net.imglib2.RealPoint;
 
@@ -41,14 +42,13 @@ public class Point3D implements Roi3D {
 	}
 
 	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, double[] screen_size, double dNear, double dFar) 
+	public void draw(GL3 gl, Matrix4fc pvm, double[] screen_size) 
 	{
 		float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
 		pointColor.getComponents(colorComp);
-		VisPointsSimple point= new VisPointsSimple(colorComp, vertex, pointSize);
-		point.draw( gl, pvm, screen_size, dNear, dFar);
+		VisPointsScaled point= new VisPointsScaled(colorComp, vertex, pointSize);
+		point.draw( gl, pvm, screen_size);
 	}
-
 	@Override
 	public void setLineColor(Color lineColor_) {
 		return;

@@ -21,7 +21,7 @@ public interface Roi3D
 	public void setName(String name);
 	
 	/** Draws ROI into the volume **/
-	public void draw( GL3 gl, Matrix4fc pvm,  final double [] screen_size, double dNear, double dFar );
+	public void draw( GL3 gl, Matrix4fc pvm,  final double [] screen_size);
 	public void setLineColor(Color lineColor_);
 	public void setPointColor(Color pointColor_);
 	public float getLineThickness();

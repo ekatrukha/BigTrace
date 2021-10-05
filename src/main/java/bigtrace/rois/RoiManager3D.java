@@ -56,7 +56,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public Color nonActivePointColor = Color.WHITE;*/
 	 public int mode;
 	 public float currLineThickness = 3.0f;
-	 public float currPointSize = 40.0f;
+	 public float currPointSize = 5.0f;
 	 public boolean bShowAll = true;
 
 	 
@@ -293,11 +293,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	    	   }
 	    	   if(bShowAll)
 	    	   {
-	    		   roi.draw(gl, pvm, screen_size, dNear, dFar);
+	    		   roi.draw(gl, pvm, screen_size);
 	    	   }
 	    	   else
 	    		   if(i==activeRoi)
-	    			   roi.draw(gl, pvm, screen_size, dNear, dFar);
+	    			   roi.draw(gl, pvm, screen_size);
 	       }
 	 }
 	 
