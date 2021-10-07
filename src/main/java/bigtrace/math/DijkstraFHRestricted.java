@@ -1,9 +1,6 @@
 package bigtrace.math;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.function.Predicate;
 
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
@@ -22,9 +19,9 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-public class DijkstraRestricted {
+public class DijkstraFHRestricted {
 	
-	
+	public static final int ININODE=100, BORDER_ADD=50;
 	
 
 	/** weights (saliency) of each voxel  **/
@@ -35,31 +32,18 @@ public class DijkstraRestricted {
 	public IntervalView< IntType > ccost;
 	public IntervalView< UnsignedByteType > dirs;
 
-	public PriorityQueue<Node> queue;
-	//public PriorityQueue<Cursor< IntType >> queue;
+
+	public FibonacciHeap<Integer> queue;
+
 	
 	Shape voxShape = new RectangleShape( 1, true);
 	long [] iniPoint;
 	long[] dim;
 	
-	public class Node
-	{
-		public int nNode;
-		public int nCost;
-		
-		public Node(int nNode_, int nCost_)
-		{
-			nNode =nNode_;
-			nCost =nCost_;
-		}
-		
-	}
-	
 	/** Computes the shortest path based on the given cost values and
 	 vectors.
 	 	**/
-	public DijkstraRestricted(IntervalView< UnsignedByteType > trace_weights_, RealPoint startPoint_)
-	//public Dijkstra(IntervalView< UnsignedByteType > trace_weights_, IntervalView< FloatType > trace_vectors_, RealPoint startPoint_)
+	public DijkstraFHRestricted(IntervalView< UnsignedByteType > trace_weights_, RealPoint startPoint_)
 	{
 		
 		//int nCount=0;
@@ -68,6 +52,7 @@ public class DijkstraRestricted {
 		dim = Intervals.dimensionsAsLongArray( trace_weights );
 		ArrayImg<IntType, IntArray> costInt = ArrayImgs.ints(dim);
 		ccost = Views.translate(costInt, trace_weights.minAsLongArray());
+		
 
 		ArrayImg<UnsignedByteType, ByteArray> dirsInt = ArrayImgs.unsignedBytes(dim);
 		dirs = Views.translate(dirsInt, trace_weights.minAsLongArray());
@@ -84,8 +69,8 @@ public class DijkstraRestricted {
 		}
 		long [][] pos = new long [(int)(nTotPix)][dim.length];
 		//queue = new PriorityQueue<Cursor< IntType >>(25000, new CursorCompare());
-		queue = new PriorityQueue<Node>(25000, new NodeCompare());
-		
+		queue = new FibonacciHeap<Integer>();
+		//entries = new ArrayList<Entry<Cursor< IntType >>>(25000);
 	
 		
 		//new cost neighborhood
@@ -101,17 +86,17 @@ public class DijkstraRestricted {
 		final RandomAccess< Neighborhood< UnsignedByteType > > dnRA = dirsNeighborhoods.randomAccess();
 		
 		
-		final RandomAccess< IntType> ccostRA = ccost.randomAccess();			
-		//final RandomAccess< UnsignedByteType> weightRA = trace_weights.randomAccess();
+		final RandomAccess< IntType> ccostRA = ccost.randomAccess();
+
 		final RandomAccess< UnsignedByteType> dirsRA = dirs.randomAccess();
 
-		Neighborhood< IntType > cnNH; 
-		Neighborhood< UnsignedByteType > wnNH;
-		Neighborhood< UnsignedByteType > dnNH;
+
 		Cursor< IntType > cnC;
+		//Cursor< IntType > enC;
 		Cursor< UnsignedByteType > wnC;
 		Cursor< UnsignedByteType > dnC;
-		Cursor< IntType > nextNode;
+		//Cursor< IntType > nextNode;
+		//Entry<Cursor< IntType >> nextEntry;
 		
 		//starting point
 		ccostRA.setPosition(currPoint);
@@ -121,44 +106,44 @@ public class DijkstraRestricted {
 		//int nCount = 0;
 		//int [] queueSize = new int[(int)(dim[0]*dim[1])];//*dim[2])];
 		int nMaxQ=0;
-		int nEnQ=0;
-		int nDeleted = 0;
 		int nValVox;
 		int nDir = 0;
+		int nEnQ=0;
+		int iCurCCost;
 		int iNewCCost;
-		int iCurCCost;	
 		int nW;
+		int maxCost=0;
 		// Path searching:
 		while (bQueue) 
 		{
 
 			ccostRA.setPosition(currPoint);
-			//weightRA.setPosition(currPoint);
-			//dirsRA.setPosition(currPoint);
-
+			
 			cnRA.setPosition(currPoint);
 			wnRA.setPosition(currPoint);
 			dnRA.setPosition(currPoint);
-			cnNH = cnRA.get();
-			wnNH = wnRA.get();
-			dnNH = dnRA.get();
-			cnC=cnNH.cursor();
-			wnC=wnNH.cursor();
-			dnC=dnNH.cursor();
+			cnC = cnRA.get().cursor();
+			//enNH = enRA.get();
+			wnC = wnRA.get().cursor();
+			dnC = dnRA.get().cursor();
+			
+
 			//mark current position as processed, i.e. make cost negative
-			ccostRA.get().mul(-1.0);
-			nValVox=(-1)*ccostRA.get().get();
+			nValVox=ccostRA.get().get();
+			ccostRA.get().set(nValVox*(-1));
+			//ccostRA.get().mul(-1.0);
 			//iterate through the neighborhood
+			//count starts from 1
 			nDir=0;
+			//nValVox=(-1)*ccostRA.get().get();
 			while ( cnC.hasNext() )
 			{
 				nDir++;
 				cnC.fwd();
+				//enC.fwd();
 				wnC.fwd();
 				dnC.fwd();
-				//int currCost=(-1)*ccostRA.get().get();
-				//long [] lll=cnC.positionAsLongArray();
-				//long  [] ll2=wnC.positionAsLongArray();				
+
 				iCurCCost = cnC.get().get();
 				if(iCurCCost>=0)
 				{
@@ -167,119 +152,76 @@ public class DijkstraRestricted {
 					if (nW==0)
 					{
 						cnC.get().set(-1);
-						dnC.get().set(50+nDir);
+						dnC.get().set(BORDER_ADD+nDir);
 					}
 					else
 					{
 						//iNewCCost = nValVox + (255 - nW);
-						iNewCCost = nValVox + (255 - wnC.get().get());
+						iNewCCost = nValVox + (255 - nW);
 						if (iNewCCost < iCurCCost || iCurCCost==0)
 						{
-							int xx=0;
-							if (iCurCCost==0)
+							cnC.get().set(iNewCCost);
+							//add element to the queue
+							//queue.enqueue(cnC.copyCursor(), iNewCCost);
+							cnC.localize(pos[nEnQ]);
+							if(iCurCCost==0)
 							{
-								xx=1;
+								queue.enqueue(nEnQ, iNewCCost);
 							}
 							else
 							{
-								xx=2;
+								int nn = 1;//enC.get().get();
+							
 							}
-							cnC.get().set(iNewCCost);
-							cnC.localize(pos[nEnQ]);
-							queue.add(new Node(nEnQ,iNewCCost));
+
+							//queue.enqueue(pos[nEnQ], iNewCCost);
+							/*if(iNewCCost>maxCost)
+								maxCost=iNewCCost;*/
 							nEnQ++;
+							int vv=0;
+							if (iCurCCost==0)
+							{																								
+								//entries.add(queue.enqueue(cnC.copyCursor(), iNewCCost));
+								//enC.get().set(entries.size()-1);
+								vv=1;
+							}
+							else
+							{
+								//int nn = enC.get().get();
+								//queue.decreaseKey(entries.get(enC.get().get()), iNewCCost);
+								vv=2;
+							}
 							dnC.get().set(nDir);
 						}
 					}
 				}
 			}//iteration through neighborhood end
 			
-			
-			if(queue.size()==0)
+			if(queue.isEmpty())
 			{
-				bQueue=false;
+				bQueue = false;
 			}
 			else
 			{
-				currPoint = pos[queue.poll().nNode];	
+				currPoint=pos[queue.dequeueMin().getValue()];
 			}
-			/*
-			
-			boolean bNextFound = false;
-			//let's look for a node with minimal cost
-			while (!bNextFound)
-			{
-				//clear the queue
-				//Predicate<Cursor<IntType>> removeChecked = curs -> curs.get().get()<0;
-				//queue.removeIf(removeChecked);
-				nextNode =	queue.poll();
-				//end of queue, finish everything
-				if (nextNode== null)
-				{
-					bNextFound = true;
-					bQueue = false;
-				}
-				else
-				{
-					//maybe it was already processed?
-					//no? ok, let's get it
-					if(nextNode.get().get()>0)
-					{
-						bNextFound = true;
-						nextNode.localize(currPoint);
-					}
-					else
-					{
-						nDeleted++;
-					}
-				}
-			}
-			*/
-			if(queue.size()>nMaxQ)
-				nMaxQ=queue.size();
-			
-			
-			// debug stuff
-			//print current cost matrix
-			/*
-			//queueSize[nCount]=queue.size(); 
-			nCount++;
-			System.out.println("Cost Matrix step="+Integer.toString(nCount));
-		    RandomAccess<IntType> rA = ccost.randomAccess();
-		    int [] pos = new int [2];
-		    int N=3;
-		    for (int i=0;i<N;i++)
-		    {
-		    	for (int j=0;j<N;j++)
-		    	{
-		    		pos[0]=j;
-		    		pos[1]=i;
-		    		rA.setPosition(pos);
-		    		System.out.print(rA.get().get());
-		    		System.out.print(" ");
-		    	}
-		    	System.out.print("\n");
-		    }
-		    N++;
-		    N--;
-		    */
+
+	
 		}//queue end 
 		System.out.println("max queue:"+Integer.toString(nMaxQ));
-		System.out.println("nDeleted:"+Integer.toString(nDeleted));
-		System.out.println("Q add N:"+Integer.toString(nEnQ));
+		System.out.println("max cost:"+Integer.toString(maxCost));
 		//mark initial node with zero cost
 		ccostRA.setPosition(iniPoint);
 		ccostRA.get().setZero();
-		//and mark direction matrix
 		dirsRA.setPosition(iniPoint);
-		dirsRA.get().set(100);
+		//middle of neighborhood
+		dirsRA.get().set(ININODE);
 	}
 	
-	public ArrayList<RealPoint> getTrace(final RealPoint click)
+	public boolean getTrace(final RealPoint click, final ArrayList<RealPoint> finSegment)
 	{
-		ArrayList<RealPoint> finSegment = new ArrayList<RealPoint>();
 		RealPoint currRP = new RealPoint(click);
-		int i,nDir;
+		int i, nDir;
 		float [][] neibIndexes = new float [26][3];
 		float [] currV = new float[3];
 		//long [] currPoint =new long [dim.length];
@@ -314,71 +256,77 @@ public class DijkstraRestricted {
 		}
 		
 		final RandomAccess< UnsignedByteType> dirsRA = dirs.randomAccess();
-		
-		boolean bArrived = false;
-		//initial spot
-		finSegment.add(new RealPoint(click));
 		//check that it was explored
 		dirsRA.setPosition(endPoint);
-		nDir=dirsRA.get().get();
+		nDir=dirsRA.get().get();			
 		if(nDir>0)
 		{
+			boolean bArrived = false;
+
+			//initial spot
+			finSegment.add(new RealPoint(click));
+
 			while (!bArrived)
 			{
 				dirsRA.setPosition(endPoint);
 				nDir=dirsRA.get().get();
-				
-	
-				if (nDir==100)
-				{
-					bArrived = true;
-				}
-				else
-				{
-					nDir--;
-					currRP.move(neibIndexes[nDir]);
-					finSegment.add(new RealPoint(currRP));
-					for (i =0;i<dim.length; i++)
+				//was it explored?
+						
+					if (nDir==ININODE)
 					{
-						endPoint[i]=(long)Math.round(currRP.getFloatPosition(i));
+						bArrived = true;
 					}
-				}
+					else
+					{
+						if(nDir>BORDER_ADD)
+						{
+							nDir-=BORDER_ADD;
+						}
+						nDir--;
+						currRP.move(neibIndexes[nDir]);
+						finSegment.add(new RealPoint(currRP));
+						for (i =0;i<dim.length; i++)
+						{
+							endPoint[i]=(long)Math.round(currRP.getFloatPosition(i));
+						}
+					}
 				
 			}
 		}
 		else
 		{
 			System.out.println("no contact :(");
+			return false;
 		}
+
 		//click.setPosition(currRP);
-		return finSegment;
-	}
-	
-/*	public class CursorCompare implements Comparator<Cursor<IntType>> 
-	{
-
-		@Override
-		public int compare(Cursor<IntType> o1, Cursor<IntType> o2) {
-			// TODO Auto-generated method stub
-			
-			return Integer.compare(o1.get().get(), o2.get().get());
-		}
-
-		
-	}*/
-	public class NodeCompare implements Comparator<Node> 
-	{
-
-		@Override
-		public int compare(Node o1, Node o2) {
-			// TODO Auto-generated method stub
-			
-			return Integer.compare(o1.nCost, o2.nCost);
-		}
-
-		
+		return true;
 	}
 
+	/** provided list of coordinates in allCorners, 
+	 * function returns only those that were in explored area,
+	 * (i.e. dirs array was marked) **/
+	public ArrayList<long []> exploredCorners(ArrayList<long []> allCorners)
+	{
+		int i;
+		int nCornNum=0;
+		
+		
+		ArrayList<long []> markedCorners = new ArrayList<long []> (); 
+		final RandomAccess< UnsignedByteType> dirsRA = dirs.randomAccess();
+		for (i=0;i<allCorners.size(); i++)
+		{
+			dirsRA.setPosition(allCorners.get(i));
+			
+			if(dirsRA.get().get()>0)
+			{
+				markedCorners.add(allCorners.get(i));
+				nCornNum++;
+			}
+		}
+		System.out.println("Corners found:"+Integer.toString(nCornNum));
+		return markedCorners;
+	}
 	//test Dijkstra on some simple example
 	public static void main(String[] args) 
 	{
@@ -391,9 +339,9 @@ public class DijkstraRestricted {
 				1, 1, 1, 1,
 		};		*/
 		final byte[] values = {
-				1, 2, 1,
-				0, 0, 1,
-				1, 1, 1
+				1, -120, -120,
+				1, 1, -120,
+				1, 1, -120
 		};
 		for (int i=0;i<values.length;i++)
 		{
@@ -403,7 +351,7 @@ public class DijkstraRestricted {
 		final Img< UnsignedByteType > img = ArrayImgs.unsignedBytes( values, N, N);
 		IntervalView< UnsignedByteType > trace_weights = Views.interval(img, new long[] {0,0},new long[] {N-1,N-1});
 		
-		DijkstraRestricted dijTest = new DijkstraRestricted(trace_weights, new RealPoint(0,0));
+		DijkstraFHRestricted dijTest = new DijkstraFHRestricted(trace_weights, new RealPoint(0,0));
 		
 
 		System.out.println("Final Cost Matrix");

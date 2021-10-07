@@ -49,14 +49,14 @@ import bigtrace.gui.PanelTitle;
 import bigtrace.math.DerivConvolutionKernels;
 import bigtrace.math.DijkstraBinaryHeap;
 import bigtrace.math.DijkstraFibonacciHeap;
-import bigtrace.math.DijkstraRestricted;
+import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.EigenValVecSymmDecomposition;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPointsSimple;
 import bigtrace.scene.VisPolyLineSimple;
-import bigtrace.volume.VolumeMax;
+import bigtrace.volume.VolumeMisc;
 import net.imagej.ops.OpService;
 import bvv.util.BvvStackSource;
 import ij.IJ;
@@ -116,6 +116,7 @@ public class BigTrace
 	static IntervalView< UnsignedByteType > view2=null;
 	static IntervalView< UnsignedByteType > trace_weights=null;
 	static IntervalView< FloatType > trace_vectors=null;
+	static ArrayList<long []> jump_points = null;
 	static boolean bTraceMode = false;
 	IntervalView< FloatType > gauss=null;
 	Img< UnsignedByteType> img;
@@ -123,7 +124,7 @@ public class BigTrace
 	//SynchronizedViewerState state;
 	CropPanel cropPanel;
 	
-	long lTraceBoxSize = 40;
+	long lTraceBoxSize = 100;
 	int nHalfClickSizeWindow = 5;
 	double sigmaGlob = 3.0;
 	
@@ -136,7 +137,8 @@ public class BigTrace
 	boolean bShowWorldGrid = false;
 	boolean bShowOrigin = true;
 	boolean bVolumeBox = true;
-	DijkstraRestricted dijkR;
+	DijkstraFHRestricted dijkRBegin;
+	DijkstraFHRestricted dijkREnd;
 	//DijkstraBinaryHeap dijkBH;
 	//DijkstraFibonacciHeap dijkFib;
 
@@ -489,11 +491,7 @@ public class BigTrace
 					{
 						if(findPointLocationFromClick(trace_weights, nHalfClickSizeWindow, target))
 						{
-							dijkR = new DijkstraRestricted(trace_weights, roiManager.getLastTracePoint());
-							ArrayList<RealPoint> trace = dijkR.getTrace(target);
-							//ArrayList<RealPoint> trace = dijkFib.getTrace(target);
-							//ArrayList<RealPoint> trace = dijkBH.getTrace(target);
-							
+							ArrayList<RealPoint> trace = getSemiAutoTrace(target);							
 							if(trace.size()>1)
 							{
 								roiManager.addSegment(target, trace);
@@ -508,23 +506,8 @@ public class BigTrace
 				"add point",
 				"Q" );
 		
-		//creates a line along the click taking into account 
-		// frustum projection
-		actions.runnableAction(
-				() -> {
 
-					addLineAlongTheClick();
-				},
-				"render click",
-				"T" );
-		//rotates a view along the axis of the click
-		// in frustum projection
-		actions.runnableAction(
-				() -> {
-					viewClickArea(10);
-				},
-				"rotate view click",
-				"Y" );
+
 		
 		actions.runnableAction(
 				() -> {
@@ -574,68 +557,7 @@ public class BigTrace
 				"reset view YZ",
 				"2" );
 			
-			actions.runnableAction(
-					() -> {
 
-						RealPoint target = new RealPoint(3);
-						long range = 30;
-						float stretch = (float)10.0;
-						if(findPointLocationFromClick(view2,5,target))
-						{
-							float [] pos = new float[3];
-							target.localize(pos);
-							long[][] rangeTraceBox = getTraceBox(view2,range,target);
-						
-							IntervalView<UnsignedByteType> input = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
-								
-							float[] vDir =testDeriv(input, sigmaGlob, target);
-							//RealPoint origin = new RealPoint(3);
-							RealPoint eV = new RealPoint(3);
-							float[] evX= new float[3];
-								
-							for(int i=-1;i<2;i+=1)
-							{
-															
-								for(int j=0;j<3;j++)
-								{
-									evX[j]=pos[j]+stretch*vDir[j]*(i);
-								}
-								eV.setPosition(evX);
-								roiManager.addPoint(eV);
-									
-							}
-							roiManager.unselect();
-							showTraceBox(trace_weights);
-							render_pl();
-
-						}
-						
-						
-						
-					},
-					"reset tracings",
-					"I" );
-			actions.runnableAction(
-					() -> {
-						showHessianComponent(view2, 3.0);
-					},
-					"show hessian ",
-					"F" );
-			actions.runnableAction(
-					() -> {
-						RealPoint target = new RealPoint(3);
-						if(findPointLocationFromClick(view2, nHalfClickSizeWindow,target))
-						{
-							long range = 40;
-							float [] pos = new float[3];
-							target.localize(pos);
-							long[][] rangeTraceBox = getTraceBox(view2,range,target);
-							IntervalView<UnsignedByteType> input = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
-							showCorners(input, 3.0, target);
-						}
-					},
-					"show harris",
-					"G" );
 		//actions.namedAction(action, defaultKeyStrokes);
 		actions.install( bvv.getBvvHandle().getKeybindings(), "BigTrace actions" );
 
@@ -647,12 +569,16 @@ public class BigTrace
 		
 		IntervalView<UnsignedByteType> traceInterval = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
 		long start1, end1;
-		
+
+		start1 = System.currentTimeMillis();
+		calcWeightVectrosCorners(traceInterval, sigmaGlob, target);
+		end1 = System.currentTimeMillis();
+		System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
+/*
 		start1 = System.currentTimeMillis();
 		float[] vDir =testDeriv(traceInterval, sigmaGlob, target);
 		end1 = System.currentTimeMillis();
-		System.out.println("Deriv part: elapsed Time in milli seconds: "+ (end1-start1));
-		
+		System.out.println("Deriv part: elapsed Time in milli seconds: "+ (end1-start1));*/
 		/*
 		start1 = System.currentTimeMillis();
 		dijkBH = new DijkstraBinaryHeap(trace_weights, target);
@@ -672,23 +598,102 @@ public class BigTrace
 		showTraceBox(trace_weights);
 
 	}
-	//gets a box around "target" with half size of range
-	public long[][] getTraceBox(final IntervalView< UnsignedByteType > viewclick, final long range, final RealPoint target)
+	public ArrayList<RealPoint> getSemiAutoTrace(RealPoint target)
 	{
-		long[][] rangeM = new long[3][3];
-		int i;
-		float [] pos = new float[3];
-		target.localize(pos);
-		for(i=0;i<3;i++)
+		ArrayList<RealPoint> trace = new ArrayList<RealPoint>(); 
+		long start1, end1;
+		
+		start1 = System.currentTimeMillis();
+		//init Dijkstra from initial click point
+		dijkRBegin = new DijkstraFHRestricted(trace_weights, roiManager.getLastTracePoint());
+		end1 = System.currentTimeMillis();
+		System.out.println("Dijkstra Restr search BEGIN: elapsed Time in milli seconds: "+ (end1-start1));
+
+		//showCorners(dijkRBegin.exploredCorners(jump_points));
+		//both points in the connected area
+		if (dijkRBegin.getTrace(target, trace))
 		{
-			rangeM[0][i]=(long)(pos[i])-range ;
-			rangeM[1][i]=(long)(pos[i])+range;								
+			return trace;
 		}
-		checkBoxInside(viewclick, rangeM);
-		return rangeM;							
+		//need to find shortcut through jumping points
+		else
+		{
+			// get corners in the beginning
+			ArrayList<long []> begCorners = dijkRBegin.exploredCorners(jump_points);
+			start1 = System.currentTimeMillis();
+			dijkREnd = new DijkstraFHRestricted(trace_weights, target);
+			end1 = System.currentTimeMillis();
+			System.out.println("Dijkstra Restr search END: elapsed Time in milli seconds: "+ (end1-start1));
+			ArrayList<long []> endCorners = dijkREnd.exploredCorners(jump_points);
+			//there are corners (jump points) in the trace area
+			// let's construct the path
+			if(begCorners.size()>0 && endCorners.size()>0)
+			{
+				//find a closest pair of corners
+				ArrayList<long []> pair = findClosestPoints(begCorners,endCorners);
+				RealPoint pB = new RealPoint(3);
+				RealPoint pE = new RealPoint(3);
+				pB.setPosition(pair.get(0));
+				pE.setPosition(pair.get(1));
+				ArrayList<RealPoint> traceB = new ArrayList<RealPoint> (); 
+				dijkRBegin.getTrace(pB, traceB);
+				ArrayList<RealPoint> traceE = new ArrayList<RealPoint> ();
+				dijkREnd.getTrace(pE, traceE);
+				int i;
+				//connect traces
+				for(i=traceB.size()-1;i>=0 ;i--)
+				{
+					trace.add(traceB.get(i));
+				}
+				//TODO: insert connecting 3D bresenham here
+				for(i=0;i<traceE.size();i++)
+				{
+					trace.add(traceE.get(i));
+				}
+
+			}
+			return trace;
+		}
+		
+		
 	}
 	
-	public void showCorners(final IntervalView<UnsignedByteType> input, final double sigma, final RealPoint target)
+	public ArrayList<long []> findClosestPoints(ArrayList<long []> begCorners, ArrayList<long []> endCorners)
+	{
+		ArrayList<long []> pair = new ArrayList<long []> ();
+		
+		long minDist = Long.MAX_VALUE;
+		long currDist,dL;
+		int indB=0;
+		int indE=0;
+		long [] pB, pE;
+		int i,j,k;
+		for (i=0;i<begCorners.size();i++)
+		{
+			pB=begCorners.get(i);
+			for (j=0;j<endCorners.size();j++)
+			{
+				pE=endCorners.get(j);
+				currDist=0;
+				for(k=0;k<pB.length;k++)
+				{
+					dL=pE[k]-pB[k];
+					currDist+=dL*dL;
+				}
+				if(currDist<minDist)
+				{
+					minDist=currDist;
+					indB=i;
+					indE=j;
+				}
+			}
+		}
+		pair.add(begCorners.get(indB));
+		pair.add(endCorners.get(indE));
+		return pair;
+	}
+	
+	public void calcWeightVectrosCorners(final IntervalView<UnsignedByteType> input, final double sigma, final RealPoint target)
 	{
 		int i;
 		double [][] kernels;
@@ -751,184 +756,39 @@ public class BigTrace
 		
 		mEV.computeVWCRAI(hessian, directionVectors,salWeights, lineCorners,nThreads,es);
 		es.shutdown();
-		trace_weights=convertFloatToUnsignedByte(lineCorners,false);
-		IntervalView< UnsignedByteType > maxFiltered =localMaxPoint(trace_weights);
-		showTraceBox(maxFiltered);
+		trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
+		jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 15);
+		//showCorners(jump_points);
+		showTraceBox(trace_weights);
 	}
-	public IntervalView< UnsignedByteType > localMaxPoint(final IntervalView< UnsignedByteType > input)
-	{
-		Shape voxShape = new RectangleShape( 1, true);
-		long[] dim = Intervals.dimensionsAsLongArray( input );
-		ArrayImg<UnsignedByteType, ByteArray> outBytes = ArrayImgs.unsignedBytes(dim);
-		IntervalView< UnsignedByteType > output = Views.translate(outBytes, input.minAsLongArray());
-		
-		final RandomAccessible< Neighborhood< UnsignedByteType > > inputNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.extendZero(input) );		
-		final RandomAccess< Neighborhood< UnsignedByteType > > inRA = inputNeighborhoods.randomAccess();
-		
-		
-		Cursor< UnsignedByteType > inC=input.cursor();
-		Cursor< UnsignedByteType > ouC=output.cursor();
-		Cursor< UnsignedByteType > neibC;
-		int nMaxDet = 0;
-		int nMaxNDet = 0;
-		int currVal;
-		boolean isMax;
-		while ( inC.hasNext() )
-		{
-			inC.fwd();
-			ouC.fwd();
-			currVal=inC.get().get();
-			if(currVal>15)
-			{
-				inRA.setPosition(inC.positionAsLongArray());
-				neibC = inRA.get().cursor();
-				isMax= true;
-				while(neibC.hasNext())
-				{
-					neibC.fwd();
-					if(neibC.get().get()>currVal)
-					{
-						isMax = false;
-						break;
-					}
-						
-				}
-				if(isMax)
-				{
-					ouC.get().set(100);
-					nMaxDet++;
-					float [] position = new float[3];
-					ouC.localize(position);
-					roiManager.addPoint(new RealPoint(position));
-					
-				}
-				else
-				{
-					ouC.get().set(0);
-					nMaxNDet++;
-				}
-			}
-		}
-		System.out.println("max det:"+Integer.toString(nMaxDet));
-		System.out.println("max N det:"+Integer.toString(nMaxNDet));
-		return output;
-	}
-
 	
-	public float[] testDeriv(final IntervalView<UnsignedByteType> input, final double sigma, final RealPoint target)
-	//public void testDeriv(IntervalView<UnsignedByteType> input, double sigma, double range)
+	void showCorners(ArrayList<long []> corners)
 	{
+		roiManager.mode=RoiManager3D.ADD_POINT;
+		for(int i=0;i<corners.size();i++)
+		{
+			RealPoint vv = new RealPoint(0.,0.,0.);
+			vv.setPosition(corners.get(i));
+			roiManager.addPoint(vv);	
+		}
+	}
+
+	//gets a box around "target" with half size of range
+	public long[][] getTraceBox(final IntervalView< UnsignedByteType > viewclick, final long range, final RealPoint target)
+	{
+		long[][] rangeM = new long[3][3];
 		int i;
-		double [][] kernels;
-		Kernel1D[] derivKernel;
-		final long[] dim = Intervals.dimensionsAsLongArray( input );
-		long[] minV = input.minAsLongArray();
-		long[] nShift = new long [input.numDimensions()+1];
-		
-		for (i=0;i<input.numDimensions();i++)
-		{
-			nShift[i]=minV[i];
-		}
-		
-		ArrayImg<FloatType, FloatArray> hessFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
-		IntervalView<FloatType> hessian = Views.translate(hessFloat, nShift);
-		
-		
-		//ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
-		
-		//long start1, end1;
-		
-		
-		int count = 0;
-		int [] nDerivOrder;
-		/**/
-		Convolution convObj;
-		//start1 = System.currentTimeMillis();
-		final int nThreads = Runtime.getRuntime().availableProcessors();
-		ExecutorService es = Executors.newFixedThreadPool( nThreads );
-		//progressBar.setMaximum(6);
-		//progressBar.setValue(0);
-		//progressBar.setIndeterminate(false);
-		//second derivatives
-		for (int d1=0;d1<3;d1++)
-		{
-			for ( int d2 = d1; d2 < 3; d2++ )
-			{
-				
-				IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
-				nDerivOrder = new int [3];
-				nDerivOrder[d1]++;
-				nDerivOrder[d2]++;
-				kernels = DerivConvolutionKernels.convolve_derive_kernel(sigma, nDerivOrder );
-				derivKernel = Kernel1D.centralAsymmetric(kernels);
-				convObj=SeparableKernelConvolution.convolution( derivKernel );
-				convObj.setExecutor(es);
-				convObj.process(Views.extendBorder(input), hs2 );
-				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
-				//progressBar.setValue(count);
-				count++;
-				System.out.println(count);
-			}
-		}
-		//end1 = System.currentTimeMillis();
-		//System.out.println("THREADED Elapsed Time in milli seconds: "+ (end1-start1));
-
-		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
-		ArrayImg<FloatType, FloatArray> dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
-		ArrayImg<FloatType, FloatArray> sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
-		IntervalView<FloatType> directionVectors =  Views.translate(dV, nShift);
-		IntervalView<FloatType> salWeights =  Views.translate(sW, minV);
-	    
-		//direction vectors and saliency weights for each voxel
-		 
-		mEV.computeVWRAI( hessian,directionVectors,salWeights,nThreads,es);
-		es.shutdown();
-        
-		float[] vDirv = new float[3];
-		RandomAccess< FloatType > rA = directionVectors.randomAccess();		
-
+		float [] pos = new float[3];
+		target.localize(pos);
 		for(i=0;i<3;i++)
 		{
-			rA.setPosition(new long[] {(long)target.getFloatPosition(0), (long)target.getFloatPosition(1), (long)target.getFloatPosition(2) ,(long)i});
-			vDirv[i]=rA.get().get();
+			rangeM[0][i]=(long)(pos[i])-range ;
+			rangeM[1][i]=(long)(pos[i])+range;								
 		}
-		
-		trace_weights=convertFloatToUnsignedByte(salWeights,false);
-		trace_vectors=directionVectors;
-		System.out.println("done");
-		//showFloat(Views.interval(salWeights,salWeights.minAsLongArray(),salWeights.maxAsLongArray()));
-		
-		return vDirv;		
+		checkBoxInside(viewclick, rangeM);
+		return rangeM;							
 	}
 
-	public IntervalView<UnsignedByteType> convertFloatToUnsignedByte(IntervalView<FloatType> input, boolean inverse)
-	{
-		float minVal = Float.MAX_VALUE;
-		float maxVal = -Float.MAX_VALUE;
-		for ( final FloatType h : input )
-		{
-			final float dd = h.get();
-			minVal = Math.min( dd, minVal );
-			maxVal = Math.max( dd, maxVal );
-		}
-
-		
-		//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
-		final RealUnsignedByteConverter<FloatType> cvU;
-		if (inverse)
-		{
-			cvU = new RealUnsignedByteConverter<FloatType>(maxVal,minVal);
-		}
-		else
-		{
-			cvU = new RealUnsignedByteConverter<FloatType>(minVal, maxVal);
-		}
-		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > inputScaled = new ConvertedRandomAccessibleInterval<>( input, ( s, t ) -> {
-			cvU.convert(s,t);
-		}, new UnsignedByteType() );	
-		return Views.interval(inputScaled,inputScaled.minAsLongArray(),inputScaled.maxAsLongArray());
-		
-	}
 	public void showTraceBox(IntervalView<UnsignedByteType> weights)
 	{
 
@@ -955,59 +815,7 @@ public class BigTrace
 		bvv_trace=null;
 		//handl.setDisplayMode(DisplayMode.SINGLE);
 	}	
-	public void showHessianComponent(IntervalView<UnsignedByteType> input, double sigma)
-	{
-		double [][] kernels;
-		Kernel1D[] derivKernel;
-		final long[] dim = Intervals.dimensionsAsLongArray( input );
-		//ArrayImg<UnsignedByteType, ByteArray> hss = ArrayImgs.unsignedBytes( dim[ 0 ], dim[ 1 ], dim[ 2 ] );
-		ArrayImg<FloatType, FloatArray> hessian = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
-			//ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
-		int count = 0;
-		int [] nDerivOrder; 
-		for (int d1=0;d1<3;d1++)
-		{
-			for ( int d2 = d1; d2 < 3; d2++ )
-			{
-				final IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
-				nDerivOrder = new int [3];
-				nDerivOrder[d1]++;
-				nDerivOrder[d2]++;
-				kernels = DerivConvolutionKernels.convolve_derive_kernel(sigma, nDerivOrder );
-				derivKernel = Kernel1D.centralAsymmetric(kernels);
-				SeparableKernelConvolution.convolution( derivKernel ).process( Views.extendBorder(input), hs2 );		
-				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
-				count++;
-				System.out.println(count);
-			}
-		}
 
-		final IntervalView< FloatType > hss = Views.hyperSlice( hessian, 3, 1 );
-		float minVal = Float.MAX_VALUE;
-			float maxVal = -Float.MAX_VALUE;
-			for ( final FloatType h : hss )
-			{
-				final float dd = h.get();
-				minVal = Math.min( dd, minVal );
-				maxVal = Math.max( dd, maxVal );
-			}
-
-			
-			//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
-			final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal, maxVal);
-			final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > hsStretched = new ConvertedRandomAccessibleInterval<>( hss, ( s, t ) -> {
-				cvU.convert(s,t);
-			}, new UnsignedByteType() );	
-			
-		bvv2.removeFromBdv();
-		System.gc();
-		//view2=Views.interval( hsStretched, nDimCurr[0], nDimCurr[1] );
-		view2=Views.interval(hsStretched,nDimIni[0],nDimIni[1]);
-		bvv2 = BvvFunctions.show( view2, "hessian", Bvv.options().addTo(bvv));
-		
-
-		
-	}
 
 	public void render_pl()
 	{
@@ -1394,7 +1202,7 @@ public class BigTrace
 			RealPoint target_found = new RealPoint( 3 );
 			//RealPoint locationMax = new RealPoint( 3 );
 			
-			if(VolumeMax.findMaxLocationCuboid(intRay,target_found,clickVolume))
+			if(VolumeMisc.findMaxLocationCuboid(intRay,target_found,clickVolume))
 			{
 				//traces.addPointToActive(target);
 				handl.showMessage("point found");

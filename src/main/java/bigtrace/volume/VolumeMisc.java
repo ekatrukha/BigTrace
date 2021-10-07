@@ -1,5 +1,7 @@
 package bigtrace.volume;
 
+import java.util.ArrayList;
+
 import bigtrace.geometry.Cuboid3D;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
@@ -9,17 +11,20 @@ import net.imglib2.RealPoint;
 import net.imglib2.algorithm.neighborhood.Neighborhood;
 import net.imglib2.algorithm.neighborhood.RectangleShape;
 import net.imglib2.algorithm.neighborhood.Shape;
+import net.imglib2.converter.RealUnsignedByteConverter;
+import net.imglib2.converter.read.ConvertedRandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.ByteArray;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
-public class VolumeMax {
+public class VolumeMisc {
 	/**
 	 * Compute the location of the maximal intensity for any IterableInterval,
 	 * like an {@link Img}, contained inside Cuboid3D
@@ -118,4 +123,85 @@ public class VolumeMax {
 			System.out.println("max N det:"+Integer.toString(nMaxNDet));
 			return output;
 		}
+	
+	public static IntervalView<UnsignedByteType> convertFloatToUnsignedByte(IntervalView<FloatType> input, boolean inverse)
+	{
+		float minVal = Float.MAX_VALUE;
+		float maxVal = -Float.MAX_VALUE;
+		for ( final FloatType h : input )
+		{
+			final float dd = h.get();
+			minVal = Math.min( dd, minVal );
+			maxVal = Math.max( dd, maxVal );
+		}
+
+		
+		//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
+		final RealUnsignedByteConverter<FloatType> cvU;
+		if (inverse)
+		{
+			cvU = new RealUnsignedByteConverter<FloatType>(maxVal,minVal);
+		}
+		else
+		{
+			cvU = new RealUnsignedByteConverter<FloatType>(minVal, maxVal);
+		}
+		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > inputScaled = new ConvertedRandomAccessibleInterval<>( input, ( s, t ) -> {
+			cvU.convert(s,t);
+		}, new UnsignedByteType() );	
+		return Views.interval(inputScaled,inputScaled.minAsLongArray(),inputScaled.maxAsLongArray());
+		
+	}
+	//function finds local "weak" maxima in the interval and returns its list as long[]	
+	public static ArrayList<long []> localMaxPointList(final IntervalView< UnsignedByteType > input, int maxVal)
+	{
+		Shape voxShape = new RectangleShape( 1, true);
+		
+		ArrayList<long []> finList= new ArrayList<long []> (); 
+		final RandomAccessible< Neighborhood< UnsignedByteType > > inputNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.extendZero(input) );		
+		final RandomAccess< Neighborhood< UnsignedByteType > > inRA = inputNeighborhoods.randomAccess();
+		
+		
+		Cursor< UnsignedByteType > inC=input.cursor();
+		Cursor< UnsignedByteType > neibC;
+		int nMaxDet = 0;
+		int nMaxNDet = 0;
+		int currVal;
+		boolean isMax;
+		while ( inC.hasNext() )
+		{
+			inC.fwd();
+			currVal=inC.get().get();
+			if(currVal>maxVal)
+			{
+				inRA.setPosition(inC.positionAsLongArray());
+				neibC = inRA.get().cursor();
+				isMax= true;
+				while(neibC.hasNext())
+				{
+					neibC.fwd();
+					if(neibC.get().get()>currVal)
+					{
+						isMax = false;
+						break;
+					}
+						
+				}
+				if(isMax)
+				{
+					nMaxDet++;
+					long [] position = new long[3];
+					inC.localize(position);
+					finList.add(position);					
+				}
+				else
+				{
+					nMaxNDet++;
+				}
+			}
+		}
+		System.out.println("max det:"+Integer.toString(nMaxDet));
+		System.out.println("max not det:"+Integer.toString(nMaxNDet));
+		return finList;
+	}
 }

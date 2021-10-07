@@ -25,8 +25,6 @@ import net.imglib2.view.Views;
 public class DijkstraBinaryHeap {
 	
 	
-	
-
 	/** weights (saliency) of each voxel  **/
 	IntervalView< UnsignedByteType > trace_weights;
 	/** Interval containing calculated costs AND simulataneously used as
