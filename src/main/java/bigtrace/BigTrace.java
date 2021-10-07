@@ -937,22 +937,6 @@ public class BigTrace
 		
 		handl.setRenderScene( ( gl, data ) -> {
 			
-			/* DEBUG traces helper
-			 * 
-			 for (int i=0;i<traces.nLinesN;i++)
-			{
-				ArrayList< RealPoint > point_coords = traces.get(i);
-				VisPointsSimple points= new VisPointsSimple(new float[]{0.0f,1.0f,0.0f},point_coords, 30.0f);
-				VisPolyLineSimple lines;
-				if (i==traces.activeLine)
-					lines = new VisPolyLineSimple(new float[]{1.0f,0.0f,0.0f}, point_coords, 5.0f);
-				else
-					lines = new VisPolyLineSimple(new float[]{0.0f,0.0f,1.0f}, point_coords, 5.0f);
-
-				points.draw( gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()}, data.getDClipNear(), data.getDClipFar());
-				lines.draw( gl, new Matrix4f( data.getPv() ));
-			}
-			*/
 			roiManager.draw(gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()});
 			
 			//render the origin of coordinates
