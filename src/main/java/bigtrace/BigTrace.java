@@ -52,6 +52,7 @@ import bigtrace.math.DijkstraFibonacciHeap;
 import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.EigenValVecSymmDecomposition;
 import bigtrace.polyline.BTPolylines;
+import bigtrace.rois.LineTracing3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPointsSimple;
@@ -123,10 +124,22 @@ public class BigTrace
 	VolumeViewerPanel handl;
 	//SynchronizedViewerState state;
 	CropPanel cropPanel;
-	
-	long lTraceBoxSize = 100;
+
+	/** half size of rectangle around click point (in screen pixels)
+	 * used to find maximim intensity **/
 	int nHalfClickSizeWindow = 5;
+
+	/** characteristic size (SD) of lines (for now in all dimensions)**/
 	double sigmaGlob = 3.0;
+	/** half size of tracing box (for now in all dimensions) **/
+	long lTraceBoxSize = 50;
+	/** How much the tracebox will follow the last direction of trace:
+	 * in the range [0..1], 0 = no following (center), 1 = previous point is at the edge of the box**/
+	float fTraceBoxShift = 0.9f;
+
+	/** whether (1) or not (0) remove visibility of volume data during tracing **/
+	int nTraceBoxView = 1;
+	
 	
 	long [][] nDimCurr = new long [2][3];
 	long [][] nDimIni = new long [2][3];
@@ -220,6 +233,7 @@ public class BigTrace
 		
 						
 		bvv = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
+		bvv.setActive(false);
 		installActions();
 		resetViewXY(true);
 	}
@@ -480,7 +494,11 @@ public class BigTrace
 								bTraceMode= true;
 								roiManager.setTraceMode(bTraceMode);
 								roiManager.addSegment(target, null);																
-								initTracing(target);
+								calcShowTraceBoxIni(target);
+								if(nTraceBoxView==1)
+								{
+									bvv2.setActive(false);
+								}
 								
 							}
 							render_pl();
@@ -500,11 +518,9 @@ public class BigTrace
 							}
 						}						
 					}
-					//addPointToRoiManager(5);
-					// listModel.addElement("test");
 				},
 				"add point",
-				"Q" );
+				"F" );
 		
 
 
@@ -517,17 +533,28 @@ public class BigTrace
 					}
 					else
 					{
-						roiManager.removeSegment();
+						//roiManager.removeSegment();
+						//if the last point, leave tracing mode
+						if(!roiManager.removeSegment())
+						{
+							roiManager.removeActiveRoi();
+							bTraceMode= false;
+							roiManager.setTraceMode(bTraceMode);							
+							removeTraceBox();
+							if(nTraceBoxView==1)
+							{
+								bvv2.setActive(true);
+							}
+						}
+						
 					}
-					//if(traces.removeLastPointFromActive())
-					//{
 					render_pl();
 					handl.showMessage("Point removed");
-					//}
+
 					
 				},
 				"remove point",
-				"W" );
+				"G" );
 		actions.runnableAction(
 				() -> {
 					if(!bTraceMode)
@@ -540,10 +567,44 @@ public class BigTrace
 						bTraceMode= false;
 						roiManager.setTraceMode(bTraceMode);	
 						removeTraceBox();
+						if(nTraceBoxView==1)
+						{
+							bvv2.setActive(true);
+						}
 					}
 				},
 				"new trace",
-				"E" );
+				"H" );
+			actions.runnableAction(
+					() -> {
+						if(bTraceMode)
+						{
+							//make a straight line
+							RealPoint target = new RealPoint(3);							
+							if(findPointLocationFromClick(trace_weights, nHalfClickSizeWindow, target))
+							{
+								ArrayList<RealPoint> trace = new ArrayList<RealPoint>();
+								trace.add(roiManager.getLastTracePoint());
+								trace.add(target);
+								//TODO add BRESENHAM 3D
+								roiManager.addSegment(target, trace);
+								render_pl();
+							}
+						}
+					},
+					"straight line semitrace",
+					"R" );		
+		actions.runnableAction(
+				() -> {
+					if(bTraceMode)
+					{
+						removeTraceBox();
+						calcShowTraceBoxNext((LineTracing3D)roiManager.getActiveRoi());
+						//initTracing(roiManager.getLastTracePoint());
+					}
+				},
+				"move trace box",
+				"T" );
 		actions.runnableAction(
 				() -> {
 					resetViewXY(false);
@@ -563,15 +624,15 @@ public class BigTrace
 
 	}
 	
-	public void initTracing(final RealPoint target)
+	public void calcShowTraceBoxIni(final RealPoint target)
 	{
-		long[][] rangeTraceBox = getTraceBox(view2,lTraceBoxSize,target);
+		long[][] rangeTraceBox = getTraceBoxCentered(view2,lTraceBoxSize,target);
 		
 		IntervalView<UnsignedByteType> traceInterval = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
 		long start1, end1;
 
 		start1 = System.currentTimeMillis();
-		calcWeightVectrosCorners(traceInterval, sigmaGlob, target);
+		calcWeightVectrosCorners(traceInterval, sigmaGlob);
 		end1 = System.currentTimeMillis();
 		System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
 /*
@@ -598,30 +659,52 @@ public class BigTrace
 		showTraceBox(trace_weights);
 
 	}
+	public void calcShowTraceBoxNext(final LineTracing3D trace)
+	{
+		long[][] rangeTraceBox = getTraceBoxNext(view2,lTraceBoxSize, fTraceBoxShift, trace);
+		
+		IntervalView<UnsignedByteType> traceInterval = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
+		long start1, end1;
+
+		start1 = System.currentTimeMillis();
+		calcWeightVectrosCorners(traceInterval, sigmaGlob);
+		end1 = System.currentTimeMillis();
+		System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
+
+		showTraceBox(trace_weights);
+
+	}
+
+	
 	public ArrayList<RealPoint> getSemiAutoTrace(RealPoint target)
 	{
 		ArrayList<RealPoint> trace = new ArrayList<RealPoint>(); 
 		long start1, end1;
+		boolean found_path_end;
 		
 		start1 = System.currentTimeMillis();
 		//init Dijkstra from initial click point
-		dijkRBegin = new DijkstraFHRestricted(trace_weights, roiManager.getLastTracePoint());
+		dijkRBegin = new DijkstraFHRestricted(trace_weights);
+		found_path_end = dijkRBegin.calcCostTwoPoints(roiManager.getLastTracePoint(),target);
 		end1 = System.currentTimeMillis();
 		System.out.println("Dijkstra Restr search BEGIN: elapsed Time in milli seconds: "+ (end1-start1));
 
 		//showCorners(dijkRBegin.exploredCorners(jump_points));
 		//both points in the connected area
-		if (dijkRBegin.getTrace(target, trace))
+		if (found_path_end)
 		{
+			dijkRBegin.getTrace(target, trace);
 			return trace;
 		}
 		//need to find shortcut through jumping points
 		else
 		{
+			//showCorners(jump_points);
 			// get corners in the beginning
 			ArrayList<long []> begCorners = dijkRBegin.exploredCorners(jump_points);
 			start1 = System.currentTimeMillis();
-			dijkREnd = new DijkstraFHRestricted(trace_weights, target);
+			dijkREnd = new DijkstraFHRestricted(trace_weights);
+			dijkREnd.calcCost(target);
 			end1 = System.currentTimeMillis();
 			System.out.println("Dijkstra Restr search END: elapsed Time in milli seconds: "+ (end1-start1));
 			ArrayList<long []> endCorners = dijkREnd.exploredCorners(jump_points);
@@ -641,12 +724,13 @@ public class BigTrace
 				dijkREnd.getTrace(pE, traceE);
 				int i;
 				//connect traces
-				for(i=traceB.size()-1;i>=0 ;i--)
+				for(i=0;i<traceB.size();i++)
 				{
 					trace.add(traceB.get(i));
 				}
 				//TODO: insert connecting 3D bresenham here
-				for(i=0;i<traceE.size();i++)
+				for(i=traceE.size()-1;i>=0 ;i--)
+				
 				{
 					trace.add(traceE.get(i));
 				}
@@ -693,7 +777,7 @@ public class BigTrace
 		return pair;
 	}
 	
-	public void calcWeightVectrosCorners(final IntervalView<UnsignedByteType> input, final double sigma, final RealPoint target)
+	public void calcWeightVectrosCorners(final IntervalView<UnsignedByteType> input, final double sigma)
 	{
 		int i;
 		double [][] kernels;
@@ -757,7 +841,7 @@ public class BigTrace
 		mEV.computeVWCRAI(hessian, directionVectors,salWeights, lineCorners,nThreads,es);
 		es.shutdown();
 		trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
-		jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 15);
+		jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
 		//showCorners(jump_points);
 		showTraceBox(trace_weights);
 	}
@@ -774,7 +858,7 @@ public class BigTrace
 	}
 
 	//gets a box around "target" with half size of range
-	public long[][] getTraceBox(final IntervalView< UnsignedByteType > viewclick, final long range, final RealPoint target)
+	public long[][] getTraceBoxCentered(final IntervalView< UnsignedByteType > viewclick, final long range, final RealPoint target)
 	{
 		long[][] rangeM = new long[3][3];
 		int i;
@@ -785,6 +869,37 @@ public class BigTrace
 			rangeM[0][i]=(long)(pos[i])-range ;
 			rangeM[1][i]=(long)(pos[i])+range;								
 		}
+		checkBoxInside(viewclick, rangeM);
+		return rangeM;							
+	}
+
+	//gets a box around "target" with half size of range
+	public long[][] getTraceBoxNext(final IntervalView< UnsignedByteType > viewclick, final long range, final float fFollowDegree, LineTracing3D trace)
+	{
+		long[][] rangeM = new long[3][3];
+		int i;
+		double [] pos = new double[3];
+		double [] beforeLast = new double[3];
+		
+		
+		//get centered box
+		trace.vertices.get(trace.vertices.size()-1).localize(pos);		
+		for(i=0;i<3;i++)
+		{
+			rangeM[0][i]=(long)(pos[i])-range ;
+			rangeM[1][i]=(long)(pos[i])+range;								
+		}
+		//now shift it in the last direction of the trace to fFollowDegree
+		ArrayList<RealPoint> lastSegment =trace.getLastSegment();
+		lastSegment.get(lastSegment.size()-2).localize(beforeLast);
+		LinAlgHelpers.subtract(pos, beforeLast, pos);
+		LinAlgHelpers.normalize(pos);
+		for(i=0;i<3;i++)
+		{
+			rangeM[0][i]+=(long)(pos[i]*range*fFollowDegree);
+			rangeM[1][i]+=(long)(pos[i]*range*fFollowDegree);								
+		}		
+		
 		checkBoxInside(viewclick, rangeM);
 		return rangeM;							
 	}

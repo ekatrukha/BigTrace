@@ -243,9 +243,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 roi_in.setName("trace"+Integer.toString(roi_in.hashCode()));
 
 		 listModel.addElement(roi_in.getName());
-		 jlist.setSelectedIndex(activeRoi);
-		
+		 jlist.setSelectedIndex(rois.size()-1);
+		 activeRoi = rois.size()-1;
 
+	 }
+	 
+	 public Roi3D getActiveRoi()
+	 {
+		 return rois.get(activeRoi);
 	 }
 	 /** removes ROI and updates ListModel
 	  * does not update activeRoi index! **/
@@ -266,7 +271,24 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 jlist.clearSelection();
 		 }
 	 }
-	 
+	 /** removes active ROI and updates ListModel
+	  * and activeRoi index **/
+	 public void removeActiveRoi()
+	 {
+		 
+		 if(activeRoi>=0)
+		 {
+			 rois.remove(activeRoi);
+			 listModel.removeElementAt(activeRoi);
+			 activeRoi--;
+			 if(activeRoi<0)
+			 {
+				 jlist.clearSelection();
+			 }
+			 fireActiveRoiChanged(activeRoi);
+		 }
+
+	 }
 	 public void removeAll()
 	 {
 		 rois =  new ArrayList<Roi3D >();
@@ -349,11 +371,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 }
 
 	 
-	 public void removeSegment()
+	 public boolean removeSegment()
 	 {
 		 LineTracing3D tracing;
 		 tracing = (LineTracing3D) rois.get(activeRoi);
-		 tracing.removeLastSegment();
+		 return tracing.removeLastSegment();
 	 }
 
 	 /** adds point to active polyline

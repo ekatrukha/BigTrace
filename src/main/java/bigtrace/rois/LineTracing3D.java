@@ -53,12 +53,32 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 		segments.add(segments_);
 	}
 	
-	public void removeLastSegment() 
+	/** removes last segment of the tracing.
+	 * if there was just one spot, returns false**/
+	public boolean removeLastSegment() 
 	{
+		
 		vertices.remove(vertices.size()-1);
-		segments.remove(segments.size()-1);
+		if(vertices.size()>0)
+		{
+			segments.remove(segments.size()-1);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 		
 	}
+	
+	/** returns the last segment of the tracing.**/
+	public ArrayList<RealPoint> getLastSegment() 
+	{
+		
+		return segments.get(segments.size()-1);
+		
+	}
+
 	/*
 	//adds a point to the "end" of polyline
 	public void addPointToEnd(final RealPoint in_)
