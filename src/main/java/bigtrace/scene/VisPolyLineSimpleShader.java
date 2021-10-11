@@ -33,12 +33,10 @@ import com.jogamp.opengl.GL3;
 
 import net.imglib2.RealPoint;
 
-import java.awt.Color;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 import org.joml.Matrix4fc;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 
@@ -52,81 +50,55 @@ import tpietzsch.shadergen.generate.SegmentTemplate;
 import static com.jogamp.opengl.GL.GL_FLOAT;
 
 
-public class VisPointsScaled
+public class VisPolyLineSimpleShader
 {
 	//private final String imageFilename;
-	private static final float fMaxRenderSpotSize = 600.0f;
+
 	private final Shader prog;
 
 	private int vao;
 	
 	private Vector3f l_color;
 	
-	public float fPointSize;
+
+	public float fLineThickness;
 	
 	//private final ArrayList< Point > points = new ArrayList<>();
 	
-	float vertices[]; 
+	static float vertices[]; 
 	private int nPointsN;
-	private boolean initialized;
 
-	public VisPointsScaled()
+
+	public VisPolyLineSimpleShader(float [] color_in, ArrayList< RealPoint > points, float fLineThickness_, Shader prog_)
 	{
-		final Segment pointVp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point_color.fp" ).instantiate();
-	
-		
-		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
-	}
-	public VisPointsScaled(float [] color_in, RealPoint point, float fPointSize_)
-	{		
-		this();
-
-		int j;
-		fPointSize= fPointSize_;
-		
-		l_color = new Vector3f(color_in);
-		
-		nPointsN=1;
-		vertices = new float [nPointsN*3];//assime 3D
-		
-
-		for (j=0;j<3; j++)
-		{
-			//vertices[i*3+j]=(points.get(i).getFloatPosition(j)/max_pos)-0.5f;
-			vertices[j]=point.getFloatPosition(j);
-		}					
-	
-
-	}
-	public VisPointsScaled(float [] color_in, ArrayList< RealPoint > points, float fPointSize_)
-	{
-		this();
 		int i,j;
 		
-		fPointSize= fPointSize_;
+		fLineThickness= fLineThickness_;
 		
 		l_color = new Vector3f(color_in);
 		
 		nPointsN=points.size();
-		vertices = new float [nPointsN*3];//assime 3D
+		vertices = new float [nPointsN*3];//assume 3D
 		
+
 		for (i=0;i<nPointsN; i++)
 		{
 			for (j=0;j<3; j++)
 			{
-				//vertices[i*3+j]=(points.get(i).getFloatPosition(j)/max_pos)-0.5f;
 				vertices[i*3+j]=points.get(i).getFloatPosition(j);
 			}
 			
 		}
+		
+	
+		//final Segment pointVp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.vp" ).instantiate();
+		//final Segment pointFp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.fp" ).instantiate();
+	
+		prog = prog_;
+		//prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
+	}
 
-	}
-	public void setColor(Color pointColor) {
-		
-		l_color = new Vector3f(pointColor.getRGBColorComponents(null));
-		
-	}
+	private boolean initialized;
 
 	private void init( GL3 gl )
 	{
@@ -153,32 +125,23 @@ public class VisPointsScaled
 		gl.glBindVertexArray( 0 );
 	}
 
-	public void draw( GL3 gl, Matrix4fc pvm, int [] screen_size )
+	public void draw( GL3 gl, Matrix4fc pvm )
 	{
 		if ( !initialized )
 			init( gl );
-		Vector2f screen_sizef;
+
 
 		JoglGpuContext context = JoglGpuContext.get( gl );
-		
-		//scale disk with viewport transform
-		screen_sizef =  new Vector2f ((float)(screen_size[0]), (float)(screen_size[1]));
 
-		prog.getUniform1f( "pointSizeReal" ).set( fPointSize );
-		prog.getUniform1f( "pointSizeMaxRender" ).set( fMaxRenderSpotSize);
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-		//prog.getUniformMatrix4f( "projection" ).set( projection );
 		prog.getUniform3f("colorin").set(l_color);
-		prog.getUniform2f("screenSize").set(screen_sizef);
-
 		prog.setUniforms( context );
 		prog.use( context );
 
 
 		gl.glBindVertexArray( vao );
-		gl.glPointSize(fMaxRenderSpotSize);
-		gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN);
+		gl.glLineWidth(fLineThickness);
+		gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
 		gl.glBindVertexArray( 0 );
 	}
-
 }

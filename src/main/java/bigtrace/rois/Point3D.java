@@ -41,7 +41,7 @@ public class Point3D implements Roi3D {
 	}
 
 	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, double[] screen_size) 
+	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) 
 	{
 		float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
 		pointColor.getComponents(colorComp);

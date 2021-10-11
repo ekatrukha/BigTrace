@@ -39,6 +39,7 @@ import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.jogamp.opengl.GL3;
 
 import bdv.viewer.DisplayMode;
 import bigtrace.geometry.Cuboid3D;
@@ -52,6 +53,7 @@ import bigtrace.math.DijkstraFibonacciHeap;
 import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.EigenValVecSymmDecomposition;
 import bigtrace.polyline.BTPolylines;
+import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTracing3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsScaled;
@@ -104,6 +106,7 @@ import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import sc.fiji.simplifiedio.SimplifiedIO;
+import tpietzsch.example2.RenderData;
 import tpietzsch.example2.VolumeViewerPanel;
 import tpietzsch.util.MatrixMath;
 
@@ -121,10 +124,15 @@ public class BigTrace
 	static boolean bTraceMode = false;
 	IntervalView< FloatType > gauss=null;
 	Img< UnsignedByteType> img;
-	VolumeViewerPanel handl;
+	static VolumeViewerPanel handl;
 	//SynchronizedViewerState state;
 	CropPanel cropPanel;
+	/** visualization of coordinates origin axes **/
+	ArrayList<VisPolyLineSimple> originVis = new ArrayList<VisPolyLineSimple>();
 
+	/** box around volume **/
+	Cube3D volumeBox;
+	
 	/** half size of rectangle around click point (in screen pixels)
 	 * used to find maximim intensity **/
 	int nHalfClickSizeWindow = 5;
@@ -159,8 +167,6 @@ public class BigTrace
 	//ArrayList< RealPoint > point_coords = new ArrayList<>();
 	BTPolylines traces = new BTPolylines ();
 	
-	
-	BTPolylines origin_data = new BTPolylines ();
 
 	RoiManager3D roiManager = new RoiManager3D();
 	JProgressBar progressBar;
@@ -172,7 +178,7 @@ public class BigTrace
 		//img = SimplifiedIO.openImage(
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
-		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT.tif", new UnsignedByteType());
+		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT-1.tif", new UnsignedByteType());
 		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest_horz.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
@@ -209,22 +215,41 @@ public class BigTrace
 //		bdv.getBdvHandle().getKeybindings().removeInputMap( "BigTrace" );
 
 	}
-	public void init(double axis_length)
+	
+	public void initOriginAndBox(double axis_length)
 	{
 		int i;
-		
 		//basis vectors 
 		RealPoint basis = new RealPoint(-0.1*axis_length, -0.1*axis_length,-0.1*axis_length);				
 		for(i=0;i<3;i++)
-		{			
-			origin_data.addPointToActive(basis);
+		{		
+			ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
+			point_coords.add(new RealPoint(basis));
+			//origin_data.addPointToActive(basis);
 			basis.move(axis_length, i);
-			origin_data.addPointToActive(basis);
+			//origin_data.addPointToActive(basis);
+			point_coords.add(new RealPoint(basis));
 			basis.move((-1.0)*axis_length, i);
-			origin_data.addNewLine();
+			float [] color_orig = new float[3];
+			color_orig[i] = 1.0f;
+			originVis.add(new VisPolyLineSimple(color_orig, point_coords, 3.0f));						
 		}
+		float [][] nDimBox = new float [2][3];
 		
-		//traces = new BTPolylines ();
+		for(i=0;i<3;i++)
+		{
+			//why is this shift?! I don't know,
+			// but looks better like this
+			nDimBox[0][i]=nDimIni[0][i]+0.5f;
+			nDimBox[1][i]=nDimIni[1][i]-1.0f;
+		}
+		volumeBox = new Cube3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY);
+	}
+	public void init(double origin_axis_length)
+	{
+		
+		initOriginAndBox(origin_axis_length);
+		
 		
 		// init bigvolumeviewer
 		final Img< UnsignedByteType > imgx = ArrayImgs.unsignedBytes( new long[]{ 2, 2, 2 } );
@@ -234,6 +259,9 @@ public class BigTrace
 						
 		bvv = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
 		bvv.setActive(false);
+		handl=bvv.getBvvHandle().getViewerPanel();
+		//polyLineRender = new VisPolyLineSimple();
+		handl.setRenderScene(this::renderScene);
 		installActions();
 		resetViewXY(true);
 	}
@@ -307,10 +335,10 @@ public class BigTrace
 		public void itemStateChanged(ItemEvent e) {
 	    	      if(e.getStateChange()==ItemEvent.SELECTED){
 	    	    	  bShowOrigin=true;
-	    	    	  render_pl();
+	    	    	  //render_pl();
 	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
 	    	        	bShowOrigin=false;
-	    	        	render_pl();
+	    	        	//render_pl();
 	    	        }
 			}
 	    	});
@@ -330,10 +358,10 @@ public class BigTrace
 		public void itemStateChanged(ItemEvent e) {
 	    	      if(e.getStateChange()==ItemEvent.SELECTED){
 	    	    	  bVolumeBox=true;
-	    	    	  render_pl();
+	    	    	  //render_pl();
 	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
 	    	        	bVolumeBox=false;
-	    	        	render_pl();
+	    	        	//render_pl();
 	    	        }
 			}
 	    	});
@@ -351,10 +379,10 @@ public class BigTrace
 		public void itemStateChanged(ItemEvent e) {
 	    	      if(e.getStateChange()==ItemEvent.SELECTED){
 	    	    	  bShowWorldGrid=true;
-	    	    	  render_pl();
+	    	    	  //render_pl();
 	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
 	    	        	bShowWorldGrid=false;
-	    	        	render_pl();
+	    	        	//render_pl();
 	    	        }
 			}
 	    	});
@@ -410,7 +438,7 @@ public class BigTrace
 
 			@Override
 			public void activeRoiChanged(int nRoi) {
-				render_pl();
+				//render_pl();
 			}
 	    	
 	    });
@@ -501,7 +529,7 @@ public class BigTrace
 								}
 								
 							}
-							render_pl();
+							//render_pl();
 						}
 					}
 					//continue to trace
@@ -514,7 +542,7 @@ public class BigTrace
 							{
 								roiManager.addSegment(target, trace);
 								System.out.print("next trace!");
-								render_pl();
+								//render_pl();
 							}
 						}						
 					}
@@ -548,7 +576,7 @@ public class BigTrace
 						}
 						
 					}
-					render_pl();
+					//render_pl();
 					handl.showMessage("Point removed");
 
 					
@@ -588,7 +616,7 @@ public class BigTrace
 								trace.add(target);
 								//TODO add BRESENHAM 3D
 								roiManager.addSegment(target, trace);
-								render_pl();
+								//render_pl();
 							}
 						}
 					},
@@ -932,31 +960,29 @@ public class BigTrace
 	}	
 
 
-	public void render_pl()
+	public void renderScene(final GL3 gl, final RenderData data)
 	{
 		
-		handl.setRenderScene( ( gl, data ) -> {
-			
-			roiManager.draw(gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()});
-			
+		int [] screen_size = new int [] {(int)data.getScreenWidth(), (int) data.getScreenHeight()};
+		//handl.setRenderScene( ( gl, data ) -> {
+		synchronized (roiManager)
+		{
+		//	roiManager.draw(gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()});
+		}	
 			//render the origin of coordinates
 			if (bShowOrigin)
 			{
 				for (int i=0;i<3;i++)
 				{
-					ArrayList< RealPoint > point_coords = origin_data.get(i);
-					VisPolyLineSimple lines;
-					float [] color_orig = new float[]{0.0f,0.0f,0.0f};
-					color_orig[i] = 1.0f;
-					lines = new VisPolyLineSimple(color_orig, point_coords, 3.0f);
-					color_orig[i] = 0.0f;								
-					lines.draw( gl, new Matrix4f( data.getPv() ));	
+					originVis.get(i).draw(gl, new Matrix4f( data.getPv() ));
 				}
 			}
 			
 			//render a box around  the volume 
 			if (bVolumeBox)
 			{
+				volumeBox.draw(gl, new Matrix4f( data.getPv() ), screen_size);
+				/*
 				float [][] nDimBox = new float [2][3];
 				
 				int i,j,z;
@@ -1022,7 +1048,7 @@ public class BigTrace
 
 					lines.draw( gl, new Matrix4f( data.getPv() ));	
 				}
-				
+				*/
 
 			}
 		
@@ -1107,7 +1133,7 @@ public class BigTrace
 				}
 			}
 			
-		} );
+		//} );
 
 		handl.requestRepaint();
 
@@ -1141,7 +1167,7 @@ public class BigTrace
 		//traces = new BTPolylines ();						
 		
 		
-		handl=bvv.getBvvHandle().getViewerPanel();
+		//handl=bvv.getBvvHandle().getViewerPanel();
 		handl.state().setViewerTransform(t);
 		handl.requestRepaint();
 		if(!firstCall)
@@ -1150,7 +1176,7 @@ public class BigTrace
 		view2=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
 		bvv2 = BvvFunctions.show( view2, "cropreset", Bvv.options().addTo(bvv));
 		
-		render_pl();
+		//render_pl();
 	}
 	
 	public void resetViewYZ(boolean firstCall)
@@ -1408,7 +1434,7 @@ public class BigTrace
 			viewclick=Intersections3D.cuboidLinesIntersect(viewCube,linex);
 		}
 
-		render_pl();
+		//render_pl();
 	}
 	
 	public void viewClickArea(final int nHalfWindow)
@@ -1532,7 +1558,7 @@ public class BigTrace
 		}
 		
 
-		render_pl();
+		//render_pl();
 	}
 	public static void main( String... args) throws IOException
 	{

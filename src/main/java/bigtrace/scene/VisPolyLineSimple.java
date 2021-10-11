@@ -33,6 +33,7 @@ import com.jogamp.opengl.GL3;
 
 import net.imglib2.RealPoint;
 
+import java.awt.Color;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
@@ -65,12 +66,24 @@ public class VisPolyLineSimple
 	
 	//private final ArrayList< Point > points = new ArrayList<>();
 	
-	static float vertices[]; 
+	float vertices[]; 
 	private int nPointsN;
 
+	private boolean initialized;
 
+	public VisPolyLineSimple()
+	{
+		final Segment pointVp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.vp" ).instantiate();
+		final Segment pointFp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.fp" ).instantiate();
+	
+		
+		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
+	}
+	
+	
 	public VisPolyLineSimple(float [] color_in, ArrayList< RealPoint > points, float fLineThickness_)
 	{
+		this();
 		int i,j;
 		
 		fLineThickness= fLineThickness_;
@@ -90,15 +103,39 @@ public class VisPolyLineSimple
 			
 		}
 		
-	
-		final Segment pointVp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.fp" ).instantiate();
-	
-		
-		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 	}
+	
+	public void setThickness(float fLineThickness_)
+	{
+		fLineThickness= fLineThickness_;
+	}
+	
+	public void setColor(Color color_in)
+	{
+		l_color = new Vector3f(color_in.getRGBColorComponents(null));
+	}
+	public void setParams(float [] color_in, ArrayList< RealPoint > points, float fLineThickness_)
+	{
+		int i,j;
+		
+		fLineThickness= fLineThickness_;
+		
+		l_color = new Vector3f(color_in);
+		
+		nPointsN=points.size();
+		vertices = new float [nPointsN*3];//assume 3D
+		
 
-	private boolean initialized;
+		for (i=0;i<nPointsN; i++)
+		{
+			for (j=0;j<3; j++)
+			{
+				vertices[i*3+j]=points.get(i).getFloatPosition(j);
+			}
+			
+		}
+		initialized=false;
+	}
 
 	private void init( GL3 gl )
 	{

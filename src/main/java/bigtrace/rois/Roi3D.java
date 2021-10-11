@@ -9,7 +9,7 @@ import com.jogamp.opengl.GL3;
 public interface Roi3D 
 {
 
-	public static final int POINT=0, POLYLINE=1, LINE_TRACE=2; // Types
+	public static final int POINT=0, POLYLINE=1, LINE_TRACE=2, CUBE=3; // Types
 	
 	/** returns ROI type**/
 	public int getType();
@@ -21,7 +21,7 @@ public interface Roi3D
 	public void setName(String name);
 	
 	/** Draws ROI into the volume **/
-	public void draw( GL3 gl, Matrix4fc pvm,  final double [] screen_size);
+	public void draw( GL3 gl, Matrix4fc pvm,  final int [] screen_size);
 	public void setLineColor(Color lineColor_);
 	public void setPointColor(Color pointColor_);
 	public float getLineThickness();
