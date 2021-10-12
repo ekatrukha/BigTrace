@@ -107,6 +107,7 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import sc.fiji.simplifiedio.SimplifiedIO;
 import tpietzsch.example2.RenderData;
+import tpietzsch.example2.VolumeViewerFrame;
 import tpietzsch.example2.VolumeViewerPanel;
 import tpietzsch.util.MatrixMath;
 
@@ -117,16 +118,22 @@ public class BigTrace
 	public  BvvStackSource< UnsignedByteType > bvv2;
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	RandomAccessibleInterval< UnsignedByteType > view;
-	static IntervalView< UnsignedByteType > view2=null;
-	static IntervalView< UnsignedByteType > trace_weights=null;
-	static IntervalView< FloatType > trace_vectors=null;
-	static ArrayList<long []> jump_points = null;
-	static boolean bTraceMode = false;
-	IntervalView< FloatType > gauss=null;
+	IntervalView< UnsignedByteType > view2 = null;
+	
+	
+	IntervalView< UnsignedByteType > trace_weights = null;
+	IntervalView< FloatType > trace_vectors=null;
+	ArrayList<long []> jump_points = null;
+	boolean bTraceMode = false;
+	
 	Img< UnsignedByteType> img;
-	static VolumeViewerPanel handl;
-	//SynchronizedViewerState state;
+
+	VolumeViewerPanel panel;
+	VolumeViewerFrame frame;
+	
+	
 	CropPanel cropPanel;
+
 	/** visualization of coordinates origin axes **/
 	ArrayList<VisPolyLineSimple> originVis = new ArrayList<VisPolyLineSimple>();
 
@@ -232,7 +239,7 @@ public class BigTrace
 			basis.move((-1.0)*axis_length, i);
 			float [] color_orig = new float[3];
 			color_orig[i] = 1.0f;
-			originVis.add(new VisPolyLineSimple(color_orig, point_coords, 3.0f));						
+			originVis.add(new VisPolyLineSimple( point_coords, 3.0f,new Color(color_orig[0],color_orig[1],color_orig[2])));						
 		}
 		float [][] nDimBox = new float [2][3];
 		
@@ -259,9 +266,9 @@ public class BigTrace
 						
 		bvv = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
 		bvv.setActive(false);
-		handl=bvv.getBvvHandle().getViewerPanel();
+		panel=bvv.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();
-		handl.setRenderScene(this::renderScene);
+		panel.setRenderScene(this::renderScene);
 		installActions();
 		resetViewXY(true);
 	}
@@ -494,7 +501,18 @@ public class BigTrace
 	    
 	    frame.setVisible( true );
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-	
+		
+		frame.addWindowListener(new java.awt.event.WindowAdapter() {
+		    @Override
+		    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+		    	{
+		    		panel.stop();
+		    		bvv.close();
+		            System.exit(0);
+		        }
+		    }
+		});
+		
 		
 	}
 	public void installActions()
@@ -577,7 +595,7 @@ public class BigTrace
 						
 					}
 					//render_pl();
-					handl.showMessage("Point removed");
+					panel.showMessage("Point removed");
 
 					
 				},
@@ -763,6 +781,13 @@ public class BigTrace
 					trace.add(traceE.get(i));
 				}
 
+			}
+			//no corners, just do a straight line
+			else
+			{
+				trace.add(roiManager.getLastTracePoint());
+				//TODO: insert connecting 3D bresenham here
+				trace.add(target);
 			}
 			return trace;
 		}
@@ -967,7 +992,7 @@ public class BigTrace
 		//handl.setRenderScene( ( gl, data ) -> {
 		synchronized (roiManager)
 		{
-		//	roiManager.draw(gl, new Matrix4f( data.getPv() ), new double [] {data.getScreenWidth(), data.getScreenHeight()});
+			roiManager.draw(gl, new Matrix4f( data.getPv() ), new int [] {(int)data.getScreenWidth(), (int)data.getScreenHeight()});
 		}	
 			//render the origin of coordinates
 			if (bShowOrigin)
@@ -1055,7 +1080,7 @@ public class BigTrace
 			//render world grid			
 			if(bShowWorldGrid)
 			{
-
+/*
 				int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 				int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
 				Matrix4f  matPerspWorld = new Matrix4f();
@@ -1131,11 +1156,12 @@ public class BigTrace
 					lines.draw( gl, matPerspWorld);
 					point_coords.clear();
 				}
+				*/
 			}
 			
 		//} );
 
-		handl.requestRepaint();
+		panel.requestRepaint();
 
 	}
 	public void resetViewXY(boolean firstCall)
@@ -1168,8 +1194,8 @@ public class BigTrace
 		
 		
 		//handl=bvv.getBvvHandle().getViewerPanel();
-		handl.state().setViewerTransform(t);
-		handl.requestRepaint();
+		panel.state().setViewerTransform(t);
+		panel.requestRepaint();
 		if(!firstCall)
 			bvv2.removeFromBdv();
 		
@@ -1215,9 +1241,9 @@ public class BigTrace
 		//traces = new BTPolylines ();						
 		//render_pl();
 		
-		handl=bvv.getBvvHandle().getViewerPanel();
-		handl.state().setViewerTransform(t);
-		handl.requestRepaint();
+		panel=bvv.getBvvHandle().getViewerPanel();
+		panel.state().setViewerTransform(t);
+		panel.requestRepaint();
 		if(!firstCall)
 			bvv2.removeFromBdv();
 		
@@ -1236,7 +1262,7 @@ public class BigTrace
 														
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
-		handl.state().getViewerTransform(transform);
+		panel.state().getViewerTransform(transform);
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
 		Matrix4f matPerspWorld = new Matrix4f();
@@ -1330,7 +1356,7 @@ public class BigTrace
 			if(VolumeMisc.findMaxLocationCuboid(intRay,target_found,clickVolume))
 			{
 				//traces.addPointToActive(target);
-				handl.showMessage("point found");
+				panel.showMessage("point found");
 				target.setPosition(target_found);
 				return true;
 				//roiManager.addPoint(target);
@@ -1338,7 +1364,7 @@ public class BigTrace
 			}
 			else
 			{
-				handl.showMessage("not found :(");
+				panel.showMessage("not found :(");
 				return false;
 			}
 				
@@ -1362,7 +1388,7 @@ public class BigTrace
 
 		AffineTransform3D transform = new AffineTransform3D();
 		
-		handl.state().getViewerTransform(transform);
+		panel.state().getViewerTransform(transform);
 		//transform.concatenate(affine)
 		ArrayList<RealPoint> viewclick = new ArrayList<RealPoint>();
 		//int dW=5;
@@ -1446,7 +1472,7 @@ public class BigTrace
 														
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
-		handl.state().getViewerTransform(transform);
+		panel.state().getViewerTransform(transform);
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
 		Matrix4f matPerspWorld = new Matrix4f();

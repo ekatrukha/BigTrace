@@ -336,7 +336,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 }
 	 public void addPoint3D(RealPoint point_)
 	 {
-		 addRoi( new Point3D(currPointSize, activePointColor,point_));
+		 addRoi( new Point3D(point_, currPointSize, activePointColor));
 	 }
 	 
 	 public void addSegment(RealPoint point_, ArrayList<RealPoint> segments_)

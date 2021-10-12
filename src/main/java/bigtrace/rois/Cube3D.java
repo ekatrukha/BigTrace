@@ -57,14 +57,13 @@ public class Cube3D implements Roi3D {
 				//z coord
 				vertex1.setPosition(nDimBox[z][2], 2);
 				vertex2.setPosition(nDimBox[z][2], 2);
+				
 				ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
-				//VisPolyLineSimple lines;
 				point_coords.add(new RealPoint(vertex1));
 				point_coords.add(new RealPoint(vertex2));
-				float [] zz =lineColor.getRGBColorComponents(null);
-				//edgesVis.add(new VisPolyLineSimple(lineColor.getRGBColorComponents(null), point_coords, lineThickness));
-				edgesVis.add(new VisPolyLineSimple(zz, point_coords, lineThickness));
-				//lines.draw( gl, new Matrix4f( data.getPv() ));	
+
+				edgesVis.add(new VisPolyLineSimple(point_coords, lineThickness,lineColor));
+
 			}
 		}
 		//draw the rest 4 edges
@@ -80,14 +79,12 @@ public class Cube3D implements Roi3D {
 			vertex1.setPosition(nDimBox[0][2], 2);
 			vertex2.setPosition(nDimBox[1][2], 2);
 			ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
-			//VisPolyLineSimple lines;
+
 			point_coords.add(new RealPoint(vertex1));
 			point_coords.add(new RealPoint(vertex2));
 
-			edgesVis.add(new VisPolyLineSimple(lineColor.getColorComponents(null), point_coords, lineThickness));
-			//lines = new VisPolyLineSimple(vbox_color, point_coords, lineThickness);
-
-			//lines.draw( gl, new Matrix4f( data.getPv() ));	
+			edgesVis.add(new VisPolyLineSimple(point_coords, lineThickness,lineColor));
+	
 		}	
 	}
 	@Override

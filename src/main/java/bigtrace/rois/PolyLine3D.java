@@ -23,6 +23,8 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 {
 	
 	public ArrayList<RealPoint> vertices;
+	public VisPointsScaled verticesVis;
+	public VisPolyLineSimple edgesVis;
 	public float lineThickness;
 	public float pointSize;
 	public Color lineColor;
@@ -38,12 +40,20 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());		
 		vertices = new ArrayList<RealPoint>();
+		verticesVis = new VisPointsScaled();
+		verticesVis.setColor(pointColor_);
+		verticesVis.setSize(pointSize_);
+		edgesVis = new VisPolyLineSimple();
+		edgesVis.setColor(lineColor_);
+		edgesVis.setThickness(lineThickness_);
+
 	}
 	
 	//adds a point to the "end" of polyline
 	public void addPointToEnd(final RealPoint in_)
 	{
 		vertices.add(new RealPoint(in_));
+		updateRenderVertices();
 	}
 	//removes the point from the "end" and returns "true"
 	//if it is the last point, returns "false"
@@ -54,6 +64,7 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 		 if(nP>0)
 			{
 			 	vertices.remove(nP-1);
+			 	updateRenderVertices();
 			 	if(nP==1)
 			 		return false;
 			 	else
@@ -61,33 +72,60 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 			}
 		 return false;
 	 }
-
+	
+	
+	public void updateRenderVertices()
+	{
+		verticesVis.setVertices(vertices);
+		edgesVis.setVertices(vertices);		
+		
+	}
 
 
 	@Override
 	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
 		
 		
-		float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
-		pointColor.getComponents(colorComp);
-		VisPointsScaled points= new VisPointsScaled(colorComp, vertices, pointSize);
-		VisPolyLineSimple lines;
-		lineColor.getComponents(colorComp);
-		lines = new VisPolyLineSimple(colorComp, vertices, lineThickness);
-		points.draw( gl, pvm, screen_size);
-		lines.draw( gl, pvm);
+		//float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
+		//pointColor.getComponents(colorComp);
+		//VisPointsScaled points= new VisPointsScaled(colorComp, vertices, pointSize);
+		//VisPolyLineSimple lines;
+		//lineColor.getComponents(colorComp);
+		//lines = new VisPolyLineSimple(colorComp, vertices, lineThickness);
+		//points.draw( gl, pvm, screen_size);
+		//lines.draw( gl, pvm);
+		
+		verticesVis.draw(gl, pvm, screen_size);
+		edgesVis.draw(gl, pvm);
+		
 	}
 
 	@Override
 	public void setLineColor(Color lineColor_) {
 		
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
+		edgesVis.setColor(lineColor);
 	}
 
 	@Override
 	public void setPointColor(Color pointColor_) {
 		
-		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());	
+		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
+		verticesVis.setColor(pointColor);
+	}
+	@Override
+	public void setLineThickness(float line_thickness) {
+
+		lineThickness=line_thickness;
+		edgesVis.setThickness(lineThickness);
+	}
+
+	@Override
+	public void setPointSize(float point_size) {
+
+		pointSize=point_size;
+		verticesVis.setSize(pointSize);
+		
 	}
 
 	@Override
@@ -207,17 +245,7 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 		return pointSize;
 	}
 
-	@Override
-	public void setLineThickness(float line_thickness) {
 
-		lineThickness=line_thickness;
-	}
-
-	@Override
-	public void setPointSize(float point_size) {
-
-		pointSize=point_size;
-	}
 	
 }
 

@@ -81,14 +81,14 @@ public class VisPolyLineSimple
 	}
 	
 	
-	public VisPolyLineSimple(float [] color_in, ArrayList< RealPoint > points, float fLineThickness_)
+	public VisPolyLineSimple(final ArrayList< RealPoint > points, final float fLineThickness_,final Color color_in)
 	{
 		this();
 		int i,j;
 		
 		fLineThickness= fLineThickness_;
 		
-		l_color = new Vector3f(color_in);
+		l_color = new Vector3f(color_in.getRGBColorComponents(null));
 		
 		nPointsN=points.size();
 		vertices = new float [nPointsN*3];//assume 3D
@@ -114,17 +114,36 @@ public class VisPolyLineSimple
 	{
 		l_color = new Vector3f(color_in.getRGBColorComponents(null));
 	}
-	public void setParams(float [] color_in, ArrayList< RealPoint > points, float fLineThickness_)
+	
+	public void setParams(final ArrayList< RealPoint > points, final float fLineThickness_, final Color color_in)
 	{
 		int i,j;
 		
 		fLineThickness= fLineThickness_;
 		
-		l_color = new Vector3f(color_in);
+		l_color = new Vector3f(color_in.getRGBColorComponents(null));
 		
 		nPointsN=points.size();
 		vertices = new float [nPointsN*3];//assume 3D
 		
+
+		for (i=0;i<nPointsN; i++)
+		{
+			for (j=0;j<3; j++)
+			{
+				vertices[i*3+j]=points.get(i).getFloatPosition(j);
+			}
+			
+		}
+		initialized=false;
+	}
+	public void setVertices( ArrayList< RealPoint > points)
+	{
+		int i,j;
+		
+		
+		nPointsN=points.size();
+		vertices = new float [nPointsN*3];//assume 3D	
 
 		for (i=0;i<nPointsN; i++)
 		{

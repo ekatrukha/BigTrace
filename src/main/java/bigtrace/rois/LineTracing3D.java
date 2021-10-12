@@ -24,6 +24,8 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 	
 	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> segments;
+	public VisPointsScaled verticesVis;
+	public ArrayList<VisPolyLineSimple> segmentsVis;
 	public float lineThickness;
 	public float pointSize;
 	public Color lineColor;
@@ -40,17 +42,26 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());		
 		vertices = new ArrayList<RealPoint>();
 		segments = new ArrayList<ArrayList<RealPoint>>();
+		verticesVis = new VisPointsScaled();
+		verticesVis.setColor(pointColor_);
+		verticesVis.setSize(pointSize_);
+		segmentsVis = new ArrayList<VisPolyLineSimple>();
+		
+
 	}
 	/** adds initial vertex **/
 	public void addFirstPoint(final RealPoint in_)
 	{
 		vertices.add(new RealPoint(in_));
+		verticesVis.setVertices(vertices);
 	}
 	
 	public void addPointAndSegment(final RealPoint in_, final ArrayList<RealPoint> segments_)
 	{
 		vertices.add(new RealPoint(in_));
+		verticesVis.setVertices(vertices);
 		segments.add(segments_);
+		segmentsVis.add(new VisPolyLineSimple(segments_,lineThickness,lineColor));
 	}
 	
 	/** removes last segment of the tracing.
@@ -59,9 +70,11 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 	{
 		
 		vertices.remove(vertices.size()-1);
+		verticesVis.setVertices(vertices);
 		if(vertices.size()>0)
 		{
 			segments.remove(segments.size()-1);
+			segmentsVis.remove(segmentsVis.size()-1);
 			return true;
 		}
 		else
@@ -108,29 +121,57 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
 		
 		
-		float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
-		pointColor.getComponents(colorComp);
-		VisPointsScaled points= new VisPointsScaled(colorComp, vertices, pointSize);
-		points.draw( gl, pvm, screen_size);		
-		VisPolyLineSimple lines;
-		lineColor.getComponents(colorComp);
-		for (int i=0;i<segments.size();i++)
+		//float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
+		//pointColor.getComponents(colorComp);
+		//VisPointsScaled points= new VisPointsScaled(vertices,pointSize, pointColor);
+		//points.draw( gl, pvm, screen_size);		
+		//VisPolyLineSimple lines;
+		//lineColor.getComponents(colorComp);
+		verticesVis.draw(gl, pvm, screen_size);
+		
+		for (VisPolyLineSimple segment : segmentsVis)
 		{
-			lines = new VisPolyLineSimple(colorComp, segments.get(i), lineThickness);		
-			lines.draw( gl, pvm);
+			segment.draw(gl, pvm);
 		}
+		//for (int i=0;i<segments.size();i++)
+		//{
+			//lines = new VisPolyLineSimple(segments.get(i), lineThickness,lineColor);		
+			//lines.draw( gl, pvm);
+		//}
 	}
 
 	@Override
 	public void setLineColor(Color lineColor_) {
 		
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
+		
+		for (VisPolyLineSimple segment : segmentsVis)
+		{
+			segment.setColor(lineColor);
+		}
 	}
 
 	@Override
 	public void setPointColor(Color pointColor_) {
 		
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());	
+		verticesVis.setColor(pointColor);
+	}
+	@Override
+	public void setLineThickness(float line_thickness) {
+
+		lineThickness=line_thickness;
+		for (VisPolyLineSimple segment : segmentsVis)
+		{
+			segment.setThickness(lineThickness);
+		}
+	}
+
+	@Override
+	public void setPointSize(float point_size) {
+
+		pointSize=point_size;
+		verticesVis.setSize(pointSize);
 	}
 
 	@Override
@@ -255,17 +296,7 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 		return pointSize;
 	}
 
-	@Override
-	public void setLineThickness(float line_thickness) {
 
-		lineThickness=line_thickness;
-	}
-
-	@Override
-	public void setPointSize(float point_size) {
-
-		pointSize=point_size;
-	}
 
 	
 }
