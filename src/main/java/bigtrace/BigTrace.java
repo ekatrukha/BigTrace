@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -52,6 +53,7 @@ import bigtrace.math.DijkstraBinaryHeap;
 import bigtrace.math.DijkstraFibonacciHeap;
 import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.EigenValVecSymmDecomposition;
+import bigtrace.math.TraceBoxMath;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTracing3D;
@@ -121,9 +123,9 @@ public class BigTrace
 	IntervalView< UnsignedByteType > view2 = null;
 	
 	
-	IntervalView< UnsignedByteType > trace_weights = null;
-	IntervalView< FloatType > trace_vectors=null;
-	ArrayList<long []> jump_points = null;
+	//IntervalView< UnsignedByteType > trace_weights = null;
+	//IntervalView< FloatType > trace_vectors=null;
+	//ArrayList<long []> jump_points = null;
 	boolean bTraceMode = false;
 	
 	Img< UnsignedByteType> img;
@@ -156,11 +158,14 @@ public class BigTrace
 	int nTraceBoxView = 1;
 	
 	
-	long [][] nDimCurr = new long [2][3];
-	long [][] nDimIni = new long [2][3];
+	//long [][] nDimCurr = new long [2][3];
+	//long [][] nDimIni = new long [2][3];
 	double dCam = 1100.;
 	double dClipNear = 1000.;
 	double dClipFar = 1000.;
+	
+	BigTraceData btdata = new BigTraceData();
+	BigTraceControlPanel btpanel;
 	
 	boolean bShowWorldGrid = false;
 	boolean bShowOrigin = true;
@@ -185,7 +190,7 @@ public class BigTrace
 		//img = SimplifiedIO.openImage(
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
-		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT-1.tif", new UnsignedByteType());
+		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT.tif", new UnsignedByteType());
 		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest_horz.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
@@ -194,14 +199,14 @@ public class BigTrace
 		//		new UnsignedByteType() );
 	
 
-		img.min(nDimIni[0]);
-		img.max(nDimIni[1]);
-		img.min(nDimCurr[0]);
-		img.max(nDimCurr[1]);
+		img.min(btdata.nDimIni[0]);
+		img.max(btdata.nDimIni[1]);
+		img.min(btdata.nDimCurr[0]);
+		img.max(btdata.nDimCurr[1]);
 
 
 
-		init(0.25*Math.min(nDimIni[1][2], Math.min(nDimIni[1][0],nDimIni[1][1])));
+		init(0.25*Math.min(btdata.nDimIni[1][2], Math.min(btdata.nDimIni[1][0],btdata.nDimIni[1][1])));
 		
 		try {
 		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
@@ -209,12 +214,11 @@ public class BigTrace
 		    System.err.println( "Failed to initialize LaF" );
 		}
 		
-		
-		   javax.swing.SwingUtilities.invokeLater(new Runnable() {
-	            public void run() {
-	            	initMainDialog();
-	            }
-	        });
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                createAndShowGUI();
+            }
+        });
 		
 
 
@@ -247,8 +251,8 @@ public class BigTrace
 		{
 			//why is this shift?! I don't know,
 			// but looks better like this
-			nDimBox[0][i]=nDimIni[0][i]+0.5f;
-			nDimBox[1][i]=nDimIni[1][i]-1.0f;
+			nDimBox[0][i]=btdata.nDimIni[0][i]+0.5f;
+			nDimBox[1][i]=btdata.nDimIni[1][i]-1.0f;
 		}
 		volumeBox = new Cube3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY);
 	}
@@ -272,249 +276,29 @@ public class BigTrace
 		installActions();
 		resetViewXY(true);
 	}
-	
-	public void initMainDialog()
+	private void createAndShowGUI() 
 	{
-		//Interface
-		
-		//CropPanel
-		//cropPanel = new CropPanel( nW-1, nH-1, nD-1);
-		cropPanel = new CropPanel(nDimIni[1]);
-		
-		cropPanel.addCropPanelListener(new CropPanel.Listener() {
+		btpanel = new BigTraceControlPanel(this, btdata,roiManager);		
+	 	JFrame frame = new JFrame("BigTrace");
+	 	JFrame bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv.getBvvHandle().getViewerPanel());
+	 	
+	 	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		/*	@Override
-			public void nearFarChanged(int near, int far) {
-				// TO DO Auto-generated method stub
-				//VolumeViewer
-				dClipNear = Math.abs(near);
-				dClipFar = (double)far;
-				bvv.getBvvHandle().getViewerPanel().setCamParams(dCam, dClipNear, dClipFar);
-				handl.requestRepaint();
-				//handl.state().setViewerTransform(transform);
-				
-			}
-			*/
-
-			@Override
-			public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
-				
-				if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(nDimIni[1][0]) && bby1<=(nDimIni[1][1]) && bbz1<=(nDimIni[1][2]))
-				{
-					nDimCurr[0]=new long[] { bbx0, bby0, bbz0 };
-					nDimCurr[1]=new long[] { bbx1, bby1, bbz1 };
-					
-					bvv2.removeFromBdv();
-					
-					System.gc();
-					view2=Views.interval( img, nDimCurr[0], nDimCurr[1] );
-					
-					bvv2 = BvvFunctions.show( view2, "cropresize", Bvv.options().addTo(bvv));
-					//bvv2.getConverterSetups().get(0).setColor(new ARGBType( ARGBType.rgba(0, 0, 255, 255)));										
-				}
-			}
-		
-		});
-		
-		
-		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
-		
-		JPanel panNavigation = new JPanel(new GridBagLayout());
-	    
-		GridBagConstraints c = new GridBagConstraints();
-
-		ClassLoader classLoader = getClass().getClassLoader();
-
-		//View Panel
-	  
-		JPanel panView=new JPanel(new GridBagLayout()); 
-		panView.setBorder(new PanelTitle(" View "));
-		
-		
-		String icon_path = classLoader.getResource("icons/orig.png").getFile();
-	    ImageIcon tabIcon = new ImageIcon(icon_path);
-	    JToggleButton butOrigin = new JToggleButton(tabIcon);
-	    butOrigin.setSelected(bShowOrigin);
-	    butOrigin.setToolTipText("Show XYZ axes");
-	    butOrigin.addItemListener(new ItemListener() {
-	
-	    	@Override
-		public void itemStateChanged(ItemEvent e) {
-	    	      if(e.getStateChange()==ItemEvent.SELECTED){
-	    	    	  bShowOrigin=true;
-	    	    	  //render_pl();
-	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
-	    	        	bShowOrigin=false;
-	    	        	//render_pl();
-	    	        }
-			}
-	    	});
-	    c.gridx=0;
-	    c.gridy=0;
-		panView.add(butOrigin,c);
-		
-		
-		icon_path = classLoader.getResource("icons/boxvolume.png").getFile();
-	    tabIcon = new ImageIcon(icon_path);
-	    JToggleButton butVBox = new JToggleButton(tabIcon);
-	    butVBox.setSelected(bVolumeBox);
-	    butVBox.setToolTipText("Volume Box");
-	    butVBox.addItemListener(new ItemListener() {
-	
-	    @Override
-		public void itemStateChanged(ItemEvent e) {
-	    	      if(e.getStateChange()==ItemEvent.SELECTED){
-	    	    	  bVolumeBox=true;
-	    	    	  //render_pl();
-	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
-	    	        	bVolumeBox=false;
-	    	        	//render_pl();
-	    	        }
-			}
-	    	});
-	    c.gridx++;
-	    
-		panView.add(butVBox,c);
-		icon_path = classLoader.getResource("icons/worldgrid.png").getFile();
-	    tabIcon = new ImageIcon(icon_path);
-	    JToggleButton butWorld = new JToggleButton(tabIcon);
-	    butWorld.setSelected(bShowWorldGrid);
-	    butWorld.setToolTipText("World Grid");
-	    butWorld.addItemListener(new ItemListener() {
-	
-	    @Override
-		public void itemStateChanged(ItemEvent e) {
-	    	      if(e.getStateChange()==ItemEvent.SELECTED){
-	    	    	  bShowWorldGrid=true;
-	    	    	  //render_pl();
-	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
-	    	        	bShowWorldGrid=false;
-	    	        	//render_pl();
-	    	        }
-			}
-	    	});
-	    c.gridx++;
-		panView.add(butWorld,c);
-		
-		
-		
-		
-		//Cropping Panel
-		JPanel panCrop=new JPanel(new GridBagLayout()); 
-		panCrop.setBorder(new PanelTitle(" Cropping "));
-
-        icon_path = classLoader.getResource("icons/cube_icon.png").getFile();
-	    tabIcon = new ImageIcon(icon_path);
-
-	    c.gridx=0;
-	    c.gridy=0;
-	    c.weightx=1.0;
-	    c.fill=GridBagConstraints.HORIZONTAL;
-	    panCrop.add(cropPanel,c);
-	    
-	    
-	    //add panels to Navigation
-	    c.insets=new Insets(4,4,2,2);
-	    //View
-	    c.gridx=0;
-	    c.gridy=0;
-	    c.weightx=1.0;
-	    c.gridwidth=1;
-	    c.anchor = GridBagConstraints.WEST;
-	    panNavigation.add(panView,c);
-	    
-	    //Crop
-	    c.gridy++;	
-	    panNavigation.add(panCrop,c);
-	    
-        // Blank/filler component
-	    c.gridx++;
-	    c.gridy++;
-	    c.weightx = 0.01;
-        c.weighty = 0.01;
-        panNavigation.add(new JLabel(), c);
-
-	    tabPane.addTab("",tabIcon,panNavigation, "View/Crop");
-
-	    //ROI MANAGER
-	    icon_path = classLoader.getResource("icons/node.png").getFile();
-	    tabIcon = new ImageIcon(icon_path);
-	    tabPane.addTab("",tabIcon ,roiManager,"Tracing");
-
-	    roiManager.addRoiManager3DListener(new RoiManager3D.Listener() {
-
-			@Override
-			public void activeRoiChanged(int nRoi) {
-				//render_pl();
-			}
-	    	
-	    });
-	    
-	    
-	    tabPane.setSize(350, 300);
-	    tabPane.setSelectedIndex(1);
-
-	    
-	    progressBar = new JProgressBar(0,100);
-	    //progressBar.setIndeterminate(true);
-	    progressBar.setValue(0);
-	    progressBar.setStringPainted(true);
-		
-	    JPanel finalPanel = new JPanel(new GridBagLayout());
-	    GridBagConstraints cv = new GridBagConstraints();
-	    cv.gridx=0;
-	    cv.gridy=0;	    
-	    cv.weightx=0.5;
-	    cv.weighty=1.0;
-	    cv.anchor = GridBagConstraints.NORTHWEST;
-	    cv.gridwidth = GridBagConstraints.REMAINDER;
-	    //cv.gridheight = GridBagConstraints.REMAINDER;
-	    cv.fill = GridBagConstraints.HORIZONTAL;
-	    cv.fill = GridBagConstraints.BOTH;
-	    finalPanel.add(tabPane,cv);
-	    cv.gridx=0;
-	    cv.gridy=1;	    
-	    cv.gridwidth = GridBagConstraints.RELATIVE;
-	    cv.gridheight = GridBagConstraints.RELATIVE;
-	    cv.weighty=0.01;
-	    cv.anchor = GridBagConstraints.SOUTHEAST;
-	    cv.fill = GridBagConstraints.HORIZONTAL;
-	    finalPanel.add(progressBar,cv);
-	    
-	    JFrame bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv.getBvvHandle().getViewerPanel());
-	    //final JDialog mainWindow = new JDialog(bvv_frame,"BigTrace");
-	    
-	    //mainWindow.add(finalPanel);
-	    //mainWindow.setVisible(true);
-	    //mainWindow.setSize(400, 500);
-	    //mainWindow.requestFocusInWindow();
-	    final JFrame frame = new JFrame( "BigTrace" );
-	    //roiManager.setParentFrame(frame);
-		frame.add(finalPanel);
-	    frame.setSize(400,500);
-
+        //Create and set up the content pane.
+        //JComponent newContentPane = btframe;
+        //newContentPane.setOpaque(true); //content panes must be opaque
+        //frame.setContentPane(newContentPane);
+	 	frame.add(btpanel);
+        //Display the window.
+        frame.setSize(400,500);
+        //frame.pack();
+        frame.setVisible(true);
 	    java.awt.Point bvv_p = bvv_frame.getLocationOnScreen();
 	    java.awt.Dimension bvv_d = bvv_frame.getSize();
 	
 	    frame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
-
-	    
-	    frame.setVisible( true );
-		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		
-		frame.addWindowListener(new java.awt.event.WindowAdapter() {
-		    @Override
-		    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-		    	{
-		    		panel.stop();
-		    		bvv.close();
-		            System.exit(0);
-		        }
-		    }
-		});
-		
-		
 	}
+	
 	public void installActions()
 	{
 		final Actions actions = new Actions( new InputTriggerConfig() );
@@ -553,7 +337,7 @@ public class BigTrace
 					//continue to trace
 					else
 					{
-						if(findPointLocationFromClick(trace_weights, nHalfClickSizeWindow, target))
+						if(findPointLocationFromClick(btdata.trace_weights, nHalfClickSizeWindow, target))
 						{
 							ArrayList<RealPoint> trace = getSemiAutoTrace(target);							
 							if(trace.size()>1)
@@ -627,7 +411,7 @@ public class BigTrace
 						{
 							//make a straight line
 							RealPoint target = new RealPoint(3);							
-							if(findPointLocationFromClick(trace_weights, nHalfClickSizeWindow, target))
+							if(findPointLocationFromClick(btdata.trace_weights, nHalfClickSizeWindow, target))
 							{
 								ArrayList<RealPoint> trace = new ArrayList<RealPoint>();
 								trace.add(roiManager.getLastTracePoint());
@@ -680,7 +464,17 @@ public class BigTrace
 		start1 = System.currentTimeMillis();
 		calcWeightVectrosCorners(traceInterval, sigmaGlob);
 		end1 = System.currentTimeMillis();
-		System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
+		System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));
+		start1 = System.currentTimeMillis();
+		TraceBoxMath calc = new TraceBoxMath();
+		calc.input=traceInterval;
+		calc.sigma=sigmaGlob;
+		calc.addPropertyChangeListener(btpanel);
+		calc.execute();
+		end1 = System.currentTimeMillis();
+		System.out.println("+SWING corners: elapsed Time in milli seconds: "+ (end1-start1));
+		
+			
 /*
 		start1 = System.currentTimeMillis();
 		float[] vDir =testDeriv(traceInterval, sigmaGlob, target);
@@ -702,7 +496,7 @@ public class BigTrace
 		end1 = System.currentTimeMillis();
 		System.out.println("Dijkstra fibonacci: elapsed Time in milli seconds: "+ (end1-start1));
 */
-		showTraceBox(trace_weights);
+		showTraceBox(btdata.trace_weights);
 
 	}
 	public void calcShowTraceBoxNext(final LineTracing3D trace)
@@ -717,7 +511,7 @@ public class BigTrace
 		end1 = System.currentTimeMillis();
 		System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
 
-		showTraceBox(trace_weights);
+		showTraceBox(btdata.trace_weights);
 
 	}
 
@@ -730,7 +524,7 @@ public class BigTrace
 		
 		start1 = System.currentTimeMillis();
 		//init Dijkstra from initial click point
-		dijkRBegin = new DijkstraFHRestricted(trace_weights);
+		dijkRBegin = new DijkstraFHRestricted(btdata.trace_weights);
 		found_path_end = dijkRBegin.calcCostTwoPoints(roiManager.getLastTracePoint(),target);
 		end1 = System.currentTimeMillis();
 		System.out.println("Dijkstra Restr search BEGIN: elapsed Time in milli seconds: "+ (end1-start1));
@@ -747,13 +541,13 @@ public class BigTrace
 		{
 			//showCorners(jump_points);
 			// get corners in the beginning
-			ArrayList<long []> begCorners = dijkRBegin.exploredCorners(jump_points);
+			ArrayList<long []> begCorners = dijkRBegin.exploredCorners(btdata.jump_points);
 			start1 = System.currentTimeMillis();
-			dijkREnd = new DijkstraFHRestricted(trace_weights);
+			dijkREnd = new DijkstraFHRestricted(btdata.trace_weights);
 			dijkREnd.calcCost(target);
 			end1 = System.currentTimeMillis();
 			System.out.println("Dijkstra Restr search END: elapsed Time in milli seconds: "+ (end1-start1));
-			ArrayList<long []> endCorners = dijkREnd.exploredCorners(jump_points);
+			ArrayList<long []> endCorners = dijkREnd.exploredCorners(btdata.jump_points);
 			//there are corners (jump points) in the trace area
 			// let's construct the path
 			if(begCorners.size()>0 && endCorners.size()>0)
@@ -893,10 +687,10 @@ public class BigTrace
 		
 		mEV.computeVWCRAI(hessian, directionVectors,salWeights, lineCorners,nThreads,es);
 		es.shutdown();
-		trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
-		jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
+		btdata.trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
+		btdata.jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
 		//showCorners(jump_points);
-		showTraceBox(trace_weights);
+		showTraceBox(btdata.trace_weights);
 	}
 	
 	void showCorners(ArrayList<long []> corners)
@@ -1168,9 +962,9 @@ public class BigTrace
 	{
 		
 		double scale;
-		int nW= (int)nDimIni[1][0];
-		int nH= (int)nDimIni[1][1];
-		int nD= (int)nDimIni[1][2];
+		int nW= (int)btdata.nDimIni[1][0];
+		int nH= (int)btdata.nDimIni[1][1];
+		int nD= (int)btdata.nDimIni[1][2];
 		
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
@@ -1209,9 +1003,9 @@ public class BigTrace
 	{
 		
 		double scale;
-		int nW= (int)nDimIni[1][0];
-		int nH= (int)nDimIni[1][1];
-		int nD= (int)nDimIni[1][2];
+		int nW= (int)btdata.nDimIni[1][0];
+		int nH= (int)btdata.nDimIni[1][1];
+		int nD= (int)btdata.nDimIni[1][2];
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
 		
@@ -1304,7 +1098,7 @@ public class BigTrace
 		*/
 		
 		//current dataset
-		Cuboid3D dataCube = new Cuboid3D(nDimCurr); 
+		Cuboid3D dataCube = new Cuboid3D(btdata.nDimCurr); 
 		dataCube.iniFaces();
 		ArrayList<RealPoint> intersectionPoints = Intersections3D.cuboidLinesIntersect(dataCube, frustimLines);
 		// Lines(rays) truncated to the volume.
@@ -1426,7 +1220,7 @@ public class BigTrace
 
 		//double [] intersect_point = new double[3];
 		
-		Cuboid3D viewCube = new Cuboid3D(nDimCurr); 
+		Cuboid3D viewCube = new Cuboid3D(btdata.nDimCurr); 
 		viewCube.iniFaces();
 		//dW++;
 		
@@ -1515,7 +1309,7 @@ public class BigTrace
 		*/
 		
 		//current dataset
-		Cuboid3D dataCube = new Cuboid3D(nDimCurr); 
+		Cuboid3D dataCube = new Cuboid3D(btdata.nDimCurr); 
 		dataCube.iniFaces();
 		ArrayList<RealPoint> intersectionPoints = Intersections3D.cuboidLinesIntersect(dataCube, frustimLines);
 		// Lines(rays) truncated to the volume.
