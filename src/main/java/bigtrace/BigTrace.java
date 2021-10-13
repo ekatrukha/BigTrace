@@ -146,25 +146,12 @@ public class BigTrace
 	 * used to find maximim intensity **/
 	int nHalfClickSizeWindow = 5;
 
-	/** characteristic size (SD) of lines (for now in all dimensions)**/
-	double sigmaGlob = 3.0;
-	/** half size of tracing box (for now in all dimensions) **/
-	long lTraceBoxSize = 50;
-	/** How much the tracebox will follow the last direction of trace:
-	 * in the range [0..1], 0 = no following (center), 1 = previous point is at the edge of the box**/
-	float fTraceBoxShift = 0.9f;
 
-	/** whether (1) or not (0) remove visibility of volume data during tracing **/
-	int nTraceBoxView = 1;
-	
-	
-	//long [][] nDimCurr = new long [2][3];
-	//long [][] nDimIni = new long [2][3];
 	double dCam = 1100.;
 	double dClipNear = 1000.;
 	double dClipFar = 1000.;
 	
-	BigTraceData btdata = new BigTraceData();
+	public BigTraceData btdata = new BigTraceData();
 	BigTraceControlPanel btpanel;
 	
 	boolean bShowWorldGrid = false;
@@ -324,12 +311,7 @@ public class BigTrace
 								bTraceMode= true;
 								roiManager.setTraceMode(bTraceMode);
 								roiManager.addSegment(target, null);																
-								calcShowTraceBoxIni(target);
-								if(nTraceBoxView==1)
-								{
-									bvv2.setActive(false);
-								}
-								
+								calcShowTraceBoxIni(target);							
 							}
 							//render_pl();
 						}
@@ -371,7 +353,7 @@ public class BigTrace
 							bTraceMode= false;
 							roiManager.setTraceMode(bTraceMode);							
 							removeTraceBox();
-							if(nTraceBoxView==1)
+							if(btdata.nTraceBoxView==1)
 							{
 								bvv2.setActive(true);
 							}
@@ -397,7 +379,7 @@ public class BigTrace
 						bTraceMode= false;
 						roiManager.setTraceMode(bTraceMode);	
 						removeTraceBox();
-						if(nTraceBoxView==1)
+						if(btdata.nTraceBoxView==1)
 						{
 							bvv2.setActive(true);
 						}
@@ -428,8 +410,9 @@ public class BigTrace
 				() -> {
 					if(bTraceMode)
 					{
-						removeTraceBox();
+						
 						calcShowTraceBoxNext((LineTracing3D)roiManager.getActiveRoi());
+						//removeTraceBox();
 						//initTracing(roiManager.getLastTracePoint());
 					}
 				},
@@ -456,62 +439,48 @@ public class BigTrace
 	
 	public void calcShowTraceBoxIni(final RealPoint target)
 	{
-		long[][] rangeTraceBox = getTraceBoxCentered(view2,lTraceBoxSize,target);
+		long[][] rangeTraceBox = getTraceBoxCentered(view2,btdata.lTraceBoxSize,target);
 		
 		IntervalView<UnsignedByteType> traceInterval = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
-		long start1, end1;
+//		long start1, end1;
 
-		start1 = System.currentTimeMillis();
-		calcWeightVectrosCorners(traceInterval, sigmaGlob);
-		end1 = System.currentTimeMillis();
-		System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));
-		start1 = System.currentTimeMillis();
-		TraceBoxMath calc = new TraceBoxMath();
-		calc.input=traceInterval;
-		calc.sigma=sigmaGlob;
-		calc.addPropertyChangeListener(btpanel);
-		calc.execute();
-		end1 = System.currentTimeMillis();
-		System.out.println("+SWING corners: elapsed Time in milli seconds: "+ (end1-start1));
+	//	start1 = System.currentTimeMillis();
+		//calcWeightVectrosCorners(traceInterval, sigmaGlob);
+		//end1 = System.currentTimeMillis();
+		//System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));
+		//start1 = System.currentTimeMillis();
+		TraceBoxMath calcTask = new TraceBoxMath();
+		calcTask.input=traceInterval;
+		calcTask.bt=this;
+		calcTask.addPropertyChangeListener(btpanel);
+		calcTask.execute();
+		//end1 = System.currentTimeMillis();
+		//System.out.println("+SWING corners: elapsed Time in milli seconds: "+ (end1-start1));
 		
 			
-/*
-		start1 = System.currentTimeMillis();
-		float[] vDir =testDeriv(traceInterval, sigmaGlob, target);
-		end1 = System.currentTimeMillis();
-		System.out.println("Deriv part: elapsed Time in milli seconds: "+ (end1-start1));*/
-		/*
-		start1 = System.currentTimeMillis();
-		dijkBH = new DijkstraBinaryHeap(trace_weights, target);
-		end1 = System.currentTimeMillis();
-		System.out.println("Dijkstra binary heap: elapsed Time in milli seconds: "+ (end1-start1));
 
-		start1 = System.currentTimeMillis();
-		dijkFib = new DijkstraFibonacciHeap(trace_weights, target);
-		end1 = System.currentTimeMillis();
-		System.out.println("Dijkstra fibonacci: elapsed Time in milli seconds: "+ (end1-start1));
-		
-		start1 = System.currentTimeMillis();
-		dijkR = new DijkstraRestricted(trace_weights, target);
-		end1 = System.currentTimeMillis();
-		System.out.println("Dijkstra fibonacci: elapsed Time in milli seconds: "+ (end1-start1));
-*/
-		showTraceBox(btdata.trace_weights);
+		//showTraceBox(btdata.trace_weights);
 
 	}
 	public void calcShowTraceBoxNext(final LineTracing3D trace)
 	{
-		long[][] rangeTraceBox = getTraceBoxNext(view2,lTraceBoxSize, fTraceBoxShift, trace);
+		long[][] rangeTraceBox = getTraceBoxNext(view2,btdata.lTraceBoxSize, btdata.fTraceBoxShift, trace);
 		
 		IntervalView<UnsignedByteType> traceInterval = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
-		long start1, end1;
+		//long start1, end1;
 
-		start1 = System.currentTimeMillis();
-		calcWeightVectrosCorners(traceInterval, sigmaGlob);
-		end1 = System.currentTimeMillis();
-		System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
+		//start1 = System.currentTimeMillis();
+		//calcWeightVectrosCorners(traceInterval, sigmaGlob);
+		//end1 = System.currentTimeMillis();
+		
+		TraceBoxMath calcTask = new TraceBoxMath();
+		calcTask.input=traceInterval;
+		calcTask.bt=this;
+		calcTask.addPropertyChangeListener(btpanel);
+		calcTask.execute();
+		//System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
 
-		showTraceBox(btdata.trace_weights);
+		//showTraceBox(btdata.trace_weights);
 
 	}
 
@@ -553,7 +522,7 @@ public class BigTrace
 			if(begCorners.size()>0 && endCorners.size()>0)
 			{
 				//find a closest pair of corners
-				ArrayList<long []> pair = findClosestPoints(begCorners,endCorners);
+				ArrayList<long []> pair = VolumeMisc.findClosestPoints(begCorners,endCorners);
 				RealPoint pB = new RealPoint(3);
 				RealPoint pE = new RealPoint(3);
 				pB.setPosition(pair.get(0));
@@ -588,110 +557,8 @@ public class BigTrace
 		
 		
 	}
-	
-	public ArrayList<long []> findClosestPoints(ArrayList<long []> begCorners, ArrayList<long []> endCorners)
-	{
-		ArrayList<long []> pair = new ArrayList<long []> ();
-		
-		long minDist = Long.MAX_VALUE;
-		long currDist,dL;
-		int indB=0;
-		int indE=0;
-		long [] pB, pE;
-		int i,j,k;
-		for (i=0;i<begCorners.size();i++)
-		{
-			pB=begCorners.get(i);
-			for (j=0;j<endCorners.size();j++)
-			{
-				pE=endCorners.get(j);
-				currDist=0;
-				for(k=0;k<pB.length;k++)
-				{
-					dL=pE[k]-pB[k];
-					currDist+=dL*dL;
-				}
-				if(currDist<minDist)
-				{
-					minDist=currDist;
-					indB=i;
-					indE=j;
-				}
-			}
-		}
-		pair.add(begCorners.get(indB));
-		pair.add(endCorners.get(indE));
-		return pair;
-	}
-	
-	public void calcWeightVectrosCorners(final IntervalView<UnsignedByteType> input, final double sigma)
-	{
-		int i;
-		double [][] kernels;
-		Kernel1D[] derivKernel;
-		final long[] dim = Intervals.dimensionsAsLongArray( input );
-		long[] minV = input.minAsLongArray();
-		long[] nShift = new long [input.numDimensions()+1];
-		
-		for (i=0;i<input.numDimensions();i++)
-		{
-			nShift[i]=minV[i];
-		}
-		
-		ArrayImg<FloatType, FloatArray> hessFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
-		IntervalView<FloatType> hessian = Views.translate(hessFloat, nShift);
-		
-		
-		//ArrayImg<FloatType, FloatArray> gradient = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
-		
-		//long start1, end1;
-		
-		
-		int count = 0;
-		int [] nDerivOrder;
-		/**/
-		Convolution convObj;
-		//start1 = System.currentTimeMillis();
-		final int nThreads = Runtime.getRuntime().availableProcessors();
-		ExecutorService es = Executors.newFixedThreadPool( nThreads );
 
-		//second derivatives
-		for (int d1=0;d1<3;d1++)
-		{
-			for ( int d2 = d1; d2 < 3; d2++ )
-			{
-				IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
-				nDerivOrder = new int [3];
-				nDerivOrder[d1]++;
-				nDerivOrder[d2]++;
-				kernels = DerivConvolutionKernels.convolve_derive_kernel(sigma, nDerivOrder );
-				derivKernel = Kernel1D.centralAsymmetric(kernels);
-				convObj=SeparableKernelConvolution.convolution( derivKernel );
-				convObj.setExecutor(es);
-				convObj.process(Views.extendBorder(input), hs2 );
-				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
-				count++;
-				System.out.println(count);
-			}
-		}
-		//end1 = System.currentTimeMillis();
-		//System.out.println("THREADED Elapsed Time in milli seconds: "+ (end1-start1));
-
-		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
-		ArrayImg<FloatType, FloatArray> dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
-		ArrayImg<FloatType, FloatArray> sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
-		ArrayImg<FloatType, FloatArray> nC = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
-		IntervalView<FloatType> directionVectors =  Views.translate(dV, nShift);
-		IntervalView<FloatType> salWeights =  Views.translate(sW, minV);
-		IntervalView<FloatType> lineCorners =  Views.translate(nC, minV);
-		
-		mEV.computeVWCRAI(hessian, directionVectors,salWeights, lineCorners,nThreads,es);
-		es.shutdown();
-		btdata.trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
-		btdata.jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
-		//showCorners(jump_points);
-		showTraceBox(btdata.trace_weights);
-	}
+	
 	
 	void showCorners(ArrayList<long []> corners)
 	{
@@ -716,7 +583,7 @@ public class BigTrace
 			rangeM[0][i]=(long)(pos[i])-range ;
 			rangeM[1][i]=(long)(pos[i])+range;								
 		}
-		checkBoxInside(viewclick, rangeM);
+		VolumeMisc.checkBoxInside(viewclick, rangeM);
 		return rangeM;							
 	}
 
@@ -747,7 +614,7 @@ public class BigTrace
 			rangeM[1][i]+=(long)(pos[i]*range*fFollowDegree);								
 		}		
 		
-		checkBoxInside(viewclick, rangeM);
+		VolumeMisc.checkBoxInside(viewclick, rangeM);
 		return rangeM;							
 	}
 
@@ -765,6 +632,8 @@ public class BigTrace
 		bvv_trace.setDisplayRange(0., 150.0);
 		//handl.setDisplayMode(DisplayMode.SINGLE);
 	}
+	
+	/** removes tracebox from BVV **/
 	public void removeTraceBox()
 	{
 
@@ -1122,7 +991,7 @@ public class BigTrace
 		}
 		long [][] nClickMinMax = new long[2][3];
 		
-		if(newBoundBox(viewclick, intersectionPoints, nClickMinMax))
+		if(VolumeMisc.newBoundBox(viewclick, intersectionPoints, nClickMinMax))
 		{
 			/*
 			//show volume that was cut-off
@@ -1174,212 +1043,7 @@ public class BigTrace
 		
 	}
 	
-	public void addLineAlongTheClick()
-	{
-		java.awt.Point point_mouse  =bvv.getBvvHandle().getViewerPanel().getMousePosition();
-		System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
-		
 
-		AffineTransform3D transform = new AffineTransform3D();
-		
-		panel.state().getViewerTransform(transform);
-		//transform.concatenate(affine)
-		ArrayList<RealPoint> viewclick = new ArrayList<RealPoint>();
-		//int dW=5;
-
-		/**/
-
-		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
-		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
-		//Matrix4f viewm = MatrixMath.affine( transform, new Matrix4f() );
-		Matrix4f persp = new Matrix4f();
-		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, persp ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
-		
-		
-		Matrix4f matPers = new Matrix4f();
-		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, matPers );
-		
-		Vector3f temp1 = new Vector3f();
-		Vector3f temp2 = new Vector3f(); 
-		matPers.unproject((float)point_mouse.x,sH-(float)point_mouse.y,1.0f, //z=1 ->far from camera z=0 -> close to camera
-				new int[] { 0, 0, sW, sH },temp1);
-		
-		matPers.unproject((float)point_mouse.x,sH-(float)point_mouse.y,0.0f, //z=1 ->far from camera z=0 -> close to camera
-				new int[] { 0, 0, sW, sH },temp2);
-		
-		
-		Vector3f worldCoords1 = new Vector3f();
-		Vector3f worldCoords2 = new Vector3f();
-
-		
-		persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,1.0f, //far from camera
-				  new int[] { 0, 0, sW, sH },worldCoords1);
-		persp.unproject((float)point_mouse.x,sH-(float)point_mouse.y,0.0f, //close to camera 
-				  new int[] { 0, 0, sW, sH },worldCoords2);
-
-
-		//double [] intersect_point = new double[3];
-		
-		Cuboid3D viewCube = new Cuboid3D(btdata.nDimCurr); 
-		viewCube.iniFaces();
-		//dW++;
-		
-		Line3D clickRay = new Line3D(worldCoords1,worldCoords2);
-		/*for(int i=0;i<6;i++)
-		{
-			if(Intersections3D.planeLineIntersect(viewCube.faces.get(i), clickRay, intersect_point))
-			{
-				//if(viewCube.isPointInsideShape(intersect_point))
-				if(viewCube.isPointInsideMinMax(intersect_point))
-					viewclick.add(new RealPoint(intersect_point));
-			}
-		}*/
-		ArrayList<Line3D> linex= new ArrayList<Line3D>();
-		linex.add(clickRay);
-		viewclick=Intersections3D.cuboidLinesIntersect(viewCube,linex);
-		System.out.println( "Intersect points #: " + viewclick.size());
-		
-
-		if(viewclick.size()>1)
-		{
-			for(int i =0;i<2;i+=2)
-			{
-				traces.addNewLine();
-				traces.addPointToActive(viewclick.get(i));
-				traces.addPointToActive(viewclick.get(i+1));
-			}
-		}
-		if(viewclick.size()==1)
-		{
-			viewclick=Intersections3D.cuboidLinesIntersect(viewCube,linex);
-		}
-
-		//render_pl();
-	}
-	
-	public void viewClickArea(final int nHalfWindow)
-	{
-		int i,j;
-
-		java.awt.Point point_mouse  = bvv.getBvvHandle().getViewerPanel().getMousePosition();
-		System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
-														
-		//get perspective matrix:
-		AffineTransform3D transform = new AffineTransform3D();
-		panel.state().getViewerTransform(transform);
-		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
-		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
-		Matrix4f matPerspWorld = new Matrix4f();
-		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
-
-
-		ArrayList<RealPoint> clickFrustum = new ArrayList<RealPoint> ();
-		Vector3f temp = new Vector3f(); 
-
-		//float [] zVals = new float []{0.0f,1.0f,1.0f,0.0f,0.0f,1.0f,1.0f,0.0f};
-		for (i = -nHalfWindow;i<3*nHalfWindow;i+=2*nHalfWindow)
-			for (j = -nHalfWindow;j<3*nHalfWindow;j+=2*nHalfWindow)
-				for (int z =0 ; z<2; z++)
-				{
-					//take coordinates in original data volume space
-					matPerspWorld.unproject((float)point_mouse.x+i,sH-(float)point_mouse.y+j,(float)z, //z=1 ->far from camera z=0 -> close to camera
-							new int[] { 0, 0, sW, sH },temp);
-					//persp.unproject((float)point_mouse.x+i,sH-(float)point_mouse.y+j,zVals[nCount+1], //z=1 ->far from camera z=0 -> close to camera
-					//new int[] { 0, 0, sW, sH },temp);
-
-					clickFrustum.add(new RealPoint(temp.x,temp.y,temp.z));
-					
-				}
-		//build lines (rays)
-		ArrayList<Line3D> frustimLines = new ArrayList<Line3D>();
-		for(i =0;i<clickFrustum.size();i+=2)
-		{
-			frustimLines.add(new Line3D(clickFrustum.get(i),clickFrustum.get(i+1)));
-		}
-		
-		
-		// original lines (rays)
-		/*
-		for(i =0;i<clickFrustum.size();i+=2)
-		{
-			traces.addNewLine();
-			traces.addPointToActive(clickFrustum.get(i));
-			traces.addPointToActive(clickFrustum.get(i+1));
-		}
-		*/
-		
-		//current dataset
-		Cuboid3D dataCube = new Cuboid3D(btdata.nDimCurr); 
-		dataCube.iniFaces();
-		ArrayList<RealPoint> intersectionPoints = Intersections3D.cuboidLinesIntersect(dataCube, frustimLines);
-		// Lines(rays) truncated to the volume.
-		// For now, all of them must contained inside datacube.
-		
-		traces = new BTPolylines ();
-			
-		for(i =0;i<intersectionPoints.size();i+=2)
-		{
-			traces.addNewLine();
-			traces.addPointToActive(intersectionPoints.get(i));
-			if(i<(intersectionPoints.size()-1))
-				traces.addPointToActive(intersectionPoints.get(i+1));
-		}
-		
-		if(intersectionPoints.size()==8)
-		{
-
-			
-		}		
-		else
-		{
-			System.out.println( "#intersection points " + intersectionPoints.size());
-			return;
-		}
-		long [][] nClickMinMax = new long[2][3];
-		
-		if(newBoundBox(view2, intersectionPoints, nClickMinMax))
-		{
-			
-			//show volume that was cut-off
-			bvv2.removeFromBdv();
-			System.gc();
-			view2=Views.interval( img, nClickMinMax[0], nClickMinMax[1]);	
-		
-			bvv2 = BvvFunctions.show( view2, "cropclick", Bvv.options().addTo(bvv));
-			
-			/*
-			
-			IntervalView< UnsignedByteType > intRay = Views.interval(view2, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
-																								   nClickMinMax[1][0],nClickMinMax[1][1],nClickMinMax[1][2]));
-			
-			//double [][] singleCube  = new double [2][3];
-			//for(i=0;i<3;i++)
-			//	singleCube[1][i]=1.0;
-			//Cuboid3D clicktest = new Cuboid3D(singleCube);
-			
-			//Cuboid3D clickVolume = new Cuboid3D(intersectionPoints); 
-			Cuboid3D clickVolume = new Cuboid3D(clickFrustum);
-			clickVolume.iniFaces();
-			RealPoint target = new RealPoint( 3 );
-			//RealPoint locationMax = new RealPoint( 3 );
-			
-			if(computeMaxLocationCuboid(intRay,target,clickVolume))
-			{
-				traces.addPointToActive(target);
-				handl.showMessage("point found");
-			}
-			else
-			{
-				handl.showMessage("not found :(");
-			}
-				
-			 */
-						
-		}
-		
-
-		//render_pl();
-	}
 	public static void main( String... args) throws IOException
 	{
 		
@@ -1392,119 +1056,8 @@ public class BigTrace
 
 	
 
-	/**  function calculates transform allowing to align two vectors 
-	 * @param align_direction - immobile vector
-	 * @param moving - vector that aligned with align_direction
-	 * @return affine transform (rotations)
-	 * **/
-	AffineTransform3D alignVectors(final RealPoint align_direction, final RealPoint moving)
-	{
-		double [] dstat = align_direction.positionAsDoubleArray();
-		double [] dmov = moving.positionAsDoubleArray();
-		double [] v = new double [3];
-		double c;
-		
-		AffineTransform3D transform = new AffineTransform3D();
-		LinAlgHelpers.normalize(dstat);
-		LinAlgHelpers.normalize(dmov);
-		c = LinAlgHelpers.dot(dstat, dmov);
-		//exact opposite directions
-		if ((c+1.0)<0.00001)
-		{
-			transform.identity();
-			transform.scale(-1.0);			
-		}
-		
-		LinAlgHelpers.cross( dstat,dmov, v);
-		double [][] matrixV = new double [3][3];
-		double [][] matrixV2 = new double [3][3];
-		
-		matrixV[0][1]=(-1.0)*v[2];
-		matrixV[0][2]=v[1];
-		matrixV[1][0]=v[2];
-		matrixV[1][2]=(-1.0)*v[0];
-		matrixV[2][0]=(-1.0)*v[1];
-		matrixV[2][1]=v[0];
-		
-		LinAlgHelpers.mult(matrixV, matrixV, matrixV2);
-		c=1.0/(1.0+c);
-		LinAlgHelpers.scale(matrixV2, c, matrixV2);
-		LinAlgHelpers.add(matrixV, matrixV2, matrixV);
-		transform.set(1.0 + matrixV[0][0],       matrixV[0][1],       matrixV[0][2],
-					        matrixV[1][0], 1.0 + matrixV[1][1],       matrixV[1][2], 
-					        matrixV[2][0],       matrixV[2][1], 1.0 + matrixV[2][2],
-					                  0.0,                 0.0,                 0.0);
-		
-		return transform;
-	}
-	
-	FinalInterval RealIntervaltoInterval (RealInterval R_Int)	
-	{
-		int i;
-		long [] minL = new long [3];
-		long [] maxL = new long [3];
-		double [] minR = new double [3];
-		double [] maxR = new double [3];
-		R_Int.realMax(maxR);
-		R_Int.realMin(minR);
-		for (i=0;i<3;i++)
-		{
-			minL[i]=(int)Math.round(minR[i]);
-			maxL[i]=(int)Math.round(maxR[i]);			
-		}
-		return Intervals.createMinMax(minL[0],minL[1],minL[2], maxL[0],maxL[1],maxL[2]);
-	}
-	public boolean checkBoxInside(final IntervalView< UnsignedByteType > viewclick, final long [][] newMinMax)
-	{ 
-		long [][] bigBox = new long[2][];
-		bigBox[0]=viewclick.minAsLongArray();
-		bigBox[1]=viewclick.maxAsLongArray();
-		for (int j=0;j<3;j++)
-		{
-				newMinMax[0][j]=Math.max(bigBox[0][j],newMinMax[0][j]);
-				newMinMax[1][j]=Math.min(bigBox[1][j],newMinMax[1][j]);
-				if(newMinMax[1][j]<newMinMax[0][j])
-					return false;
-		}
-		return true;
-	}
-	
-	public boolean newBoundBox(final IntervalView< UnsignedByteType > viewclick,final ArrayList<RealPoint> pointArray, final long [][] newMinMax)
-	{ 
-		//= new long [2][3];
-		float [][] newMinMaxF = new float [2][3];
-		int i, j;
-		float temp;
-		long [][] bigBox = new long[2][];
-		bigBox[0]=viewclick.minAsLongArray();
-		bigBox[1]=viewclick.maxAsLongArray();
-		for (i=0;i<3;i++)
-		{
-			newMinMaxF[0][i]=Float.MAX_VALUE;
-			newMinMaxF[1][i]=(-1)*Float.MAX_VALUE;
-		}
-		for (i=0;i<pointArray.size();i++)
-		{
-			
-			for (j=0;j<3;j++)
-			{
-				temp=pointArray.get(i).getFloatPosition(j);
-				if(temp>newMinMaxF[1][j])
-					newMinMaxF[1][j]=temp;
-				if(temp<newMinMaxF[0][j])
-					newMinMaxF[0][j]=temp;
-				
-			}			
-		}
-		for (j=0;j<3;j++)
-		{
-				newMinMax[0][j]=Math.max(bigBox[0][j],(long)Math.round(newMinMaxF[0][j]));
-				newMinMax[1][j]=Math.min(bigBox[1][j],(long)Math.round(newMinMaxF[1][j]));
-				if(newMinMax[1][j]<=newMinMax[0][j])
-					return false;
-		}
-		return true;
 
-	}
+	
+
 	
 }

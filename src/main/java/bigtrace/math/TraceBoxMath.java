@@ -6,6 +6,8 @@ import java.util.concurrent.Executors;
 
 import javax.swing.SwingWorker;
 
+import bigtrace.BigTrace;
+import bigtrace.BigTraceData;
 import bigtrace.volume.VolumeMisc;
 import net.imglib2.algorithm.convolution.Convolution;
 import net.imglib2.algorithm.convolution.kernel.Kernel1D;
@@ -21,11 +23,8 @@ import net.imglib2.view.Views;
 
 public class TraceBoxMath extends SwingWorker<Void, Void> 
 {
+	public BigTrace bt;
 	public IntervalView<UnsignedByteType> input; 
-	IntervalView< UnsignedByteType > trace_weights = null;
-	IntervalView< FloatType > trace_vectors=null;
-	ArrayList<long []> jump_points = null;
-	public double sigma;
 	@Override
 	protected Void doInBackground() throws Exception {
 		// TODO Auto-generated method stub
@@ -67,7 +66,7 @@ public class TraceBoxMath extends SwingWorker<Void, Void>
 				nDerivOrder = new int [3];
 				nDerivOrder[d1]++;
 				nDerivOrder[d2]++;
-				kernels = DerivConvolutionKernels.convolve_derive_kernel(sigma, nDerivOrder );
+				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btdata.sigmaGlob, nDerivOrder );
 				derivKernel = Kernel1D.centralAsymmetric(kernels);
 				convObj=SeparableKernelConvolution.convolution( derivKernel );
 				convObj.setExecutor(es);
@@ -97,10 +96,21 @@ public class TraceBoxMath extends SwingWorker<Void, Void>
 		
 		mEV.computeVWCRAI(hessian, directionVectors,salWeights, lineCorners,nThreads,es);
 		es.shutdown();
-		trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
-		jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
+		bt.btdata.trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
+		bt.btdata.jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
 		
 		return null;
 	}
-
+    /*
+     * Executed in event dispatching thread
+     */
+    @Override
+    public void done() 
+    {
+    	bt.showTraceBox(bt.btdata.trace_weights);
+		if(bt.btdata.nTraceBoxView==1)
+		{
+			bt.bvv2.setActive(false);
+		}
+    }
 }
