@@ -27,6 +27,20 @@ public class BigTraceData {
 	/** whether or not display a world grid **/
 	public boolean bShowWorldGrid = false;
 	
+	/** camera position for BVV **/
+	double dCam = 1100.;
+	/** near clip plane position for BVV **/
+	double dClipNear = 1000.;
+	/** far clip plane position for BVV  **/
+	double dClipFar = 1000.;
+	
+	
+	/////////////////////////////////clicking interface 
+	
+	/** half size of rectangle around click point (in screen pixels)
+	 * used to find maximim intensity **/
+	int nHalfClickSizeWindow = 5;
+	
 	///////////////////////////// tracing box
 	
 	/** weights of curve probability (saliency) for the trace box**/
@@ -48,4 +62,7 @@ public class BigTraceData {
 	/** How much the tracebox will follow the last direction of trace:
 	 * in the range [0..1], 0 = no following (center), 1 = previous point is at the edge of the box**/
 	float fTraceBoxShift = 0.9f;
+	/** current number of vertices in the tracebox **/
+	int nPointsInTraceBox=0;
+
 }

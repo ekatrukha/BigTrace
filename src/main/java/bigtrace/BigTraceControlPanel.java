@@ -22,6 +22,7 @@ import javax.swing.JToggleButton;
 
 import bigtrace.gui.CropPanel;
 import bigtrace.gui.PanelTitle;
+import bigtrace.math.TraceBoxMath;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.BigTraceData;
 import bvv.util.Bvv;
@@ -83,10 +84,10 @@ public class BigTraceControlPanel extends JPanel
 					btrace.bvv2.removeFromBdv();
 					
 					System.gc();
-					btrace.view2=Views.interval( btrace.img, btdata.nDimCurr[0], btdata.nDimCurr[1] );
 					
-					btrace.bvv2 = BvvFunctions.show( btrace.view2, "cropresize", Bvv.options().addTo(btrace.bvv));
-					//bvv2.getConverterSetups().get(0).setColor(new ARGBType( ARGBType.rgba(0, 0, 255, 255)));										
+					btrace.currentView=Views.interval( btrace.img, btdata.nDimCurr[0], btdata.nDimCurr[1] );
+					
+					btrace.bvv2 = BvvFunctions.show( btrace.currentView, "cropresize", Bvv.options().addTo(btrace.bvv));									
 				}
 			}
 		
@@ -235,6 +236,7 @@ public class BigTraceControlPanel extends JPanel
 	    //progressBar.setIndeterminate(true);
 	    progressBar.setValue(0);
 	    progressBar.setStringPainted(true);
+	    progressBar.setString("BigTrace version xxx");
 		
 	    //JPanel finalPanel = new JPanel(new GridBagLayout());
 	    GridBagConstraints cv = new GridBagConstraints();
@@ -295,13 +297,19 @@ public class BigTraceControlPanel extends JPanel
 	}
 
 	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-		// TODO Auto-generated method stub
-        if ("progress" == evt.getPropertyName()) {
-            int progress = (Integer) evt.getNewValue();
-            progressBar.setValue(progress);
-  
-        } 
+	public void propertyChange(PropertyChangeEvent evt) 
+	{
+	        if ("progress" == evt.getPropertyName()) 
+	        {
+	            int progress = (Integer) evt.getNewValue();
+	            progressBar.setValue(progress);
+	            if(evt.getSource().getClass().getSimpleName().equals("TraceBoxMath"))
+	            {
+	            	TraceBoxMath val = (TraceBoxMath)(evt.getSource());
+	            	progressBar.setString(val.getProgressState());
+	            }
+	        }
+	        
 	}
 
 	@Override

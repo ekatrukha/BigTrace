@@ -57,6 +57,7 @@ import bigtrace.math.TraceBoxMath;
 import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTracing3D;
+import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPointsSimple;
@@ -120,9 +121,8 @@ public class BigTrace
 	public  BvvStackSource< UnsignedByteType > bvv2;
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	RandomAccessibleInterval< UnsignedByteType > view;
-	IntervalView< UnsignedByteType > view2 = null;
-	
-	
+	IntervalView< UnsignedByteType > currentView = null;
+
 	//IntervalView< UnsignedByteType > trace_weights = null;
 	//IntervalView< FloatType > trace_vectors=null;
 	//ArrayList<long []> jump_points = null;
@@ -132,9 +132,8 @@ public class BigTrace
 
 	VolumeViewerPanel panel;
 	VolumeViewerFrame frame;
+	public boolean bInputLock = false;
 	
-	
-	CropPanel cropPanel;
 
 	/** visualization of coordinates origin axes **/
 	ArrayList<VisPolyLineSimple> originVis = new ArrayList<VisPolyLineSimple>();
@@ -142,33 +141,17 @@ public class BigTrace
 	/** box around volume **/
 	Cube3D volumeBox;
 	
-	/** half size of rectangle around click point (in screen pixels)
-	 * used to find maximim intensity **/
-	int nHalfClickSizeWindow = 5;
 
-
-	double dCam = 1100.;
-	double dClipNear = 1000.;
-	double dClipFar = 1000.;
 	
 	public BigTraceData btdata = new BigTraceData();
 	BigTraceControlPanel btpanel;
 	
-	boolean bShowWorldGrid = false;
-	boolean bShowOrigin = true;
-	boolean bVolumeBox = true;
 	DijkstraFHRestricted dijkRBegin;
 	DijkstraFHRestricted dijkREnd;
 	//DijkstraBinaryHeap dijkBH;
 	//DijkstraFibonacciHeap dijkFib;
 
-	
-	//ArrayList< RealPoint > point_coords = new ArrayList<>();
-	BTPolylines traces = new BTPolylines ();
-	
-
 	RoiManager3D roiManager = new RoiManager3D();
-	JProgressBar progressBar;
 		
 	public void runBVV()
 	{
@@ -206,9 +189,6 @@ public class BigTrace
                 createAndShowGUI();
             }
         });
-		
-
-
 
 //		bdv.getBdvHandle().getKeybindings().removeInputMap( "BigTrace" );
 
@@ -255,7 +235,7 @@ public class BigTrace
 				 Views.interval( imgx, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
 		
 						
-		bvv = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(dCam).dClipNear(dClipNear).dClipFar(dClipFar));	
+		bvv = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(btdata.dCam).dClipNear(btdata.dClipNear).dClipFar(btdata.dClipFar));	
 		bvv.setActive(false);
 		panel=bvv.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();
@@ -294,94 +274,130 @@ public class BigTrace
 		// (not really working properly yet
 		actions.runnableAction(
 				() -> {
-					//addPoint();
-					RealPoint target = new RealPoint(3);
-					if(!bTraceMode)
+					
+					if(!bInputLock)
 					{
-						if(findPointLocationFromClick(view2, nHalfClickSizeWindow,target))
+						//addPoint();
+						RealPoint target = new RealPoint(3);
+						if(!bTraceMode)
 						{
-							//point or line
-							if(roiManager.mode<=RoiManager3D.ADD_POINT_LINE)
+							if(findPointLocationFromClick(currentView, btdata.nHalfClickSizeWindow,target))
 							{
-								roiManager.addPoint(target);
+								//point or line
+								if(roiManager.mode<=RoiManager3D.ADD_POINT_LINE)
+								{
+									roiManager.addPoint(target);
+								}
+								//semi auto tracing initialize
+								else
+								{
+									bTraceMode= true;								
+									roiManager.setTraceMode(bTraceMode);
+									
+									//nothing selected, make a new tracing
+									if(roiManager.activeRoi==-1)
+									{
+										roiManager.addSegment(target, null);																
+										calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+									}
+									else
+									{
+										int nRoiType = roiManager.getActiveRoi().getType();
+										//continue tracing for the selected tracing
+										if(nRoiType ==Roi3D.LINE_TRACE)
+										{
+											calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+										}
+										//otherwise make a new tracing
+										else
+										{
+											roiManager.addSegment(target, null);																
+											calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+										}
+									}
+								}
 							}
-							//semi auto tracing initialize
-							else
-							{
-								bTraceMode= true;
-								roiManager.setTraceMode(bTraceMode);
-								roiManager.addSegment(target, null);																
-								calcShowTraceBoxIni(target);							
-							}
-							//render_pl();
 						}
-					}
-					//continue to trace
-					else
-					{
-						if(findPointLocationFromClick(btdata.trace_weights, nHalfClickSizeWindow, target))
+						//continue to trace within the trace box
+						else
 						{
-							ArrayList<RealPoint> trace = getSemiAutoTrace(target);							
-							if(trace.size()>1)
+							if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
 							{
-								roiManager.addSegment(target, trace);
-								System.out.print("next trace!");
-								//render_pl();
-							}
-						}						
+								ArrayList<RealPoint> trace = getSemiAutoTrace(target);							
+								if(trace.size()>1)
+								{
+									roiManager.addSegment(target, trace);
+									btdata.nPointsInTraceBox++;
+									System.out.print("next trace!");
+								}
+							}						
+						}
 					}
 				},
 				"add point",
 				"F" );
 		
-
-
 		
 		actions.runnableAction(
 				() -> {
-					if(!bTraceMode)
+					if(!bInputLock)
 					{
-						roiManager.removePointFromLine();
-					}
-					else
-					{
-						//roiManager.removeSegment();
-						//if the last point, leave tracing mode
-						if(!roiManager.removeSegment())
+						if(!bTraceMode)
 						{
-							roiManager.removeActiveRoi();
-							bTraceMode= false;
-							roiManager.setTraceMode(bTraceMode);							
-							removeTraceBox();
-							if(btdata.nTraceBoxView==1)
-							{
-								bvv2.setActive(true);
-							}
+							roiManager.removePointFromLine();
 						}
-						
-					}
-					//render_pl();
-					panel.showMessage("Point removed");
+						else
+						{
+	
+							//if the last point in the tracing, leave tracing mode
+							if(!roiManager.removeSegment())
+							{
+								btdata.nPointsInTraceBox--;
+								roiManager.removeActiveRoi();
+								bTraceMode= false;
+								roiManager.setTraceMode(bTraceMode);							
+								removeTraceBox();
+								if(btdata.nTraceBoxView==1)
+								{
+									bvv2.setActive(true);
+								}
+								
+							}
+							//not the last point, see if we need to move trace box back
+							else
+							{
+								btdata.nPointsInTraceBox--;
+								if(btdata.nPointsInTraceBox==0)
+								{
+									calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+								}
+							}
+							
+						}
+						panel.showMessage("Point removed");
 
-					
+					}					
 				},
 				"remove point",
 				"G" );
 		actions.runnableAction(
 				() -> {
-					if(!bTraceMode)
+					if(!bInputLock)
 					{
-						roiManager.unselect();
-					}
-					else
-					{
-						roiManager.unselect();
-						bTraceMode= false;
-						roiManager.setTraceMode(bTraceMode);	
-						removeTraceBox();
-						if(btdata.nTraceBoxView==1)
+						if(!bTraceMode)
 						{
-							bvv2.setActive(true);
+							roiManager.unselect();
+						}
+						else
+						{
+							roiManager.unselect();
+							bTraceMode= false;
+							roiManager.setTraceMode(bTraceMode);	
+							removeTraceBox();
+							if(btdata.nTraceBoxView==1)
+							{
+								bvv2.setActive(true);
+							}
 						}
 					}
 				},
@@ -389,18 +405,20 @@ public class BigTrace
 				"H" );
 			actions.runnableAction(
 					() -> {
-						if(bTraceMode)
+						if(!bInputLock)
 						{
-							//make a straight line
-							RealPoint target = new RealPoint(3);							
-							if(findPointLocationFromClick(btdata.trace_weights, nHalfClickSizeWindow, target))
+							if(bTraceMode)
 							{
-								ArrayList<RealPoint> trace = new ArrayList<RealPoint>();
-								trace.add(roiManager.getLastTracePoint());
-								trace.add(target);
-								//TODO add BRESENHAM 3D
-								roiManager.addSegment(target, trace);
-								//render_pl();
+								//make a straight line
+								RealPoint target = new RealPoint(3);							
+								if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+								{
+									ArrayList<RealPoint> trace = new ArrayList<RealPoint>();
+									trace.add(roiManager.getLastTracePoint());
+									trace.add(target);
+									//TODO add BRESENHAM 3D
+									roiManager.addSegment(target, trace);
+								}
 							}
 						}
 					},
@@ -408,12 +426,13 @@ public class BigTrace
 					"R" );		
 		actions.runnableAction(
 				() -> {
-					if(bTraceMode)
+					if(!bInputLock)
 					{
-						
-						calcShowTraceBoxNext((LineTracing3D)roiManager.getActiveRoi());
-						//removeTraceBox();
-						//initTracing(roiManager.getLastTracePoint());
+						if(bTraceMode && btdata.nPointsInTraceBox>1)
+						{
+							calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+							btdata.nPointsInTraceBox=1;
+						}
 					}
 				},
 				"move trace box",
@@ -436,43 +455,27 @@ public class BigTrace
 		actions.install( bvv.getBvvHandle().getKeybindings(), "BigTrace actions" );
 
 	}
-	
-	public void calcShowTraceBoxIni(final RealPoint target)
+
+	public void calcShowTraceBox(final LineTracing3D trace)
 	{
-		long[][] rangeTraceBox = getTraceBoxCentered(view2,btdata.lTraceBoxSize,target);
+		long[][] rangeTraceBox;
 		
-		IntervalView<UnsignedByteType> traceInterval = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
-//		long start1, end1;
-
-	//	start1 = System.currentTimeMillis();
-		//calcWeightVectrosCorners(traceInterval, sigmaGlob);
-		//end1 = System.currentTimeMillis();
-		//System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));
-		//start1 = System.currentTimeMillis();
-		TraceBoxMath calcTask = new TraceBoxMath();
-		calcTask.input=traceInterval;
-		calcTask.bt=this;
-		calcTask.addPropertyChangeListener(btpanel);
-		calcTask.execute();
-		//end1 = System.currentTimeMillis();
-		//System.out.println("+SWING corners: elapsed Time in milli seconds: "+ (end1-start1));
+		if(trace.numVertices()==1)
+		{
+			rangeTraceBox = getTraceBoxCentered(currentView,btdata.lTraceBoxSize, trace.vertices.get(0));
+		}
+		else
+		{
+			rangeTraceBox = getTraceBoxNext(currentView,btdata.lTraceBoxSize, btdata.fTraceBoxShift, trace);
+		}
 		
-			
-
-		//showTraceBox(btdata.trace_weights);
-
-	}
-	public void calcShowTraceBoxNext(final LineTracing3D trace)
-	{
-		long[][] rangeTraceBox = getTraceBoxNext(view2,btdata.lTraceBoxSize, btdata.fTraceBoxShift, trace);
-		
-		IntervalView<UnsignedByteType> traceInterval = Views.interval(view2, rangeTraceBox[0], rangeTraceBox[1]);
+		IntervalView<UnsignedByteType> traceInterval = Views.interval(currentView, rangeTraceBox[0], rangeTraceBox[1]);
 		//long start1, end1;
 
 		//start1 = System.currentTimeMillis();
 		//calcWeightVectrosCorners(traceInterval, sigmaGlob);
 		//end1 = System.currentTimeMillis();
-		
+		bInputLock = true;
 		TraceBoxMath calcTask = new TraceBoxMath();
 		calcTask.input=traceInterval;
 		calcTask.bt=this;
@@ -481,7 +484,7 @@ public class BigTrace
 		//System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
 
 		//showTraceBox(btdata.trace_weights);
-
+		btdata.nPointsInTraceBox = 1;
 	}
 
 	
@@ -658,7 +661,7 @@ public class BigTrace
 			roiManager.draw(gl, new Matrix4f( data.getPv() ), new int [] {(int)data.getScreenWidth(), (int)data.getScreenHeight()});
 		}	
 			//render the origin of coordinates
-			if (bShowOrigin)
+			if (btdata.bShowOrigin)
 			{
 				for (int i=0;i<3;i++)
 				{
@@ -667,81 +670,13 @@ public class BigTrace
 			}
 			
 			//render a box around  the volume 
-			if (bVolumeBox)
+			if (btdata.bVolumeBox)
 			{
 				volumeBox.draw(gl, new Matrix4f( data.getPv() ), screen_size);
-				/*
-				float [][] nDimBox = new float [2][3];
-				
-				int i,j,z;
-				for(i=0;i<3;i++)
-				{
-					//why is this shift?! I don't know,
-					// but looks better like this
-					nDimBox[0][i]=nDimIni[0][i]+0.5f;
-					nDimBox[1][i]=nDimIni[1][i]-1.0f;
-				}
-				float [] vbox_color = new float[]{0.4f,0.4f,0.4f};
-				float vbox_thickness = 0.5f;
-				int [][] edgesxy = new int [5][2];
-				edgesxy[0]=new int[]{0,0};
-				edgesxy[1]=new int[]{1,0};
-				edgesxy[2]=new int[]{1,1};
-				edgesxy[3]=new int[]{0,1};
-				edgesxy[4]=new int[]{0,0};
-				
-				//draw front and back
-				RealPoint vertex1=new RealPoint(0,0,0);
-				RealPoint vertex2=new RealPoint(0,0,0);
-				for (z=0;z<2;z++)
-				{
-					for (i=0;i<4;i++)
-					{
-						for (j=0;j<2;j++)
-						{
-							vertex1.setPosition(nDimBox[edgesxy[i][j]][j], j);
-							vertex2.setPosition(nDimBox[edgesxy[i+1][j]][j], j);
-						}
-						//z coord
-						vertex1.setPosition(nDimBox[z][2], 2);
-						vertex2.setPosition(nDimBox[z][2], 2);
-						ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
-						VisPolyLineSimple lines;
-						point_coords.add(new RealPoint(vertex1));
-						point_coords.add(new RealPoint(vertex2));
-						
-						lines = new VisPolyLineSimple(vbox_color, point_coords, vbox_thickness);
-														
-						lines.draw( gl, new Matrix4f( data.getPv() ));	
-					}
-				}
-				//draw the rest 4 edges
-
-				for (i=0;i<4;i++)
-				{
-					for (j=0;j<2;j++)
-					{
-						vertex1.setPosition(nDimBox[edgesxy[i][j]][j], j);
-						vertex2.setPosition(nDimBox[edgesxy[i][j]][j], j);
-					}
-					//z coord
-					vertex1.setPosition(nDimBox[0][2], 2);
-					vertex2.setPosition(nDimBox[1][2], 2);
-					ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
-					VisPolyLineSimple lines;
-					point_coords.add(new RealPoint(vertex1));
-					point_coords.add(new RealPoint(vertex2));
-
-					lines = new VisPolyLineSimple(vbox_color, point_coords, vbox_thickness);
-
-					lines.draw( gl, new Matrix4f( data.getPv() ));	
-				}
-				*/
-
 			}
 		
 			//render world grid			
-			if(bShowWorldGrid)
+			if(btdata.bShowWorldGrid)
 			{
 /*
 				int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
@@ -849,21 +784,14 @@ public class BigTrace
 		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
 		t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nW), 0.0, scale, 0.0, 0.5*((double)sH-scale*(double)nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
-		//t.set(1, 0.0, 0.0, 0.5*((double)sW-(double)nW), 0.0, 1.0, 0.0, 0.5*((double)sH-(double)nH), 0.0, 0.0, 1., 0.0);
-		//t.identity();
-		
 
-		//traces = new BTPolylines ();						
-		
-		
-		//handl=bvv.getBvvHandle().getViewerPanel();
 		panel.state().setViewerTransform(t);
 		panel.requestRepaint();
 		if(!firstCall)
 			bvv2.removeFromBdv();
 		
-		view2=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
-		bvv2 = BvvFunctions.show( view2, "cropreset", Bvv.options().addTo(bvv));
+		currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
+		bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 		
 		//render_pl();
 	}
@@ -910,8 +838,8 @@ public class BigTrace
 		if(!firstCall)
 			bvv2.removeFromBdv();
 		
-		view2=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
-		bvv2 = BvvFunctions.show( view2, "cropresetYZ", Bvv.options().addTo(bvv));
+		currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
+		bvv2 = BvvFunctions.show( currentView, "cropresetYZ", Bvv.options().addTo(bvv));
 		
 		
 	}
@@ -929,7 +857,7 @@ public class BigTrace
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
 		Matrix4f matPerspWorld = new Matrix4f();
-		MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
+		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
 		
 		
 		ArrayList<RealPoint> clickFrustum = new ArrayList<RealPoint> ();
