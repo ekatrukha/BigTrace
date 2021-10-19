@@ -123,7 +123,7 @@ public class DijkstraFibonacciHeap {
 		int nEnQ=0;
 		int iCurCCost;
 		int iNewCCost;
-		int nW;
+		//int nW;
 		int maxCost=0;
 		// Path searching:
 		while (bQueue) 

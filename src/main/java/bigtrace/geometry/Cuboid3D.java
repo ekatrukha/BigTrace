@@ -132,7 +132,7 @@ public class Cuboid3D {
 	public void iniFaces()
 	{		
 		faces = new ArrayList<Plane3D>(); 
-		int i,j;
+		//int i,j;
 		//front
 		faces.add(new Plane3D(vertices[3],vertices[0],vertices[1]));
 		//bottom

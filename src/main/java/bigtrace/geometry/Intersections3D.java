@@ -3,6 +3,7 @@ package bigtrace.geometry;
 import java.util.ArrayList;
 
 import net.imglib2.RealPoint;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.LinAlgHelpers;
 
 public class Intersections3D {
@@ -29,11 +30,11 @@ public class Intersections3D {
 		}												
 		
 	}
-	
+	/** given a set of input lines, generates points of intersection
+	 * between them and input cuboid **/
 	public static ArrayList<RealPoint> cuboidLinesIntersect(final Cuboid3D cuboid, final ArrayList<Line3D> lines)
 	{
 		ArrayList<RealPoint> int_points = new ArrayList<RealPoint>();
-		int i,j;
 		int nIntersLineN;
 		double [] intersectionPoint = new double [3];
 
@@ -41,10 +42,10 @@ public class Intersections3D {
 		if(!cuboid.faces_init)
 			cuboid.iniFaces();
 		
-		for (i=0;i<lines.size();i++)
+		for (int i=0;i<lines.size();i++)
 		{
 			nIntersLineN = 0;
-			for(j=0;j<6;j++)
+			for(int j=0;j<6;j++)
 			{
 				//line intersects a cube
 				if(planeLineIntersect(cuboid.faces.get(j), lines.get(i),intersectionPoint))
@@ -62,9 +63,77 @@ public class Intersections3D {
 			
 		}
 		return int_points;
+
 		
 	}
+	/** given a set of input lines, generates points of intersection
+	 * between them a plane **/
+	public static ArrayList<RealPoint> planeLinesIntersect(final Plane3D plane, final ArrayList<Line3D> lines)
+	{
+		
+		
+		ArrayList<RealPoint> int_points = new ArrayList<RealPoint>();
+		double [] intersectionPoint = new double [3];
+		
+		for (int i=0;i<lines.size();i++)
+		{
+
+			planeLineIntersect(plane, lines.get(i),intersectionPoint);
+			int_points.add(new RealPoint(intersectionPoint)); 		
+			
+		}
+		return int_points;
+		
+	}
+	/**  function calculates transform allowing to align two vectors 
+	 * @param align_direction - immobile vector
+	 * @param moving - vector that aligned with align_direction
+	 * @return affine transform (rotations)
+	 * **/
+	public static AffineTransform3D alignVectors(final RealPoint align_direction, final RealPoint moving)
+	{
+		double [] dstat = align_direction.positionAsDoubleArray();
+		double [] dmov = moving.positionAsDoubleArray();
+		double [] v = new double [3];
+		double c;
+		
+		AffineTransform3D transform = new AffineTransform3D();
+		LinAlgHelpers.normalize(dstat);
+		LinAlgHelpers.normalize(dmov);
+		c = LinAlgHelpers.dot(dstat, dmov);
+		
+		//exact opposite directions
+		if ((c+1.0)<0.00001)
+		{
+			transform.identity();
+			transform.scale(-1.0);			
+		}
+		
+		LinAlgHelpers.cross( dmov, dstat, v);
+		double [][] matrixV = new double [3][3];
+		double [][] matrixV2 = new double [3][3];
+		
+		matrixV[0][1]=(-1.0)*v[2];
+		matrixV[0][2]=v[1];
+		matrixV[1][0]=v[2];
+		matrixV[1][2]=(-1.0)*v[0];
+		matrixV[2][0]=(-1.0)*v[1];
+		matrixV[2][1]=v[0];
+		
+		LinAlgHelpers.mult(matrixV, matrixV, matrixV2);
+		c=1.0/(1.0+c);
+		LinAlgHelpers.scale(matrixV2, c, matrixV2);
+		LinAlgHelpers.add(matrixV, matrixV2, matrixV);
+		transform.set(1.0 + matrixV[0][0],       matrixV[0][1],       matrixV[0][2], 0.0,
+					        matrixV[1][0], 1.0 + matrixV[1][1],       matrixV[1][2], 0.0,
+					        matrixV[2][0],       matrixV[2][1], 1.0 + matrixV[2][2], 0.0);
+		
+		return transform;
+	}
 	
+	
+	
+	/** generates long minmax box from pointArray **/
 	public static boolean makeBoundBox(final ArrayList<RealPoint> pointArray, final long [][] newMinMax)
 	{ 
 		//= new long [2][3];
@@ -94,6 +163,7 @@ public class Intersections3D {
 		return true;
 
 	}
+	/** generates double minmax box from pointArray **/
 	public static boolean makeBoundBox(final ArrayList<RealPoint> pointArray, final double [][] newMinMax)
 	{ 
 		

@@ -25,6 +25,22 @@ public class Plane3D {
 		p0= new double [3]; 
 		n= new double [3];
 	}
+
+    /** set normal vector and point in the plane
+     * @param p0 - vector on a plane
+     * @param n - normal vector (does not have to be normalized) **/
+	public void setVectors(double [] p0_, double [] n_)
+	{
+		p0= new double [3]; 
+		n= new double [3];
+		for (int i =0;i<3;i++)
+		{
+			p0[i]=p0_[i];
+			n[i]=n_[i];
+		}
+		//just in case 
+		LinAlgHelpers.normalize(n);
+	}
 	
 	/** from three vectors on the plane (for RealPoint)
 	 *  make sure they are not collinear

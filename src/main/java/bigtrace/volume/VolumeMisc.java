@@ -337,51 +337,7 @@ public class VolumeMisc {
 		return linepx;
 	}
 	
-	/**  function calculates transform allowing to align two vectors 
-	 * @param align_direction - immobile vector
-	 * @param moving - vector that aligned with align_direction
-	 * @return affine transform (rotations)
-	 * **/
-	AffineTransform3D alignVectors(final RealPoint align_direction, final RealPoint moving)
-	{
-		double [] dstat = align_direction.positionAsDoubleArray();
-		double [] dmov = moving.positionAsDoubleArray();
-		double [] v = new double [3];
-		double c;
-		
-		AffineTransform3D transform = new AffineTransform3D();
-		LinAlgHelpers.normalize(dstat);
-		LinAlgHelpers.normalize(dmov);
-		c = LinAlgHelpers.dot(dstat, dmov);
-		//exact opposite directions
-		if ((c+1.0)<0.00001)
-		{
-			transform.identity();
-			transform.scale(-1.0);			
-		}
-		
-		LinAlgHelpers.cross( dstat,dmov, v);
-		double [][] matrixV = new double [3][3];
-		double [][] matrixV2 = new double [3][3];
-		
-		matrixV[0][1]=(-1.0)*v[2];
-		matrixV[0][2]=v[1];
-		matrixV[1][0]=v[2];
-		matrixV[1][2]=(-1.0)*v[0];
-		matrixV[2][0]=(-1.0)*v[1];
-		matrixV[2][1]=v[0];
-		
-		LinAlgHelpers.mult(matrixV, matrixV, matrixV2);
-		c=1.0/(1.0+c);
-		LinAlgHelpers.scale(matrixV2, c, matrixV2);
-		LinAlgHelpers.add(matrixV, matrixV2, matrixV);
-		transform.set(1.0 + matrixV[0][0],       matrixV[0][1],       matrixV[0][2],
-					        matrixV[1][0], 1.0 + matrixV[1][1],       matrixV[1][2], 
-					        matrixV[2][0],       matrixV[2][1], 1.0 + matrixV[2][2],
-					                  0.0,                 0.0,                 0.0);
-		
-		return transform;
-	}
+
 	
 	FinalInterval RealIntervaltoInterval (RealInterval R_Int)	
 	{

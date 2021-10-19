@@ -73,8 +73,8 @@ public class VisPolyLineSimple
 
 	public VisPolyLineSimple()
 	{
-		final Segment pointVp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPointsSimple.class, "/scene/simple_color.fp" ).instantiate();
+		final Segment pointVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.vp" ).instantiate();
+		final Segment pointFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.fp" ).instantiate();
 	
 		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
@@ -84,24 +84,9 @@ public class VisPolyLineSimple
 	public VisPolyLineSimple(final ArrayList< RealPoint > points, final float fLineThickness_,final Color color_in)
 	{
 		this();
-		int i,j;
-		
-		fLineThickness= fLineThickness_;
-		
-		l_color = new Vector3f(color_in.getRGBColorComponents(null));
-		
-		nPointsN=points.size();
-		vertices = new float [nPointsN*3];//assume 3D
-		
-
-		for (i=0;i<nPointsN; i++)
-		{
-			for (j=0;j<3; j++)
-			{
-				vertices[i*3+j]=points.get(i).getFloatPosition(j);
-			}
-			
-		}
+		fLineThickness= fLineThickness_;		
+		l_color = new Vector3f(color_in.getRGBColorComponents(null));		
+		setVertices(points);
 		
 	}
 	
@@ -117,25 +102,10 @@ public class VisPolyLineSimple
 	
 	public void setParams(final ArrayList< RealPoint > points, final float fLineThickness_, final Color color_in)
 	{
-		int i,j;
-		
-		fLineThickness= fLineThickness_;
-		
-		l_color = new Vector3f(color_in.getRGBColorComponents(null));
-		
-		nPointsN=points.size();
-		vertices = new float [nPointsN*3];//assume 3D
-		
 
-		for (i=0;i<nPointsN; i++)
-		{
-			for (j=0;j<3; j++)
-			{
-				vertices[i*3+j]=points.get(i).getFloatPosition(j);
-			}
-			
-		}
-		initialized=false;
+		fLineThickness= fLineThickness_;
+		l_color = new Vector3f(color_in.getRGBColorComponents(null));		
+		setVertices(points);
 	}
 	public void setVertices( ArrayList< RealPoint > points)
 	{

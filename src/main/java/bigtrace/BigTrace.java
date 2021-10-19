@@ -27,14 +27,13 @@ import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTracing3D;
+import bigtrace.rois.PolyLine3Dscaled;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
 
 import bvv.util.BvvStackSource;
-import ij.IJ;
-import ij.ImagePlus;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
 import net.imglib2.RandomAccessibleInterval;
@@ -82,7 +81,7 @@ public class BigTrace
 
 	/** box around volume **/
 	Cube3D volumeBox;
-	
+	PolyLine3Dscaled testLine;
 
 	
 	public BigTraceData btdata = new BigTraceData();
@@ -169,8 +168,7 @@ public class BigTrace
 	{
 		
 		initOriginAndBox(origin_axis_length);
-		
-		
+
 		// init bigvolumeviewer
 		final Img< UnsignedByteType > imgx = ArrayImgs.unsignedBytes( new long[]{ 2, 2, 2 } );
 		view =				 
@@ -604,23 +602,26 @@ public class BigTrace
 		
 		int [] screen_size = new int [] {(int)data.getScreenWidth(), (int) data.getScreenHeight()};
 		//handl.setRenderScene( ( gl, data ) -> {
+		Matrix4f pvm=new Matrix4f( data.getPv() );
 		synchronized (roiManager)
 		{
-			roiManager.draw(gl, new Matrix4f( data.getPv() ), new int [] {(int)data.getScreenWidth(), (int)data.getScreenHeight()});
+			roiManager.draw(gl, pvm, screen_size);
 		}	
+		
+			testLine.draw(gl, pvm, screen_size);
 			//render the origin of coordinates
 			if (btdata.bShowOrigin)
 			{
 				for (int i=0;i<3;i++)
 				{
-					originVis.get(i).draw(gl, new Matrix4f( data.getPv() ));
+					originVis.get(i).draw(gl, pvm);
 				}
 			}
 			
 			//render a box around  the volume 
 			if (btdata.bVolumeBox)
 			{
-				volumeBox.draw(gl, new Matrix4f( data.getPv() ), screen_size);
+				volumeBox.draw(gl, pvm, screen_size);
 			}
 		
 			//render world grid			
@@ -741,6 +742,12 @@ public class BigTrace
 		currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
 		bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 		
+		
+		testLine = new PolyLine3Dscaled(5.f, 2.0f, Color.CYAN, Color.YELLOW);
+		//ArrayList <RealPoint> linecoord = new ArrayList <RealPoint>();
+		
+		ArrayList <RealPoint> linecoord=VolumeMisc.BresenhamWrap(currentView, new RealPoint(0.0, 0.0, 0.0),new RealPoint(50.0, 50.0, 50.0));
+		testLine.setVertices(linecoord);
 		//render_pl();
 	}
 	

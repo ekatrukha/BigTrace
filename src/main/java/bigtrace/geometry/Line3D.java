@@ -13,13 +13,31 @@ import net.imglib2.util.LinAlgHelpers;
  *  linev[1] - vector along the line (normalized)
  * **/
 public class Line3D {
-
+	
+	/**
+	 *  linev[0] - some vector on the line
+	 *  linev[1] - vector along the line (normalized)
+	 * **/
 	public double [][] linev;
 	
     /** empty constructor **/
 	public Line3D()
 	{
 		linev= new double [2][3]; 
+	}
+	/**
+	 *  @param v0_ - some vector on the line
+	 *  @param v1_ - vector along the line (does not have to be normalized)
+	 * **/
+	public void setVectors(final double [] v0_, final double [] v1_)
+	{
+		for (int i =0;i<3;i++)
+		{
+			linev[0][i]=v0_[i];
+			linev[1][i]=v1_[i];
+		}
+		LinAlgHelpers.normalize(linev[1]);
+		
 	}
 	
 	/** from two vectors on the line (from RealPoint) **/

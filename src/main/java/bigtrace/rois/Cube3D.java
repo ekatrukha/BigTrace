@@ -3,9 +3,7 @@ package bigtrace.rois;
 import java.awt.Color;
 import java.util.ArrayList;
 
-import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
-
 import com.jogamp.opengl.GL3;
 
 import bigtrace.scene.VisPointsScaled;
@@ -104,12 +102,10 @@ public class Cube3D implements Roi3D {
 
 	@Override
 	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
-		// TODO Auto-generated method stub
+	
 		for (int i=0;i<edgesVis.size();i++)
 		{
 			edgesVis.get(i).draw(gl, pvm);
-			//lines = new VisPolyLineSimple(colorComp, segments.get(i), lineThickness);		
-			//lines.draw( gl, pvm);
 		}
 	}
 
@@ -140,7 +136,6 @@ public class Cube3D implements Roi3D {
 
 	@Override
 	public float getPointSize() {
-		// TODO Auto-generated method stub
 		return pointSize;
 	}
 
