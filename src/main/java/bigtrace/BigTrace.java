@@ -4,34 +4,12 @@ package bigtrace;
 
 
 import java.awt.Color;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-
-import java.awt.Insets;
-
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.IOException;
-
 import java.util.ArrayList;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JTabbedPane;
-import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.WindowConstants;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -42,68 +20,32 @@ import org.scijava.ui.behaviour.util.Actions;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
-import bdv.viewer.DisplayMode;
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
-import bigtrace.gui.CropPanel;
-import bigtrace.gui.PanelTitle;
-import bigtrace.math.DerivConvolutionKernels;
-import bigtrace.math.DijkstraBinaryHeap;
-import bigtrace.math.DijkstraFibonacciHeap;
 import bigtrace.math.DijkstraFHRestricted;
-import bigtrace.math.EigenValVecSymmDecomposition;
 import bigtrace.math.TraceBoxMath;
-import bigtrace.polyline.BTPolylines;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTracing3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
-import bigtrace.scene.VisPointsScaled;
-import bigtrace.scene.VisPointsSimple;
 import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
-import net.imagej.ops.OpService;
+
 import bvv.util.BvvStackSource;
 import ij.IJ;
 import ij.ImagePlus;
 import bvv.util.BvvFunctions;
-import bvv.util.BvvHandle;
-import bvv.util.BvvHandleFrame;
 import bvv.util.Bvv;
-import net.imglib2.Cursor;
-import net.imglib2.FinalInterval;
-import net.imglib2.FinalRealInterval;
-import net.imglib2.Interval;
-import net.imglib2.IterableInterval;
-import net.imglib2.Point;
-import net.imglib2.RandomAccess;
-import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.RealInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.RealRandomAccessible;
-import net.imglib2.algorithm.convolution.Convolution;
-import net.imglib2.algorithm.convolution.kernel.Kernel1D;
-import net.imglib2.algorithm.convolution.kernel.SeparableKernelConvolution;
-import net.imglib2.algorithm.neighborhood.Neighborhood;
-import net.imglib2.algorithm.neighborhood.RectangleShape;
-import net.imglib2.algorithm.neighborhood.Shape;
-import net.imglib2.converter.RealUnsignedByteConverter;
-import net.imglib2.converter.read.ConvertedRandomAccessibleInterval;
+
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.img.array.ArrayImg;
 
 import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.basictypeaccess.array.ByteArray;
-import net.imglib2.img.basictypeaccess.array.FloatArray;
 import net.imglib2.realtransform.AffineTransform3D;
 
-import net.imglib2.type.Type;
-import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
@@ -412,12 +354,10 @@ public class BigTrace
 								//make a straight line
 								RealPoint target = new RealPoint(3);							
 								if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
-								{
-									ArrayList<RealPoint> trace = new ArrayList<RealPoint>();
-									trace.add(roiManager.getLastTracePoint());
-									trace.add(target);
-									//TODO add BRESENHAM 3D
-									roiManager.addSegment(target, trace);
+								{								
+									roiManager.addSegment(target, 
+											VolumeMisc.BresenhamWrap(btdata.trace_weights,roiManager.getLastTracePoint(),target));
+									btdata.nPointsInTraceBox++;
 								}
 							}
 						}
@@ -533,6 +473,7 @@ public class BigTrace
 				ArrayList<RealPoint> traceB = new ArrayList<RealPoint> (); 
 				dijkRBegin.getTrace(pB, traceB);
 				ArrayList<RealPoint> traceE = new ArrayList<RealPoint> ();
+				ArrayList<RealPoint> traceM = new ArrayList<RealPoint> ();
 				dijkREnd.getTrace(pE, traceE);
 				int i;
 				//connect traces
@@ -540,9 +481,15 @@ public class BigTrace
 				{
 					trace.add(traceB.get(i));
 				}
-				//TODO: insert connecting 3D bresenham here
-				for(i=traceE.size()-1;i>=0 ;i--)
-				
+				//3D bresenham connecting jumping points here
+				traceM=VolumeMisc.BresenhamWrap(btdata.trace_weights,
+												traceB.get(traceB.size()-1),
+												traceE.get(traceE.size()-1));
+				for(i=1;i<traceM.size()-1 ;i++)	
+				{
+					trace.add(traceM.get(i));
+				}				
+				for(i=traceE.size()-1;i>=0 ;i--)				
 				{
 					trace.add(traceE.get(i));
 				}
@@ -551,9 +498,10 @@ public class BigTrace
 			//no corners, just do a straight line
 			else
 			{
-				trace.add(roiManager.getLastTracePoint());
-				//TODO: insert connecting 3D bresenham here
-				trace.add(target);
+				//3D bresenham here
+				trace=VolumeMisc.BresenhamWrap(btdata.trace_weights,
+						roiManager.getLastTracePoint(),
+						target);
 			}
 			return trace;
 		}

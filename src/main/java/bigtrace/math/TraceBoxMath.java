@@ -71,7 +71,7 @@ public class TraceBoxMath extends SwingWorker<Void, String> implements BigTraceB
 			for ( int d2 = d1; d2 < 3; d2++ )
 			{
 				//update progress bar
-				setProgressState("Trace box deriv_" +Integer.toString(d1+1)+"_"+Integer.toString(d2+1)+"...");
+				setProgressState("trace box deriv_" +Integer.toString(d1+1)+"_"+Integer.toString(d2+1)+"...");
 				  //Sleep for up to one second.
 				try {
 					Thread.sleep(1);
@@ -103,7 +103,7 @@ public class TraceBoxMath extends SwingWorker<Void, String> implements BigTraceB
 		IntervalView<FloatType> salWeights =  Views.translate(sW, minV);
 		IntervalView<FloatType> lineCorners =  Views.translate(nC, minV);
 
-		setProgressState("Trace box eigenvalues/corners...");
+		setProgressState("trace box eigenvalues/corners...");
 		  //Sleep for up to one second.
 		try {
 			Thread.sleep(1);
@@ -113,7 +113,7 @@ public class TraceBoxMath extends SwingWorker<Void, String> implements BigTraceB
 		mEV.computeVWCRAI(hessian, directionVectors,salWeights, lineCorners,nThreads,es);
 		es.shutdown();
 		setProgress(100);
-		setProgressState("Trace box done.");
+		setProgressState("trace box done.");
 		bt.btdata.trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
 		bt.btdata.jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
 		

@@ -6,6 +6,7 @@ import bigtrace.geometry.Cuboid3D;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.IterableInterval;
+import net.imglib2.Point;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealInterval;
@@ -13,6 +14,7 @@ import net.imglib2.RealPoint;
 import net.imglib2.algorithm.neighborhood.Neighborhood;
 import net.imglib2.algorithm.neighborhood.RectangleShape;
 import net.imglib2.algorithm.neighborhood.Shape;
+import net.imglib2.algorithm.region.BresenhamLine;
 import net.imglib2.converter.RealUnsignedByteConverter;
 import net.imglib2.converter.read.ConvertedRandomAccessibleInterval;
 import net.imglib2.img.Img;
@@ -305,6 +307,35 @@ public class VolumeMisc {
 		}
 		return true;
 	}
+	public static <T> ArrayList<RealPoint> BresenhamWrap(IntervalView<T> source, RealPoint RP1, RealPoint RP2)
+	{
+		ArrayList<RealPoint> linepx= new ArrayList<RealPoint>();
+		long[] lp1, lp2;
+		Point P1, P2;
+		int nDim = RP1.numDimensions();
+		int i;
+		
+		lp1 = new long [nDim];
+		lp2 = new long [nDim];
+		for (i=0;i<nDim;i++)
+		{
+			lp1[i]=(long)Math.round(RP1.getFloatPosition(i));
+			lp2[i]=(long)Math.round(RP2.getFloatPosition(i));
+		}
+			
+		P1= new Point(lp1);
+		P2= new Point(lp2);
+
+		BresenhamLine<T> line = new BresenhamLine<T>(source);
+		line.reset(P1, P2);
+		while (line.hasNext()) 
+		{
+			line.fwd();
+			linepx.add(line.positionAsRealPoint());
+		}
+		
+		return linepx;
+	}
 	
 	/**  function calculates transform allowing to align two vectors 
 	 * @param align_direction - immobile vector
@@ -368,5 +399,6 @@ public class VolumeMisc {
 		}
 		return Intervals.createMinMax(minL[0],minL[1],minL[2], maxL[0],maxL[1],maxL[2]);
 	}
+
 
 }

@@ -74,7 +74,6 @@
 
 		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
-		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
 		<ST4.version>4.0.8</ST4.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
@@ -115,6 +114,10 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-algorithm-gpl</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>net.imglib2</groupId>
