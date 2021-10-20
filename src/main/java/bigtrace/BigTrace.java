@@ -743,10 +743,10 @@ public class BigTrace
 		bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 		
 		
-		testLine = new PolyLine3Dscaled(5.f, 2.0f, Color.CYAN, Color.YELLOW);
+		testLine = new PolyLine3Dscaled(2.0f, 0.0f, Color.CYAN, Color.YELLOW);
 		//ArrayList <RealPoint> linecoord = new ArrayList <RealPoint>();
 		
-		ArrayList <RealPoint> linecoord=VolumeMisc.BresenhamWrap(currentView, new RealPoint(0.0, 0.0, 0.0),new RealPoint(50.0, 50.0, 50.0));
+		ArrayList <RealPoint> linecoord=VolumeMisc.BresenhamWrap(currentView, new RealPoint(40.0, 200.0, 100.0),new RealPoint(50.0, 150.0, 150.0));
 		testLine.setVertices(linecoord);
 		//render_pl();
 	}

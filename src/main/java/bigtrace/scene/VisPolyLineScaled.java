@@ -138,61 +138,99 @@ public class VisPolyLineScaled
 		Line3D contLine;
 		
 		nPointsN=points.size();
-		vertices = new float [nSectorN*3*points.size()];
-
-		//first contour around first line
-		for (i=0;i<2;i++)
+		if(nPointsN>1)
 		{
-			points.get(i).localize(path[i]);
-		}
-		
-		LinAlgHelpers.subtract(path[1], path[0], prev_segment );
-		RealPoint iniVec = new RealPoint(prev_segment );
-		RealPoint zVec = new RealPoint(0.0,0.0,1.0);
-		
-		AffineTransform3D ini_rot = Intersections3D.alignVectors( iniVec,zVec);
-		ArrayList< RealPoint > contour0 = iniSectorContour();
-		for(i=0;i<nSectorN;i++)
-		{
-			ini_rot.apply(contour0.get(i), contour0.get(i));
-		}
-		ini_rot.apply(zVec, zVec);
-		for (i=0;i<nSectorN; i++)
-		{
-			for (j=0;j<3; j++)
-			{
-				vertices[i*3+j]=contour0.get(i).getFloatPosition(j);
-			}			
-		}
-		
-		//other contours
-		for (iPoint=1;iPoint<(points.size()-1);iPoint++)
-		{
-			//find a vector that is inbetween two next segments
-			//1) orientation of the segment
-			points.get(iPoint+1).localize(path[2]);
-			LinAlgHelpers.subtract(path[2], path[1], next_segment);
-			//2) average angle/vector between segments
-			LinAlgHelpers.add(prev_segment, next_segment, plane_norm);
-			LinAlgHelpers.scale(plane_norm, 0.5, plane_norm);
+			vertices = new float [2*nSectorN*3*nPointsN];
 	
-			//3) plane of segments cross-section
+			//first contour around first line
+			for (i=0;i<2;i++)
+			{
+				points.get(i).localize(path[i]);
+			}
+			
+			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
+			RealPoint iniVec = new RealPoint(prev_segment );
+			RealPoint zVec = new RealPoint(0.0,0.0,1.0);
+			
+			AffineTransform3D ini_rot = Intersections3D.alignVectors( iniVec,zVec);
+			ini_rot.translate(path[0]);
+			ArrayList< RealPoint > contour0 = iniSectorContour();
+			for(i=0;i<nSectorN;i++)
+			{
+				ini_rot.apply(contour0.get(i), contour0.get(i));
+			}
+			ini_rot.apply(zVec, zVec);
+			for (i=0;i<nSectorN; i++)
+			{
+				for (j=0;j<3; j++)
+				{
+					vertices[i*3+j]=contour0.get(i).getFloatPosition(j);
+				}			
+			}
+			
+			//other contours
+			for (iPoint=1;iPoint<(points.size()-1);iPoint++)
+			{
+				//find a vector that is inbetween two next segments
+				//1) orientation of the segment
+				points.get(iPoint+1).localize(path[2]);
+				LinAlgHelpers.subtract(path[2], path[1], next_segment);
+				//2) average angle/vector between segments
+				LinAlgHelpers.add(prev_segment, next_segment, plane_norm);
+				LinAlgHelpers.scale(plane_norm, 0.5, plane_norm);
+		
+				//3) plane of segments cross-section
+				planeBetween.setVectors(path[1], plane_norm);
+				//4) make a set of lines emanating from the current contour
+				extrudeLines = new ArrayList<Line3D>();
+				for(i=0;i<nSectorN;i++)
+				{
+					contLine=new Line3D();
+					contour0.get(i).localize(cont_point);
+					contLine.setVectors(cont_point, prev_segment);
+					extrudeLines.add(contLine);
+				}
+				
+				//intersections
+				contour0 = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
+				
+				//add to drawing vertices
+				vertShift = iPoint*nSectorN*3;
+				for (i=0;i<nSectorN; i++)
+				{
+					for (j=0;j<3; j++)
+					{
+						vertices[vertShift+i*3+j]=contour0.get(i).getFloatPosition(j);
+					}				
+				}
+				
+				//prepare to move forward
+				for(i=0;i<3;i++)
+				{
+					prev_segment[i]=next_segment[i];
+					path[1][i]=path[2][i];
+				}
+			
+			}
+			//last point
+			points.get(nPointsN-2).localize(path[0]);
+			points.get(nPointsN-1).localize(path[1]);
+			LinAlgHelpers.subtract(path[0],path[1],plane_norm);
 			planeBetween.setVectors(path[1], plane_norm);
-			//4) make a set of lines emanating from the current contour
+			
 			extrudeLines = new ArrayList<Line3D>();
 			for(i=0;i<nSectorN;i++)
 			{
 				contLine=new Line3D();
 				contour0.get(i).localize(cont_point);
-				contLine.setVectors(cont_point, prev_segment);
+				contLine.setVectors(cont_point, plane_norm);
 				extrudeLines.add(contLine);
 			}
-			
 			//intersections
 			contour0 = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
 			
 			//add to drawing vertices
-			vertShift = iPoint*nSectorN*3;
+			vertShift = (nPointsN-1)*nSectorN*3;
 			for (i=0;i<nSectorN; i++)
 			{
 				for (j=0;j<3; j++)
@@ -200,44 +238,22 @@ public class VisPolyLineScaled
 					vertices[vertShift+i*3+j]=contour0.get(i).getFloatPosition(j);
 				}				
 			}
-			
-			//prepare to move forward
-			for(i=0;i<3;i++)
-			{
-				prev_segment[i]=next_segment[i];
-				path[1][i]=path[2][i];
-			}
-		
 		}
-		//last point
-		points.get(nPointsN-2).localize(path[0]);
-		points.get(nPointsN-1).localize(path[1]);
-		LinAlgHelpers.subtract(path[0],path[1],plane_norm);
-		planeBetween.setVectors(path[1], plane_norm);
-		
-		extrudeLines = new ArrayList<Line3D>();
-		for(i=0;i<nSectorN;i++)
-		{
-			contLine=new Line3D();
-			contour0.get(i).localize(cont_point);
-			contLine.setVectors(cont_point, plane_norm);
-			extrudeLines.add(contLine);
-		}
-		//intersections
-		contour0 = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
-		
-		//add to drawing vertices
-		vertShift = (nPointsN-1)*nSectorN*3;
-		for (i=0;i<nSectorN; i++)
-		{
-			for (j=0;j<3; j++)
-			{
-				vertices[vertShift+i*3+j]=contour0.get(i).getFloatPosition(j);
-			}				
-		}
-		
-		
+		addLinesAlong();
 		initialized=false;
+	}
+	
+	private void addLinesAlong()
+	{
+		int nShift = nSectorN*3*nPointsN;
+		int i,j,k;
+		for (i=0;i<nSectorN;i++)
+			for(j=0;j<nPointsN;j++)
+				for(k=0;k<3;k++)
+				{
+					vertices[nShift+3*i*nPointsN+j*3+k]=vertices[i*3+3*j*nSectorN+k];
+				}
+		
 	}
 	
 	private ArrayList< RealPoint > iniSectorContour()
@@ -259,26 +275,29 @@ public class VisPolyLineScaled
 	private void init( GL3 gl )
 	{
 		initialized = true;
+		if(nPointsN>1)
+		{
 
-		// ..:: VERTEX BUFFER ::..
-
-		final int[] tmp = new int[ 2 ];
-		gl.glGenBuffers( 1, tmp, 0 );
-		final int vbo = tmp[ 0 ];
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
-
-
-		// ..:: VERTEX ARRAY OBJECT ::..
-
-		gl.glGenVertexArrays( 1, tmp, 0 );
-		vao = tmp[ 0 ];
-		gl.glBindVertexArray( vao );
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 0 );
-		gl.glBindVertexArray( 0 );
+			// ..:: VERTEX BUFFER ::..
+	
+			final int[] tmp = new int[ 2 ];
+			gl.glGenBuffers( 1, tmp, 0 );
+			final int vbo = tmp[ 0 ];
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+			gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+	
+	
+			// ..:: VERTEX ARRAY OBJECT ::..
+	
+			gl.glGenVertexArrays( 1, tmp, 0 );
+			vao = tmp[ 0 ];
+			gl.glBindVertexArray( vao );
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+			gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+			gl.glEnableVertexAttribArray( 0 );
+			gl.glBindVertexArray( 0 );
+		}
 	}
 
 	public void draw( GL3 gl, Matrix4fc pvm )
@@ -287,25 +306,35 @@ public class VisPolyLineScaled
 		if ( !initialized )
 			init( gl );
 
-
-		JoglGpuContext context = JoglGpuContext.get( gl );
-
-		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-		prog.getUniform3f("colorin").set(l_color);
-		prog.setUniforms( context );
-		prog.use( context );
-
-
-		gl.glBindVertexArray( vao );
-		//gl.glLineWidth(fLineThickness);
-		gl.glLineWidth(0.5f);
-		for(nPointIt=0;nPointIt<nPointsN;nPointIt+=1)
+		if(nPointsN>1)
 		{
-			gl.glDrawArrays( GL.GL_LINE_LOOP, nPointIt*nSectorN, nSectorN);
-			//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
+
+			JoglGpuContext context = JoglGpuContext.get( gl );
+	
+			prog.getUniformMatrix4f( "pvm" ).set( pvm );
+			prog.getUniform3f("colorin").set(l_color);
+			prog.setUniforms( context );
+			prog.use( context );
+	
+	
+			gl.glBindVertexArray( vao );
+			//gl.glLineWidth(fLineThickness);
+			gl.glLineWidth(1.0f);
+			for(nPointIt=0;nPointIt<nPointsN;nPointIt+=1)
+			{
+				gl.glDrawArrays( GL.GL_LINE_LOOP, nPointIt*nSectorN, nSectorN);
+				//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
+			}
+			int nShift = nSectorN*nPointsN;
+			for(nPointIt=0;nPointIt<nSectorN;nPointIt+=1)
+			{
+				gl.glDrawArrays( GL.GL_LINE_STRIP, nShift+nPointIt*nPointsN, nPointsN);
+				//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
+			}
+			
+		    //gl.glDrawArrays( GL.GL_LINE_STRIP, nPointsN-2, nPointsN-2);
+			//gl.glDrawArrays( GL.GL_TRIANGLES, 0, nPointsN*3 );
+			gl.glBindVertexArray( 0 );
 		}
-	    //gl.glDrawArrays( GL.GL_LINE_STRIP, nPointsN-2, nPointsN-2);
-		//gl.glDrawArrays( GL.GL_TRIANGLES, 0, nPointsN*3 );
-		gl.glBindVertexArray( 0 );
 	}
 }

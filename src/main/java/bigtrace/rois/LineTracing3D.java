@@ -10,6 +10,7 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.scene.VisPointsScaled;
+import bigtrace.scene.VisPolyLineScaled;
 import bigtrace.scene.VisPolyLineSimple;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
@@ -25,7 +26,7 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> segments;
 	public VisPointsScaled verticesVis;
-	public ArrayList<VisPolyLineSimple> segmentsVis;
+	public ArrayList<VisPolyLineScaled> segmentsVis;
 	public float lineThickness;
 	public float pointSize;
 	public Color lineColor;
@@ -45,7 +46,7 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor_);
 		verticesVis.setSize(pointSize_);
-		segmentsVis = new ArrayList<VisPolyLineSimple>();
+		segmentsVis = new ArrayList<VisPolyLineScaled>();
 		
 
 	}
@@ -61,7 +62,7 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 		vertices.add(new RealPoint(in_));
 		verticesVis.setVertices(vertices);
 		segments.add(segments_);
-		segmentsVis.add(new VisPolyLineSimple(segments_,lineThickness,lineColor));
+		segmentsVis.add(new VisPolyLineScaled(segments_,lineThickness,16, lineColor));
 	}
 	
 	/** removes last segment of the tracing.
@@ -129,7 +130,7 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 		//lineColor.getComponents(colorComp);
 		verticesVis.draw(gl, pvm, screen_size);
 		
-		for (VisPolyLineSimple segment : segmentsVis)
+		for (VisPolyLineScaled segment : segmentsVis)
 		{
 			segment.draw(gl, pvm);
 		}
@@ -145,7 +146,7 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 		
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 		
-		for (VisPolyLineSimple segment : segmentsVis)
+		for (VisPolyLineScaled segment : segmentsVis)
 		{
 			segment.setColor(lineColor);
 		}
@@ -160,10 +161,13 @@ public class LineTracing3D implements Roi3D, WritablePolyline
 	@Override
 	public void setLineThickness(float line_thickness) {
 
+		int i;
 		lineThickness=line_thickness;
-		for (VisPolyLineSimple segment : segmentsVis)
+		for (i=0;i<segmentsVis.size();i++)
+		//for (VisPolyLineScaled segment : segmentsVis)
 		{
-			segment.setThickness(lineThickness);
+			segmentsVis.get(i).setThickness(lineThickness);
+			segmentsVis.get(i).setVertices(segments.get(i));
 		}
 	}
 
