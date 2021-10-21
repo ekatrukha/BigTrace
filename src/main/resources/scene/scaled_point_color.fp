@@ -2,7 +2,7 @@ out vec4 fragColor;
 
 in float dScale;
 
-uniform vec3 colorin;
+uniform vec4 colorin;
 uniform vec2 screenSize;
 
 void main()
@@ -26,7 +26,7 @@ void main()
 	}
 
     //just color in
-    vec4 ccolor = vec4(colorin, 1.0);
+    //vec4 ccolor = vec4(colorin, 1.0);
 
-    fragColor = ccolor; 
+    fragColor = colorin; 
 }

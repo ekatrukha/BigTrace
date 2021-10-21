@@ -307,11 +307,13 @@ public class VolumeMisc {
 		}
 		return true;
 	}
-	public static <T> ArrayList<RealPoint> BresenhamWrap(IntervalView<T> source, RealPoint RP1, RealPoint RP2)
+	public static ArrayList<RealPoint> BresenhamWrap(final RealPoint RP1, final RealPoint RP2)
 	{
 		ArrayList<RealPoint> linepx= new ArrayList<RealPoint>();
+		ArrayList<long []> br_line;
 		long[] lp1, lp2;
 		Point P1, P2;
+		RealPoint lineRP;
 		int nDim = RP1.numDimensions();
 		int i;
 		
@@ -326,14 +328,14 @@ public class VolumeMisc {
 		P1= new Point(lp1);
 		P2= new Point(lp2);
 
-		BresenhamLine<T> line = new BresenhamLine<T>(source);
-		line.reset(P1, P2);
-		while (line.hasNext()) 
+		br_line = BresenhamLine.generateCoords(P1, P2);
+		for(i=0;i<br_line.size();i++)
 		{
-			line.fwd();
-			linepx.add(line.positionAsRealPoint());
+			lineRP = new RealPoint(nDim);
+			lineRP.setPosition(br_line.get(i));
+			linepx.add(lineRP);
 		}
-		
+
 		return linepx;
 	}
 	

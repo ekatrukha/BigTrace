@@ -51,16 +51,39 @@ public class Point3D implements Roi3D {
 		//point.draw( gl, pvm, screen_size);
 		vertexVis.draw( gl, pvm, screen_size);
 	}
-	@Override
-	public void setLineColor(Color lineColor_) {
-		return;
-	}
+
 
 	@Override
 	public void setPointColor(Color pointColor_) {
 
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
 		vertexVis.setColor(pointColor);
+	}
+	
+	@Override
+	public void setPointColorRGB(Color pointColor_){
+		setPointColor(new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor.getAlpha()));
+	}
+	
+	@Override
+	public void setLineColor(Color lineColor_) {
+		return;
+	}
+	
+	@Override
+	public void setLineColorRGB(Color lineColor_) {
+		return;
+	}
+	
+	@Override
+	public void setOpacity(float fOpacity)
+	{
+		setPointColor(new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),(int)(fOpacity*255)));
+	}
+	@Override
+	public float getOpacity()
+	{
+		return ((float)(pointColor.getAlpha())/255.0f);
 	}
 
 	@Override
@@ -82,6 +105,15 @@ public class Point3D implements Roi3D {
 	public void setPointSize(float point_size) {
 		this.pointSize=point_size;
 		vertexVis.setSize(pointSize);
+	}
+	@Override
+	public void setRenderType(int nRenderType){
+		return;
+	}	
+	
+	@Override
+	public int getRenderType(){
+		return 0;
 	}
 
 }

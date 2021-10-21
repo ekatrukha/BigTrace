@@ -7,12 +7,14 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -30,6 +32,7 @@ import com.jogamp.opengl.GL3;
 
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.scene.VisPolyLineScaled;
 import net.imglib2.RealPoint;
 
 
@@ -51,8 +54,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public Color activePointColor = Color.WHITE;
 	 public Color nonActivePointColor = Color.WHITE;*/
 	 public int mode;
-	 public float currLineThickness = 3.0f;
-	 public float currPointSize = 5.0f;
+	 public float currLineThickness = 4.0f;
+	 public float currPointSize = 6.0f;
+	 public int currRenderType = VisPolyLineScaled.WIRE;
+	 public int currSectorN = 4;
 	 public boolean bShowAll = true;
 
 	 
@@ -300,14 +305,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	    	   roi=rois.get(i);
 	    	   if(i==activeRoi)
 	    	   {
-	    		   roi.setPointColor(activePointColor);
-	    		   roi.setLineColor(activeLineColor);
+	    		   roi.setPointColorRGB(activePointColor);
+	    		   roi.setLineColorRGB(activeLineColor);
 	    	   }
 	    	   else
 	    	   {
 	    		   
-	    		   roi.setPointColor(nonActivePointColor);
-	    		   roi.setLineColor(nonActiveLineColor);	    		   
+	    		   roi.setPointColorRGB(nonActivePointColor);
+	    		   roi.setLineColorRGB(nonActiveLineColor);	    		   
 	    	   }
 	    	   if(bShowAll)
 	    	   {
@@ -337,11 +342,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 
 	 public void addSegment(RealPoint point_, ArrayList<RealPoint> segments_)
 	 {
-		 LineTracing3D tracing;
+		 LineTrace3D tracing;
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.LINE_TRACE)
 		 {
-			 tracing = new LineTracing3D(currLineThickness, currPointSize, activeLineColor, activePointColor);
+			 tracing = new LineTrace3D(currLineThickness, currPointSize, activeLineColor, activePointColor, currRenderType, currSectorN);
 			 addRoi(tracing);
 			 tracing.addFirstPoint(point_);
 			 //activeRoi = rois.size()-1; 
@@ -355,22 +360,22 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //add point to line
 		 else
 		 {
-			 tracing = (LineTracing3D) rois.get(activeRoi);
+			 tracing = (LineTrace3D) rois.get(activeRoi);
 			 tracing.addPointAndSegment(point_,segments_);
 		 }
 	 }
 	 public RealPoint getLastTracePoint()
 	 { 
-		 LineTracing3D tracing;
-		 tracing = (LineTracing3D) rois.get(activeRoi);
+		 LineTrace3D tracing;
+		 tracing = (LineTrace3D) rois.get(activeRoi);
 		 return tracing.vertices.get(tracing.vertices.size()-1);
 	 }
 
 	 
 	 public boolean removeSegment()
 	 {
-		 LineTracing3D tracing;
-		 tracing = (LineTracing3D) rois.get(activeRoi);
+		 LineTrace3D tracing;
+		 tracing = (LineTrace3D) rois.get(activeRoi);
 		 return tracing.removeLastSegment();
 	 }
 
@@ -383,7 +388,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
 		 {
-			 polyline = new PolyLine3D(currLineThickness, currPointSize, activeLineColor, activePointColor);
+			 polyline = new PolyLine3D(currLineThickness, currPointSize, activeLineColor, activePointColor, currRenderType, currSectorN);
 			 addRoi(polyline);
 			 polyline.addPointToEnd(point_);
 			 //activeRoi = rois.size()-1; 
@@ -582,14 +587,16 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			{
 				JPanel dialProperties = new JPanel(new GridBagLayout());
 				GridBagConstraints cd = new GridBagConstraints();
-				NumberField nfPointSize = new NumberField(3);
-				NumberField nfLineThickness = new NumberField(2);
-				nfPointSize.setText(Integer.toString(Math.round(rois.get(activeRoi).getPointSize())));
-				nfPointSize.setIntegersOnly(true);
-				//for now, since using simple shader
-				nfLineThickness.setLimits(0.0, 10.);
-				nfLineThickness.setText(Integer.toString(Math.round(rois.get(activeRoi).getLineThickness())));
-				
+				NumberField nfPointSize = new NumberField(4);
+				NumberField nfLineThickness = new NumberField(4);
+				NumberField nfOpacity = new NumberField(4);
+				String[] sRenderType = { "Center line", "Wire", "Surface" };
+				JComboBox renderTypeList = new JComboBox(sRenderType);
+				nfPointSize.setText(Float.toString(rois.get(activeRoi).getPointSize()));
+				nfLineThickness.setText(Float.toString(rois.get(activeRoi).getLineThickness()));
+				DecimalFormat df = new DecimalFormat("0.00");
+				nfOpacity.setText(df.format(rois.get(activeRoi).getOpacity()));
+				nfOpacity.setLimits(0.0, 1.0);
 				
 				cd.gridx=0;
 				cd.gridy=0;
@@ -605,15 +612,55 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 					cd.gridx++;
 					dialProperties.add(nfLineThickness,cd);
 				}
+				cd.gridx=0;
+				cd.gridy++;
+				dialProperties.add(new JLabel("Opacity: "),cd);
+				cd.gridx++;
+				dialProperties.add(nfOpacity,cd);
+				
+				if(rois.get(activeRoi).getType()>Roi3D.POINT)
+				{
+					cd.gridx=0;
+					cd.gridy++;
+					dialProperties.add(new JLabel("Render as: "),cd);
+					renderTypeList.setSelectedIndex(rois.get(activeRoi).getRenderType());
+					cd.gridx++;
+					dialProperties.add(renderTypeList,cd);
+				}
+				
 				int reply = JOptionPane.showConfirmDialog(null, dialProperties, "ROI Properties", 
 				        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 				if (reply == JOptionPane.OK_OPTION) 
 				{
-					rois.get(activeRoi).setPointSize(Integer.parseInt(nfPointSize.getText()));
+					//point size 
+					rois.get(activeRoi).setPointSize(Float.parseFloat(nfPointSize.getText()));
+					//opacity
+					float fNewOpacity= Float.parseFloat(nfOpacity.getText());
+					if(fNewOpacity<0.0f)
+						{fNewOpacity=0.0f;}
+					if(fNewOpacity>1.0f)
+						{fNewOpacity=1.0f;}
+					rois.get(activeRoi).setOpacity(fNewOpacity);
+
+					//line
 					if(rois.get(activeRoi).getType()>Roi3D.POINT)
 					{
-						rois.get(activeRoi).setLineThickness(Integer.parseInt(nfLineThickness.getText()));
+						//line thickness
+						float fNewLineThickess = Float.parseFloat(nfLineThickness.getText());
+						if(Math.abs(fNewLineThickess-rois.get(activeRoi).getLineThickness())>0.00001)
+						{
+							rois.get(activeRoi).setLineThickness(fNewLineThickess );
+						}
+						//render type
+						if(renderTypeList.getSelectedIndex()!=rois.get(activeRoi).getRenderType())
+						{
+							rois.get(activeRoi).setRenderType(renderTypeList.getSelectedIndex());
+						}
+						
+						//if both are changed, we rebuild mesh twice
+						//possibly optimize it in the future
 					}
+					
 					fireActiveRoiChanged(activeRoi); 
 				}
 			}

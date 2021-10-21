@@ -22,11 +22,21 @@ public interface Roi3D
 	
 	/** Draws ROI into the volume **/
 	public void draw( GL3 gl, Matrix4fc pvm,  final int [] screen_size);
+	
+	public void setLineColorRGB(Color lineColor_);
+	public void setPointColorRGB(Color pointColor_);
 	public void setLineColor(Color lineColor_);
 	public void setPointColor(Color pointColor_);
-	public float getLineThickness();
-	public float getPointSize();
-	public void setLineThickness(final float line_thickness);
-	public void setPointSize(final float point_size);
 	
+	public void setOpacity(float fOpacity);
+	public float getOpacity();
+
+	public void setLineThickness(final float line_thickness);
+	public float getLineThickness();
+	
+	public void setPointSize(final float point_size);
+	public float getPointSize();
+
+	public void setRenderType(int nRenderType);
+	public int getRenderType();
 }

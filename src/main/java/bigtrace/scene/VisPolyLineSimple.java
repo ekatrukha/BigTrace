@@ -38,8 +38,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 import org.joml.Matrix4fc;
-import org.joml.Vector3f;
-
+import org.joml.Vector4f;
 
 import tpietzsch.backend.jogl.JoglGpuContext;
 import tpietzsch.shadergen.DefaultShader;
@@ -59,7 +58,7 @@ public class VisPolyLineSimple
 
 	private int vao;
 	
-	private Vector3f l_color;
+	private Vector4f l_color;
 	
 
 	public float fLineThickness;
@@ -85,7 +84,7 @@ public class VisPolyLineSimple
 	{
 		this();
 		fLineThickness= fLineThickness_;		
-		l_color = new Vector3f(color_in.getRGBColorComponents(null));		
+		l_color = new Vector4f(color_in.getComponents(null));		
 		setVertices(points);
 		
 	}
@@ -97,14 +96,14 @@ public class VisPolyLineSimple
 	
 	public void setColor(Color color_in)
 	{
-		l_color = new Vector3f(color_in.getRGBColorComponents(null));
+		l_color = new Vector4f(color_in.getComponents(null));
 	}
 	
 	public void setParams(final ArrayList< RealPoint > points, final float fLineThickness_, final Color color_in)
 	{
 
 		fLineThickness= fLineThickness_;
-		l_color = new Vector3f(color_in.getRGBColorComponents(null));		
+		l_color = new Vector4f(color_in.getComponents(null));		
 		setVertices(points);
 	}
 	public void setVertices( ArrayList< RealPoint > points)
@@ -160,7 +159,7 @@ public class VisPolyLineSimple
 		JoglGpuContext context = JoglGpuContext.get( gl );
 
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-		prog.getUniform3f("colorin").set(l_color);
+		prog.getUniform4f("colorin").set(l_color);
 		prog.setUniforms( context );
 		prog.use( context );
 

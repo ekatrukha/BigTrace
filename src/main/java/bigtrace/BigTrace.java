@@ -26,8 +26,7 @@ import bigtrace.geometry.Line3D;
 import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.rois.Cube3D;
-import bigtrace.rois.LineTracing3D;
-import bigtrace.rois.PolyLine3Dscaled;
+import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineSimple;
@@ -81,7 +80,6 @@ public class BigTrace
 
 	/** box around volume **/
 	Cube3D volumeBox;
-	PolyLine3Dscaled testLine;
 
 	
 	public BigTraceData btdata = new BigTraceData();
@@ -238,7 +236,7 @@ public class BigTrace
 									if(roiManager.activeRoi==-1)
 									{
 										roiManager.addSegment(target, null);																
-										calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+										calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
 									}
 									else
 									{
@@ -246,13 +244,13 @@ public class BigTrace
 										//continue tracing for the selected tracing
 										if(nRoiType ==Roi3D.LINE_TRACE)
 										{
-											calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+											calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
 										}
 										//otherwise make a new tracing
 										else
 										{
 											roiManager.addSegment(target, null);																
-											calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+											calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
 										}
 									}
 								}
@@ -309,7 +307,7 @@ public class BigTrace
 								btdata.nPointsInTraceBox--;
 								if(btdata.nPointsInTraceBox==0)
 								{
-									calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+									calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
 								}
 							}
 							
@@ -354,7 +352,7 @@ public class BigTrace
 								if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
 								{								
 									roiManager.addSegment(target, 
-											VolumeMisc.BresenhamWrap(btdata.trace_weights,roiManager.getLastTracePoint(),target));
+											VolumeMisc.BresenhamWrap(roiManager.getLastTracePoint(),target));
 									btdata.nPointsInTraceBox++;
 								}
 							}
@@ -368,7 +366,7 @@ public class BigTrace
 					{
 						if(bTraceMode && btdata.nPointsInTraceBox>1)
 						{
-							calcShowTraceBox((LineTracing3D)roiManager.getActiveRoi());
+							calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
 							btdata.nPointsInTraceBox=1;
 						}
 					}
@@ -394,7 +392,7 @@ public class BigTrace
 
 	}
 
-	public void calcShowTraceBox(final LineTracing3D trace)
+	public void calcShowTraceBox(final LineTrace3D trace)
 	{
 		long[][] rangeTraceBox;
 		
@@ -480,8 +478,7 @@ public class BigTrace
 					trace.add(traceB.get(i));
 				}
 				//3D bresenham connecting jumping points here
-				traceM=VolumeMisc.BresenhamWrap(btdata.trace_weights,
-												traceB.get(traceB.size()-1),
+				traceM=VolumeMisc.BresenhamWrap(traceB.get(traceB.size()-1),
 												traceE.get(traceE.size()-1));
 				for(i=1;i<traceM.size()-1 ;i++)	
 				{
@@ -497,9 +494,7 @@ public class BigTrace
 			else
 			{
 				//3D bresenham here
-				trace=VolumeMisc.BresenhamWrap(btdata.trace_weights,
-						roiManager.getLastTracePoint(),
-						target);
+				trace=VolumeMisc.BresenhamWrap(roiManager.getLastTracePoint(),target);
 			}
 			return trace;
 		}
@@ -537,7 +532,7 @@ public class BigTrace
 	}
 
 	//gets a box around "target" with half size of range
-	public long[][] getTraceBoxNext(final IntervalView< UnsignedByteType > viewclick, final long range, final float fFollowDegree, LineTracing3D trace)
+	public long[][] getTraceBoxNext(final IntervalView< UnsignedByteType > viewclick, final long range, final float fFollowDegree, LineTrace3D trace)
 	{
 		long[][] rangeM = new long[3][3];
 		int i;
@@ -608,7 +603,6 @@ public class BigTrace
 			roiManager.draw(gl, pvm, screen_size);
 		}	
 		
-			testLine.draw(gl, pvm, screen_size);
 			//render the origin of coordinates
 			if (btdata.bShowOrigin)
 			{
@@ -742,13 +736,6 @@ public class BigTrace
 		currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
 		bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 		
-		
-		testLine = new PolyLine3Dscaled(2.0f, 0.0f, Color.CYAN, Color.YELLOW);
-		//ArrayList <RealPoint> linecoord = new ArrayList <RealPoint>();
-		
-		ArrayList <RealPoint> linecoord=VolumeMisc.BresenhamWrap(currentView, new RealPoint(40.0, 200.0, 100.0),new RealPoint(50.0, 150.0, 150.0));
-		testLine.setVertices(linecoord);
-		//render_pl();
 	}
 	
 	public void resetViewYZ(boolean firstCall)

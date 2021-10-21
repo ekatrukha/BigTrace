@@ -39,8 +39,7 @@ import java.util.ArrayList;
 
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
-import org.joml.Vector3f;
-
+import org.joml.Vector4f;
 
 import tpietzsch.backend.jogl.JoglGpuContext;
 import tpietzsch.shadergen.DefaultShader;
@@ -60,7 +59,7 @@ public class VisPointsScaled
 
 	private int vao;
 	
-	private Vector3f l_color;
+	private Vector4f l_color;
 	
 	private float fPointSize;
 	
@@ -85,7 +84,7 @@ public class VisPointsScaled
 		int j;
 		fPointSize= fPointSize_;
 		
-		l_color = new Vector3f(color_in.getRGBColorComponents(null));
+		l_color = new Vector4f(color_in.getComponents(null));
 		
 		nPointsN=1;
 		vertices = new float [nPointsN*3];//assime 3D
@@ -106,7 +105,7 @@ public class VisPointsScaled
 		
 		fPointSize= fPointSize_;
 		
-		l_color = new Vector3f(color_in.getRGBColorComponents(null));
+		l_color = new Vector4f(color_in.getComponents(null));
 		
 		nPointsN=points.size();
 		vertices = new float [nPointsN*3];//assume 3D
@@ -144,7 +143,7 @@ public class VisPointsScaled
 	}
 	public void setColor(Color pointColor) {
 		
-		l_color = new Vector3f(pointColor.getRGBColorComponents(null));
+		l_color = new Vector4f(pointColor.getComponents(null));
 		
 	}
 	public void setSize(float fPointSize_)
@@ -192,7 +191,7 @@ public class VisPointsScaled
 		prog.getUniform1f( "pointSizeMaxRender" ).set( fMaxRenderSpotSize);
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
 		//prog.getUniformMatrix4f( "projection" ).set( projection );
-		prog.getUniform3f("colorin").set(l_color);
+		prog.getUniform4f("colorin").set(l_color);
 		prog.getUniform2f("screenSize").set(screen_sizef);
 
 		prog.setUniforms( context );

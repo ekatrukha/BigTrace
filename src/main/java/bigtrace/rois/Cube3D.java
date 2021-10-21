@@ -85,6 +85,97 @@ public class Cube3D implements Roi3D {
 	
 		}	
 	}
+	
+	@Override
+	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
+	
+		for (int i=0;i<edgesVis.size();i++)
+		{
+			edgesVis.get(i).draw(gl, pvm);
+		}
+	}
+	
+	
+	@Override
+	public void setPointColor(Color pointColor_) {
+		
+		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());	
+		for(int i =0; i<verticesVis.size();i++)
+		{
+			verticesVis.get(i).setColor(pointColor);
+		}
+	}
+
+	@Override
+	public void setLineColor(Color lineColor_) {
+		
+		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
+		for(int i =0; i<edgesVis.size();i++)
+		{
+			edgesVis.get(i).setColor(lineColor);
+		}
+	}
+	
+	@Override
+	public void setPointColorRGB(Color pointColor_){
+		setPointColor(new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor.getAlpha()));
+	}
+	
+	@Override
+	public void setLineColorRGB(Color lineColor_){
+		setLineColor(new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor.getAlpha()));
+	}
+	
+	@Override
+	public void setOpacity(float fOpacity)
+	{
+		setPointColor(new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),(int)(fOpacity*255)));
+		setLineColor(new Color(lineColor.getRed(),lineColor.getGreen(),lineColor.getBlue(),(int)(fOpacity*255)));
+	}
+	
+	@Override
+	public float getOpacity()
+	{
+		return ((float)(pointColor.getAlpha())/255.0f);
+	}
+	
+	@Override
+	public float getLineThickness() {
+		return lineThickness;
+	}
+
+
+	@Override
+	public void setLineThickness(float line_thickness) {
+
+		lineThickness=line_thickness;
+		for(int i =0; i<edgesVis.size();i++)
+		{
+			edgesVis.get(i).setThickness(lineThickness);
+		}
+	}
+	
+	@Override
+	public float getPointSize() {
+		return pointSize;
+	}
+	
+	@Override
+	public void setPointSize(float point_size) {
+	
+		pointSize=point_size;
+	}
+	
+	@Override
+	public void setRenderType(int nRenderType){
+		return;
+	}	
+	
+	@Override
+	public int getRenderType(){
+		return 0;
+	}
+	
 	@Override
 	public int getType() {
 		return type;
@@ -98,61 +189,6 @@ public class Cube3D implements Roi3D {
 	@Override
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
-	
-		for (int i=0;i<edgesVis.size();i++)
-		{
-			edgesVis.get(i).draw(gl, pvm);
-		}
-	}
-
-	@Override
-	public void setLineColor(Color lineColor_) {
-		
-		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
-		for(int i =0; i<edgesVis.size();i++)
-		{
-			edgesVis.get(i).setColor(lineColor);
-		}
-	}
-
-	@Override
-	public void setPointColor(Color pointColor_) {
-		
-		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());	
-		for(int i =0; i<edgesVis.size();i++)
-		{
-			verticesVis.get(i).setColor(pointColor);
-		}
-	}
-
-	@Override
-	public float getLineThickness() {
-		return lineThickness;
-	}
-
-	@Override
-	public float getPointSize() {
-		return pointSize;
-	}
-
-	@Override
-	public void setLineThickness(float line_thickness) {
-
-		lineThickness=line_thickness;
-		for(int i =0; i<edgesVis.size();i++)
-		{
-			edgesVis.get(i).setThickness(lineThickness);
-		}
-	}
-
-	@Override
-	public void setPointSize(float point_size) {
-	
-		pointSize=point_size;
 	}
 
 }

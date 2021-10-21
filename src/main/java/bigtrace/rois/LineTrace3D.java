@@ -19,42 +19,87 @@ import net.imglib2.roi.RealMaskRealInterval;
 import net.imglib2.roi.geom.real.WritablePolyline;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;
 
-public class PolyLine3Dscaled implements Roi3D, WritablePolyline
+public class LineTrace3D implements Roi3D, WritablePolyline
 {
 	
 	public ArrayList<RealPoint> vertices;
+	public ArrayList<ArrayList<RealPoint>> segments;
 	public VisPointsScaled verticesVis;
-	public VisPolyLineScaled edgesVis;
+	public ArrayList<VisPolyLineScaled> segmentsVis;
 	public float lineThickness;
 	public float pointSize;
 	public Color lineColor;
 	public Color pointColor;
+	public int nSectorN;
 	public String name;
 	public int type;
+	public int renderType;
 	
-	public PolyLine3Dscaled(final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_)
+	public LineTrace3D(final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nRenderType, final int nSectorN_)
 	{
-		type = Roi3D.POLYLINE;
+		type = Roi3D.LINE_TRACE;
 		lineThickness=lineThickness_;
 		pointSize = pointSize_;
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());		
 		vertices = new ArrayList<RealPoint>();
+		segments = new ArrayList<ArrayList<RealPoint>>();
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor_);
 		verticesVis.setSize(pointSize_);
-		edgesVis = new VisPolyLineScaled();
-		edgesVis.setColor(lineColor_);
-		edgesVis.setThickness(lineThickness_);
-		edgesVis.setSectorN(16);
+		segmentsVis = new ArrayList<VisPolyLineScaled>();
+		renderType= nRenderType;
+		nSectorN = nSectorN_;
 
 	}
+	/** adds initial vertex **/
+	public void addFirstPoint(final RealPoint in_)
+	{
+		vertices.add(new RealPoint(in_));
+		verticesVis.setVertices(vertices);
+	}
 	
+	public void addPointAndSegment(final RealPoint in_, final ArrayList<RealPoint> segments_)
+	{
+		vertices.add(new RealPoint(in_));
+		verticesVis.setVertices(vertices);
+		segments.add(segments_);
+		segmentsVis.add(new VisPolyLineScaled(segments_,lineThickness, lineColor, nSectorN, renderType));
+	}
+	
+	/** removes last segment of the tracing.
+	 * if there was just one spot, returns false**/
+	public boolean removeLastSegment() 
+	{
+		
+		vertices.remove(vertices.size()-1);
+		verticesVis.setVertices(vertices);
+		if(vertices.size()>0)
+		{
+			segments.remove(segments.size()-1);
+			segmentsVis.remove(segmentsVis.size()-1);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+		
+	}
+	
+	/** returns the last segment of the tracing.**/
+	public ArrayList<RealPoint> getLastSegment() 
+	{
+		
+		return segments.get(segments.size()-1);
+		
+	}
+
+	/*
 	//adds a point to the "end" of polyline
 	public void addPointToEnd(final RealPoint in_)
 	{
 		vertices.add(new RealPoint(in_));
-		updateRenderVertices();
 	}
 	//removes the point from the "end" and returns "true"
 	//if it is the last point, returns "false"
@@ -65,7 +110,6 @@ public class PolyLine3Dscaled implements Roi3D, WritablePolyline
 		 if(nP>0)
 			{
 			 	vertices.remove(nP-1);
-			 	updateRenderVertices();
 			 	if(nP==1)
 			 		return false;
 			 	else
@@ -73,68 +117,113 @@ public class PolyLine3Dscaled implements Roi3D, WritablePolyline
 			}
 		 return false;
 	 }
-	
-	public void setVertices(ArrayList<RealPoint> vertices_in)
-	{
-		vertices = new ArrayList<RealPoint>();
-		for (int i=0;i<vertices_in.size();i++)
-		{
-			vertices.add(new RealPoint(vertices_in.get(i)));		
-		}
-		updateRenderVertices();
-	}
-	public void updateRenderVertices()
-	{
-		verticesVis.setVertices(vertices);
-		edgesVis.setVertices(vertices);		
-		
-	}
 
+*/
 
 	@Override
 	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
 		
-		
-		//float[] colorComp  = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
-		//pointColor.getComponents(colorComp);
-		//VisPointsScaled points= new VisPointsScaled(colorComp, vertices, pointSize);
-		//VisPolyLineSimple lines;
-		//lineColor.getComponents(colorComp);
-		//lines = new VisPolyLineSimple(colorComp, vertices, lineThickness);
-		//points.draw( gl, pvm, screen_size);
-		//lines.draw( gl, pvm);
-		
+	
 		verticesVis.draw(gl, pvm, screen_size);
-		edgesVis.draw(gl, pvm);
 		
-	}
+		for (VisPolyLineScaled segment : segmentsVis)
+		{
+			segment.draw(gl, pvm);
+		}
 
+	}
+	
+	@Override
+	public void setPointColor(Color pointColor_) {
+		
+		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());	
+		verticesVis.setColor(pointColor);
+	}
+	
 	@Override
 	public void setLineColor(Color lineColor_) {
 		
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
-		edgesVis.setColor(lineColor);
-	}
-
-	@Override
-	public void setPointColor(Color pointColor_) {
 		
-		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
-		verticesVis.setColor(pointColor);
+		for (VisPolyLineScaled segment : segmentsVis)
+		{
+			segment.setColor(lineColor);
+		}
 	}
+
+
+	
 	@Override
-	public void setLineThickness(float line_thickness) {
-
-		lineThickness=line_thickness;
-		edgesVis.setThickness(lineThickness);
+	public void setPointColorRGB(Color pointColor_){
+		setPointColor(new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor.getAlpha()));
 	}
-
+	
+	@Override
+	public void setLineColorRGB(Color lineColor_){
+		setLineColor(new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor.getAlpha()));
+	}
+	
+	@Override
+	public void setOpacity(float fOpacity)
+	{
+		setPointColor(new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),(int)(fOpacity*255)));
+		setLineColor(new Color(lineColor.getRed(),lineColor.getGreen(),lineColor.getBlue(),(int)(fOpacity*255)));
+	}
+	
+	@Override
+	public float getOpacity()
+	{
+		return ((float)(pointColor.getAlpha())/255.0f);
+	}
+	
 	@Override
 	public void setPointSize(float point_size) {
 
 		pointSize=point_size;
 		verticesVis.setSize(pointSize);
+	}
+	
+	@Override
+	public float getPointSize() {
+
+		return pointSize;
+	}
+	
+	@Override
+	public void setLineThickness(float line_thickness) {
+
+
+		lineThickness=line_thickness;
+		for (int i=0;i<segmentsVis.size();i++)
+		{
+			segmentsVis.get(i).setThickness(lineThickness);
+			segmentsVis.get(i).setVertices(segments.get(i));
+		}
+	}
+	
+	@Override
+	public float getLineThickness() {
+
+		return lineThickness;
+	}
+
+	
+	@Override
+	public void setRenderType(int nRenderType){
 		
+		
+		renderType=nRenderType;
+		for (int i=0;i<segmentsVis.size();i++)
+		{
+			segmentsVis.get(i).setRenderType(renderType);
+			segmentsVis.get(i).setVertices(segments.get(i));
+		}
+
+	}	
+	
+	@Override
+	public int getRenderType(){
+		return renderType;
 	}
 
 	@Override
@@ -158,9 +247,14 @@ public class PolyLine3Dscaled implements Roi3D, WritablePolyline
 	 * but added for the future and implemented them
 	 * to the best of my knowledge (and so they do not produce errors)
 	 */
-	@Override
+	
 	public int numVertices() {
 		return vertices.size();
+	}
+	
+	
+	public int numSegments() {
+		return segments.size();
 	}
 
 	@Override
@@ -242,17 +336,8 @@ public class PolyLine3Dscaled implements Roi3D, WritablePolyline
 		
 	}
 
-	@Override
-	public float getLineThickness() {
 
-		return lineThickness;
-	}
 
-	@Override
-	public float getPointSize() {
-
-		return pointSize;
-	}
 
 
 	
