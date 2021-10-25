@@ -57,7 +57,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public float currLineThickness = 4.0f;
 	 public float currPointSize = 6.0f;
 	 public int currRenderType = VisPolyLineScaled.WIRE;
-	 public int currSectorN = 4;
+	 public int currSectorN = 16;
 	 public boolean bShowAll = true;
 
 	 

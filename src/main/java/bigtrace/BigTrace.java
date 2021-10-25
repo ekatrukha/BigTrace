@@ -25,6 +25,7 @@ import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.TraceBoxMath;
+import bigtrace.procedural.Procedural3DImageByte;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
@@ -37,7 +38,7 @@ import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
-
+import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
 
 import net.imglib2.img.array.ArrayImgs;
@@ -47,6 +48,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
+import net.imglib2.view.RandomAccessibleOnRealRandomAccessible;
 import net.imglib2.view.Views;
 import sc.fiji.simplifiedio.SimplifiedIO;
 import tpietzsch.example2.RenderData;
@@ -109,7 +111,10 @@ public class BigTrace
 	
 
 		img.min(btdata.nDimIni[0]);
-		img.max(btdata.nDimIni[1]);
+		//img.max(btdata.nDimIni[1]);
+		btdata.nDimIni[1][0]=800;
+		btdata.nDimIni[1][1]=800;
+		btdata.nDimIni[1][2]=800;
 		img.min(btdata.nDimCurr[0]);
 		img.max(btdata.nDimCurr[1]);
 
@@ -733,9 +738,50 @@ public class BigTrace
 		if(!firstCall)
 			bvv2.removeFromBdv();
 		
-		currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
-		bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
+		//currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
+		//bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 		
+       // Interval interval = new FinalInterval(
+        //		new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 });
+
+        RealRandomAccessible<UnsignedByteType> rra = new Procedural3DImageByte(
+                p -> {
+                	 
+                	 int maxIterations= 50;
+                	 double n=2;
+                	 //double n=3;
+                	 int i = 0;
+                	 double x= 0;
+                	 double y= 0;
+                	 double z= 0;
+                     double r, theta, phi;
+                     double a = (p[0]/btdata.nDimIni[1][0])*2.47 - 2.0;
+                     double b = (p[1]/btdata.nDimIni[1][1])*2.24-1.12;
+                     double c = (p[2]/btdata.nDimIni[1][2]-0.5);
+                     //double c = 2.0*(p[2]/btdata.nDimIni[1][2]-0.5);
+
+                     double dV = 0;
+                     
+                	 for ( ; i <= maxIterations; ++i )
+                	 {
+                		 r = Math.sqrt(x*x+y*y+z*z);
+                		 theta = Math.atan2(z,Math.sqrt(x*x+y*y));
+                		 phi = Math.atan2(y,x);
+                		 x = Math.pow(r,n) * Math.cos(n*phi) * Math.cos(n*theta)+a;
+                		 y = Math.pow(r,n) * Math.sin(n*phi) * Math.cos(n*theta)+b;
+                		 z = Math.pow(r,n) *  Math.sin(n*theta)+c;
+                		 dV=x*x +y*y+z*z;
+                		 if ( dV>8 )
+                             break;
+                	 }
+
+
+                    return (int)Math.round(255*i/maxIterations);
+                }
+        ).getRRA();
+        RandomAccessibleOnRealRandomAccessible<UnsignedByteType> RAc = new RandomAccessibleOnRealRandomAccessible<UnsignedByteType>(rra);
+        currentView = Views.interval( RAc, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );	
+        bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 	}
 	
 	public void resetViewYZ(boolean firstCall)
