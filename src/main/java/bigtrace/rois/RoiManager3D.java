@@ -7,6 +7,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
@@ -30,25 +36,34 @@ import org.joml.Matrix4fc;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
+import bigtrace.BigTrace;
+import bigtrace.BigTraceData;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.math.TraceBoxMath;
 import bigtrace.scene.VisPolyLineScaled;
+import ij.IJ;
+import ij.io.OpenDialog;
+import ij.io.SaveDialog;
 import net.imglib2.RealPoint;
 
 
 
 public class RoiManager3D extends JPanel implements ListSelectionListener, ActionListener {
 	
+	 
 	
+	 
+	 BigTrace bt;
 
 	 private static final long serialVersionUID = -2843907862066423151L;
 	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2;
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
 	 public int activeRoi = -1;
-	 public Color activeLineColor = Color.RED;
-	 public Color nonActiveLineColor = Color.BLUE;
 	 public Color activePointColor = Color.YELLOW;
-	 public Color nonActivePointColor = Color.GREEN;
+	 public Color defaultPointColor = Color.GREEN;
+	 public Color activeLineColor = Color.RED;
+	 public Color defaultLineColor = Color.BLUE;
 	/* public Color activeLineColor = Color.WHITE;
 	 public Color nonActiveLineColor = Color.WHITE;
 	 public Color activePointColor = Color.WHITE;
@@ -73,6 +88,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JButton butDeselect;
 	 JButton butProperties;
 	 JToggleButton butShowAll;
+	 JButton butSaveROIs;
+	 JButton butLoadROIs;
 	 
 	 JToggleButton roiPointMode;
 	 JToggleButton roiPolyLineMode;
@@ -82,13 +99,16 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 private ArrayList<Listener> listeners =	new ArrayList<Listener>();
 
 		
-	 public RoiManager3D()
+	 public RoiManager3D(BigTrace bt)
 	 {
-		try {
-		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
-		} catch( Exception ex ) {
-		    System.err.println( "Failed to initialize LaF" );
-		}
+		 
+		 
+		 this.bt = bt;
+		 try {
+		     UIManager.setLookAndFeel( new FlatIntelliJLaf() );
+		 } catch( Exception ex ) {
+		     System.err.println( "Failed to initialize LaF" );
+		 }
 		
 		 int nButtonSize = 40;
 
@@ -175,20 +195,32 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 butRename.addActionListener(this);
 		 cr.gridy++;
 		 roiList.add(butRename,cr);
+		 
 		 butDeselect = new JButton("Deselect");
 		 butDeselect.addActionListener(this);
 		 cr.gridy++;
 		 roiList.add(butDeselect,cr);
+		 
 		 butProperties = new JButton("Properties");
 		 butProperties.addActionListener(this);
 		 cr.gridy++;
 		 roiList.add(butProperties ,cr);
+		 
 		 butShowAll = new JToggleButton("Show all");
 		 butShowAll.addActionListener(this);
 		 butShowAll.setSelected(true);
 		 cr.gridy++;
 		 roiList.add(butShowAll ,cr);
 	
+		 butSaveROIs = new JButton("Save ROIs");
+		 butSaveROIs.addActionListener(this);
+		 cr.gridy++;
+		 roiList.add(butSaveROIs ,cr);
+		 
+		 butLoadROIs = new JButton("Load ROIs");
+		 butLoadROIs.addActionListener(this);
+		 cr.gridy++;
+		 roiList.add(butLoadROIs ,cr);
 		 
 		 // a solution for now
 		 butDelete.setMinimumSize(butProperties.getPreferredSize());
@@ -234,21 +266,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public void addRoi(Roi3D roi_in)
 	 {
 		 rois.add(roi_in);		 
-		 activeRoi = rois.size()-1;
-		 if(roi_in.getType()==Roi3D.POINT)
-			 roi_in.setName("point"+Integer.toString(roi_in.hashCode()));
-
-		 if(roi_in.getType()==Roi3D.POLYLINE)
-			 roi_in.setName("polyl"+Integer.toString(roi_in.hashCode()));
-		 if(roi_in.getType()==Roi3D.LINE_TRACE)
-			 roi_in.setName("trace"+Integer.toString(roi_in.hashCode()));
-
 		 listModel.addElement(roi_in.getName());
 		 jlist.setSelectedIndex(rois.size()-1);
 		 activeRoi = rois.size()-1;
 
 	 }
-	 
+
 	 public Roi3D getActiveRoi()
 	 {
 		 return rois.get(activeRoi);
@@ -299,28 +322,35 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size)
 	 {
 	       Roi3D roi;
+	       Color savePointColor= defaultPointColor;
+	       Color saveLineColor = defaultLineColor;
 	       int i;
 	       for (i=0;i<rois.size();i++) 
 	       {
 	    	   roi=rois.get(i);
 	    	   if(i==activeRoi)
 	    	   {
+	    		   savePointColor = roi.getPointColor();
+	    		   saveLineColor = roi.getLineColor();
 	    		   roi.setPointColorRGB(activePointColor);
 	    		   roi.setLineColorRGB(activeLineColor);
-	    	   }
-	    	   else
-	    	   {
-	    		   
-	    		   roi.setPointColorRGB(nonActivePointColor);
-	    		   roi.setLineColorRGB(nonActiveLineColor);	    		   
 	    	   }
 	    	   if(bShowAll)
 	    	   {
 	    		   roi.draw(gl, pvm, screen_size);
 	    	   }
 	    	   else
+	    	   {
 	    		   if(i==activeRoi)
+	    		   {
 	    			   roi.draw(gl, pvm, screen_size);
+	    		   }
+	    	   }
+	    	   if(i==activeRoi)
+	    	   {
+	    		   roi.setPointColor(savePointColor);
+	    		   roi.setLineColor(saveLineColor);
+	    	   }
 	       }
 	 }
 	 
@@ -445,15 +475,17 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 }
 		 }
 	 }
-	 public void setTraceMode(boolean bTraceMode)
+	 public void setLockMode(boolean bLockMode)
 	 {
-		 	 boolean bState = !bTraceMode;
+		 	 boolean bState = !bLockMode;
 			 roiPointMode.setEnabled(bState);
 			 roiPolyLineMode.setEnabled(bState);
 			 butDelete.setEnabled(bState);
 			 butRename.setEnabled(bState);
 			 butDeselect.setEnabled(bState);
 			 butProperties.setEnabled(bState);
+			 butSaveROIs.setEnabled(bState);
+			 butLoadROIs.setEnabled(bState);
 			 listScroller.setEnabled(bState);
 			 jlist.setEnabled(bState);
 
@@ -537,7 +569,22 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			fireActiveRoiChanged(activeRoi); 
 		}
 		
-		///SIDE ROI LIST BUTTONS
+		//SAVE ROIS
+		if(rois.size()>0)
+		{
+			
+			if(e.getSource() == butSaveROIs)
+			{
+				diagSaveROIs();
+			}
+		}
+		//LOAD ROIS
+		if(e.getSource() == butLoadROIs)
+		{
+			diagLoadROIs();
+		}
+		
+		///SIDE ROI SPECIFIC LIST BUTTONS
 		if(activeRoi>=0)
 		{
 			//DELETE
@@ -585,90 +632,305 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			//PROPERTIES
 			if(e.getSource() == butProperties)
 			{
-				JPanel dialProperties = new JPanel(new GridBagLayout());
-				GridBagConstraints cd = new GridBagConstraints();
-				NumberField nfPointSize = new NumberField(4);
-				NumberField nfLineThickness = new NumberField(4);
-				NumberField nfOpacity = new NumberField(4);
-				String[] sRenderType = { "Center line", "Wire", "Surface" };
-				JComboBox renderTypeList = new JComboBox(sRenderType);
-				nfPointSize.setText(Float.toString(rois.get(activeRoi).getPointSize()));
-				nfLineThickness.setText(Float.toString(rois.get(activeRoi).getLineThickness()));
-				DecimalFormat df = new DecimalFormat("0.00");
-				nfOpacity.setText(df.format(rois.get(activeRoi).getOpacity()));
-				nfOpacity.setLimits(0.0, 1.0);
-				
-				cd.gridx=0;
-				cd.gridy=0;
-				//cd.anchor=GridBagConstraints.WEST;
-				dialProperties.add(new JLabel("Point size: "),cd);
-				cd.gridx++;
-				dialProperties.add(nfPointSize,cd);
-				if(rois.get(activeRoi).getType()>Roi3D.POINT)
-				{
-					cd.gridx=0;
-					cd.gridy++;
-					dialProperties.add(new JLabel("Line thickness: "),cd);
-					cd.gridx++;
-					dialProperties.add(nfLineThickness,cd);
-				}
-				cd.gridx=0;
-				cd.gridy++;
-				dialProperties.add(new JLabel("Opacity: "),cd);
-				cd.gridx++;
-				dialProperties.add(nfOpacity,cd);
-				
-				if(rois.get(activeRoi).getType()>Roi3D.POINT)
-				{
-					cd.gridx=0;
-					cd.gridy++;
-					dialProperties.add(new JLabel("Render as: "),cd);
-					renderTypeList.setSelectedIndex(rois.get(activeRoi).getRenderType());
-					cd.gridx++;
-					dialProperties.add(renderTypeList,cd);
-				}
-				
-				int reply = JOptionPane.showConfirmDialog(null, dialProperties, "ROI Properties", 
-				        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-				if (reply == JOptionPane.OK_OPTION) 
-				{
-					//point size 
-					rois.get(activeRoi).setPointSize(Float.parseFloat(nfPointSize.getText()));
-					//opacity
-					float fNewOpacity= Float.parseFloat(nfOpacity.getText());
-					if(fNewOpacity<0.0f)
-						{fNewOpacity=0.0f;}
-					if(fNewOpacity>1.0f)
-						{fNewOpacity=1.0f;}
-					rois.get(activeRoi).setOpacity(fNewOpacity);
-
-					//line
-					if(rois.get(activeRoi).getType()>Roi3D.POINT)
-					{
-						//line thickness
-						float fNewLineThickess = Float.parseFloat(nfLineThickness.getText());
-						if(Math.abs(fNewLineThickess-rois.get(activeRoi).getLineThickness())>0.00001)
-						{
-							rois.get(activeRoi).setLineThickness(fNewLineThickess );
-						}
-						//render type
-						if(renderTypeList.getSelectedIndex()!=rois.get(activeRoi).getRenderType())
-						{
-							rois.get(activeRoi).setRenderType(renderTypeList.getSelectedIndex());
-						}
-						
-						//if both are changed, we rebuild mesh twice
-						//possibly optimize it in the future
-					}
-					
-					fireActiveRoiChanged(activeRoi); 
-				}
+				dialProperties();
 			}
+
 		}
+
 		
 	}
+	
+	/** show ROI Properties dialog**/
+	public void dialProperties()
+	{
+		JPanel dialProperties = new JPanel(new GridBagLayout());
+		GridBagConstraints cd = new GridBagConstraints();
+		NumberField nfPointSize = new NumberField(4);
+		NumberField nfLineThickness = new NumberField(4);
+		NumberField nfOpacity = new NumberField(4);
+		String[] sRenderType = { "Center line", "Wire", "Surface" };
+		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
+		nfPointSize.setText(Float.toString(rois.get(activeRoi).getPointSize()));
+		nfLineThickness.setText(Float.toString(rois.get(activeRoi).getLineThickness()));
+		DecimalFormat df = new DecimalFormat("0.00");
+		nfOpacity.setText(df.format(rois.get(activeRoi).getOpacity()));
+		nfOpacity.setLimits(0.0, 1.0);
 		
+		cd.gridx=0;
+		cd.gridy=0;
+		//cd.anchor=GridBagConstraints.WEST;
+		dialProperties.add(new JLabel("Point size: "),cd);
+		cd.gridx++;
+		dialProperties.add(nfPointSize,cd);
+		if(rois.get(activeRoi).getType()>Roi3D.POINT)
+		{
+			cd.gridx=0;
+			cd.gridy++;
+			dialProperties.add(new JLabel("Line thickness: "),cd);
+			cd.gridx++;
+			dialProperties.add(nfLineThickness,cd);
+		}
+		cd.gridx=0;
+		cd.gridy++;
+		dialProperties.add(new JLabel("Opacity: "),cd);
+		cd.gridx++;
+		dialProperties.add(nfOpacity,cd);
 		
+		if(rois.get(activeRoi).getType()>Roi3D.POINT)
+		{
+			cd.gridx=0;
+			cd.gridy++;
+			dialProperties.add(new JLabel("Render as: "),cd);
+			renderTypeList.setSelectedIndex(rois.get(activeRoi).getRenderType());
+			cd.gridx++;
+			dialProperties.add(renderTypeList,cd);
+		}
+		
+		int reply = JOptionPane.showConfirmDialog(null, dialProperties, "ROI Properties", 
+		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			//point size 
+			rois.get(activeRoi).setPointSize(Float.parseFloat(nfPointSize.getText()));
+			//opacity
+			float fNewOpacity= Float.parseFloat(nfOpacity.getText());
+			if(fNewOpacity<0.0f)
+				{fNewOpacity=0.0f;}
+			if(fNewOpacity>1.0f)
+				{fNewOpacity=1.0f;}
+			rois.get(activeRoi).setOpacity(fNewOpacity);
+
+			//line
+			if(rois.get(activeRoi).getType()>Roi3D.POINT)
+			{
+				//line thickness
+				float fNewLineThickess = Float.parseFloat(nfLineThickness.getText());
+				if(Math.abs(fNewLineThickess-rois.get(activeRoi).getLineThickness())>0.00001)
+				{
+					rois.get(activeRoi).setLineThickness(fNewLineThickess );
+				}
+				//render type
+				if(renderTypeList.getSelectedIndex()!=rois.get(activeRoi).getRenderType())
+				{
+					rois.get(activeRoi).setRenderType(renderTypeList.getSelectedIndex());
+				}
+				
+				//if both are changed, we rebuild mesh twice
+				//possibly optimize it in the future
+			}
+			
+			fireActiveRoiChanged(activeRoi); 
+		}
+	}
+	
+	/** Save ROIS dialog and saving **/
+	public void diagSaveROIs()
+	{
+		String filename;
+		
+		filename = bt.btdata.sFileNameImg + "_btrois";
+		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
+        String path = sd.getDirectory();
+        if (path==null)
+        	return;
+        filename = path+sd.getFileName();
+        bt.bInputLock = true;
+        this.setLockMode(true);
+        ROIsSaveBG saveTask = new ROIsSaveBG();
+        saveTask.sFilename=filename;
+        saveTask.bt=this.bt;
+        saveTask.addPropertyChangeListener(bt.btpanel);
+        saveTask.execute();
+        this.setLockMode(false);
+	}
+	/** Save ROIS dialog and saving **/
+	public void diagLoadROIs()
+	{
+		String filename;
+		String[] line_array;
+        int bFirstPartCheck = 0;
+        int nRoiN=0;
+        int nVertN=0;
+        int i,j;
+        
+        ArrayList<RealPoint> vertices;
+        ArrayList<RealPoint> segment;
+        
+        float pointSize=0.0f;
+        float lineThickness =0.0f;
+        Color pointColor = Color.BLACK;
+        Color lineColor = Color.BLACK;
+        String sName = "";
+        int nRoiType = Roi3D.POINT;
+        int nRenderType = 0;
+        int nSectorN = 16;
+        //Roi3D roiIn;
+        
+		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs","", "*.csv");
+		
+        String path = openDial.getDirectory();
+        if (path==null)
+        	return;
+
+        filename = path+openDial.getFileName();
+        
+        bt.bInputLock = true;
+        this.setLockMode(true);
+
+
+		try {
+			
+	        BufferedReader br = new BufferedReader(new FileReader(filename));
+	        int nLineN = 0;
+
+	        String line;
+
+			while ((line = br.readLine()) != null) 
+				{
+				   // process the line.
+				  line_array = line.split(",");
+				  nLineN++;
+				  //first line check
+				  if(line_array.length==3 && nLineN==1)
+			      {
+					  bFirstPartCheck++;
+					  if(line_array[0].equals("BigTrace_ROIs")&& line_array[2].equals(bt.btdata.sVersion))
+					  {
+						  bFirstPartCheck++; 
+					  }					  
+			      }
+				  //second line check
+				  if(line_array.length==2 && nLineN==2)
+			      {
+					  bFirstPartCheck++;
+					  if(line_array[0].equals("ROIsNumber"))
+					  {
+						  bFirstPartCheck++;
+						  nRoiN=Integer.parseInt(line_array[1]);
+					  }
+			      }				  
+				  if(line_array[0].equals("BT_Roi"))
+				  {
+
+				  }
+				  if(line_array[0].equals("Type"))
+				  {						  
+					  nRoiType = Roi3D.stringTypeToInt(line_array[1]);
+				  }
+				  if(line_array[0].equals("Name"))
+				  {						  
+					  sName = line_array[1];
+				  }
+				  if(line_array[0].equals("PointSize"))
+				  {						  
+					  pointSize = Float.parseFloat(line_array[1]);
+				  }
+				  if(line_array[0].equals("LineThickness"))
+				  {						  
+					  lineThickness = Float.parseFloat(line_array[1]);
+				  }
+				  if(line_array[0].equals("PointColor"))
+				  {						  
+					  pointColor = new Color(Integer.parseInt(line_array[1]),
+							  				 Integer.parseInt(line_array[2]),
+							  				 Integer.parseInt(line_array[3]),
+							  				 Integer.parseInt(line_array[4]));
+				  }
+				  if(line_array[0].equals("LineColor"))
+				  {						  
+					  lineColor = new Color(Integer.parseInt(line_array[1]),
+							  				 Integer.parseInt(line_array[2]),
+							  				 Integer.parseInt(line_array[3]),
+							  				 Integer.parseInt(line_array[4]));
+				  }
+				  if(line_array[0].equals("RenderType"))
+				  {						  
+					  nRenderType = Integer.parseInt(line_array[1]);
+				  }
+				  if(line_array[0].equals("SectorN"))
+				  {						  
+					  nSectorN = Integer.parseInt(line_array[1]);
+				  }
+				  if(line_array[0].equals("Vertices"))
+				  {						  
+					  nVertN = Integer.parseInt(line_array[1]);
+					  vertices =new ArrayList<RealPoint>(); 
+					  for(i=0;i<nVertN;i++)
+					  {
+						  line = br.readLine();
+						  line_array = line.split(",");
+						  vertices.add(new RealPoint(Float.parseFloat(line_array[0]),
+								  					 Float.parseFloat(line_array[1]),
+								  					 Float.parseFloat(line_array[2])));
+					  }
+					  
+					  switch (nRoiType)
+					  {
+					  case Roi3D.POINT:
+						  Point3D roiP = new Point3D(pointSize,pointColor);
+						  roiP.setName(sName);
+						  roiP.setVertex(vertices.get(0));
+						  this.addRoi(roiP);
+					  	  break;
+					  case Roi3D.POLYLINE:
+						  PolyLine3D roiPL = new PolyLine3D(lineThickness,pointSize,lineColor,pointColor,nRenderType,nSectorN);
+						  roiPL.setName(sName);
+						  roiPL.setVertices(vertices);
+						  this.addRoi(roiPL);
+						  break;
+					  case Roi3D.LINE_TRACE:
+						  LineTrace3D roiLT = new LineTrace3D(lineThickness,pointSize,lineColor,pointColor,nRenderType,nSectorN);
+						  roiLT.setName(sName);
+						  roiLT.addFirstPoint(vertices.get(0));
+						  //segments number
+						  line = br.readLine();
+						  line_array = line.split(",");
+						  int nTotSegm = Integer.parseInt(line_array[1]);
+						  for (i=0;i<nTotSegm;i++)
+						  {
+							  //points number
+							  line = br.readLine();
+							  line_array = line.split(",");  
+							  nVertN = Integer.parseInt(line_array[3]);
+							  segment =new ArrayList<RealPoint>(); 
+							  for(j=0;j<nVertN;j++)
+							  {
+								  line = br.readLine();
+								  line_array = line.split(",");
+								  segment.add(new RealPoint(Float.parseFloat(line_array[0]),
+										  					 Float.parseFloat(line_array[1]),
+										  					 Float.parseFloat(line_array[2])));
+							  }
+							  roiLT.addPointAndSegment(vertices.get(i+1),segment); 
+						  }
+						  this.addRoi(roiLT);
+						  break;
+						  
+					  }
+					  
+				  }
+				  
+				}
+
+	        br.close();
+		}
+		//catching errors in file opening
+		catch (FileNotFoundException e) {
+			IJ.error(""+e);
+		}	        
+		catch (IOException e) {
+			IJ.error(""+e);
+		}
+        
+		//some error reading the file
+        if(bFirstPartCheck!=4)
+        {
+        	 System.err.println("Not a Bigtrace ROI file format or plugin/version mismatch, loading ROIs aborted.");
+        }
+        bt.bInputLock = false;
+        this.setLockMode(false);
+        
+	}
 		
 	
 }

@@ -10,6 +10,10 @@ import net.imglib2.view.IntervalView;
 public class BigTraceData {
 
 	
+	public String sVersion = "0.0.1";
+	
+	/////////////// input file
+	public String sFileNameImg;
 	///////////////////////////// volume/image  and rendering
 	
 	/** dimensions of the volume/image (without crop) **/

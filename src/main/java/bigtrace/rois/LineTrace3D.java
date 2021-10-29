@@ -1,6 +1,10 @@
 package bigtrace.rois;
 
 import java.awt.Color;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Predicate;
@@ -50,6 +54,7 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		segmentsVis = new ArrayList<VisPolyLineScaled>();
 		renderType= nRenderType;
 		nSectorN = nSectorN_;
+		name = "trace"+Integer.toString(this.hashCode());
 
 	}
 	/** adds initial vertex **/
@@ -161,6 +166,18 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 	@Override
 	public void setLineColorRGB(Color lineColor_){
 		setLineColor(new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor.getAlpha()));
+	}
+	
+	@Override
+	public Color getPointColor()
+	{
+		return new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),pointColor.getAlpha());
+	}
+	
+	@Override
+	public Color getLineColor()
+	{
+		return new Color(lineColor.getRed(),lineColor.getGreen(),lineColor.getBlue(),lineColor.getAlpha());
 	}
 	
 	@Override
@@ -336,6 +353,66 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		
 	}
 
+	@Override
+	public void saveRoi(final FileWriter writer)
+	{
+		int i, iPoint, iSegment;
+		float [] vert;
+		ArrayList<RealPoint> segment;
+		
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+		try {
+			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
+			writer.write("Name," + this.getName()+"\n");
+			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
+			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
+									  +	Integer.toString(pointColor.getGreen()) +","
+									  +	Integer.toString(pointColor.getBlue()) +","
+									  +	Integer.toString(pointColor.getAlpha()) +"\n");
+			writer.write("LineThickness," + df3.format(this.getLineThickness())+"\n");
+			writer.write("LineColor,"+ Integer.toString(lineColor.getRed()) +","
+									  +	Integer.toString(lineColor.getGreen()) +","
+									  +	Integer.toString(lineColor.getBlue()) +","
+									  +	Integer.toString(lineColor.getAlpha()) +"\n");
+			writer.write("RenderType,"+ Integer.toString(this.getRenderType())+"\n");
+			writer.write("SectorN,"+ Integer.toString(this.nSectorN)+"\n");
+			
+			writer.write("Vertices,"+Integer.toString(vertices.size())+"\n");
+			vert = new float[3];
+			for (iPoint = 0;iPoint<vertices.size();iPoint++)
+			{ 
+				vertices.get(iPoint).localize(vert);
+				for(i=0;i<3;i++)
+				{
+					writer.write(df3.format(vert[i])+",");
+				}
+				//time point
+				writer.write("0.0\n");
+			}
+			writer.write("SegmentsNumber,"+Integer.toString(segments.size())+"\n");
+			for(iSegment=0;iSegment<segments.size();iSegment++)
+			{
+				segment=segments.get(iSegment);
+				writer.write("Segment,"+Integer.toString(iSegment+1)+",Points,"+Integer.toString(segment.size())+"\n");
+				for (iPoint = 0;iPoint<segment.size();iPoint++)
+				{ 
+					segment.get(iPoint).localize(vert);
+					for(i=0;i<3;i++)
+					{
+						writer.write(df3.format(vert[i])+",");
+					}
+					//time point
+					writer.write("0.0\n");
+				}
+			}
+		}
+		catch (IOException e) {	
+			System.err.print(e.getMessage());
+			
+		}
+	}
 
 
 

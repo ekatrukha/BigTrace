@@ -303,10 +303,9 @@ public class BigTraceControlPanel extends JPanel
 	        {
 	            int progress = (Integer) evt.getNewValue();
 	            progressBar.setValue(progress);
-	            if(evt.getSource().getClass().getSimpleName().equals("TraceBoxMath"))
+	            if(evt.getSource() instanceof bigtrace.BigTraceBGWorker)
 	            {
-	            	TraceBoxMath val = (TraceBoxMath)(evt.getSource());
-	            	progressBar.setString(val.getProgressState());
+	            	progressBar.setString(((bigtrace.BigTraceBGWorker)(evt.getSource())).getProgressState());
 	            }
 	        }
 	        

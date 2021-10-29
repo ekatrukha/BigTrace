@@ -1,6 +1,7 @@
 package bigtrace.rois;
 
 import java.awt.Color;
+import java.io.FileWriter;
 
 import org.joml.Matrix4fc;
 
@@ -28,6 +29,9 @@ public interface Roi3D
 	public void setLineColor(Color lineColor_);
 	public void setPointColor(Color pointColor_);
 	
+	public Color getLineColor();
+	public Color getPointColor();	
+	
 	public void setOpacity(float fOpacity);
 	public float getOpacity();
 
@@ -39,4 +43,39 @@ public interface Roi3D
 
 	public void setRenderType(int nRenderType);
 	public int getRenderType();
+	public void saveRoi(final FileWriter writer);
+	public static String intTypeToString(int nType)
+	{
+		String sType = "Point";
+		switch (nType)
+		{
+		 case POINT:
+			 sType= "Point";
+			 break;
+		 case POLYLINE:
+			 sType= "Polyline";
+			 break;
+		 case LINE_TRACE:
+			 sType = "LineTrace";
+			 break;
+		 case CUBE:
+			 sType = "Cube";
+			 break;
+		
+		}
+		return sType;
+	}
+	public static int stringTypeToInt(String sType)
+	{
+		if(sType.equals("Point"))
+		{ return POINT;};
+		if(sType.equals("Polyline"))
+		{ return POLYLINE;};
+		if(sType.equals("LineTrace"))
+		{ return LINE_TRACE;};
+		if(sType.equals("Cube"))
+		{ return CUBE;};
+		
+		return -1;
+	}
 }

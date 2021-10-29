@@ -85,14 +85,14 @@ public class BigTrace
 
 	
 	public BigTraceData btdata = new BigTraceData();
-	BigTraceControlPanel btpanel;
+	public BigTraceControlPanel btpanel;
 	
 	DijkstraFHRestricted dijkRBegin;
 	DijkstraFHRestricted dijkREnd;
 	//DijkstraBinaryHeap dijkBH;
 	//DijkstraFibonacciHeap dijkFib;
 
-	RoiManager3D roiManager = new RoiManager3D();
+	public RoiManager3D roiManager;
 		
 	public void runBVV()
 	{
@@ -101,7 +101,9 @@ public class BigTrace
 		//img = SimplifiedIO.openImage(
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
-		img = SimplifiedIO.openImage("/home/eugene/workspace/ExM_MT.tif", new UnsignedByteType());
+		
+		btdata.sFileNameImg = "/home/eugene/workspace/ExM_MT.tif";
+		img = SimplifiedIO.openImage(btdata.sFileNameImg, new UnsignedByteType());
 		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest_horz.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
@@ -111,15 +113,12 @@ public class BigTrace
 	
 
 		img.min(btdata.nDimIni[0]);
-		//img.max(btdata.nDimIni[1]);
-		btdata.nDimIni[1][0]=800;
-		btdata.nDimIni[1][1]=800;
-		btdata.nDimIni[1][2]=800;
+		img.max(btdata.nDimIni[1]);
 		img.min(btdata.nDimCurr[0]);
 		img.max(btdata.nDimCurr[1]);
 
 
-
+		roiManager = new RoiManager3D(this);
 		init(0.25*Math.min(btdata.nDimIni[1][2], Math.min(btdata.nDimIni[1][0],btdata.nDimIni[1][1])));
 		
 		try {
@@ -200,7 +199,7 @@ public class BigTrace
         //frame.setContentPane(newContentPane);
 	 	frame.add(btpanel);
         //Display the window.
-        frame.setSize(400,500);
+        frame.setSize(400,600);
         //frame.pack();
         frame.setVisible(true);
 	    java.awt.Point bvv_p = bvv_frame.getLocationOnScreen();
@@ -235,7 +234,7 @@ public class BigTrace
 								else
 								{
 									bTraceMode= true;								
-									roiManager.setTraceMode(bTraceMode);
+									roiManager.setLockMode(bTraceMode);
 									
 									//nothing selected, make a new tracing
 									if(roiManager.activeRoi==-1)
@@ -298,7 +297,7 @@ public class BigTrace
 								btdata.nPointsInTraceBox--;
 								roiManager.removeActiveRoi();
 								bTraceMode= false;
-								roiManager.setTraceMode(bTraceMode);							
+								roiManager.setLockMode(bTraceMode);							
 								removeTraceBox();
 								if(btdata.nTraceBoxView==1)
 								{
@@ -335,7 +334,7 @@ public class BigTrace
 						{
 							roiManager.unselect();
 							bTraceMode= false;
-							roiManager.setTraceMode(bTraceMode);	
+							roiManager.setLockMode(bTraceMode);	
 							removeTraceBox();
 							if(btdata.nTraceBoxView==1)
 							{
@@ -738,50 +737,48 @@ public class BigTrace
 		if(!firstCall)
 			bvv2.removeFromBdv();
 		
-		//currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
-		//bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
+		currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
+		bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 		
-       // Interval interval = new FinalInterval(
-        //		new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 });
 
-        RealRandomAccessible<UnsignedByteType> rra = new Procedural3DImageByte(
-                p -> {
-                	 
-                	 int maxIterations= 50;
-                	 double n=2;
-                	 //double n=3;
-                	 int i = 0;
-                	 double x= 0;
-                	 double y= 0;
-                	 double z= 0;
-                     double r, theta, phi;
-                     double a = (p[0]/btdata.nDimIni[1][0])*2.47 - 2.0;
-                     double b = (p[1]/btdata.nDimIni[1][1])*2.24-1.12;
-                     double c = (p[2]/btdata.nDimIni[1][2]-0.5);
-                     //double c = 2.0*(p[2]/btdata.nDimIni[1][2]-0.5);
-
-                     double dV = 0;
-                     
-                	 for ( ; i <= maxIterations; ++i )
-                	 {
-                		 r = Math.sqrt(x*x+y*y+z*z);
-                		 theta = Math.atan2(z,Math.sqrt(x*x+y*y));
-                		 phi = Math.atan2(y,x);
-                		 x = Math.pow(r,n) * Math.cos(n*phi) * Math.cos(n*theta)+a;
-                		 y = Math.pow(r,n) * Math.sin(n*phi) * Math.cos(n*theta)+b;
-                		 z = Math.pow(r,n) *  Math.sin(n*theta)+c;
-                		 dV=x*x +y*y+z*z;
-                		 if ( dV>8 )
-                             break;
-                	 }
-
-
-                    return (int)Math.round(255*i/maxIterations);
-                }
-        ).getRRA();
-        RandomAccessibleOnRealRandomAccessible<UnsignedByteType> RAc = new RandomAccessibleOnRealRandomAccessible<UnsignedByteType>(rra);
-        currentView = Views.interval( RAc, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );	
-        bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
+//        RealRandomAccessible<UnsignedByteType> rra = new Procedural3DImageByte(
+//                p -> {
+//                	 
+//                	 int maxIterations= 50;
+//                	 double n=2;
+//                	 //double n=3;
+//                	 int i = 0;
+//                	 double x= 0;
+//                	 double y= 0;
+//                	 double z= 0;
+//                     double r, theta, phi;
+//                     double a = (p[0]/btdata.nDimIni[1][0])*2.47 - 2.0;
+//                     double b = (p[1]/btdata.nDimIni[1][1])*2.24-1.12;
+//                     double c = (p[2]/btdata.nDimIni[1][2]-0.5);
+//                     //double c = 2.0*(p[2]/btdata.nDimIni[1][2]-0.5);
+//
+//                     double dV = 0;
+//                     
+//                	 for ( ; i <= maxIterations; ++i )
+//                	 {
+//                		 r = Math.sqrt(x*x+y*y+z*z);
+//                		 theta = Math.atan2(z,Math.sqrt(x*x+y*y));
+//                		 phi = Math.atan2(y,x);
+//                		 x = Math.pow(r,n) * Math.cos(n*phi) * Math.cos(n*theta)+a;
+//                		 y = Math.pow(r,n) * Math.sin(n*phi) * Math.cos(n*theta)+b;
+//                		 z = Math.pow(r,n) *  Math.sin(n*theta)+c;
+//                		 dV=x*x +y*y+z*z;
+//                		 if ( dV>8 )
+//                             break;
+//                	 }
+//
+//
+//                    return (int)Math.round(255*i/maxIterations);
+//                }
+//        ).getRRA();
+//        RandomAccessibleOnRealRandomAccessible<UnsignedByteType> RAc = new RandomAccessibleOnRealRandomAccessible<UnsignedByteType>(rra);
+//        currentView = Views.interval( RAc, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );	
+//        bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 	}
 	
 	public void resetViewYZ(boolean firstCall)

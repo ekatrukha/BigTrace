@@ -1,6 +1,10 @@
 package bigtrace.rois;
 
 import java.awt.Color;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 
 import org.joml.Matrix4fc;
@@ -125,6 +129,17 @@ public class Cube3D implements Roi3D {
 	public void setLineColorRGB(Color lineColor_){
 		setLineColor(new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor.getAlpha()));
 	}
+	@Override
+	public Color getPointColor()
+	{
+		return new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),pointColor.getAlpha());
+	}
+	
+	@Override
+	public Color getLineColor()
+	{
+		return new Color(lineColor.getRed(),lineColor.getGreen(),lineColor.getBlue(),lineColor.getAlpha());
+	}
 	
 	@Override
 	public void setOpacity(float fOpacity)
@@ -189,6 +204,48 @@ public class Cube3D implements Roi3D {
 	@Override
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	@Override
+	public void saveRoi(final FileWriter writer)
+	{
+		int i, iPoint;
+		float [] vert;
+		
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+		try {
+			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
+			writer.write("Name," + this.getName()+"\n");
+			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
+			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
+									  +	Integer.toString(pointColor.getGreen()) +","
+									  +	Integer.toString(pointColor.getBlue()) +","
+									  +	Integer.toString(pointColor.getAlpha()) +"\n");
+			writer.write("LineThickness," + df3.format(this.getLineThickness())+"\n");
+			writer.write("LineColor,"+ Integer.toString(lineColor.getRed()) +","
+									  +	Integer.toString(lineColor.getGreen()) +","
+									  +	Integer.toString(lineColor.getBlue()) +","
+									  +	Integer.toString(lineColor.getAlpha()) +"\n");
+			writer.write("RenderType,"+ Integer.toString(this.getRenderType()));
+			
+			writer.write("Vertices,"+Integer.toString(vertices.size())+"\n");
+			vert = new float[3];
+			for (iPoint = 0;iPoint<vertices.size();i++)
+			{ 
+				vertices.get(iPoint).localize(vert);
+				for(i=0;i<3;i++)
+				{
+					writer.write(df3.format(vert[i])+",");
+				}
+				writer.write("\n");
+			}
+		}
+		catch (IOException e) {	
+			System.err.print(e.getMessage());
+			
+		}
 	}
 
 }
