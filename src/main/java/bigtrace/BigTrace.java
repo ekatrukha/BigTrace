@@ -213,7 +213,6 @@ public class BigTrace
 		final Actions actions = new Actions( new InputTriggerConfig() );
 		
 		//find a brightest pixel in the direction of a click
-		// (not really working properly yet
 		actions.runnableAction(
 				() -> {
 					
@@ -377,6 +376,85 @@ public class BigTrace
 				},
 				"move trace box",
 				"T" );
+		//find a brightest pixel in the direction of a click
+		actions.runnableAction(
+				() -> {
+					
+					if(!bInputLock)
+					{
+						if(roiManager.activeRoi>=0)
+						{
+							int nRoiType = roiManager.getActiveRoi().getType();
+							//continue tracing for the selected tracing
+							if(nRoiType ==Roi3D.POLYLINE)
+							{
+								roiManager.getActiveRoi().reversePoints();
+								
+							}
+							
+						}
+						/*
+						RealPoint target = new RealPoint(3);
+						if(!bTraceMode)
+						{
+							if(findPointLocationFromClick(currentView, btdata.nHalfClickSizeWindow,target))
+							{
+								//point or line
+								if(roiManager.mode<=RoiManager3D.ADD_POINT_LINE)
+								{
+									roiManager.addPoint(target);
+								}
+								//semi auto tracing initialize
+								else
+								{
+									bTraceMode= true;								
+									roiManager.setLockMode(bTraceMode);
+									
+									//nothing selected, make a new tracing
+									if(roiManager.activeRoi==-1)
+									{
+										roiManager.addSegment(target, null);																
+										calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+									}
+									else
+									{
+										int nRoiType = roiManager.getActiveRoi().getType();
+										//continue tracing for the selected tracing
+										if(nRoiType ==Roi3D.LINE_TRACE)
+										{
+											calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+										}
+										//otherwise make a new tracing
+										else
+										{
+											roiManager.addSegment(target, null);																
+											calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+										}
+									}
+								}
+							}
+						}
+						//continue to trace within the trace box
+						else
+						{
+							if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+							{
+								ArrayList<RealPoint> trace = getSemiAutoTrace(target);							
+								if(trace.size()>1)
+								{
+									roiManager.addSegment(target, trace);
+									btdata.nPointsInTraceBox++;
+									System.out.print("next trace!");
+								}
+							}						
+						}*/
+					}
+				},
+				"reverse curve point order",
+				"Y" );
+
+		
+		
 		actions.runnableAction(
 				() -> {
 					resetViewXY(false);

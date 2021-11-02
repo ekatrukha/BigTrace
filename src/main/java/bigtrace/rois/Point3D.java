@@ -176,4 +176,10 @@ public class Point3D implements Roi3D {
 			
 		}
 	}
+
+	@Override
+	public void reversePoints() {
+		return;
+		
+	}
 }

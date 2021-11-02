@@ -106,7 +106,8 @@ public class Intersections3D {
 		if ((c+1.0)<0.00001)
 		{
 			transform.identity();
-			transform.scale(-1.0);			
+			transform.scale(-1.0);
+			return transform;
 		}
 		
 		LinAlgHelpers.cross( dmov, dstat, v);

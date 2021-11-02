@@ -347,6 +347,21 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 			
 		}
 	}
+	@Override
+	public void reversePoints() {
+		
+		ArrayList<RealPoint> vertices_r = new ArrayList<RealPoint>();
+		
+		for(int i=vertices.size()-1;i>=0;i--)
+		{
+			vertices_r.add(new RealPoint(this.vertices.get(i)));
+		}
+		vertices = vertices_r; 
+		
+		updateRenderVertices();
+		return;
+		
+	}
 
 	
 }

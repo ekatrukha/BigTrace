@@ -376,7 +376,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.LINE_TRACE)
 		 {
-			 tracing = new LineTrace3D(currLineThickness, currPointSize, activeLineColor, activePointColor, currRenderType, currSectorN);
+			 tracing = new LineTrace3D(currLineThickness, currPointSize, defaultLineColor, defaultPointColor, currRenderType, currSectorN);
 			 addRoi(tracing);
 			 tracing.addFirstPoint(point_);
 			 //activeRoi = rois.size()-1; 
@@ -418,7 +418,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
 		 {
-			 polyline = new PolyLine3D(currLineThickness, currPointSize, activeLineColor, activePointColor, currRenderType, currSectorN);
+			 polyline = new PolyLine3D(currLineThickness, currPointSize, defaultLineColor, defaultPointColor, currRenderType, currSectorN);
 			 addRoi(polyline);
 			 polyline.addPointToEnd(point_);
 			 //activeRoi = rois.size()-1; 

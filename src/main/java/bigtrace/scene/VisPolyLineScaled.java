@@ -197,7 +197,8 @@ public class VisPolyLineScaled
 			}
 			
 			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
-			RealPoint iniVec = new RealPoint(prev_segment );
+			LinAlgHelpers.normalize(prev_segment);
+			RealPoint iniVec = new RealPoint(prev_segment );			
 			RealPoint zVec = new RealPoint(0.0,0.0,1.0);
 			
 			AffineTransform3D ini_rot = Intersections3D.alignVectors( iniVec,zVec);
@@ -216,24 +217,36 @@ public class VisPolyLineScaled
 				//1) orientation of the segment
 				points.get(iPoint+1).localize(path[2]);
 				LinAlgHelpers.subtract(path[2], path[1], next_segment);
+				LinAlgHelpers.normalize(next_segment);
 				//2) average angle/vector between segments
 				LinAlgHelpers.add(prev_segment, next_segment, plane_norm);
 				LinAlgHelpers.scale(plane_norm, 0.5, plane_norm);
 		
-				//3) plane of segments cross-section
-				planeBetween.setVectors(path[1], plane_norm);
-				//4) make a set of lines emanating from the current contour
-				extrudeLines = new ArrayList<Line3D>();
-				for(i=0;i<nSectorN;i++)
-				{
-					contLine=new Line3D();
-					contour_curr.get(i).localize(cont_point);
-					contLine.setVectors(cont_point, prev_segment);
-					extrudeLines.add(contLine);
+				//calculate intersection
+				// also there is a special case: reverse, basically do nothing
+				// use the same contour
+				if(LinAlgHelpers.length(plane_norm)>0.0000001)
+				{					
+					//3) plane of segments cross-section
+					planeBetween.setVectors(path[1], plane_norm);
+					//4) make a set of lines emanating from the current contour
+					extrudeLines = new ArrayList<Line3D>();
+					for(i=0;i<nSectorN;i++)
+					{
+						contLine=new Line3D();
+						contour_curr.get(i).localize(cont_point);
+						contLine.setVectors(cont_point, prev_segment);
+						extrudeLines.add(contLine);
+					}
+					
+					//intersections
+					contour_next = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
 				}
-				
-				//intersections
-				contour_next = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
+				else
+				{
+					//reversed direction
+					contour_next=contour_curr;
+				}
 				
 				//add to drawing vertices triangles
 				vertShift = (iPoint-1)*(nSectorN+1)*2*3;
@@ -330,6 +343,7 @@ public class VisPolyLineScaled
 			}
 			
 			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
+			LinAlgHelpers.normalize(prev_segment);
 			RealPoint iniVec = new RealPoint(prev_segment );
 			RealPoint zVec = new RealPoint(0.0,0.0,1.0);
 			
@@ -356,24 +370,30 @@ public class VisPolyLineScaled
 				//1) orientation of the segment
 				points.get(iPoint+1).localize(path[2]);
 				LinAlgHelpers.subtract(path[2], path[1], next_segment);
+				
+				LinAlgHelpers.normalize(next_segment);
 				//2) average angle/vector between segments
 				LinAlgHelpers.add(prev_segment, next_segment, plane_norm);
-				LinAlgHelpers.scale(plane_norm, 0.5, plane_norm);
-		
-				//3) plane of segments cross-section
-				planeBetween.setVectors(path[1], plane_norm);
-				//4) make a set of lines emanating from the current contour
-				extrudeLines = new ArrayList<Line3D>();
-				for(i=0;i<nSectorN;i++)
-				{
-					contLine=new Line3D();
-					contour.get(i).localize(cont_point);
-					contLine.setVectors(cont_point, prev_segment);
-					extrudeLines.add(contLine);
+				//calculate intersection
+				// also there is a special case: reverse, basically do nothing
+				//use the same contour
+				if(LinAlgHelpers.length(plane_norm)>0.0000001)
+				{					
+					//3) plane of segments cross-section
+					planeBetween.setVectors(path[1], plane_norm);
+					//4) make a set of lines emanating from the current contour
+					extrudeLines = new ArrayList<Line3D>();
+					for(i=0;i<nSectorN;i++)
+					{
+						contLine=new Line3D();
+						contour.get(i).localize(cont_point);
+						contLine.setVectors(cont_point, prev_segment);
+						extrudeLines.add(contLine);
+					}
+					
+					//intersections
+					contour = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
 				}
-				
-				//intersections
-				contour = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
 				
 				//add to drawing vertices
 				vertShift = iPoint*nSectorN*3;

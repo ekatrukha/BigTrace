@@ -28,6 +28,7 @@ public interface Roi3D
 	public void setPointColorRGB(Color pointColor_);
 	public void setLineColor(Color lineColor_);
 	public void setPointColor(Color pointColor_);
+	public void reversePoints();
 	
 	public Color getLineColor();
 	public Color getPointColor();	
