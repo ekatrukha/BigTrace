@@ -2,10 +2,13 @@ package bigtrace.rois;
 
 import java.awt.Color;
 import java.io.FileWriter;
+import java.util.ArrayList;
 
 import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
+
+import net.imglib2.RealPoint;
 
 public interface Roi3D 
 {
@@ -78,5 +81,15 @@ public interface Roi3D
 		{ return CUBE;};
 		
 		return -1;
+	}
+	public static ArrayList<RealPoint> reverseArrayRP(final ArrayList<RealPoint> vert_in) 
+	{
+		ArrayList<RealPoint> reversed = new ArrayList<RealPoint>();
+		
+		for(int i=vert_in.size()-1;i>=0;i--)
+		{
+			reversed.add(new RealPoint(vert_in.get(i)));
+		}
+		return reversed; 
 	}
 }

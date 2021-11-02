@@ -417,13 +417,24 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 	@Override
 	public void reversePoints() {
 		
-		ArrayList<RealPoint> vertices_r = new ArrayList<RealPoint>();
+		int i;
 		
-		for(int i=vertices.size()-1;i>=0;i--)
+		vertices = Roi3D.reverseArrayRP(vertices); 
+		//update drawing component
+		verticesVis.setVertices(vertices);
+		
+		ArrayList<ArrayList<RealPoint>> segments_r = new ArrayList<ArrayList<RealPoint>>();
+		for(i= segments.size()-1;i>=0;i--)
 		{
-			vertices_r.add(new RealPoint(this.vertices.get(i)));
+			segments_r.add(Roi3D.reverseArrayRP(segments.get(i)));
 		}
-		vertices = vertices_r; 
+		segments = segments_r;
+		
+		//update drawing component
+		for(i=0;i< segments.size(); i++)
+		{
+			segmentsVis.get(i).setVertices(segments.get(i));
+		}
 		return;
 		
 	}

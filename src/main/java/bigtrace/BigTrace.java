@@ -208,253 +208,210 @@ public class BigTrace
 	    frame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
 	}
 	
-	public void installActions()
+	/** find a brightest pixel in the direction of a click
+	 *  and add a new 3D point to active ROI OR
+	 *  start a new ROI (if none selected)
+	 **/ 
+	public void actionAddPoint()
 	{
-		final Actions actions = new Actions( new InputTriggerConfig() );
 		
-		//find a brightest pixel in the direction of a click
-		actions.runnableAction(
-				() -> {
-					
-					if(!bInputLock)
+		if(!bInputLock)
+		{
+			//addPoint();
+			RealPoint target = new RealPoint(3);
+			if(!bTraceMode)
+			{
+				if(findPointLocationFromClick(currentView, btdata.nHalfClickSizeWindow,target))
+				{
+					//point or line
+					if(roiManager.mode<=RoiManager3D.ADD_POINT_LINE)
 					{
-						//addPoint();
-						RealPoint target = new RealPoint(3);
-						if(!bTraceMode)
-						{
-							if(findPointLocationFromClick(currentView, btdata.nHalfClickSizeWindow,target))
-							{
-								//point or line
-								if(roiManager.mode<=RoiManager3D.ADD_POINT_LINE)
-								{
-									roiManager.addPoint(target);
-								}
-								//semi auto tracing initialize
-								else
-								{
-									bTraceMode= true;								
-									roiManager.setLockMode(bTraceMode);
-									
-									//nothing selected, make a new tracing
-									if(roiManager.activeRoi==-1)
-									{
-										roiManager.addSegment(target, null);																
-										calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
-									}
-									else
-									{
-										int nRoiType = roiManager.getActiveRoi().getType();
-										//continue tracing for the selected tracing
-										if(nRoiType ==Roi3D.LINE_TRACE)
-										{
-											calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
-										}
-										//otherwise make a new tracing
-										else
-										{
-											roiManager.addSegment(target, null);																
-											calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
-										}
-									}
-								}
-							}
-						}
-						//continue to trace within the trace box
-						else
-						{
-							if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
-							{
-								ArrayList<RealPoint> trace = getSemiAutoTrace(target);							
-								if(trace.size()>1)
-								{
-									roiManager.addSegment(target, trace);
-									btdata.nPointsInTraceBox++;
-									System.out.print("next trace!");
-								}
-							}						
-						}
+						roiManager.addPoint(target);
 					}
-				},
-				"add point",
-				"F" );
-		
-		
-		actions.runnableAction(
-				() -> {
-					if(!bInputLock)
+					//semi auto tracing initialize
+					else
 					{
-						if(!bTraceMode)
+						bTraceMode= true;								
+						roiManager.setLockMode(bTraceMode);
+						
+						//nothing selected, make a new tracing
+						if(roiManager.activeRoi==-1)
 						{
-							roiManager.removePointFromLine();
-						}
-						else
-						{
-	
-							//if the last point in the tracing, leave tracing mode
-							if(!roiManager.removeSegment())
-							{
-								btdata.nPointsInTraceBox--;
-								roiManager.removeActiveRoi();
-								bTraceMode= false;
-								roiManager.setLockMode(bTraceMode);							
-								removeTraceBox();
-								if(btdata.nTraceBoxView==1)
-								{
-									bvv2.setActive(true);
-								}
-								
-							}
-							//not the last point, see if we need to move trace box back
-							else
-							{
-								btdata.nPointsInTraceBox--;
-								if(btdata.nPointsInTraceBox==0)
-								{
-									calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
-								}
-							}
-							
-						}
-						panel.showMessage("Point removed");
-
-					}					
-				},
-				"remove point",
-				"G" );
-		actions.runnableAction(
-				() -> {
-					if(!bInputLock)
-					{
-						if(!bTraceMode)
-						{
-							roiManager.unselect();
-						}
-						else
-						{
-							roiManager.unselect();
-							bTraceMode= false;
-							roiManager.setLockMode(bTraceMode);	
-							removeTraceBox();
-							if(btdata.nTraceBoxView==1)
-							{
-								bvv2.setActive(true);
-							}
-						}
-					}
-				},
-				"new trace",
-				"H" );
-			actions.runnableAction(
-					() -> {
-						if(!bInputLock)
-						{
-							if(bTraceMode)
-							{
-								//make a straight line
-								RealPoint target = new RealPoint(3);							
-								if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
-								{								
-									roiManager.addSegment(target, 
-											VolumeMisc.BresenhamWrap(roiManager.getLastTracePoint(),target));
-									btdata.nPointsInTraceBox++;
-								}
-							}
-						}
-					},
-					"straight line semitrace",
-					"R" );		
-		actions.runnableAction(
-				() -> {
-					if(!bInputLock)
-					{
-						if(bTraceMode && btdata.nPointsInTraceBox>1)
-						{
+							roiManager.addSegment(target, null);																
 							calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
-							btdata.nPointsInTraceBox=1;
 						}
-					}
-				},
-				"move trace box",
-				"T" );
-		//find a brightest pixel in the direction of a click
-		actions.runnableAction(
-				() -> {
-					
-					if(!bInputLock)
-					{
-						if(roiManager.activeRoi>=0)
+						else
 						{
 							int nRoiType = roiManager.getActiveRoi().getType();
 							//continue tracing for the selected tracing
-							if(nRoiType ==Roi3D.POLYLINE)
+							if(nRoiType ==Roi3D.LINE_TRACE)
 							{
-								roiManager.getActiveRoi().reversePoints();
-								
+								calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
 							}
-							
-						}
-						/*
-						RealPoint target = new RealPoint(3);
-						if(!bTraceMode)
-						{
-							if(findPointLocationFromClick(currentView, btdata.nHalfClickSizeWindow,target))
+							//otherwise make a new tracing
+							else
 							{
-								//point or line
-								if(roiManager.mode<=RoiManager3D.ADD_POINT_LINE)
-								{
-									roiManager.addPoint(target);
-								}
-								//semi auto tracing initialize
-								else
-								{
-									bTraceMode= true;								
-									roiManager.setLockMode(bTraceMode);
-									
-									//nothing selected, make a new tracing
-									if(roiManager.activeRoi==-1)
-									{
-										roiManager.addSegment(target, null);																
-										calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
-									}
-									else
-									{
-										int nRoiType = roiManager.getActiveRoi().getType();
-										//continue tracing for the selected tracing
-										if(nRoiType ==Roi3D.LINE_TRACE)
-										{
-											calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
-										}
-										//otherwise make a new tracing
-										else
-										{
-											roiManager.addSegment(target, null);																
-											calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
-										}
-									}
-								}
+								roiManager.addSegment(target, null);																
+								calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
 							}
 						}
-						//continue to trace within the trace box
-						else
-						{
-							if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
-							{
-								ArrayList<RealPoint> trace = getSemiAutoTrace(target);							
-								if(trace.size()>1)
-								{
-									roiManager.addSegment(target, trace);
-									btdata.nPointsInTraceBox++;
-									System.out.print("next trace!");
-								}
-							}						
-						}*/
 					}
-				},
-				"reverse curve point order",
-				"Y" );
+				}
+			}
+			//continue to trace within the trace box
+			else
+			{
+				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+				{
+					ArrayList<RealPoint> trace = getSemiAutoTrace(target);							
+					if(trace.size()>1)
+					{
+						roiManager.addSegment(target, trace);
+						btdata.nPointsInTraceBox++;
+						System.out.print("next trace!");
+					}
+				}						
+			}
+		}
+	}
+	/** remove last added point from ROI
+	 * (and delete ROI if it is the last point in it)
+	 * **/
+	public void actionRemovePoint()
+	{
+		if(!bInputLock)
+		{
+			if(!bTraceMode)
+			{
+				roiManager.removePointFromLine();
+			}
+			else
+			{
 
+				//if the last point in the tracing, leave tracing mode
+				if(!roiManager.removeSegment())
+				{
+					btdata.nPointsInTraceBox--;
+					roiManager.removeActiveRoi();
+					bTraceMode= false;
+					roiManager.setLockMode(bTraceMode);							
+					removeTraceBox();
+					if(btdata.nTraceBoxView==1)
+					{
+						bvv2.setActive(true);
+					}
+					
+				}
+				//not the last point, see if we need to move trace box back
+				else
+				{
+					btdata.nPointsInTraceBox--;
+					if(btdata.nPointsInTraceBox==0)
+					{
+						calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+					}
+				}
+				
+			}
+			panel.showMessage("Point removed");
+
+		}					
+	}
+	/** deselects current ROI (and finishes tracing)
+	 *   
+	 * **/
+	public void actionDeselect()
+	{
+		if(!bInputLock)
+		{
+			if(!bTraceMode)
+			{
+				roiManager.unselect();
+			}
+			else
+			{
+				roiManager.unselect();
+				bTraceMode= false;
+				roiManager.setLockMode(bTraceMode);	
+				removeTraceBox();
+				if(btdata.nTraceBoxView==1)
+				{
+					bvv2.setActive(true);
+				}
+			}
+		}
+	}
+	/** reverses order of points/segments in PolyLine and LineTrace,
+	 * so the active end (where point addition happens) is reversed **/
+	public void actionReversePoints() 
+	{
 		
-		
+		if(!bInputLock)
+		{
+			if(roiManager.activeRoi>=0)
+			{
+				int nRoiType = roiManager.getActiveRoi().getType();
+				//continue tracing for the selected tracing
+				if(nRoiType ==Roi3D.POLYLINE)
+				{
+					roiManager.getActiveRoi().reversePoints();
+					
+				}
+				
+				if(nRoiType ==Roi3D.LINE_TRACE)
+				{
+					roiManager.getActiveRoi().reversePoints();
+					if(bTraceMode)
+					{
+						calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+						btdata.nPointsInTraceBox=1;
+					}
+				}							
+			}
+
+		}
+	}
+	/** move trace box to a position around current last added point **/
+	public void actionMoveTraceBox()
+	{
+		if(!bInputLock)
+		{
+			if(bTraceMode && btdata.nPointsInTraceBox>1)
+			{
+				calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+				btdata.nPointsInTraceBox=1;
+			}
+		}
+	}
+	/** in a trace mode build a straight (not a curved trace) segment 
+	 * connecting clicked and last point (to overcome semi-auto errors)**/
+	public void actionSemiTraceStraightLine()
+	{
+		if(!bInputLock)
+		{
+			if(bTraceMode)
+			{
+				//make a straight line
+				RealPoint target = new RealPoint(3);							
+				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+				{								
+					roiManager.addSegment(target, 
+							VolumeMisc.BresenhamWrap(roiManager.getLastTracePoint(),target));
+					btdata.nPointsInTraceBox++;
+				}
+			}
+		}
+	}
+	public void installActions()
+	{
+		final Actions actions = new Actions( new InputTriggerConfig() );
+		actions.runnableAction(() -> actionAddPoint(),	            "add point", "F" );
+		actions.runnableAction(() -> actionRemovePoint(),       	"remove point",	"G" );
+		actions.runnableAction(() -> actionDeselect(),	            "deselect", "H" );
+		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );
+		actions.runnableAction(() -> actionMoveTraceBox(),          "move trace box", "T" );
+		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
+						
 		actions.runnableAction(
 				() -> {
 					resetViewXY(false);
