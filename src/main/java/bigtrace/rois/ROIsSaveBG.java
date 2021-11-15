@@ -30,6 +30,8 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
 	protected Void doInBackground() throws Exception {
 		int nRoi, nRoiN;		
 
+		bt.bInputLock = true;
+    	bt.roiManager.setLockMode(true);
         try {
 			final File file = new File(sFilename);
 			setProgressState("saving ROIs...");
@@ -65,5 +67,6 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
     {
 		//unlock user interaction
     	bt.bInputLock = false;
+    	bt.roiManager.setLockMode(false);
     }
 }

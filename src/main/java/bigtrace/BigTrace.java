@@ -102,7 +102,9 @@ public class BigTrace
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
 		
-		btdata.sFileNameImg = "/home/eugene/workspace/ExM_MT.tif";
+		btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/ExM_MT.tif";
+		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
+		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
 		img = SimplifiedIO.openImage(btdata.sFileNameImg, new UnsignedByteType());
 		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest_horz.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
@@ -177,7 +179,7 @@ public class BigTrace
 				 Views.interval( imgx, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
 		
 						
-		bvv = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(btdata.dCam).dClipNear(btdata.dClipNear).dClipFar(btdata.dClipFar));	
+		bvv = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(btdata.dCam).dClipNear(btdata.dClipNear).dClipFar(btdata.dClipFar).renderWidth( 800).renderHeight( 800 ));	
 		bvv.setActive(false);
 		panel=bvv.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();

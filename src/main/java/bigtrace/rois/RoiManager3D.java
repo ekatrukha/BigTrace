@@ -263,7 +263,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 }
 
 	 
-	 public void addRoi(Roi3D roi_in)
+	 public synchronized void addRoi(Roi3D roi_in)
 	 {
 		 rois.add(roi_in);		 
 		 listModel.addElement(roi_in.getName());
@@ -735,35 +735,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         	return;
         filename = path+sd.getFileName();
         bt.bInputLock = true;
-        this.setLockMode(true);
+        //this.setLockMode(true);
         ROIsSaveBG saveTask = new ROIsSaveBG();
         saveTask.sFilename=filename;
         saveTask.bt=this.bt;
         saveTask.addPropertyChangeListener(bt.btpanel);
         saveTask.execute();
-        this.setLockMode(false);
+        //this.setLockMode(false);
 	}
 	/** Save ROIS dialog and saving **/
 	public void diagLoadROIs()
 	{
 		String filename;
-		String[] line_array;
-        int bFirstPartCheck = 0;
-        int nRoiN=0;
-        int nVertN=0;
-        int i,j;
-        
-        ArrayList<RealPoint> vertices;
-        ArrayList<RealPoint> segment;
-        
-        float pointSize=0.0f;
-        float lineThickness =0.0f;
-        Color pointColor = Color.BLACK;
-        Color lineColor = Color.BLACK;
-        String sName = "";
-        int nRoiType = Roi3D.POINT;
-        int nRenderType = 0;
-        int nSectorN = 16;
+
         //Roi3D roiIn;
         
 		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs","", "*.csv");
@@ -775,160 +759,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         filename = path+openDial.getFileName();
         
         bt.bInputLock = true;
-        this.setLockMode(true);
-
-
-		try {
-			
-	        BufferedReader br = new BufferedReader(new FileReader(filename));
-	        int nLineN = 0;
-
-	        String line;
-
-			while ((line = br.readLine()) != null) 
-				{
-				   // process the line.
-				  line_array = line.split(",");
-				  nLineN++;
-				  //first line check
-				  if(line_array.length==3 && nLineN==1)
-			      {
-					  bFirstPartCheck++;
-					  if(line_array[0].equals("BigTrace_ROIs")&& line_array[2].equals(bt.btdata.sVersion))
-					  {
-						  bFirstPartCheck++; 
-					  }					  
-			      }
-				  //second line check
-				  if(line_array.length==2 && nLineN==2)
-			      {
-					  bFirstPartCheck++;
-					  if(line_array[0].equals("ROIsNumber"))
-					  {
-						  bFirstPartCheck++;
-						  nRoiN=Integer.parseInt(line_array[1]);
-					  }
-			      }				  
-				  if(line_array[0].equals("BT_Roi"))
-				  {
-
-				  }
-				  if(line_array[0].equals("Type"))
-				  {						  
-					  nRoiType = Roi3D.stringTypeToInt(line_array[1]);
-				  }
-				  if(line_array[0].equals("Name"))
-				  {						  
-					  sName = line_array[1];
-				  }
-				  if(line_array[0].equals("PointSize"))
-				  {						  
-					  pointSize = Float.parseFloat(line_array[1]);
-				  }
-				  if(line_array[0].equals("LineThickness"))
-				  {						  
-					  lineThickness = Float.parseFloat(line_array[1]);
-				  }
-				  if(line_array[0].equals("PointColor"))
-				  {						  
-					  pointColor = new Color(Integer.parseInt(line_array[1]),
-							  				 Integer.parseInt(line_array[2]),
-							  				 Integer.parseInt(line_array[3]),
-							  				 Integer.parseInt(line_array[4]));
-				  }
-				  if(line_array[0].equals("LineColor"))
-				  {						  
-					  lineColor = new Color(Integer.parseInt(line_array[1]),
-							  				 Integer.parseInt(line_array[2]),
-							  				 Integer.parseInt(line_array[3]),
-							  				 Integer.parseInt(line_array[4]));
-				  }
-				  if(line_array[0].equals("RenderType"))
-				  {						  
-					  nRenderType = Integer.parseInt(line_array[1]);
-				  }
-				  if(line_array[0].equals("SectorN"))
-				  {						  
-					  nSectorN = Integer.parseInt(line_array[1]);
-				  }
-				  if(line_array[0].equals("Vertices"))
-				  {						  
-					  nVertN = Integer.parseInt(line_array[1]);
-					  vertices =new ArrayList<RealPoint>(); 
-					  for(i=0;i<nVertN;i++)
-					  {
-						  line = br.readLine();
-						  line_array = line.split(",");
-						  vertices.add(new RealPoint(Float.parseFloat(line_array[0]),
-								  					 Float.parseFloat(line_array[1]),
-								  					 Float.parseFloat(line_array[2])));
-					  }
-					  
-					  switch (nRoiType)
-					  {
-					  case Roi3D.POINT:
-						  Point3D roiP = new Point3D(pointSize,pointColor);
-						  roiP.setName(sName);
-						  roiP.setVertex(vertices.get(0));
-						  this.addRoi(roiP);
-					  	  break;
-					  case Roi3D.POLYLINE:
-						  PolyLine3D roiPL = new PolyLine3D(lineThickness,pointSize,lineColor,pointColor,nRenderType,nSectorN);
-						  roiPL.setName(sName);
-						  roiPL.setVertices(vertices);
-						  this.addRoi(roiPL);
-						  break;
-					  case Roi3D.LINE_TRACE:
-						  LineTrace3D roiLT = new LineTrace3D(lineThickness,pointSize,lineColor,pointColor,nRenderType,nSectorN);
-						  roiLT.setName(sName);
-						  roiLT.addFirstPoint(vertices.get(0));
-						  //segments number
-						  line = br.readLine();
-						  line_array = line.split(",");
-						  int nTotSegm = Integer.parseInt(line_array[1]);
-						  for (i=0;i<nTotSegm;i++)
-						  {
-							  //points number
-							  line = br.readLine();
-							  line_array = line.split(",");  
-							  nVertN = Integer.parseInt(line_array[3]);
-							  segment =new ArrayList<RealPoint>(); 
-							  for(j=0;j<nVertN;j++)
-							  {
-								  line = br.readLine();
-								  line_array = line.split(",");
-								  segment.add(new RealPoint(Float.parseFloat(line_array[0]),
-										  					 Float.parseFloat(line_array[1]),
-										  					 Float.parseFloat(line_array[2])));
-							  }
-							  roiLT.addPointAndSegment(vertices.get(i+1),segment); 
-						  }
-						  this.addRoi(roiLT);
-						  break;
-						  
-					  }
-					  
-				  }
-				  
-				}
-
-	        br.close();
-		}
-		//catching errors in file opening
-		catch (FileNotFoundException e) {
-			IJ.error(""+e);
-		}	        
-		catch (IOException e) {
-			IJ.error(""+e);
-		}
-        
-		//some error reading the file
-        if(bFirstPartCheck!=4)
-        {
-        	 System.err.println("Not a Bigtrace ROI file format or plugin/version mismatch, loading ROIs aborted.");
-        }
-        bt.bInputLock = false;
-        this.setLockMode(false);
+        //this.setLockMode(true);
+        ROIsLoadBG loadTask = new ROIsLoadBG();
+        loadTask.sFilename=filename;
+        loadTask.bt=this.bt;
+        loadTask.addPropertyChangeListener(bt.btpanel);
+        loadTask.execute();
+        //this.setLockMode(false);
         
 	}
 		
