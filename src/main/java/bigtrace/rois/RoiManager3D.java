@@ -13,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
@@ -104,12 +105,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 
 		 
 		 this.bt = bt;
+		 /*
 		 try {
 		     UIManager.setLookAndFeel( new FlatIntelliJLaf() );
 		 } catch( Exception ex ) {
 		     System.err.println( "Failed to initialize LaF" );
 		 }
-		
+		*/
 		 int nButtonSize = 40;
 
 		 JPanel panTracing = new JPanel(new GridBagLayout());  
@@ -119,21 +121,24 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 
 		// UIManager.put("ToggleButton.select", Color.WHITE);
 		 ClassLoader classLoader = getClass().getClassLoader();
-	     String icon_path = classLoader.getResource("icons/dot.png").getFile();
+		 URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
 		 ImageIcon tabIcon = new ImageIcon(icon_path);
 		 roiPointMode = new JToggleButton(tabIcon);
 		 roiPointMode .setToolTipText("Trace single point");
 		 roiPointMode.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		 //roiPointMode.setSelected(true);
 			 
-	     icon_path = classLoader.getResource("icons/polyline.png").getFile();
+	     //icon_path = classLoader.getResource("icons/polyline.png").getFile();
+		 icon_path =bigtrace.BigTrace.class.getResource("/icons/polyline.png");
+		 //icon_path = RoiManager3D.class.getResource("/polyline.png").getFile();
+		 //icon_path = RoiManager3D.class.getResource("icons/polyline.png").getFile();
 		 tabIcon = new ImageIcon(icon_path);
 		 roiPolyLineMode = new JToggleButton(tabIcon);
 		 roiPolyLineMode.setToolTipText("Trace polyline");
 		 roiPolyLineMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 		 roiPolyLineMode.setSelected(true);
 	     
-		 icon_path = classLoader.getResource("icons/semiauto.png").getFile();
+		 icon_path = bigtrace.BigTrace.class.getResource("/icons/semiauto.png");
 		 tabIcon = new ImageIcon(icon_path);
 		 roiPolySemiAMode = new JToggleButton(tabIcon);
 		 roiPolySemiAMode.setToolTipText("Semi auto trace");

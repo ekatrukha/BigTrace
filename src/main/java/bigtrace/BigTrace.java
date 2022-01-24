@@ -4,11 +4,13 @@ package bigtrace;
 
 
 import java.awt.Color;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import org.joml.Matrix4f;
@@ -25,7 +27,6 @@ import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.TraceBoxMath;
-import bigtrace.procedural.Procedural3DImageByte;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
@@ -34,30 +35,34 @@ import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
 
 import bvv.util.BvvStackSource;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.plugin.PlugIn;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
 
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
-import net.imglib2.view.RandomAccessibleOnRealRandomAccessible;
 import net.imglib2.view.Views;
-import sc.fiji.simplifiedio.SimplifiedIO;
+//import sc.fiji.simplifiedio.SimplifiedIO;
 import tpietzsch.example2.RenderData;
 import tpietzsch.example2.VolumeViewerFrame;
 import tpietzsch.example2.VolumeViewerPanel;
 import tpietzsch.util.MatrixMath;
 
 
-public class BigTrace
+public class BigTrace implements PlugIn
 {
 	public  BvvStackSource< UnsignedByteType > bvv;
 	public  BvvStackSource< UnsignedByteType > bvv2;
@@ -94,18 +99,27 @@ public class BigTrace
 
 	public RoiManager3D roiManager;
 		
-	public void runBVV()
+	public void run(String arg)
 	{
 		
 		
 		//img = SimplifiedIO.openImage(
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
+		btdata.sFileNameImg=IJ.getFilePath("Open ONI results table");
+		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/ExM_MT.tif";
+		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/test_actin_crop.tif";
+		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
+		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
 		
-		btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/ExM_MT.tif";
-		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
-		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
-		img = SimplifiedIO.openImage(btdata.sFileNameImg, new UnsignedByteType());
+		final ImagePlus imp = IJ.openImage( btdata.sFileNameImg );
+		img = ImageJFunctions.wrapByte( imp );
+		/*
+		ImgOpener io = new ImgOpener();
+		
+		img = io.openImgs( btdata.sFileNameImg,
+			new UnsignedByteType() ).get( 0 );*/
+		//img = SimplifiedIO.openImage(btdata.sFileNameImg, new UnsignedByteType());
 		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest_horz.tif", new UnsignedByteType());
 		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
 		//img = ImageJFunctions.wrapByte( imp );
@@ -123,12 +137,19 @@ public class BigTrace
 		roiManager = new RoiManager3D(this);
 		init(0.25*Math.min(btdata.nDimIni[1][2], Math.min(btdata.nDimIni[1][0],btdata.nDimIni[1][1])));
 		
+		
+		
+/*		
+		//FlatIntelliJLaf.setup();
+	
+		
+		
 		try {
 		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
 		} catch( Exception ex ) {
 		    System.err.println( "Failed to initialize LaF" );
 		}
-		
+		*/
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI();
@@ -994,12 +1015,19 @@ public class BigTrace
 	}
 	
 
-	public static void main( String... args) throws IOException
+	public static void main( String... args) throws Exception
 	{
 		
+		/*
+		Class<?> clazz = BigTrace.class;
+		java.net.URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
+		java.io.File file = new java.io.File(url.toURI());
+		System.setProperty("plugins.dir", file.getAbsolutePath());
+		
+		new ImageJ();*/
 		BigTrace testI=new BigTrace(); 
 		
-		testI.runBVV();
+		testI.run("Yay");
 		
 		
 	}

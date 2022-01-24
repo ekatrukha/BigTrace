@@ -10,6 +10,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.net.URL;
 
 import javax.swing.ImageIcon;
 
@@ -80,6 +81,11 @@ public class BigTraceControlPanel extends JPanel
 				{
 					btdata.nDimCurr[0]=new long[] { bbx0, bby0, bbz0 };
 					btdata.nDimCurr[1]=new long[] { bbx1, bby1, bbz1 };
+					System.out.println("min ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMin()));
+					System.out.println("max ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMax()));
+					double intMin = btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMin();
+					double intMax = btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMax();
+					//System.out.println("max ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMax()));
 					
 					btrace.bvv2.removeFromBdv();
 					
@@ -87,7 +93,10 @@ public class BigTraceControlPanel extends JPanel
 					
 					btrace.currentView=Views.interval( btrace.img, btdata.nDimCurr[0], btdata.nDimCurr[1] );
 					
-					btrace.bvv2 = BvvFunctions.show( btrace.currentView, "cropresize", Bvv.options().addTo(btrace.bvv));									
+					btrace.bvv2 = BvvFunctions.show( btrace.currentView, "cropresize", Bvv.options().addTo(btrace.bvv));
+					//btrace.bvv.getConverterSetups().get(1).setDisplayRange(intMin, intMax);
+					//btrace.bvv2.getConverterSetups().get(0).setDisplayRange(intMin, intMax);
+					btrace.bvv2.setDisplayRange(intMin, intMax);
 				}
 			}
 		
@@ -108,7 +117,7 @@ public class BigTraceControlPanel extends JPanel
 		panView.setBorder(new PanelTitle(" View "));
 		
 		
-		String icon_path = classLoader.getResource("icons/orig.png").getFile();
+		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/orig.png");
 	    ImageIcon tabIcon = new ImageIcon(icon_path);
 	    JToggleButton butOrigin = new JToggleButton(tabIcon);
 	    butOrigin.setSelected(btdata.bShowOrigin);
@@ -131,7 +140,7 @@ public class BigTraceControlPanel extends JPanel
 		panView.add(butOrigin,c);
 		
 		
-		icon_path = classLoader.getResource("icons/boxvolume.png").getFile();
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/boxvolume.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    JToggleButton butVBox = new JToggleButton(tabIcon);
 	    butVBox.setSelected(btdata.bVolumeBox);
@@ -152,7 +161,7 @@ public class BigTraceControlPanel extends JPanel
 	    c.gridx++;
 	    
 		panView.add(butVBox,c);
-		icon_path = classLoader.getResource("icons/worldgrid.png").getFile();
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/worldgrid.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    JToggleButton butWorld = new JToggleButton(tabIcon);
 	    butWorld.setSelected(btdata.bShowWorldGrid);
@@ -180,7 +189,7 @@ public class BigTraceControlPanel extends JPanel
 		JPanel panCrop=new JPanel(new GridBagLayout()); 
 		panCrop.setBorder(new PanelTitle(" Cropping "));
 
-        icon_path = classLoader.getResource("icons/cube_icon.png").getFile();
+        icon_path = bigtrace.BigTrace.class.getResource("/icons/cube_icon.png");
 	    tabIcon = new ImageIcon(icon_path);
 
 	    c.gridx=0;
@@ -214,7 +223,7 @@ public class BigTraceControlPanel extends JPanel
 	    tabPane.addTab("",tabIcon,panNavigation, "View/Crop");
 
 	    //ROI MANAGER
-	    icon_path = classLoader.getResource("icons/node.png").getFile();
+	    icon_path = bigtrace.BigTrace.class.getResource("/icons/node.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    tabPane.addTab("",tabIcon ,roiManager,"Tracing");
 

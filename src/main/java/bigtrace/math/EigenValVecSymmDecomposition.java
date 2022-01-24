@@ -305,6 +305,8 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
        // Diagonalize.
        tql2();
        
+       ////////////////////////////////////////////////
+       
        // organize output
        // find the smallest absolute eigenvalue
        // and store corresponding vector
@@ -347,6 +349,7 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
     	   weight.setZero();
        }
        
+       ////////////////////////////////////////
    }
    public void computeCorners( RealComposite< T > tensor,  T corner)
    {

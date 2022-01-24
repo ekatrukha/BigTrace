@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>30.0.0</version>
+		<version>31.1.0</version>
 		<relativePath />
 	</parent>
 
@@ -48,10 +48,13 @@
 		<contributor>
 			<name>TODO</name>
 		</contributor>
-	</contributors>
-
-	
-
+	</contributors>	
+	<mailingLists>
+		<mailingList>
+			<name>Image.sc Forum</name>
+			<archive>https://forum.image.sc/tags/imglib2</archive>
+		</mailingList>
+	</mailingLists>
 
     <scm>
         <connection>scm:git:git://github.com/ekatrukha/bigtrace</connection>
@@ -61,7 +64,7 @@
     </scm>
     <issueManagement>
         <system>GitHub</system>
-        <url>http://ggithub.com/ekatrukha/bigtrace/issues</url>
+        <url>http://github.com/ekatrukha/bigtrace/issues</url>
     </issueManagement>
     <ciManagement>
         <system>None</system>
@@ -74,10 +77,6 @@
 
 		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
-		<ST4.version>4.0.8</ST4.version>
-
-		<!-- NB: Deploy releases to the SciJava Maven repository. -->
-		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 	</properties>
 
 	<repositories>
@@ -91,22 +90,19 @@
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
-			<version>1.5</version>
+			<version>2.0</version>
 		</dependency>
 		<dependency>
   		<groupId>com.formdev</groupId>
   			<artifactId>flatlaf-jide-oss</artifactId>
-  			<version>1.5</version>
+  			<version>2.0</version>
 		</dependency>
 		<dependency> 
     		<groupId>com.formdev</groupId> 
     		<artifactId>jide-oss</artifactId> 
     		<version>3.7.12</version>
   		</dependency> 
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-		</dependency>
+
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
@@ -127,34 +123,14 @@
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-realtransform</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.antlr</groupId>
-			<artifactId>ST4</artifactId>
-			<version>${ST4.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>simplified-io</artifactId>
-			<version>1.0.1</version>
-		</dependency>
+
+
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigvolumeviewer</artifactId>
 			<version>0.2.0</version>
 		</dependency>
-		<dependency>
-			<!-- only used for linear programming, get rid of this, we only need something extremely simple -->
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-math3</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jdom</groupId>
-			<artifactId>jdom2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jogamp.gluegen</groupId>
-			<artifactId>gluegen-rt-main</artifactId>
-		</dependency>
+
 		<dependency>
 			<groupId>org.jogamp.jogl</groupId>
 			<artifactId>jogl-all-main</artifactId>
@@ -163,14 +139,8 @@
 			<groupId>org.joml</groupId>
 			<artifactId>joml</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>ui-behaviour</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>scijava-common</artifactId>
-		</dependency>
+
+
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>
@@ -183,7 +153,7 @@
 			<groupId>sc.fiji</groupId>
 			<artifactId>spim_data</artifactId>
 		</dependency>
-				<dependency>
+		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
 		</dependency>
@@ -191,7 +161,10 @@
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-legacy</artifactId>
 		</dependency>
-
+		<dependency>
+        	<groupId>sc.fiji</groupId>
+        	<artifactId>fiji-lib</artifactId>
+        </dependency>
 	
 	</dependencies>
 </project>
