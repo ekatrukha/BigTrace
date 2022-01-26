@@ -311,7 +311,16 @@ public class BigTraceControlPanel extends JPanel
 	        if ("progress" == evt.getPropertyName()) 
 	        {
 	            int progress = (Integer) evt.getNewValue();
-	            progressBar.setValue(progress);
+	            if (progress == 0) 
+	            {
+	            	progressBar.setIndeterminate(true);
+	            }
+	            else
+	            {
+	            	progressBar.setIndeterminate(false);
+	            	progressBar.setValue(progress);
+	            }
+	            
 	            if(evt.getSource() instanceof bigtrace.BigTraceBGWorker)
 	            {
 	            	progressBar.setString(((bigtrace.BigTraceBGWorker)(evt.getSource())).getProgressState());

@@ -61,12 +61,12 @@ public class BigTraceData {
 	public int nTraceBoxView = 1;
 	
 	/** half size of tracing box (for now in all dimensions) **/
-	long lTraceBoxSize = 50;
+	long lTraceBoxSize = 100;
 	
 	/** How much the tracebox will follow the last direction of trace:
 	 * in the range [0..1], 0 = no following (center), 1 = previous point is at the edge of the box**/
 	float fTraceBoxShift = 0.9f;
 	/** current number of vertices in the tracebox **/
-	int nPointsInTraceBox=0;
+	public int nPointsInTraceBox=0;
 
 }

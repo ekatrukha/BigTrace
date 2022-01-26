@@ -27,6 +27,7 @@ import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.TraceBoxMath;
+import bigtrace.math.TracingBG;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
@@ -49,8 +50,6 @@ import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
@@ -92,8 +91,8 @@ public class BigTrace implements PlugIn
 	public BigTraceData btdata = new BigTraceData();
 	public BigTraceControlPanel btpanel;
 	
-	DijkstraFHRestricted dijkRBegin;
-	DijkstraFHRestricted dijkREnd;
+	public DijkstraFHRestricted dijkRBegin;
+	public DijkstraFHRestricted dijkREnd;
 	//DijkstraBinaryHeap dijkBH;
 	//DijkstraFibonacciHeap dijkFib;
 
@@ -139,7 +138,7 @@ public class BigTrace implements PlugIn
 		
 		
 		
-/*		
+		
 		//FlatIntelliJLaf.setup();
 	
 		
@@ -149,7 +148,7 @@ public class BigTrace implements PlugIn
 		} catch( Exception ex ) {
 		    System.err.println( "Failed to initialize LaF" );
 		}
-		*/
+		
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI();
@@ -286,13 +285,9 @@ public class BigTrace implements PlugIn
 			{
 				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
 				{
-					ArrayList<RealPoint> trace = getSemiAutoTrace(target);							
-					if(trace.size()>1)
-					{
-						roiManager.addSegment(target, trace);
-						btdata.nPointsInTraceBox++;
-						System.out.print("next trace!");
-					}
+					//run trace finding in a separate thread
+					getSemiAutoTrace(target);
+
 				}						
 			}
 		}
@@ -486,81 +481,17 @@ public class BigTrace implements PlugIn
 	}
 
 	
-	public ArrayList<RealPoint> getSemiAutoTrace(RealPoint target)
+	//public ArrayList<RealPoint> getSemiAutoTrace(RealPoint target)
+	public void getSemiAutoTrace(RealPoint target)
 	{
-		ArrayList<RealPoint> trace = new ArrayList<RealPoint>(); 
-		long start1, end1;
-		boolean found_path_end;
 		
-		start1 = System.currentTimeMillis();
-		//init Dijkstra from initial click point
-		dijkRBegin = new DijkstraFHRestricted(btdata.trace_weights);
-		found_path_end = dijkRBegin.calcCostTwoPoints(roiManager.getLastTracePoint(),target);
-		end1 = System.currentTimeMillis();
-		System.out.println("Dijkstra Restr search BEGIN: elapsed Time in milli seconds: "+ (end1-start1));
-
-		//showCorners(dijkRBegin.exploredCorners(jump_points));
-		//both points in the connected area
-		if (found_path_end)
-		{
-			dijkRBegin.getTrace(target, trace);
-			return trace;
-		}
-		//need to find shortcut through jumping points
-		else
-		{
-			//showCorners(jump_points);
-			// get corners in the beginning
-			ArrayList<long []> begCorners = dijkRBegin.exploredCorners(btdata.jump_points);
-			start1 = System.currentTimeMillis();
-			dijkREnd = new DijkstraFHRestricted(btdata.trace_weights);
-			dijkREnd.calcCost(target);
-			end1 = System.currentTimeMillis();
-			System.out.println("Dijkstra Restr search END: elapsed Time in milli seconds: "+ (end1-start1));
-			ArrayList<long []> endCorners = dijkREnd.exploredCorners(btdata.jump_points);
-			//there are corners (jump points) in the trace area
-			// let's construct the path
-			if(begCorners.size()>0 && endCorners.size()>0)
-			{
-				//find a closest pair of corners
-				ArrayList<long []> pair = VolumeMisc.findClosestPoints(begCorners,endCorners);
-				RealPoint pB = new RealPoint(3);
-				RealPoint pE = new RealPoint(3);
-				pB.setPosition(pair.get(0));
-				pE.setPosition(pair.get(1));
-				ArrayList<RealPoint> traceB = new ArrayList<RealPoint> (); 
-				dijkRBegin.getTrace(pB, traceB);
-				ArrayList<RealPoint> traceE = new ArrayList<RealPoint> ();
-				ArrayList<RealPoint> traceM = new ArrayList<RealPoint> ();
-				dijkREnd.getTrace(pE, traceE);
-				int i;
-				//connect traces
-				for(i=0;i<traceB.size();i++)
-				{
-					trace.add(traceB.get(i));
-				}
-				//3D bresenham connecting jumping points here
-				traceM=VolumeMisc.BresenhamWrap(traceB.get(traceB.size()-1),
-												traceE.get(traceE.size()-1));
-				for(i=1;i<traceM.size()-1 ;i++)	
-				{
-					trace.add(traceM.get(i));
-				}				
-				for(i=traceE.size()-1;i>=0 ;i--)				
-				{
-					trace.add(traceE.get(i));
-				}
-
-			}
-			//no corners, just do a straight line
-			else
-			{
-				//3D bresenham here
-				trace=VolumeMisc.BresenhamWrap(roiManager.getLastTracePoint(),target);
-			}
-			return trace;
-		}
-		
+		bInputLock = true;
+		TracingBG traceBG = new TracingBG();
+		traceBG.target = target;
+		traceBG.bt=this;
+		traceBG.addPropertyChangeListener(btpanel);
+		traceBG.execute();
+		return ;
 		
 	}
 

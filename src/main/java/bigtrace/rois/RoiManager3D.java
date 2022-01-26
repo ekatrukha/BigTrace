@@ -105,13 +105,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 
 		 
 		 this.bt = bt;
-		 /*
+		 
 		 try {
 		     UIManager.setLookAndFeel( new FlatIntelliJLaf() );
 		 } catch( Exception ex ) {
 		     System.err.println( "Failed to initialize LaF" );
 		 }
-		*/
+		
 		 int nButtonSize = 40;
 
 		 JPanel panTracing = new JPanel(new GridBagLayout());  
