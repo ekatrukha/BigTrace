@@ -73,7 +73,7 @@ public class BigTrace implements PlugIn, WindowListener
 	
 	Img< UnsignedByteType> img;
 
-	JFrame finFrame;
+	public JFrame finFrame;
 	VolumeViewerPanel panel;
 
 	public boolean bInputLock = false;
@@ -108,7 +108,8 @@ public class BigTrace implements PlugIn, WindowListener
 		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/test_actin_crop.tif";
 		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
 		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
-		
+		if(btdata.sFileNameImg==null)
+			return;
 		final ImagePlus imp = IJ.openImage( btdata.sFileNameImg );
 		img = ImageJFunctions.wrapByte( imp );
 		/*
@@ -562,23 +563,28 @@ public class BigTrace implements PlugIn, WindowListener
 	public void showTraceBox(IntervalView<UnsignedByteType> weights)
 	{
 
-	
+		// there is a trace box already, let's remove it
 		if(bvv_trace!=null)
 		{
 			bvv_trace.removeFromBdv();
 			System.gc();
 		}
+		//there is no tracebox, let's dim the main volume first
+		else
+		{
+			if(btdata.nTraceBoxView==1)
+			{
+				//bvv2.setActive(false);
+				btdata.bBrightnessRange[0]=bvv2.getConverterSetups().get(0).getDisplayRangeMin();
+				btdata.bBrightnessRange[1]=bvv2.getConverterSetups().get(0).getDisplayRangeMax();
+				bvv2.getConverterSetups().get(0).setDisplayRange(0.0, 0.0);
+			}
+			
+		}
 		bvv_trace = BvvFunctions.show(weights, "weights", Bvv.options().addTo(bvv));
 		bvv_trace.setCurrent();
 		bvv_trace.setDisplayRange(0., 150.0);
 		//handl.setDisplayMode(DisplayMode.SINGLE);
-		if(btdata.nTraceBoxView==1)
-		{
-			//bvv2.setActive(false);
-			btdata.bBrightnessRange[0]=bvv2.getConverterSetups().get(0).getDisplayRangeMin();
-			btdata.bBrightnessRange[1]=bvv2.getConverterSetups().get(0).getDisplayRangeMax();
-			bvv2.getConverterSetups().get(0).setDisplayRange(0.0, 0.0);
-		}
 	}
 	
 	/** removes tracebox from BVV **/
@@ -994,9 +1000,7 @@ public class BigTrace implements PlugIn, WindowListener
 	@Override
 	public void windowClosing(WindowEvent arg0) {
 		// TODO Auto-generated method stub
-		//System.out.println("yay2");
-		btpanel.bvv_frame.dispose();
-		finFrame.dispose();
+		closeWindows();
 	}
 
 	@Override
@@ -1024,7 +1028,11 @@ public class BigTrace implements PlugIn, WindowListener
 	}
 
 	
-
+	public void closeWindows()
+	{
+		btpanel.bvv_frame.dispose();
+		finFrame.dispose();
+	}
 
 	
 

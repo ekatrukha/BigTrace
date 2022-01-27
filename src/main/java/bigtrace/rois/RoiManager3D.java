@@ -7,6 +7,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -15,14 +16,17 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -31,10 +35,12 @@ import org.joml.Matrix4fc;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
+import bdv.tools.brightness.ColorIcon;
 import bigtrace.BigTrace;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.scene.VisPolyLineScaled;
+import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import net.imglib2.RealPoint;
@@ -43,23 +49,22 @@ import net.imglib2.RealPoint;
 
 public class RoiManager3D extends JPanel implements ListSelectionListener, ActionListener {
 	
-	 
-	
-	 
+
 	 BigTrace bt;
 
 	 private static final long serialVersionUID = -2843907862066423151L;
 	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2;
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
 	 public int activeRoi = -1;
+	 
 	 public Color activePointColor = Color.YELLOW;
 	 public Color defaultPointColor = Color.GREEN;
 	 public Color activeLineColor = Color.RED;
 	 public Color defaultLineColor = Color.BLUE;
-	/* public Color activeLineColor = Color.WHITE;
-	 public Color nonActiveLineColor = Color.WHITE;
-	 public Color activePointColor = Color.WHITE;
-	 public Color nonActivePointColor = Color.WHITE;*/
+	 
+	 public Color newLineColor = null;
+	 public Color newPointColor = null;
+
 	 public int mode;
 	 public float currLineThickness = 4.0f;
 	 public float currPointSize = 6.0f;
@@ -86,6 +91,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JToggleButton roiPointMode;
 	 JToggleButton roiPolyLineMode;
 	 JToggleButton roiPolySemiAMode;
+	 JButton roiSettings;
 	 
 	 
 	 private ArrayList<Listener> listeners =	new ArrayList<Listener>();
@@ -133,7 +139,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 roiPolySemiAMode = new JToggleButton(tabIcon);
 		 roiPolySemiAMode.setToolTipText("Semi auto trace");
 		 roiPolySemiAMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 //roiPolySemiAMode.setSelected(true);		 
+		 //roiPolySemiAMode.setSelected(true);	
+		 
+		 icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
+		 tabIcon = new ImageIcon(icon_path);
+		 roiSettings = new JButton(tabIcon);
+		 roiSettings.setToolTipText("Settings");
+		 roiSettings.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 
 		 //button group	 
 		 roiTraceMode.add(roiPointMode);
@@ -143,6 +155,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 roiPointMode.addActionListener(this);
 		 roiPolyLineMode.addActionListener(this);
 		 roiPolySemiAMode.addActionListener(this);
+		 roiSettings.addActionListener(this);
 		 //add to the panel
 		 GridBagConstraints ct = new GridBagConstraints();
 		 ct.gridx=0;
@@ -152,11 +165,20 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 panTracing.add(roiPolyLineMode,ct);
 		 ct.gridx++;
 		 panTracing.add(roiPolySemiAMode,ct);
-		 //filler
 		 ct.gridx++;
+		 JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
+		 sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
+		 panTracing.add(sp,ct);
+		 ct.gridx++;
+		 //panTracing.add(roiSettings,ct);
+		 //filler
+		 //ct.gridx++;
 		 ct.weightx = 0.01;
 		 panTracing.add(new JLabel(), ct);
+		 ct.gridx++;
+		 panTracing.add(roiSettings,ct);
 
+		
 
 		 ///RoiLIST and buttons
 		 mode = RoiManager3D.ADD_POINT_LINE;
@@ -475,13 +497,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 	 boolean bState = !bLockMode;
 			 roiPointMode.setEnabled(bState);
 			 roiPolyLineMode.setEnabled(bState);
+			 roiSettings.setEnabled(bState);
 			 butDelete.setEnabled(bState);
 			 butRename.setEnabled(bState);
 			 butDeselect.setEnabled(bState);
 			 butProperties.setEnabled(bState);
 			 butSaveROIs.setEnabled(bState);
 			 butLoadROIs.setEnabled(bState);
-			 listScroller.setEnabled(bState);
+			 listScroller.setEnabled(bState);			 
 			 jlist.setEnabled(bState);
 
 	 }
@@ -543,18 +566,32 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		//TRACING TYPE
 		if(e.getSource() == roiPointMode)
 		{
-			this.mode = RoiManager3D.ADD_POINT;
-			unselect();
+			if(this.mode != RoiManager3D.ADD_POINT)
+			{
+				this.mode = RoiManager3D.ADD_POINT;
+				unselect();
+			}
 		}
 		if(e.getSource() == roiPolyLineMode)
 		{
-			this.mode = RoiManager3D.ADD_POINT_LINE;
-			unselect();
+			if(this.mode != RoiManager3D.ADD_POINT_LINE)
+			{
+				this.mode = RoiManager3D.ADD_POINT_LINE;
+				unselect();
+			}
 		}
 		if(e.getSource() == roiPolySemiAMode)
 		{
-			this.mode = RoiManager3D.ADD_POINT_SEMIAUTOLINE;
-			unselect();
+			if(this.mode != RoiManager3D.ADD_POINT_SEMIAUTOLINE)
+			{
+				this.mode = RoiManager3D.ADD_POINT_SEMIAUTOLINE;
+				unselect();
+			}
+		}
+		//SETTINGS
+		if(e.getSource() == roiSettings)
+		{
+			dialSettings();
 		}
 		
 		//SHOW ALL BUTTON
@@ -629,6 +666,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			{
 				dialProperties();
 			}
+			
 
 		}
 
@@ -636,11 +674,22 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	}
 	
 	/** show ROI Properties dialog**/
-	public void dialProperties()
+	public void dialSettings()
 	{
-		JPanel dialProperties = new JPanel(new GridBagLayout());
+		JPanel dialRoiSet = new JPanel(new GridBagLayout());
 		GridBagConstraints cd = new GridBagConstraints();
-		NumberField nfPointSize = new NumberField(4);
+		NumberField nfTraceBoxSize = new NumberField(4);
+		//nTraceBoxSize.setText(Integer.toString((int)(2.0*Prefs.get("BigTrace.lTraceBoxSize", 50))));
+		//nfTraceBoxSize.setText(Integer.toString((int)(2.0*Prefs.get("BigTrace.lTraceBoxSize", 50))));
+		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btdata.lTraceBoxSize)));
+		
+		cd.gridx=0;
+		cd.gridy=0;
+		//cd.anchor=GridBagConstraints.WEST;
+		dialRoiSet.add(new JLabel("Trace box size (px): "),cd);
+		cd.gridx++;
+		dialRoiSet.add(nfTraceBoxSize,cd);
+		/*
 		NumberField nfLineThickness = new NumberField(4);
 		NumberField nfOpacity = new NumberField(4);
 		String[] sRenderType = { "Center line", "Wire", "Surface" };
@@ -680,11 +729,15 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			cd.gridx++;
 			dialProperties.add(renderTypeList,cd);
 		}
-		
-		int reply = JOptionPane.showConfirmDialog(null, dialProperties, "ROI Properties", 
+		*/
+		int reply = JOptionPane.showConfirmDialog(null, dialRoiSet, "ROI Manager Settings", 
 		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (reply == JOptionPane.OK_OPTION) 
 		{
+			
+			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
+			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
+			/*
 			//point size 
 			rois.get(activeRoi).setPointSize(Float.parseFloat(nfPointSize.getText()));
 			//opacity
@@ -712,6 +765,144 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				
 				//if both are changed, we rebuild mesh twice
 				//possibly optimize it in the future
+			}
+			
+			fireActiveRoiChanged(activeRoi); 
+			*/
+		}
+	}
+	
+	
+	/** show ROI Properties dialog**/
+	public void dialProperties()
+	{
+		JPanel dialProperties = new JPanel(new GridBagLayout());
+		GridBagConstraints cd = new GridBagConstraints();
+		NumberField nfPointSize = new NumberField(4);
+		NumberField nfLineThickness = new NumberField(4);
+		NumberField nfOpacity = new NumberField(4);
+
+		String[] sRenderType = { "Center line", "Wire", "Surface" };
+		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
+		nfPointSize.setText(Float.toString(rois.get(activeRoi).getPointSize()));
+		nfLineThickness.setText(Float.toString(rois.get(activeRoi).getLineThickness()));
+		DecimalFormat df = new DecimalFormat("0.00");
+		nfOpacity.setText(df.format(rois.get(activeRoi).getOpacity()));
+		nfOpacity.setLimits(0.0, 1.0);
+		
+
+		JButton butPointColor = new JButton( new ColorIcon( rois.get(activeRoi).getPointColor() ) );
+		
+		butPointColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose point color", rois.get(activeRoi).getPointColor() );
+			if (newColor!=null)
+			{
+				setNewPointColor(newColor);
+				butPointColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
+		
+		JButton butLineColor  = new JButton( new ColorIcon( rois.get(activeRoi).getLineColor()) );
+
+		
+		butLineColor.addActionListener( e -> {
+				Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose line color", rois.get(activeRoi).getPointColor() );
+				if (newColor!=null)
+				{	
+					setNewLineColor(newColor);			
+					butLineColor.setIcon(new ColorIcon(newColor));
+				}
+				
+		});
+		
+
+		cd.gridx=0;
+		cd.gridy=0;
+		//cd.anchor=GridBagConstraints.WEST;
+		dialProperties.add(new JLabel("Point size: "),cd);
+		cd.gridx++;
+		dialProperties.add(nfPointSize,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		dialProperties.add(new JLabel("Point color: "),cd);
+		cd.gridx++;
+		dialProperties.add(butPointColor,cd);
+		
+		if(rois.get(activeRoi).getType()>Roi3D.POINT)
+		{
+			cd.gridx=0;
+			cd.gridy++;
+			dialProperties.add(new JLabel("Line thickness: "),cd);
+			cd.gridx++;
+			dialProperties.add(nfLineThickness,cd);
+			cd.gridx=0;
+			cd.gridy++;
+			dialProperties.add(new JLabel("Line color: "),cd);
+			cd.gridx++;
+			dialProperties.add(butLineColor,cd);
+		}
+		cd.gridx=0;
+		cd.gridy++;
+		dialProperties.add(new JLabel("Opacity: "),cd);
+		cd.gridx++;
+		dialProperties.add(nfOpacity,cd);
+		
+		if(rois.get(activeRoi).getType()>Roi3D.POINT)
+		{
+			cd.gridx=0;
+			cd.gridy++;
+			dialProperties.add(new JLabel("Render as: "),cd);
+			renderTypeList.setSelectedIndex(rois.get(activeRoi).getRenderType());
+			cd.gridx++;
+			dialProperties.add(renderTypeList,cd);
+		}
+		
+		
+		int reply = JOptionPane.showConfirmDialog(null, dialProperties, "ROI Properties", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		
+		
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			//point size 
+			rois.get(activeRoi).setPointSize(Float.parseFloat(nfPointSize.getText()));
+			
+			//point color
+			if(newPointColor!=null)
+			{
+				rois.get(activeRoi).setPointColorRGB(newPointColor);
+				newPointColor = null;
+			}
+			//opacity
+			float fNewOpacity= Float.parseFloat(nfOpacity.getText());
+			if(fNewOpacity<0.0f)
+				{fNewOpacity=0.0f;}
+			if(fNewOpacity>1.0f)
+				{fNewOpacity=1.0f;}
+			rois.get(activeRoi).setOpacity(fNewOpacity);
+
+			//line
+			if(rois.get(activeRoi).getType()>Roi3D.POINT)
+			{
+				//line thickness
+				float fNewLineThickess = Float.parseFloat(nfLineThickness.getText());
+				if(Math.abs(fNewLineThickess-rois.get(activeRoi).getLineThickness())>0.00001)
+				{
+					rois.get(activeRoi).setLineThickness(fNewLineThickess );
+				}
+				//line color
+				if(newLineColor!=null)
+				{				
+					rois.get(activeRoi).setLineColorRGB(newLineColor);
+					newLineColor = null;
+				
+				}
+				//render type
+				if(renderTypeList.getSelectedIndex()!=rois.get(activeRoi).getRenderType())
+				{
+					rois.get(activeRoi).setRenderType(renderTypeList.getSelectedIndex());
+				}
 			}
 			
 			fireActiveRoiChanged(activeRoi); 
@@ -763,6 +954,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         //this.setLockMode(false);
         
 	}
-		
+	void setNewPointColor(Color color_in)
+	{
+		newPointColor = new Color(color_in.getRed(),color_in.getGreen(),color_in.getBlue(),color_in.getAlpha());
+	}
+	void setNewLineColor(Color color_in)
+	{
+		newLineColor = new Color(color_in.getRed(),color_in.getGreen(),color_in.getBlue(),color_in.getAlpha());
+	}
 	
 }

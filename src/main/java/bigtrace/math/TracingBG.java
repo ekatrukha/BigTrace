@@ -145,7 +145,7 @@ public class TracingBG extends SwingWorker<Void, String> implements BigTraceBGWo
 
 		//unlock user interaction
     	bt.bInputLock = false;
-    	bt.roiManager.setLockMode(false);
+    	//bt.roiManager.setLockMode(false);
     }
 
 }

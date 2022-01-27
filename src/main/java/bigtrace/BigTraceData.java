@@ -2,6 +2,7 @@ package bigtrace;
 
 import java.util.ArrayList;
 
+import ij.Prefs;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
@@ -63,12 +64,16 @@ public class BigTraceData {
 	public int nTraceBoxView = 1;
 	
 	/** half size of tracing box (for now in all dimensions) **/
-	long lTraceBoxSize = 50;
+	public long lTraceBoxSize = 50;
 	
 	/** How much the tracebox will follow the last direction of trace:
 	 * in the range [0..1], 0 = no following (center), 1 = previous point is at the edge of the box**/
 	float fTraceBoxShift = 0.9f;
 	/** current number of vertices in the tracebox **/
 	public int nPointsInTraceBox=0;
-
+	
+	public BigTraceData()
+	{
+		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);
+	}
 }
