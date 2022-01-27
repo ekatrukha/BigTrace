@@ -38,6 +38,8 @@ public class BigTraceData {
 	/** far clip plane position for BVV  **/
 	double dClipFar = 1000.;
 	
+	public double [] bBrightnessRange = new double [2];
+	
 	
 	/////////////////////////////////clicking interface 
 	
@@ -61,7 +63,7 @@ public class BigTraceData {
 	public int nTraceBoxView = 1;
 	
 	/** half size of tracing box (for now in all dimensions) **/
-	long lTraceBoxSize = 100;
+	long lTraceBoxSize = 50;
 	
 	/** How much the tracebox will follow the last direction of trace:
 	 * in the range [0..1], 0 = no following (center), 1 = previous point is at the edge of the box**/

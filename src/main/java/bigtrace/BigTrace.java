@@ -4,13 +4,12 @@ package bigtrace;
 
 
 import java.awt.Color;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import org.joml.Matrix4f;
@@ -54,14 +53,12 @@ import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-//import sc.fiji.simplifiedio.SimplifiedIO;
 import tpietzsch.example2.RenderData;
-import tpietzsch.example2.VolumeViewerFrame;
 import tpietzsch.example2.VolumeViewerPanel;
 import tpietzsch.util.MatrixMath;
 
 
-public class BigTrace implements PlugIn
+public class BigTrace implements PlugIn, WindowListener
 {
 	public  BvvStackSource< UnsignedByteType > bvv;
 	public  BvvStackSource< UnsignedByteType > bvv2;
@@ -76,8 +73,9 @@ public class BigTrace implements PlugIn
 	
 	Img< UnsignedByteType> img;
 
+	JFrame finFrame;
 	VolumeViewerPanel panel;
-	VolumeViewerFrame frame;
+
 	public boolean bInputLock = false;
 	
 
@@ -209,25 +207,35 @@ public class BigTrace implements PlugIn
 	}
 	private void createAndShowGUI() 
 	{
-		btpanel = new BigTraceControlPanel(this, btdata,roiManager);		
-	 	JFrame frame = new JFrame("BigTrace");
-	 	JFrame bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv.getBvvHandle().getViewerPanel());
+		btpanel = new BigTraceControlPanel(this, btdata,roiManager);
+		finFrame = new JFrame("BigTrace");
+		//btpanel.frame = new JFrame("BigTrace");
+		//btpanel.setName("TEEEST");
+		//btpanel.frame = (BigTraceControlPanel)new JFrame("BigTrace");
+		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv.getBvvHandle().getViewerPanel());
 	 	
-	 	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+	 	//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//btpanel.frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		finFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		btpanel.bvv_frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         //Create and set up the content pane.
         //JComponent newContentPane = btframe;
         //newContentPane.setOpaque(true); //content panes must be opaque
         //frame.setContentPane(newContentPane);
-	 	frame.add(btpanel);
+		//btpanel.frame.add(btpanel);
+		finFrame.add(btpanel);
         //Display the window.
-        frame.setSize(400,600);
+		finFrame.setSize(400,600);
         //frame.pack();
-        frame.setVisible(true);
-	    java.awt.Point bvv_p = bvv_frame.getLocationOnScreen();
-	    java.awt.Dimension bvv_d = bvv_frame.getSize();
+		finFrame.setVisible(true);
+	    java.awt.Point bvv_p = btpanel.bvv_frame.getLocationOnScreen();
+	    java.awt.Dimension bvv_d = btpanel.bvv_frame.getSize();
 	
-	    frame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
+	    finFrame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
+	    finFrame.addWindowListener(this);
+	    btpanel.bvv_frame.addWindowListener(this);
+	    //finFrame.addWindowStateListener(this);
+	    //addWindowListener(addWindowListener(this));
 	}
 	
 	/** find a brightest pixel in the direction of a click
@@ -352,10 +360,6 @@ public class BigTrace implements PlugIn
 				bTraceMode= false;
 				roiManager.setLockMode(bTraceMode);	
 				removeTraceBox();
-				if(btdata.nTraceBoxView==1)
-				{
-					bvv2.setActive(true);
-				}
 			}
 		}
 	}
@@ -568,6 +572,13 @@ public class BigTrace implements PlugIn
 		bvv_trace.setCurrent();
 		bvv_trace.setDisplayRange(0., 150.0);
 		//handl.setDisplayMode(DisplayMode.SINGLE);
+		if(btdata.nTraceBoxView==1)
+		{
+			//bvv2.setActive(false);
+			btdata.bBrightnessRange[0]=bvv2.getConverterSetups().get(0).getDisplayRangeMin();
+			btdata.bBrightnessRange[1]=bvv2.getConverterSetups().get(0).getDisplayRangeMax();
+			bvv2.getConverterSetups().get(0).setDisplayRange(0.0, 0.0);
+		}
 	}
 	
 	/** removes tracebox from BVV **/
@@ -582,6 +593,11 @@ public class BigTrace implements PlugIn
 		}
 		bvv_trace=null;
 		//handl.setDisplayMode(DisplayMode.SINGLE);
+		if(btdata.nTraceBoxView==1)
+		{
+			//bvv2.setActive(true);
+			bvv2.getConverterSetups().get(0).setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
+		}
 	}	
 
 
@@ -961,6 +977,50 @@ public class BigTrace implements PlugIn
 		testI.run("Yay");
 		
 		
+	}
+
+	@Override
+	public void windowActivated(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		//System.out.println("yay1");
+	}
+
+	@Override
+	public void windowClosed(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		//System.out.println("yay");
+	}
+
+	@Override
+	public void windowClosing(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		//System.out.println("yay2");
+		btpanel.bvv_frame.dispose();
+		finFrame.dispose();
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		//System.out.println("yay3");
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		//System.out.println("yay4");
+	}
+
+	@Override
+	public void windowIconified(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		//System.out.println("yay5");
+	}
+
+	@Override
+	public void windowOpened(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		//System.out.println("yay6");
 	}
 
 	

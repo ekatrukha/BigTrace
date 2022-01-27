@@ -7,12 +7,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -38,12 +32,9 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTrace;
-import bigtrace.BigTraceData;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
-import bigtrace.math.TraceBoxMath;
 import bigtrace.scene.VisPolyLineScaled;
-import ij.IJ;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import net.imglib2.RealPoint;
@@ -119,8 +110,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 
 		 ButtonGroup roiTraceMode = new ButtonGroup();
 		 
-		// UIManager.put("ToggleButton.select", Color.WHITE);
-		 ClassLoader classLoader = getClass().getClassLoader();
+
 		 URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
 		 ImageIcon tabIcon = new ImageIcon(icon_path);
 		 roiPointMode = new JToggleButton(tabIcon);
@@ -372,7 +362,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 }
 	 public void addPoint3D(RealPoint point_)
 	 {
-		 addRoi( new Point3D(point_, currPointSize, activePointColor));
+		 addRoi( new Point3D(point_, currPointSize, defaultPointColor));
 	 }
 	 
 	 public void addSegment(RealPoint point_, ArrayList<RealPoint> segments_)

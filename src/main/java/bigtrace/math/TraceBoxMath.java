@@ -126,10 +126,7 @@ public class TraceBoxMath extends SwingWorker<Void, String> implements BigTraceB
     public void done() 
     {
     	bt.showTraceBox(bt.btdata.trace_weights);
-		if(bt.btdata.nTraceBoxView==1)
-		{
-			bt.bvv2.setActive(false);
-		}
+
 		//unlock user interaction
     	bt.bInputLock = false;
     }

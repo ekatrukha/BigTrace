@@ -8,12 +8,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
-
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
@@ -31,6 +33,7 @@ import bvv.util.BvvFunctions;
 import net.imglib2.view.Views;
 
 public class BigTraceControlPanel extends JPanel
+//public class BigTraceControlPanel extends JFrame
 								implements ActionListener, 
 									PropertyChangeListener {
 	
@@ -39,6 +42,12 @@ public class BigTraceControlPanel extends JPanel
 	 * 
 	 */
 	private static final long serialVersionUID = -8992158095263652259L;
+	
+	//public BigTraceControlPanel frame;
+	public JFrame bvv_frame;
+	
+	//public JPanel finalPanel;
+	
 	CropPanel cropPanel;
 	BigTrace btrace;
 	RoiManager3D roiManager;
@@ -48,6 +57,7 @@ public class BigTraceControlPanel extends JPanel
 	
 	public BigTraceControlPanel(final BigTrace bt_,final BigTraceData btd_, final RoiManager3D roiManager_)//, int locx, int locy) 
 	{
+		//finalPanel = new JPanel(new GridBagLayout());
 		super(new GridBagLayout());
 		roiManager=roiManager_;
 	
@@ -108,8 +118,6 @@ public class BigTraceControlPanel extends JPanel
 		JPanel panNavigation = new JPanel(new GridBagLayout());
 	    
 		GridBagConstraints c = new GridBagConstraints();
-
-		ClassLoader classLoader = getClass().getClassLoader();
 
 		//View Panel
 	  
@@ -267,6 +275,7 @@ public class BigTraceControlPanel extends JPanel
 	    cv.weighty=0.01;
 	    cv.anchor = GridBagConstraints.SOUTHEAST;
 	    cv.fill = GridBagConstraints.HORIZONTAL;
+	    //finalPanel.add(tabPane,cv);
 	    this.add(progressBar,cv);
 	    
 	    //JFrame bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv.getBvvHandle().getViewerPanel());
@@ -330,9 +339,10 @@ public class BigTraceControlPanel extends JPanel
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent arg0) {
+	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		
 	}
+
 
 }
