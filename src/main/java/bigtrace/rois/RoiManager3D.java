@@ -24,6 +24,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -62,8 +63,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public Color activeLineColor = Color.RED;
 	 public Color defaultLineColor = Color.BLUE;
 	 
-	 public Color newLineColor = null;
-	 public Color newPointColor = null;
+	 public ColorUserSettings selectColors = new ColorUserSettings(); 
+	 //public Color newLineColor = null;
+	 //public Color newPointColor = null;
 
 	 public int mode;
 	 public float currLineThickness = 4.0f;
@@ -676,8 +678,86 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	/** show ROI Properties dialog**/
 	public void dialSettings()
 	{
-		JPanel dialRoiSet = new JPanel(new GridBagLayout());
+		
+		JTabbedPane tabPane = new JTabbedPane();
 		GridBagConstraints cd = new GridBagConstraints();
+		
+		
+		////////////DEFAULT COLORS AND RENDER		
+		JPanel pDefaults = new JPanel(new GridBagLayout());
+		
+		JButton butPointDefColor = new JButton( new ColorIcon( defaultPointColor ) );	
+		butPointDefColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose default point color", defaultPointColor );
+			if (newColor!=null)
+			{
+				selectColors.setColor(newColor, 0);
+				//setNewPointColor(newColor);
+				butPointDefColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
+		
+		JButton butLineDefColor = new JButton( new ColorIcon( defaultLineColor ) );	
+		butLineDefColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose default point color", defaultLineColor );
+			if (newColor!=null)
+			{
+				selectColors.setColor(newColor, 1);
+				//setNewPointColor(newColor);
+				butLineDefColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
+		
+		JButton butPointActiveColor = new JButton( new ColorIcon( activePointColor ) );	
+		butPointActiveColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose active point color", activePointColor );
+			if (newColor!=null)
+			{
+				selectColors.setColor(newColor, 2);
+				//setNewPointColor(newColor);
+				butPointActiveColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
+		
+		JButton butLineActiveColor = new JButton( new ColorIcon( activeLineColor ) );	
+		butLineActiveColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose active line color", activeLineColor );
+			if (newColor!=null)
+			{
+				selectColors.setColor(newColor, 3);
+				//setNewPointColor(newColor);
+				butLineActiveColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
+		cd.gridx=0;
+		cd.gridy=0;
+		pDefaults.add(new JLabel("Default point color: "),cd);
+		cd.gridx++;
+		pDefaults.add(butPointDefColor,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		pDefaults.add(new JLabel("Default line color: "),cd);
+		cd.gridx++;
+		pDefaults.add(butLineDefColor,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		pDefaults.add(new JLabel("Active point color: "),cd);
+		cd.gridx++;
+		pDefaults.add(butPointActiveColor,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		pDefaults.add(new JLabel("Active line color: "),cd);
+		cd.gridx++;
+		pDefaults.add(butLineActiveColor,cd);
+		
+		////////////TRACING OPTIONS
+		JPanel pTrace = new JPanel(new GridBagLayout());
+
+		
 		NumberField nfTraceBoxSize = new NumberField(4);
 		//nTraceBoxSize.setText(Integer.toString((int)(2.0*Prefs.get("BigTrace.lTraceBoxSize", 50))));
 		//nfTraceBoxSize.setText(Integer.toString((int)(2.0*Prefs.get("BigTrace.lTraceBoxSize", 50))));
@@ -686,89 +766,48 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridx=0;
 		cd.gridy=0;
 		//cd.anchor=GridBagConstraints.WEST;
-		dialRoiSet.add(new JLabel("Trace box size (px): "),cd);
+		pTrace.add(new JLabel("Trace box size (px): "),cd);
 		cd.gridx++;
-		dialRoiSet.add(nfTraceBoxSize,cd);
-		/*
-		NumberField nfLineThickness = new NumberField(4);
-		NumberField nfOpacity = new NumberField(4);
-		String[] sRenderType = { "Center line", "Wire", "Surface" };
-		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
-		nfPointSize.setText(Float.toString(rois.get(activeRoi).getPointSize()));
-		nfLineThickness.setText(Float.toString(rois.get(activeRoi).getLineThickness()));
-		DecimalFormat df = new DecimalFormat("0.00");
-		nfOpacity.setText(df.format(rois.get(activeRoi).getOpacity()));
-		nfOpacity.setLimits(0.0, 1.0);
-		
-		cd.gridx=0;
-		cd.gridy=0;
-		//cd.anchor=GridBagConstraints.WEST;
-		dialProperties.add(new JLabel("Point size: "),cd);
-		cd.gridx++;
-		dialProperties.add(nfPointSize,cd);
-		if(rois.get(activeRoi).getType()>Roi3D.POINT)
-		{
-			cd.gridx=0;
-			cd.gridy++;
-			dialProperties.add(new JLabel("Line thickness: "),cd);
-			cd.gridx++;
-			dialProperties.add(nfLineThickness,cd);
-		}
-		cd.gridx=0;
-		cd.gridy++;
-		dialProperties.add(new JLabel("Opacity: "),cd);
-		cd.gridx++;
-		dialProperties.add(nfOpacity,cd);
-		
-		if(rois.get(activeRoi).getType()>Roi3D.POINT)
-		{
-			cd.gridx=0;
-			cd.gridy++;
-			dialProperties.add(new JLabel("Render as: "),cd);
-			renderTypeList.setSelectedIndex(rois.get(activeRoi).getRenderType());
-			cd.gridx++;
-			dialProperties.add(renderTypeList,cd);
-		}
-		*/
-		int reply = JOptionPane.showConfirmDialog(null, dialRoiSet, "ROI Manager Settings", 
-		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		pTrace.add(nfTraceBoxSize,cd);
+		tabPane.addTab("Defaults",pDefaults);
+		tabPane.addTab("Tracing",pTrace);
+
+		int reply = JOptionPane.showConfirmDialog(null, tabPane, "ROI Manager Settings", 
+        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+//		int reply = JOptionPane.showConfirmDialog(null, dialRoiSet, "ROI Manager Settings", 
+		        //JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (reply == JOptionPane.OK_OPTION) 
 		{
 			
 			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
 			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
-			/*
-			//point size 
-			rois.get(activeRoi).setPointSize(Float.parseFloat(nfPointSize.getText()));
-			//opacity
-			float fNewOpacity= Float.parseFloat(nfOpacity.getText());
-			if(fNewOpacity<0.0f)
-				{fNewOpacity=0.0f;}
-			if(fNewOpacity>1.0f)
-				{fNewOpacity=1.0f;}
-			rois.get(activeRoi).setOpacity(fNewOpacity);
-
-			//line
-			if(rois.get(activeRoi).getType()>Roi3D.POINT)
-			{
-				//line thickness
-				float fNewLineThickess = Float.parseFloat(nfLineThickness.getText());
-				if(Math.abs(fNewLineThickess-rois.get(activeRoi).getLineThickness())>0.00001)
-				{
-					rois.get(activeRoi).setLineThickness(fNewLineThickess );
-				}
-				//render type
-				if(renderTypeList.getSelectedIndex()!=rois.get(activeRoi).getRenderType())
-				{
-					rois.get(activeRoi).setRenderType(renderTypeList.getSelectedIndex());
-				}
-				
-				//if both are changed, we rebuild mesh twice
-				//possibly optimize it in the future
-			}
+			Color tempC;
 			
-			fireActiveRoiChanged(activeRoi); 
-			*/
+			tempC=selectColors.getColor(0);
+			if(tempC!=null)
+			{
+				defaultPointColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
+				selectColors.setColor(null, 0);
+			}
+			tempC=selectColors.getColor(1);
+			if(tempC!=null)
+			{
+				defaultLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
+				selectColors.setColor(null, 1);
+			}
+			tempC=selectColors.getColor(2);
+			if(tempC!=null)
+			{
+				activePointColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
+				selectColors.setColor(null, 2);
+			}
+			tempC=selectColors.getColor(3);
+			if(tempC!=null)
+			{
+				activeLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
+				selectColors.setColor(null, 3);
+			}
 		}
 	}
 	
@@ -797,7 +836,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose point color", rois.get(activeRoi).getPointColor() );
 			if (newColor!=null)
 			{
-				setNewPointColor(newColor);
+				selectColors.setColor(newColor, 0);
+				//setNewPointColor(newColor);
 				butPointColor.setIcon(new ColorIcon(newColor));
 			}
 			
@@ -810,7 +850,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose line color", rois.get(activeRoi).getPointColor() );
 				if (newColor!=null)
 				{	
-					setNewLineColor(newColor);			
+					selectColors.setColor(newColor, 1);							
 					butLineColor.setIcon(new ColorIcon(newColor));
 				}
 				
@@ -869,10 +909,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			rois.get(activeRoi).setPointSize(Float.parseFloat(nfPointSize.getText()));
 			
 			//point color
-			if(newPointColor!=null)
+			if(selectColors.getColor(0)!=null)
 			{
-				rois.get(activeRoi).setPointColorRGB(newPointColor);
-				newPointColor = null;
+				rois.get(activeRoi).setPointColorRGB(selectColors.getColor(0));
+				selectColors.setColor(null, 0);
+				//newPointColor = null;
 			}
 			//opacity
 			float fNewOpacity= Float.parseFloat(nfOpacity.getText());
@@ -892,10 +933,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 					rois.get(activeRoi).setLineThickness(fNewLineThickess );
 				}
 				//line color
-				if(newLineColor!=null)
+				if(selectColors.getColor(1)!=null)
 				{				
-					rois.get(activeRoi).setLineColorRGB(newLineColor);
-					newLineColor = null;
+					rois.get(activeRoi).setLineColorRGB(selectColors.getColor(1));
+					selectColors.setColor(null, 1);
 				
 				}
 				//render type
@@ -954,13 +995,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         //this.setLockMode(false);
         
 	}
-	void setNewPointColor(Color color_in)
-	{
-		newPointColor = new Color(color_in.getRed(),color_in.getGreen(),color_in.getBlue(),color_in.getAlpha());
-	}
-	void setNewLineColor(Color color_in)
-	{
-		newLineColor = new Color(color_in.getRed(),color_in.getGreen(),color_in.getBlue(),color_in.getAlpha());
-	}
+
 	
 }

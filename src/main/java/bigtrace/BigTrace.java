@@ -60,8 +60,8 @@ import tpietzsch.util.MatrixMath;
 
 public class BigTrace implements PlugIn, WindowListener
 {
-	public  BvvStackSource< UnsignedByteType > bvv;
-	public  BvvStackSource< UnsignedByteType > bvv2;
+	public  BvvStackSource< UnsignedByteType > bvv = null;
+	public  BvvStackSource< UnsignedByteType > bvv2 = null;
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	RandomAccessibleInterval< UnsignedByteType > view;
 	IntervalView< UnsignedByteType > currentView = null;
@@ -968,22 +968,7 @@ public class BigTrace implements PlugIn, WindowListener
 	}
 	
 
-	public static void main( String... args) throws Exception
-	{
-		
-		/*
-		Class<?> clazz = BigTrace.class;
-		java.net.URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
-		java.io.File file = new java.io.File(url.toURI());
-		System.setProperty("plugins.dir", file.getAbsolutePath());
-		
-		new ImageJ();*/
-		BigTrace testI=new BigTrace(); 
-		
-		testI.run("Yay");
-		
-		
-	}
+
 
 	@Override
 	public void windowActivated(WindowEvent arg0) {
@@ -1030,11 +1015,39 @@ public class BigTrace implements PlugIn, WindowListener
 	
 	public void closeWindows()
 	{
-		btpanel.bvv_frame.dispose();
+		if(bvv_trace!=null)
+		{
+			bvv_trace.removeFromBdv();
+			System.gc();
+		}
+		if(bvv2!=null)
+		{
+			bvv2.removeFromBdv();
+		}
+		if(bvv!=null)
+		{
+			bvv.removeFromBdv();
+		}
+		btpanel.bvv_frame.dispose();		
 		finFrame.dispose();
 	}
 
 	
-
+	public static void main( String... args) throws Exception
+	{
+		
+		/*
+		Class<?> clazz = BigTrace.class;
+		java.net.URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
+		java.io.File file = new java.io.File(url.toURI());
+		System.setProperty("plugins.dir", file.getAbsolutePath());
+		
+		new ImageJ();*/
+		BigTrace testI=new BigTrace(); 
+		
+		testI.run("Yay");
+		
+		
+	}
 	
 }

@@ -43,16 +43,14 @@ public class BigTraceControlPanel extends JPanel
 	 */
 	private static final long serialVersionUID = -8992158095263652259L;
 	
-	//public BigTraceControlPanel frame;
-	public JFrame bvv_frame;
-	
-	//public JPanel finalPanel;
-	
-	CropPanel cropPanel;
 	BigTrace btrace;
+	BigTraceData btdata;	
+	
+	CropPanel cropPanel;	
 	RoiManager3D roiManager;
 	
-	BigTraceData btdata;
+
+	public JFrame bvv_frame;
 	JProgressBar progressBar;
 	
 	public BigTraceControlPanel(final BigTrace bt_,final BigTraceData btd_, final RoiManager3D roiManager_)//, int locx, int locy) 
