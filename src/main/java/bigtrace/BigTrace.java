@@ -39,14 +39,19 @@ import ij.ImagePlus;
 import ij.plugin.PlugIn;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
+import net.imagej.ImgPlus;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.converter.RealTypeConverters;
+import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.img.Img;
-
+import net.imglib2.img.ImgView;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
-
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
@@ -114,11 +119,25 @@ public class BigTrace implements PlugIn, WindowListener
 		if(btdata.sFileNameImg==null)
 			return;
 		final ImagePlus imp = IJ.openImage( btdata.sFileNameImg );
+		
+		/*if(!(imp.getType()==ImagePlus.GRAY8 || imp.getType()==ImagePlus.GRAY16 || imp.getType()==ImagePlus.GRAY32))
+		{
+			IJ.showMessage("Only 8/16/32-bit images supported for now.");
+			return;
+		}*/
 		if(imp.getType()!=ImagePlus.GRAY8)
 		{
 			IJ.showMessage("Only 8-bit images supported for now.");
 			return;
 		}
+
+		if(imp.getNChannels()>1)
+		{
+			IJ.showMessage("Only single channel images supported for now.");
+			return;			
+		}
+		//img = convertInput(ImagePlusAdapter.wrapImgPlus( imp ), new UnsignedByteType());
+		//ImagePlusAdapter.wrapImgPlus( imp );
 		img = ImageJFunctions.wrapByte( imp );
 		/*
 		ImgOpener io = new ImgOpener();
@@ -1039,9 +1058,17 @@ public class BigTrace implements PlugIn, WindowListener
 		{
 			bvv.removeFromBdv();
 		}
-		panel.stop();
+		//panel.stop();
 		btpanel.bvv_frame.dispose();		
 		finFrame.dispose();
+	}
+	
+	@SuppressWarnings( "rawtypes" )
+	private static  < T extends NativeType< T > > ImgPlus< T > convertInput(ImgPlus img_in, RealType type)
+	{
+		RandomAccessibleInterval< T > convertedRAI = RealTypeConverters.convert( img_in, type);
+		Img< T > convertedImg = ImgView.wrap( convertedRAI, new ArrayImgFactory<T>( convertedRAI.randomAccess().get().createVariable() ) );
+		return new ImgPlus<>( convertedImg, img_in );
 	}
 
 	
@@ -1057,8 +1084,8 @@ public class BigTrace implements PlugIn, WindowListener
 		new ImageJ();*/
 		BigTrace testI=new BigTrace(); 
 		
-		testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
-		//testI.run("");
+		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		testI.run("");
 		
 		
 	}
