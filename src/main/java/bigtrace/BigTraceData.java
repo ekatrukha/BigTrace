@@ -75,5 +75,6 @@ public class BigTraceData {
 	public BigTraceData()
 	{
 		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);
+		sigmaGlob = Prefs.get("BigTrace.sigmaGlob", 3.0);
 	}
 }

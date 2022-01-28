@@ -2,7 +2,6 @@
 package bigtrace;
 
 
-
 import java.awt.Color;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -103,14 +102,23 @@ public class BigTrace implements PlugIn, WindowListener
 		//img = SimplifiedIO.openImage(
 					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
 					//new UnsignedByteType() );
-		btdata.sFileNameImg=IJ.getFilePath("Open ONI results table");
-		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/ExM_MT.tif";
-		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/test_actin_crop.tif";
-		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
-		//btdata.sFileNameImg = "/home/eugene/Desktop/BigTrace_data/Hugo_equidist.tif";
+		if(arg.equals(""))
+		{
+			btdata.sFileNameImg=IJ.getFilePath("Open ONI results table");
+		}
+		else
+		{
+			btdata.sFileNameImg=arg;
+		}
+
 		if(btdata.sFileNameImg==null)
 			return;
 		final ImagePlus imp = IJ.openImage( btdata.sFileNameImg );
+		if(imp.getType()!=ImagePlus.GRAY8)
+		{
+			IJ.showMessage("Only 8-bit images supported for now.");
+			return;
+		}
 		img = ImageJFunctions.wrapByte( imp );
 		/*
 		ImgOpener io = new ImgOpener();
@@ -203,6 +211,7 @@ public class BigTrace implements PlugIn, WindowListener
 		panel=bvv.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();
 		panel.setRenderScene(this::renderScene);
+		
 		installActions();
 		resetViewXY(true);
 	}
@@ -577,7 +586,8 @@ public class BigTrace implements PlugIn, WindowListener
 				//bvv2.setActive(false);
 				btdata.bBrightnessRange[0]=bvv2.getConverterSetups().get(0).getDisplayRangeMin();
 				btdata.bBrightnessRange[1]=bvv2.getConverterSetups().get(0).getDisplayRangeMax();
-				bvv2.getConverterSetups().get(0).setDisplayRange(0.0, 0.0);
+				bvv2.setDisplayRange(0.0, 0.0);
+				//bvv2.getConverterSetups().get(0).setDisplayRange(0.0, 0.0);
 			}
 			
 		}
@@ -602,7 +612,8 @@ public class BigTrace implements PlugIn, WindowListener
 		if(btdata.nTraceBoxView==1)
 		{
 			//bvv2.setActive(true);
-			bvv2.getConverterSetups().get(0).setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
+			//bvv2.getConverterSetups().get(0).setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
+			bvv2.setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
 		}
 	}	
 
@@ -1028,6 +1039,7 @@ public class BigTrace implements PlugIn, WindowListener
 		{
 			bvv.removeFromBdv();
 		}
+		panel.stop();
 		btpanel.bvv_frame.dispose();		
 		finFrame.dispose();
 	}
@@ -1045,7 +1057,8 @@ public class BigTrace implements PlugIn, WindowListener
 		new ImageJ();*/
 		BigTrace testI=new BigTrace(); 
 		
-		testI.run("Yay");
+		testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		//testI.run("");
 		
 		
 	}

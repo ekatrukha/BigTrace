@@ -64,8 +64,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public Color defaultLineColor = Color.BLUE;
 	 
 	 public ColorUserSettings selectColors = new ColorUserSettings(); 
-	 //public Color newLineColor = null;
-	 //public Color newPointColor = null;
 
 	 public int mode;
 	 public float currLineThickness = 4.0f;
@@ -700,7 +698,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		JButton butLineDefColor = new JButton( new ColorIcon( defaultLineColor ) );	
 		butLineDefColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose default point color", defaultLineColor );
+			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose default line color", defaultLineColor );
 			if (newColor!=null)
 			{
 				selectColors.setColor(newColor, 1);
@@ -733,14 +731,25 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			}
 			
 		});
+		NumberField nfPointSize = new NumberField(4);
+		NumberField nfLineThickness = new NumberField(4);
+		nfPointSize.setText(Float.toString(currPointSize));
+		nfLineThickness.setText(Float.toString(currLineThickness));
+
+		
+		String[] sRenderType = { "Center line", "Wire", "Surface" };
+		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
+		renderTypeList.setSelectedIndex(currRenderType);
+		
+		
 		cd.gridx=0;
 		cd.gridy=0;
-		pDefaults.add(new JLabel("Default point color: "),cd);
+		pDefaults.add(new JLabel("Default new point color: "),cd);
 		cd.gridx++;
 		pDefaults.add(butPointDefColor,cd);
 		cd.gridx=0;
 		cd.gridy++;
-		pDefaults.add(new JLabel("Default line color: "),cd);
+		pDefaults.add(new JLabel("Default new line color: "),cd);
 		cd.gridx++;
 		pDefaults.add(butLineDefColor,cd);
 		cd.gridx=0;
@@ -754,21 +763,47 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridx++;
 		pDefaults.add(butLineActiveColor,cd);
 		
+		cd.gridx=0;
+		cd.gridy++;
+		pDefaults.add(new JLabel("Default point size: "),cd);
+		cd.gridx++;
+		pDefaults.add(nfPointSize,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		pDefaults.add(new JLabel("Default line thickness: "),cd);
+		cd.gridx++;
+		pDefaults.add(nfLineThickness,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		pDefaults.add(new JLabel("Default line render: "),cd);
+		cd.gridx++;
+		pDefaults.add(renderTypeList,cd);
+		
 		////////////TRACING OPTIONS
 		JPanel pTrace = new JPanel(new GridBagLayout());
 
 		
 		NumberField nfTraceBoxSize = new NumberField(4);
+		NumberField nfSigma = new NumberField(4);
 		//nTraceBoxSize.setText(Integer.toString((int)(2.0*Prefs.get("BigTrace.lTraceBoxSize", 50))));
 		//nfTraceBoxSize.setText(Integer.toString((int)(2.0*Prefs.get("BigTrace.lTraceBoxSize", 50))));
 		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btdata.lTraceBoxSize)));
+		nfSigma.setText(Double.toString(bt.btdata.sigmaGlob));
 		
 		cd.gridx=0;
 		cd.gridy=0;
 		//cd.anchor=GridBagConstraints.WEST;
+		pTrace.add(new JLabel("Curve size/scale (SD, px): "),cd);
+		cd.gridx++;
+		pTrace.add(nfSigma,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		//cd.anchor=GridBagConstraints.WEST;
 		pTrace.add(new JLabel("Trace box size (px): "),cd);
 		cd.gridx++;
 		pTrace.add(nfTraceBoxSize,cd);
+		
 		tabPane.addTab("Defaults",pDefaults);
 		tabPane.addTab("Tracing",pTrace);
 
@@ -780,8 +815,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		if (reply == JOptionPane.OK_OPTION) 
 		{
 			
-			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
+
 			Color tempC;
 			
 			tempC=selectColors.getColor(0);
@@ -808,6 +842,17 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				activeLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
 				selectColors.setColor(null, 3);
 			}
+			
+			currPointSize = Float.parseFloat(nfPointSize.getText());
+			currLineThickness = Float.parseFloat(nfLineThickness.getText());
+			currRenderType = renderTypeList.getSelectedIndex();
+			
+			
+			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
+			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
+			
+			bt.btdata.sigmaGlob = Double.parseDouble(nfSigma.getText());
+			Prefs.set("BigTrace.sigmaGlob", (double)(bt.btdata.sigmaGlob));
 		}
 	}
 	
