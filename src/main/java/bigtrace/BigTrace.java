@@ -20,6 +20,7 @@ import org.scijava.ui.behaviour.util.Actions;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
+import bdv.viewer.animate.SimilarityTransformAnimator;
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
@@ -471,7 +472,7 @@ public class BigTrace implements PlugIn, WindowListener
 				"1" );
 			actions.runnableAction(
 				() -> {
-					resetViewYZ(false);
+					resetViewYZ();
 				},
 				"reset view YZ",
 				"2" );
@@ -630,8 +631,7 @@ public class BigTrace implements PlugIn, WindowListener
 		//handl.setDisplayMode(DisplayMode.SINGLE);
 		if(btdata.nTraceBoxView==1)
 		{
-			//bvv2.setActive(true);
-			//bvv2.getConverterSetups().get(0).setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
+
 			bvv2.setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
 		}
 	}	
@@ -773,14 +773,22 @@ public class BigTrace implements PlugIn, WindowListener
 		AffineTransform3D t = new AffineTransform3D();
 		t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nW), 0.0, scale, 0.0, 0.5*((double)sH-scale*(double)nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
 
-		panel.state().setViewerTransform(t);
-		panel.requestRepaint();
+		
+
 		if(!firstCall)
-			bvv2.removeFromBdv();
-		
-		currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
-		bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
-		
+		{
+			SimilarityTransformAnimator anim = new SimilarityTransformAnimator(panel.state().getViewerTransform(),t,0,0,400);
+			
+			panel.setTransformAnimator(anim);
+			
+		}
+		else
+		{
+			panel.state().setViewerTransform(t);
+			currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
+			bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
+			panel.requestRepaint();
+		}
 
 //        RealRandomAccessible<UnsignedByteType> rra = new Procedural3DImageByte(
 //                p -> {
@@ -822,11 +830,10 @@ public class BigTrace implements PlugIn, WindowListener
 //        bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 	}
 	
-	public void resetViewYZ(boolean firstCall)
+	public void resetViewYZ()
 	{
 		
 		double scale;
-		int nW= (int)btdata.nDimIni[1][0];
 		int nH= (int)btdata.nDimIni[1][1];
 		int nD= (int)btdata.nDimIni[1][2];
 		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
@@ -843,31 +850,19 @@ public class BigTrace implements PlugIn, WindowListener
 		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
 		AffineTransform3D t2 = new AffineTransform3D();
-		//t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nD), 0.0, scale, 0.0, 0.5*scale*((double)sH-scale*(double)nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
-		
+	
 		t.rotate(1, (-1)*Math.PI/2.0);
-		//t.identity();
+
 		t2.set(scale, 0.0, 0.0, 0.0, 0.0, scale, 0.0,0.5*((double)sH-scale*(double)nH) , 0.0, 0.0, scale, -0.5*((double)sW+scale*(double)nD));
 		t.concatenate(t2);
-		//t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nD), 0.0, scale, 0.0, 0.0, 0.0, 0.0, scale, 0.0);
-		//t.identity();
-		
-		//t.set(1, 0.0, 0.0, 0.5*((double)sW-(double)nW), 0.0, 1.0, 0.0, 0.5*((double)sH-(double)nH), 0.0, 0.0, 1., 0.0);
-		
 
-		//traces = new BTPolylines ();						
-		//render_pl();
 		
 		panel=bvv.getBvvHandle().getViewerPanel();
-		panel.state().setViewerTransform(t);
-		panel.requestRepaint();
-		if(!firstCall)
-			bvv2.removeFromBdv();
 		
-		currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
-		bvv2 = BvvFunctions.show( currentView, "cropresetYZ", Bvv.options().addTo(bvv));
+		SimilarityTransformAnimator anim = new SimilarityTransformAnimator(panel.state().getViewerTransform(),t,0,0,300);
 		
-		
+		panel.setTransformAnimator(anim);
+
 	}
 	
 	public boolean findPointLocationFromClick(final IntervalView< UnsignedByteType > viewclick, final int nHalfWindowSize, final RealPoint target)
@@ -1084,8 +1079,8 @@ public class BigTrace implements PlugIn, WindowListener
 		new ImageJ();*/
 		BigTrace testI=new BigTrace(); 
 		
-		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
-		testI.run("");
+		testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		//testI.run("");
 		
 		
 	}
