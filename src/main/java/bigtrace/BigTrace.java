@@ -41,6 +41,7 @@ import ij.plugin.PlugIn;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
 import net.imagej.ImgPlus;
+import net.imglib2.FinalRealInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.converter.RealTypeConverters;
@@ -486,6 +487,10 @@ public class BigTrace implements PlugIn, WindowListener
 					AffineTransform3D transform = new AffineTransform3D();
 				
 					panel.state().getViewerTransform(transform);
+					transform.scale(2.0);
+					panel.state().setViewerTransform(transform);
+					
+					/*
 					int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
 					int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
 					int [] bothXY = new int [2];
@@ -496,16 +501,21 @@ public class BigTrace implements PlugIn, WindowListener
 					
 					//center of the screen in the transformed coordinates
 					//take coordinates in original data volume space
-					Vector3f temp = new Vector3f(); 
-					matPerspWorld.unproject(0.5f*sW,0.5f*sH,0.95f, //z=1 ->far from camera z=0 -> close to camera
-							new int[] { 0, 0, sW, sH },temp);
-					RealPoint target = new RealPoint(3);
-					for(int i=0;i<3;i++)
+					Vector3f temp = new Vector3f();
+
+					for (float z = 0.9f;z<=1.0f;z+=0.01f)
 					{
-						target.setPosition(temp.get(i), i);
+						matPerspWorld.unproject(0.5f*sW,0.5f*sH,z, //z=1 ->far from camera z=0 -> close to camera
+								new int[] { 0, 0, sW, sH },temp);
+						RealPoint target = new RealPoint(3);
+						for(int i=0;i<3;i++)
+						{
+							target.setPosition(temp.get(i), i);
+						}
+						roiManager.currPointSize=5.0f+500.0f*(z-0.9f);
+						roiManager.addPoint(target);
 					}
-					roiManager.addPoint(target);
-					
+					*/
 				},
 				"test CENTER",
 				"A" );
@@ -528,7 +538,7 @@ public class BigTrace implements PlugIn, WindowListener
 		IntervalView<UnsignedByteType> traceInterval = Views.interval(currentView, rangeTraceBox[0], rangeTraceBox[1]);
 		
 		//getCenteredView(traceInterval);
-		panel.setTransformAnimator(getCenteredView(traceInterval));
+		panel.setTransformAnimator(getCenteredViewAnim(traceInterval));
 		//long start1, end1;
 
 		//start1 = System.currentTimeMillis();
@@ -621,102 +631,97 @@ public class BigTrace implements PlugIn, WindowListener
 		return rangeM;							
 	}
 	
-	public SimilarityTransformAnimator getCenteredView(IntervalView<UnsignedByteType> inInterval)
+	public SimilarityTransformAnimator getCenteredViewAnim(final IntervalView<UnsignedByteType> inInterval)
 	{
-		int i;
+		int i,j;
 		int nDim = inInterval.numDimensions();
 		final long [] minDim = inInterval.minAsLongArray();
 		final long [] maxDim = inInterval.maxAsLongArray();
 		float [] centerCoord = new float[nDim];
 		
+		//center of the new subvolume (tracebox)
 		for(i=0;i<nDim;i++)
 		{
 			centerCoord[i] = (float)Math.round(minDim[i]+ 0.5*(maxDim[i]-minDim[i]));
 		}
 		
-		AffineTransform3D transform = new AffineTransform3D();
-		AffineTransform3D transform_new = new AffineTransform3D();
-		panel.state().getViewerTransform(transform);
-		panel.state().getViewerTransform(transform_new);
-		//coordinates in the current transform view
-		transform.apply(centerCoord, centerCoord);
-		panel.state().getViewerTransform(transform);
-		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
-		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
-		int [] bothXY = new int [2];
-		bothXY[0]=sW;
-		bothXY[1]=sH;
-		Matrix4f matPerspWorld = new Matrix4f();
-		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
+		//current window dimensions
+		final int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
+		final int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
 		
+		final AffineTransform3D transform = new AffineTransform3D();
+		panel.state().getViewerTransform(transform);
 		
-		//center of the screen in the transformed coordinates
-		//take coordinates in original data volume space
-
-		/*
-		Vector3f position = new Vector3f();
-		position.set(centerCoord);
-		Vector3f winCoordsDest = new Vector3f();
-		matPerspWorld.project(position, new int[] { 0, 0, sW, sH },winCoordsDest);
-		*/
+		//bounding box after transformation
+		FinalRealInterval boxAfter = transform.estimateBounds(inInterval);
+		
+		//calculate scale factor
+		//current width/height
+		double dCurrW = boxAfter.realMax(0)-boxAfter.realMin(0);
+		double dCurrH = boxAfter.realMax(1)-boxAfter.realMin(1);
+		double scaleX = (0.5)*sW/dCurrW;
+		double scaleY = (0.5)*sH/dCurrH;
+		double scalefin=Math.min(scaleX, scaleY);
+		
+		//scaled the volume
+		final AffineTransform3D transform_scale = new AffineTransform3D();
+		transform_scale.set(transform);
+		//transform_scale.set(scalefin, 0, 0);
+		//transform_scale.set(scalefin, 1, 1);
+		//transform_scale.set(scalefin, 2, 2);
+		transform_scale.scale(scalefin);
+		
+		//now let's move it
 		
 		Vector3f temp = new Vector3f();
+		
+		
+		//final AffineTransform3D transform_new = new AffineTransform3D();
+		
+	//transform_new.set(transform);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		//coordinates in the current transform view
+		//transform.apply(centerCoord, centerCoord);
+		transform_scale.apply(centerCoord, centerCoord);
+
+
+
+		Matrix4f matPerspWorld = new Matrix4f();
+		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform_scale, new Matrix4f() ) );
+				
+		//center of the screen in the transformed coordinates
+		//take coordinates in original data volume space
+		
+		
 		matPerspWorld.unproject(0.5f*sW,0.5f*sH,0.95f, //z=1 ->far from camera z=0 -> close to camera
 				new int[] { 0, 0, sW, sH },temp);
-		//double scale;
-		//transform_new.identity();
+
 		float [] newCent = new float[3];
 		for(i=0;i<3;i++)
 		{
 			newCent[i] = temp.get(i);
 		}
-		transform.apply(newCent, newCent);
-		double [] dl = transform_new.getTranslation();
+		//center of the screen in the source transform coordinates
+		transform_scale.apply(newCent, newCent);
 		
-		//translation
+		double [] dl = transform_scale.getTranslation();
+		
+		//translation after source transform to new position
 		for(i=0;i<3;i++)
 		{
-			//scale = transform.get(i, i);
-			//transform_new.set(0.5*bothXY[i]-(double)scale*centerCoord[i], i, 3);
-			//transform_new.set(tempC-(temp.get(i)-centerCoord[i]), i, 3);
-			//transform_new.set(tempC+(temp.get(i)-centerCoord[i])/scale, i, 3);
 			dl[i]+= (newCent[i]-centerCoord[i]);
 		}
-		transform_new.setTranslation(dl);
-		//transform_new.concatenate(transform);
-		//double scale = 1.0;
-		//transform_new.set(scale, 0.0, 0.0, 0.5*sW+(double)(-1)*centerCoord[0], 0.0, scale, 0.0, 0.5*sH+(double)(-1)*centerCoord[1], 0.0, 0.0, scale,0.0);//(double)centerCoord[2]);// (-0.5)*scale*(double)nD);
-		//panel.state().setViewerTransform(transform_new);
-		//panel.requestRepaint();
-		/*
-		for(i=0;i<2;i++)
-		{
-			//dl[i]-=winCoordsDest.get(i)-0.5f*bothXY[i];
-		
-		}
-		double scale = transform.get(0, 0);
-		double dx = 0.5f*bothXY[0]-winCoordsDest.get(0);
-		dl[0]+=dx;
-		//dl[0]-=100;
-		scale = transform.get(1, 1);
-		double dy = 0.5f*bothXY[1]-winCoordsDest.get(1);
-		dl[1]-=dy;
-		//dl[1]+=100;
-		*/
+		transform_scale.setTranslation(dl);
 
-		Matrix4f matPerspWorldNew = new Matrix4f();
-		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorldNew ).mul( MatrixMath.affine( transform_new, new Matrix4f() ) );
-
-		Vector3f position = new Vector3f();
-		position.set(centerCoord);
-		
-		Vector3f winCoordsDest = new Vector3f();
-		matPerspWorldNew.project(position, new int[] { 0, 0, sW, sH }, winCoordsDest);
-		
-		//transform_new.apply(centerCoord, centerCoord);
-		SimilarityTransformAnimator anim = new SimilarityTransformAnimator(transform,transform_new,0,0,300);
-		
-		//panel.setTransformAnimator(anim);
+		final SimilarityTransformAnimator anim = new SimilarityTransformAnimator(transform,transform_scale,0,0,1500);		
 		
 		return anim;
 	}
@@ -919,6 +924,7 @@ public class BigTrace implements PlugIn, WindowListener
 		{
 			panel.state().setViewerTransform(t);
 			currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
+			//currentView=Views.interval( img, img );
 			bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 			panel.requestRepaint();
 		}

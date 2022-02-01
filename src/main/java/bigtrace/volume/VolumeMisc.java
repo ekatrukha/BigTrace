@@ -357,6 +357,6 @@ public class VolumeMisc {
 		}
 		return Intervals.createMinMax(minL[0],minL[1],minL[2], maxL[0],maxL[1],maxL[2]);
 	}
-
+	
 
 }

@@ -251,7 +251,7 @@ public class BigTraceControlPanel extends JPanel
 	    //progressBar.setIndeterminate(true);
 	    progressBar.setValue(0);
 	    progressBar.setStringPainted(true);
-	    progressBar.setString("BigTrace version xxx");
+	    progressBar.setString("BigTrace version "+btdata.sVersion);
 		
 	    //JPanel finalPanel = new JPanel(new GridBagLayout());
 	    GridBagConstraints cv = new GridBagConstraints();
