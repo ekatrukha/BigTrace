@@ -74,7 +74,7 @@ public class BigTrace implements PlugIn, WindowListener
 	//IntervalView< UnsignedByteType > trace_weights = null;
 	//IntervalView< FloatType > trace_vectors=null;
 	//ArrayList<long []> jump_points = null;
-	boolean bTraceMode = false;
+	private boolean bTraceMode = false;
 	
 	Img< UnsignedByteType> img;
 
@@ -291,8 +291,9 @@ public class BigTrace implements PlugIn, WindowListener
 					//semi auto tracing initialize
 					else
 					{
-						bTraceMode= true;								
-						roiManager.setLockMode(bTraceMode);
+						setTraceBoxMode(true);
+						//bTraceMode= true;								
+						//roiManager.setLockMode(bTraceMode);
 						
 						//nothing selected, make a new tracing
 						if(roiManager.activeRoi==-1)
@@ -349,8 +350,9 @@ public class BigTrace implements PlugIn, WindowListener
 				{
 					btdata.nPointsInTraceBox--;
 					roiManager.removeActiveRoi();
-					bTraceMode= false;
-					roiManager.setLockMode(bTraceMode);							
+					setTraceBoxMode(false);
+					//bTraceMode= false;
+					//roiManager.setLockMode(bTraceMode);							
 					removeTraceBox();
 					if(btdata.nTraceBoxView==1)
 					{
@@ -387,8 +389,9 @@ public class BigTrace implements PlugIn, WindowListener
 			else
 			{
 				roiManager.unselect();
-				bTraceMode= false;
-				roiManager.setLockMode(bTraceMode);	
+				setTraceBoxMode(false);
+				//bTraceMode= false;
+				//roiManager.setLockMode(bTraceMode);	
 				removeTraceBox();
 			}
 		}
@@ -673,20 +676,7 @@ public class BigTrace implements PlugIn, WindowListener
 		
 		//now let's move it
 		
-		Vector3f temp = new Vector3f();
-		
-		
-		//final AffineTransform3D transform_new = new AffineTransform3D();
-		
-	//transform_new.set(transform);
-		
-		
-		
-		
-		
-		
-		
-		
+		Vector3f temp = new Vector3f();	
 		
 		//coordinates in the current transform view
 		//transform.apply(centerCoord, centerCoord);
@@ -722,6 +712,7 @@ public class BigTrace implements PlugIn, WindowListener
 		transform_scale.setTranslation(dl);
 
 		final SimilarityTransformAnimator anim = new SimilarityTransformAnimator(transform,transform_scale,0,0,1500);		
+		//final SimilarityTransformAnimator anim = new SimilarityTransformAnimator(transform,transform,0,0,1500);		
 		
 		return anim;
 	}
@@ -772,6 +763,28 @@ public class BigTrace implements PlugIn, WindowListener
 			bvv2.setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
 		}
 	}	
+	
+	public void setTraceBoxMode(boolean bStatus)
+	{
+		bTraceMode= bStatus;								
+		roiManager.setLockMode(bStatus);
+		//entering trace mode, 
+		//let's save current view
+		if(bStatus)
+		{
+			panel.state().getViewerTransform(btdata.transformBeforeTracing);
+			//transformBeforeTracing.set(panel.);
+		}
+		//exiting trace mode,
+		//let's go back
+		else
+		{
+			final AffineTransform3D transform = new AffineTransform3D();
+			panel.state().getViewerTransform(transform);
+			final SimilarityTransformAnimator anim = new SimilarityTransformAnimator(transform,btdata.transformBeforeTracing,0,0,1500);
+			panel.setTransformAnimator(anim);
+		}
+	}
 
 
 	public void renderScene(final GL3 gl, final RenderData data)

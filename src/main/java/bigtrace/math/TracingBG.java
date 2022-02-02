@@ -52,7 +52,7 @@ public class TracingBG extends SwingWorker<Void, String> implements BigTraceBGWo
 		bt.dijkRBegin = new DijkstraFHRestricted(bt.btdata.trace_weights);
 		found_path_end = bt.dijkRBegin.calcCostTwoPoints(bt.roiManager.getLastTracePoint(),target);
 		end1 = System.currentTimeMillis();
-		System.out.println("fDijkstra Restr search BEGIN: elapsed Time in milli seconds: "+ (end1-start1));
+		System.out.println("Dijkstra Restr search BEGIN: elapsed Time in milli seconds: "+ (end1-start1));
 	
 		
 		

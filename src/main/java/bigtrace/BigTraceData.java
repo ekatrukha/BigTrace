@@ -3,6 +3,7 @@ package bigtrace;
 import java.util.ArrayList;
 
 import ij.Prefs;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
@@ -11,7 +12,7 @@ import net.imglib2.view.IntervalView;
 public class BigTraceData {
 
 	
-	public String sVersion = "0.0.1";
+	public String sVersion = "0.0.2";
 	
 	/////////////// input file
 	public String sFileNameImg;
@@ -71,6 +72,8 @@ public class BigTraceData {
 	float fTraceBoxShift = 0.9f;
 	/** current number of vertices in the tracebox **/
 	public int nPointsInTraceBox=0;
+	
+	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
 	
 	public BigTraceData()
 	{
