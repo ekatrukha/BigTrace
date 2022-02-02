@@ -369,14 +369,17 @@ public class BigTrace implements PlugIn, WindowListener
 				{
 					btdata.nPointsInTraceBox--;
 					roiManager.removeActiveRoi();
+					roiManager.activeRoi=-1;
 					setTraceBoxMode(false);
 					//bTraceMode= false;
 					//roiManager.setLockMode(bTraceMode);							
 					removeTraceBox();
 					if(btdata.nTraceBoxView==1)
 					{
-						bvv2.setActive(true);
+						bvv2.setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
+						//bvv2.setActive(true);
 					}
+					
 					
 				}
 				//not the last point, see if we need to move trace box back
