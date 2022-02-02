@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -67,6 +68,7 @@ public class BigTrace implements PlugIn, WindowListener
 {
 	public  BvvStackSource< UnsignedByteType > bvv = null;
 	public  BvvStackSource< UnsignedByteType > bvv2 = null;
+	//public  ArrayList<BvvStackSource< ? >> bvv2 = new ArrayList<BvvStackSource< ? >>();
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	RandomAccessibleInterval< UnsignedByteType > view;
 	IntervalView< UnsignedByteType > currentView = null;
@@ -77,6 +79,7 @@ public class BigTrace implements PlugIn, WindowListener
 	private boolean bTraceMode = false;
 	
 	Img< UnsignedByteType> img;
+	//Img< UnsignedByteType> img_in;
 
 	public JFrame finFrame;
 	VolumeViewerPanel panel;
@@ -119,6 +122,7 @@ public class BigTrace implements PlugIn, WindowListener
 
 		if(btdata.sFileNameImg==null)
 			return;
+		
 		final ImagePlus imp = IJ.openImage( btdata.sFileNameImg );
 		
 		/*if(!(imp.getType()==ImagePlus.GRAY8 || imp.getType()==ImagePlus.GRAY16 || imp.getType()==ImagePlus.GRAY32))
@@ -132,14 +136,29 @@ public class BigTrace implements PlugIn, WindowListener
 			return;
 		}
 
-		if(imp.getNChannels()>1)
-		{
-			IJ.showMessage("Only single channel images supported for now.");
-			return;			
-		}
+		//if(imp.getNChannels()>1)
+		//{
+			//IJ.showMessage("Only single channel images supported for now.");
+			//return;			
+	//	}
+		
+		
 		//img = convertInput(ImagePlusAdapter.wrapImgPlus( imp ), new UnsignedByteType());
 		//ImagePlusAdapter.wrapImgPlus( imp );
 		img = ImageJFunctions.wrapByte( imp );
+		/*
+		img_in = ImageJFunctions.wrapByte( imp );
+		if(imp.getNChannels()==1)
+		{
+			img = Views.interval(img_in,img_in);;
+		}
+		else
+		{
+			img =  Views.hyperSlice(img_in,2,1);
+		}
+		*/
+		
+		
 		/*
 		ImgOpener io = new ImgOpener();
 		
@@ -636,7 +655,7 @@ public class BigTrace implements PlugIn, WindowListener
 	
 	public SimilarityTransformAnimator getCenteredViewAnim(final IntervalView<UnsignedByteType> inInterval)
 	{
-		int i,j;
+		int i;
 		int nDim = inInterval.numDimensions();
 		final long [] minDim = inInterval.minAsLongArray();
 		final long [] maxDim = inInterval.maxAsLongArray();
@@ -936,8 +955,8 @@ public class BigTrace implements PlugIn, WindowListener
 		else
 		{
 			panel.state().setViewerTransform(t);
-			currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
-			//currentView=Views.interval( img, img );
+			//currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
+			currentView=Views.interval( img, img );
 			bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 			panel.requestRepaint();
 		}
@@ -1201,10 +1220,10 @@ public class BigTrace implements PlugIn, WindowListener
 		{
 			bvv2.removeFromBdv();
 		}
-		if(bvv!=null)
+		/*if(bvv!=null)
 		{
 			bvv.removeFromBdv();
-		}
+		}*/
 		//panel.stop();
 		btpanel.bvv_frame.dispose();		
 		finFrame.dispose();
@@ -1231,8 +1250,8 @@ public class BigTrace implements PlugIn, WindowListener
 		new ImageJ();*/
 		BigTrace testI=new BigTrace(); 
 		
-		testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
-		//testI.run("");
+		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		testI.run("");
 		
 		
 	}
