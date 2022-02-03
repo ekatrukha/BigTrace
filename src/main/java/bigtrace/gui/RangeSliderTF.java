@@ -119,14 +119,23 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 	
 	@Override
 	public void valueChanged(double v) {
-		// TODO Auto-generated method stub
-		try {
-			slider.setLowValue(Integer.parseInt(minTF.getText()));
-			slider.setHighValue(Integer.parseInt(maxTF.getText()));
-			slider.repaint();
-			fireSliderChanged();
-		} catch(Exception ex) {
-		}
+	
+			
+			// TODO Auto-generated method stub
+			try {
+				int nMinV=Integer.parseInt(minTF.getText());
+				int nMaxV=Integer.parseInt(maxTF.getText());
+			
+				slider.setLowValue(nMinV);
+				slider.setHighValue(nMaxV);
+				slider.repaint();
+				fireSliderChanged();
+				
+			} catch(Exception ex) 
+			{
+				System.out.println(ex.getMessage());
+			}
+		
 	}
 
 	@Override

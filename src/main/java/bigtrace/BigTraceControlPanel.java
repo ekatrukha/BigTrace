@@ -8,8 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
@@ -25,11 +23,11 @@ import javax.swing.JToggleButton;
 
 import bigtrace.gui.CropPanel;
 import bigtrace.gui.PanelTitle;
-import bigtrace.math.TraceBoxMath;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.BigTraceData;
 import bvv.util.Bvv;
 import bvv.util.BvvFunctions;
+import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.view.Views;
 
 public class BigTraceControlPanel extends JPanel
@@ -49,6 +47,8 @@ public class BigTraceControlPanel extends JPanel
 	CropPanel cropPanel;	
 	RoiManager3D roiManager;
 	
+
+	double [][] nDisplayMinMax;
 
 	public JFrame bvv_frame;
 	JProgressBar progressBar;
@@ -85,34 +85,10 @@ public class BigTraceControlPanel extends JPanel
 			@Override
 			public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
 				
-				if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(btdata.nDimIni[1][0]) && bby1<=(btdata.nDimIni[1][1]) && bbz1<=(btdata.nDimIni[1][2]))
-				{
-					/*
-					btdata.nDimCurr[0]=new long[] { bbx0, bby0, bbz0 };
-					btdata.nDimCurr[1]=new long[] { bbx1, bby1, bbz1 };
-					
-					
-					
-					//System.out.println("min ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMin()));
-					//System.out.println("max ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMax()));
-					double intMin = btrace.bvv2.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMin();
-					double intMax = btrace.bvv2.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMax();
-					//System.out.println("max ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMax()));
-					
-					btrace.bvv2.get(btdata.nChAnalysis).removeFromBdv();
-					
-					System.gc();
-					
-					btrace.currentView=Views.interval( btrace.img, btdata.nDimCurr[0], btdata.nDimCurr[1] );
-					
-					//btrace.bvv2 = BvvFunctions.show( btrace.currentView, "cropresize", Bvv.options().addTo(btrace.bvv));
-					btrace.bvv2.set(btdata.nChAnalysis, BvvFunctions.show( btrace.currentView, "cropresize", Bvv.options().addTo(btrace.bvv)));
-					//btrace.bvv.getConverterSetups().get(1).setDisplayRange(intMin, intMax);
-					//btrace.bvv2.getConverterSetups().get(0).setDisplayRange(intMin, intMax);
-					btrace.bvv2.get(btdata.nChAnalysis).setDisplayRange(intMin, intMax);
-					*/
+				bbChanged(bbx0, bby0, bbz0,  bbx1,  bby1,  bbz1);		
+
 				}
-			}
+			
 		
 		});
 		
@@ -342,6 +318,57 @@ public class BigTraceControlPanel extends JPanel
 	        
 	}
 
+	synchronized void bbChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1)
+	{
+		if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(btdata.nDimIni[1][0]) && bby1<=(btdata.nDimIni[1][1]) && bbz1<=(btdata.nDimIni[1][2]))
+		{
+
+				int i;
+				btdata.nDimCurr[0]=new long[] { bbx0, bby0, bbz0 };
+				btdata.nDimCurr[1]=new long[] { bbx1, bby1, bbz1 };
+				
+				//save display range settings
+				
+				nDisplayMinMax = new double [btrace.btdata.nTotalChannels][2];
+				for(i=0;i<btrace.btdata.nTotalChannels;i++)
+				{
+					if(btrace.bvv_sources.get(i)!=null)
+					{
+						nDisplayMinMax[i][0]=btrace.bvv_sources.get(i).getConverterSetups().get(0).getDisplayRangeMin();
+						nDisplayMinMax[i][1]=btrace.bvv_sources.get(i).getConverterSetups().get(0).getDisplayRangeMax();
+					}
+				}
+				//update sources
+				if(btrace.btdata.nTotalChannels==1)
+				{
+					btrace.sources.set(0,Views.interval(btrace.img_in, btdata.nDimCurr[0], btdata.nDimCurr[1] ));
+					
+				}
+				else
+				{
+					for(i=0;i<btrace.btdata.nTotalChannels;i++)
+					{
+						btrace.sources.set(i,Views.interval(Views.hyperSlice(btrace.img_in,2,i), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
+					}
+				}
+		
+				//update bvv sources
+				for(i=0;i<btrace.bvv_sources.size();i++)
+				{		
+
+					btrace.bvv_sources.get(i).removeFromBdv();
+					btrace.bvv_sources.set(i, BvvFunctions.show( btrace.sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(btrace.bvv_main)));
+					btrace.bvv_sources.get(i).setDisplayRange(nDisplayMinMax[i][0], nDisplayMinMax[i][1]);
+					btrace.bvv_sources.get(i).setColor( new ARGBType(btrace.colorsCh[i].getRGB() ));
+					btrace.bvv_sources.get(i).setDisplayRangeBounds(0, 255);
+				}	
+				/**/					
+
+				//just in case
+				System.gc();
+				
+			}
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub

@@ -241,6 +241,22 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cr.gridy++;
 		 roiList.add(butLoadROIs ,cr);
 		 
+		 
+		 String[] nCh = new String[bt.btdata.nTotalChannels];
+		 for(int i=0;i<nCh.length;i++)
+		 {
+			 nCh[i] = "channel "+Integer.toString(i+1);
+		 }
+		 cbActiveChannel = new JComboBox<>(nCh);
+		 cbActiveChannel.setSelectedIndex(0);
+		 cbActiveChannel.addActionListener(this); 
+		 cr.gridy++;
+		 roiList.add(new JLabel("Active"),cr);
+		 cr.gridy++;
+		 roiList.add(cbActiveChannel,cr);
+		 
+		 
+		 
 		 // a solution for now
 		 butDelete.setMinimumSize(butProperties.getPreferredSize());
 		 butDelete.setPreferredSize(butProperties.getPreferredSize());
@@ -257,7 +273,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cr.weightx = 0.01;
 	     cr.weighty = 0.01;
 	     roiList.add(new JLabel(), cr);
-		
+		/*
 		 JPanel panChannel = new JPanel(new GridBagLayout());  
 		 panChannel.setBorder(new PanelTitle(" Active channel "));
 		 String[] nCh = new String[bt.btdata.nTotalChannels];
@@ -274,6 +290,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cr.gridy=0;
 		 panChannel.add(cbActiveChannel,cr);
 		 
+		 */
+		 
 		 GridBagConstraints c = new GridBagConstraints();
 		 setLayout(new GridBagLayout());
 		 c.insets=new Insets(4,4,2,2);
@@ -288,8 +306,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //roi list
 		 c.gridy++;
 		 add(roiList,c);
-		 c.gridy++;
-		 add(panChannel,c);
+		 //c.gridy++;
+		 //add(panChannel,c);
 	      // Blank/filler component
 		 c.gridy++;
 		 c.weightx = 0.01;
@@ -757,8 +775,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		});
 		NumberField nfPointSize = new NumberField(4);
 		NumberField nfLineThickness = new NumberField(4);
+		NumberField nfZoomBoxSize = new NumberField(4);
 		nfPointSize.setText(Float.toString(currPointSize));
 		nfLineThickness.setText(Float.toString(currLineThickness));
+		nfZoomBoxSize.setText(Integer.toString(bt.btdata.nZoomBoxSize));
 
 		
 		String[] sRenderType = { "Center line", "Wire", "Surface" };
@@ -802,6 +822,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		pDefaults.add(new JLabel("Default line render: "),cd);
 		cd.gridx++;
 		pDefaults.add(renderTypeList,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		pDefaults.add(new JLabel("Zoom area size (px): "),cd);
+		cd.gridx++;
+		pDefaults.add(nfZoomBoxSize,cd);
+		
 		
 		////////////TRACING OPTIONS
 		JPanel pTrace = new JPanel(new GridBagLayout());
@@ -868,9 +894,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			}
 			
 			currPointSize = Float.parseFloat(nfPointSize.getText());
-			currLineThickness = Float.parseFloat(nfLineThickness.getText());
+			currLineThickness = Float.parseFloat(nfLineThickness.getText());			
 			currRenderType = renderTypeList.getSelectedIndex();
 			
+			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
+			Prefs.set("BigTrace.nZoomBoxSize", (double)(bt.btdata.nZoomBoxSize));
 			
 			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
 			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));

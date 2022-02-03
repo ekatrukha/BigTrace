@@ -44,8 +44,9 @@ import ij.plugin.PlugIn;
 import ij.process.LUT;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
-import net.imagej.ImgPlus;
+import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 
@@ -72,10 +73,11 @@ public class BigTrace implements PlugIn, WindowListener
 	//public  BvvStackSource< UnsignedByteType > bvv2 = null;
 	public  ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<BvvStackSource< ? >>();
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
-	RandomAccessibleInterval< UnsignedByteType > view;
+	RandomAccessibleInterval< UnsignedByteType > empty_view;
 	//IntervalView< UnsignedByteType > currentView = null;
 	ArrayList<IntervalView< UnsignedByteType >>  sources = new ArrayList<IntervalView< UnsignedByteType >>();
-	Color [] colorsCh;
+	public Color [] colorsCh;
+	public double [][] channelRanges;
 	//IntervalView< UnsignedByteType > trace_weights = null;
 	//IntervalView< FloatType > trace_vectors=null;
 	//ArrayList<long []> jump_points = null;
@@ -155,6 +157,9 @@ public class BigTrace implements PlugIn, WindowListener
 			sources.add(Views.interval(img_in,img_in));
 			colorsCh = new Color[1];
 			colorsCh[0] = Color.WHITE;
+			channelRanges = new double [2][1];
+			channelRanges[0][0]=imp.getDisplayRangeMin();
+			channelRanges[1][0]=imp.getDisplayRangeMax();
 			//img = Views.interval(img_in,img_in);;
 		}
 		else
@@ -266,12 +271,12 @@ public class BigTrace implements PlugIn, WindowListener
 
 		// init bigvolumeviewer
 		final Img< UnsignedByteType > imgx = ArrayImgs.unsignedBytes( new long[]{ 2, 2, 2 } );
-		view =				 
+		empty_view =				 
 				 Views.interval( imgx, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
 		
 						
-		bvv_main = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(btdata.dCam).dClipNear(btdata.dClipNear).dClipFar(btdata.dClipFar).renderWidth( 800).renderHeight( 800 ));	
-		bvv_main.setActive(false);
+		bvv_main = BvvFunctions.show( empty_view, "empty" ,Bvv.options().dCam(btdata.dCam).dClipNear(btdata.dClipNear).dClipFar(btdata.dClipFar).renderWidth( 800).renderHeight( 800 ));	
+		bvv_main.setActive(true);
 		panel=bvv_main.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();
 		panel.setRenderScene(this::renderScene);
@@ -504,6 +509,30 @@ public class BigTrace implements PlugIn, WindowListener
 			}
 		}
 	}
+	
+	/** find a brightest pixel in the direction of a click
+	 *  zoom main view to it, limiting to nZoomBoxSize
+	 **/ 
+	public void actionZoomToPoint()
+	{
+		
+		if(!bInputLock)
+		{
+			//addPoint();
+			RealPoint target = new RealPoint(3);
+			if(!bTraceMode)
+			{
+				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
+				{
+					
+					FinalInterval zoomInterval = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.nZoomBoxSize, target);
+			
+					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,1.0));
+				}
+			}
+
+		}
+	}
 	public void installActions()
 	{
 		final Actions actions = new Actions( new InputTriggerConfig() );
@@ -513,6 +542,7 @@ public class BigTrace implements PlugIn, WindowListener
 		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );
 		actions.runnableAction(() -> actionMoveTraceBox(),          "move trace box", "T" );
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
+		actions.runnableAction(() -> actionZoomToPoint(),	"straight line semitrace", "D" );
 						
 		actions.runnableAction(
 				() -> {
@@ -574,7 +604,7 @@ public class BigTrace implements PlugIn, WindowListener
 
 	public void calcShowTraceBox(final LineTrace3D trace)
 	{
-		long[][] rangeTraceBox;
+		FinalInterval rangeTraceBox;
 		
 		if(trace.numVertices()==1)
 		{
@@ -585,10 +615,10 @@ public class BigTrace implements PlugIn, WindowListener
 			rangeTraceBox = getTraceBoxNext(sources.get(btdata.nChAnalysis),btdata.lTraceBoxSize, btdata.fTraceBoxShift, trace);
 		}
 		
-		IntervalView<UnsignedByteType> traceInterval = Views.interval(sources.get(btdata.nChAnalysis), rangeTraceBox[0], rangeTraceBox[1]);
+		IntervalView<UnsignedByteType> traceInterval = Views.interval(sources.get(btdata.nChAnalysis), rangeTraceBox);
 		
 		//getCenteredView(traceInterval);
-		panel.setTransformAnimator(getCenteredViewAnim(traceInterval));
+		panel.setTransformAnimator(getCenteredViewAnim(traceInterval,0.5));
 		//long start1, end1;
 
 		//start1 = System.currentTimeMillis();
@@ -635,9 +665,9 @@ public class BigTrace implements PlugIn, WindowListener
 	}
 
 	//gets a box around "target" with half size of range
-	public long[][] getTraceBoxCentered(final IntervalView< UnsignedByteType > viewclick, final long range, final RealPoint target)
+	public FinalInterval getTraceBoxCentered(final IntervalView< UnsignedByteType > viewclick, final long range, final RealPoint target)
 	{
-		long[][] rangeM = new long[3][3];
+		long[][] rangeM = new long[2][3];
 		int i;
 		float [] pos = new float[3];
 		target.localize(pos);
@@ -647,11 +677,12 @@ public class BigTrace implements PlugIn, WindowListener
 			rangeM[1][i]=(long)(pos[i])+range;								
 		}
 		VolumeMisc.checkBoxInside(viewclick, rangeM);
-		return rangeM;							
+		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
+		return finInt;							
 	}
 
 	//gets a box around "target" with half size of range
-	public long[][] getTraceBoxNext(final IntervalView< UnsignedByteType > viewclick, final long range, final float fFollowDegree, LineTrace3D trace)
+	public FinalInterval getTraceBoxNext(final IntervalView< UnsignedByteType > viewclick, final long range, final float fFollowDegree, LineTrace3D trace)
 	{
 		long[][] rangeM = new long[3][3];
 		int i;
@@ -678,10 +709,12 @@ public class BigTrace implements PlugIn, WindowListener
 		}		
 		
 		VolumeMisc.checkBoxInside(viewclick, rangeM);
-		return rangeM;							
+		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
+		return finInt;
+									
 	}
 	
-	public SimilarityTransformAnimator getCenteredViewAnim(final IntervalView<UnsignedByteType> inInterval)
+	public SimilarityTransformAnimator getCenteredViewAnim(final Interval inInterval, double zoomFraction)
 	{
 		int i;
 		int nDim = inInterval.numDimensions();
@@ -709,8 +742,8 @@ public class BigTrace implements PlugIn, WindowListener
 		//current width/height
 		double dCurrW = boxAfter.realMax(0)-boxAfter.realMin(0);
 		double dCurrH = boxAfter.realMax(1)-boxAfter.realMin(1);
-		double scaleX = (0.5)*sW/dCurrW;
-		double scaleY = (0.5)*sH/dCurrH;
+		double scaleX = (zoomFraction)*sW/dCurrW;
+		double scaleY = (zoomFraction)*sH/dCurrH;
 		double scalefin=Math.min(scaleX, scaleY);
 		
 		//scaled the volume
@@ -987,6 +1020,8 @@ public class BigTrace implements PlugIn, WindowListener
 			{
 				bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
 				bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
+				bvv_sources.get(i).setDisplayRange(channelRanges[0][i], channelRanges[1][i]);
+				bvv_sources.get(i).setDisplayRangeBounds(0, 255);
 			}
 
 		}
@@ -1194,10 +1229,11 @@ public class BigTrace implements PlugIn, WindowListener
 	}
 	/** creates and fills array colorsCh with channel colors,
 	 * taken from Christian Tischer reply in this thread
-	 * https://forum.image.sc/t/composite-image-channel-color/45196/3**/
+	 * https://forum.image.sc/t/composite-image-channel-color/45196/3 **/
 	public void getChannelsColors(ImagePlus imp)
 	{
 		colorsCh = new Color[imp.getNChannels()];
+		channelRanges = new double [2][imp.getNChannels()];
 	      for ( int c = 0; c < imp.getNChannels(); ++c )
 	        {
 	            if ( imp instanceof CompositeImage )
@@ -1226,11 +1262,16 @@ public class BigTrace implements PlugIn, WindowListener
 					}
 
 					compositeImage.setC( c + 1 );
-
+					channelRanges[0][c]=(int)imp.getDisplayRangeMin();
+					channelRanges[1][c]=(int)imp.getDisplayRangeMax();
+					//channelRanges.add( "" +  + " " +  imp.getDisplayRangeMax() );
 	            }
 	            else
 	            {
 	            	colorsCh[c] = Color.WHITE;
+	    			channelRanges[0][c]=(int)imp.getDisplayRangeMin();
+					channelRanges[1][c]=(int)imp.getDisplayRangeMax();
+	            	//channelRanges.add( "" + imp.getDisplayRangeMin() + " " +  imp.getDisplayRangeMax() );
 	                //channelColors.add( ImarisUtils.DEFAULT_COLOR );
 	                //channelRanges.add( "" + imp.getDisplayRangeMin() + " " +  imp.getDisplayRangeMax() );
 	                //channelNames.add( "channel_" + c );
@@ -1307,6 +1348,7 @@ public class BigTrace implements PlugIn, WindowListener
 		//btpanel.bvv_frame.dispatchEvent(new WindowEvent(btpanel.bvv_frame, WindowEvent.WINDOW_CLOSING));
 		//finFrame.dispatchEvent(new WindowEvent(finFrame, WindowEvent.WINDOW_CLOSING));
 		
+		//bvv_main.close();
 		btpanel.bvv_frame.dispose();		
 		finFrame.dispose();
 	}

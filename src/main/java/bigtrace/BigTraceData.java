@@ -12,7 +12,7 @@ import net.imglib2.view.IntervalView;
 public class BigTraceData {
 
 	
-	public String sVersion = "0.0.2";
+	public String sVersion = "0.0.3";
 	
 	/////////////// input file
 	public String sFileNameImg;
@@ -51,7 +51,11 @@ public class BigTraceData {
 	
 	/** half size of rectangle around click point (in screen pixels)
 	 * used to find maximim intensity **/
-	int nHalfClickSizeWindow = 5;
+	public int nHalfClickSizeWindow = 5;
+	
+	/** characteristic size of zoom in area (in pixels of original volume) **/
+	public int nZoomBoxSize = 150;
+	
 	
 	///////////////////////////// tracing box
 	
@@ -62,7 +66,7 @@ public class BigTraceData {
 	/**special points Dijkstra search for the trace box**/
 	public ArrayList<long []> jump_points = null;
 	
-
+	
 	
 	/** characteristic size (SD) of lines (for now in all dimensions)**/
 	public double sigmaGlob = 3.0;
@@ -85,5 +89,6 @@ public class BigTraceData {
 	{
 		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);
 		sigmaGlob = Prefs.get("BigTrace.sigmaGlob", 3.0);
+		nZoomBoxSize = (int) Prefs.get("BigTrace.nZoomBoxSize", 150);
 	}
 }
