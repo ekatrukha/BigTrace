@@ -88,6 +88,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JButton butSaveROIs;
 	 JButton butLoadROIs;
 	 
+	 JComboBox<String> cbActiveChannel;
+	 
 	 JToggleButton roiPointMode;
 	 JToggleButton roiPolyLineMode;
 	 JToggleButton roiPolySemiAMode;
@@ -256,7 +258,22 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	     cr.weighty = 0.01;
 	     roiList.add(new JLabel(), cr);
 		
-	     
+		 JPanel panChannel = new JPanel(new GridBagLayout());  
+		 panChannel.setBorder(new PanelTitle(" Active channel "));
+		 String[] nCh = new String[bt.btdata.nTotalChannels];
+		 for(int i=0;i<nCh.length;i++)
+		 {
+			 nCh[i] = "channel "+Integer.toString(i+1);
+		 }
+		 cbActiveChannel = new JComboBox<>(nCh);
+		 cbActiveChannel.setSelectedIndex(0);
+		 cbActiveChannel.addActionListener(this);
+		 
+		 cr = new GridBagConstraints();
+		 cr.gridx=0;
+		 cr.gridy=0;
+		 panChannel.add(cbActiveChannel,cr);
+		 
 		 GridBagConstraints c = new GridBagConstraints();
 		 setLayout(new GridBagLayout());
 		 c.insets=new Insets(4,4,2,2);
@@ -271,6 +288,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //roi list
 		 c.gridy++;
 		 add(roiList,c);
+		 c.gridy++;
+		 add(panChannel,c);
 	      // Blank/filler component
 		 c.gridy++;
 		 c.weightx = 0.01;
@@ -506,6 +525,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 butLoadROIs.setEnabled(bState);
 			 listScroller.setEnabled(bState);			 
 			 jlist.setEnabled(bState);
+			 cbActiveChannel.setEnabled(bState);
 
 	 }
 	 public void unselect()
@@ -593,7 +613,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		{
 			dialSettings();
 		}
-		
+		//ACTIVE CHANNEL
+		if(e.getSource() == cbActiveChannel)
+		{
+			bt.btdata.nChAnalysis=cbActiveChannel.getSelectedIndex();
+		}		
 		//SHOW ALL BUTTON
 		if(e.getSource() == butShowAll)
 		{

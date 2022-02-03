@@ -42,6 +42,10 @@ public class BigTraceData {
 	
 	public double [] bBrightnessRange = new double [2];
 	
+	/**number of channel used for analysis/tracing **/
+	public int nChAnalysis=0;
+	public int nTotalChannels=0;
+	
 	
 	/////////////////////////////////clicking interface 
 	
@@ -57,6 +61,8 @@ public class BigTraceData {
 	public IntervalView< FloatType > trace_vectors=null;
 	/**special points Dijkstra search for the trace box**/
 	public ArrayList<long []> jump_points = null;
+	
+
 	
 	/** characteristic size (SD) of lines (for now in all dimensions)**/
 	public double sigmaGlob = 3.0;

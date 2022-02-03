@@ -5,8 +5,9 @@ package bigtrace;
 import java.awt.Color;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.image.IndexColorModel;
 import java.util.ArrayList;
-import java.util.List;
+
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -36,24 +37,25 @@ import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
 
 import bvv.util.BvvStackSource;
+import ij.CompositeImage;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.PlugIn;
+import ij.process.LUT;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
 import net.imagej.ImgPlus;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.converter.RealTypeConverters;
+
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgView;
-import net.imglib2.img.array.ArrayImgFactory;
+
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
+
+import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
@@ -66,20 +68,21 @@ import tpietzsch.util.MatrixMath;
 
 public class BigTrace implements PlugIn, WindowListener
 {
-	public  BvvStackSource< UnsignedByteType > bvv = null;
-	public  BvvStackSource< UnsignedByteType > bvv2 = null;
-	//public  ArrayList<BvvStackSource< ? >> bvv2 = new ArrayList<BvvStackSource< ? >>();
+	public  BvvStackSource< UnsignedByteType > bvv_main = null;
+	//public  BvvStackSource< UnsignedByteType > bvv2 = null;
+	public  ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<BvvStackSource< ? >>();
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	RandomAccessibleInterval< UnsignedByteType > view;
-	IntervalView< UnsignedByteType > currentView = null;
-
+	//IntervalView< UnsignedByteType > currentView = null;
+	ArrayList<IntervalView< UnsignedByteType >>  sources = new ArrayList<IntervalView< UnsignedByteType >>();
+	Color [] colorsCh;
 	//IntervalView< UnsignedByteType > trace_weights = null;
 	//IntervalView< FloatType > trace_vectors=null;
 	//ArrayList<long []> jump_points = null;
 	private boolean bTraceMode = false;
 	
-	Img< UnsignedByteType> img;
-	//Img< UnsignedByteType> img_in;
+	//Img< UnsignedByteType> img;
+	Img< UnsignedByteType> img_in;
 
 	public JFrame finFrame;
 	VolumeViewerPanel panel;
@@ -145,7 +148,29 @@ public class BigTrace implements PlugIn, WindowListener
 		
 		//img = convertInput(ImagePlusAdapter.wrapImgPlus( imp ), new UnsignedByteType());
 		//ImagePlusAdapter.wrapImgPlus( imp );
-		img = ImageJFunctions.wrapByte( imp );
+		img_in = ImageJFunctions.wrapByte( imp );
+		btdata.nTotalChannels=imp.getNChannels();
+		if(btdata.nTotalChannels==1)
+		{
+			sources.add(Views.interval(img_in,img_in));
+			colorsCh = new Color[1];
+			colorsCh[0] = Color.WHITE;
+			//img = Views.interval(img_in,img_in);;
+		}
+		else
+		{
+			getChannelsColors(imp);
+			//colorsCh = new Color [imp.getNChannels()];
+			//CompositeImage multichannels_imp = (CompositeImage) imp;
+			for(int i=0;i<btdata.nTotalChannels;i++)
+			{
+				//multichannels_imp.setC(i+1);
+				//colorsCh[i] = multichannels_imp.getChannelColor();
+				sources.add( Views.hyperSlice(img_in,2,i));
+				//img =  Views.hyperSlice(img_in,2,1);
+			}
+		}
+		
 		/*
 		img_in = ImageJFunctions.wrapByte( imp );
 		if(imp.getNChannels()==1)
@@ -172,11 +197,12 @@ public class BigTrace implements PlugIn, WindowListener
 		//		test_BVV_inteface.class.getResource( "/t1-head.tif" ).getFile(),
 		//		new UnsignedByteType() );
 	
+		sources.get(0);
+		sources.get(0).min(btdata.nDimIni[0]);
+		sources.get(0).max(btdata.nDimIni[1]);
+		sources.get(0).min(btdata.nDimCurr[0]);
+		sources.get(0).max(btdata.nDimCurr[1]);
 
-		img.min(btdata.nDimIni[0]);
-		img.max(btdata.nDimIni[1]);
-		img.min(btdata.nDimCurr[0]);
-		img.max(btdata.nDimCurr[1]);
 
 
 		roiManager = new RoiManager3D(this);
@@ -195,13 +221,12 @@ public class BigTrace implements PlugIn, WindowListener
 		    System.err.println( "Failed to initialize LaF" );
 		}
 		
+		//not sure we really need it, but anyway
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI();
             }
         });
-
-//		bdv.getBdvHandle().getKeybindings().removeInputMap( "BigTrace" );
 
 	}
 	
@@ -245,9 +270,9 @@ public class BigTrace implements PlugIn, WindowListener
 				 Views.interval( imgx, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
 		
 						
-		bvv = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(btdata.dCam).dClipNear(btdata.dClipNear).dClipFar(btdata.dClipFar).renderWidth( 800).renderHeight( 800 ));	
-		bvv.setActive(false);
-		panel=bvv.getBvvHandle().getViewerPanel();
+		bvv_main = BvvFunctions.show( view, "empty" ,Bvv.options().dCam(btdata.dCam).dClipNear(btdata.dClipNear).dClipFar(btdata.dClipFar).renderWidth( 800).renderHeight( 800 ));	
+		bvv_main.setActive(false);
+		panel=bvv_main.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();
 		panel.setRenderScene(this::renderScene);
 		
@@ -261,7 +286,7 @@ public class BigTrace implements PlugIn, WindowListener
 		//btpanel.frame = new JFrame("BigTrace");
 		//btpanel.setName("TEEEST");
 		//btpanel.frame = (BigTraceControlPanel)new JFrame("BigTrace");
-		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv.getBvvHandle().getViewerPanel());
+		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv_main.getBvvHandle().getViewerPanel());
 	 	
 	 	//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		//btpanel.frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -300,7 +325,7 @@ public class BigTrace implements PlugIn, WindowListener
 			RealPoint target = new RealPoint(3);
 			if(!bTraceMode)
 			{
-				if(findPointLocationFromClick(currentView, btdata.nHalfClickSizeWindow,target))
+				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
 				{
 					//point or line
 					if(roiManager.mode<=RoiManager3D.ADD_POINT_LINE)
@@ -376,7 +401,7 @@ public class BigTrace implements PlugIn, WindowListener
 					removeTraceBox();
 					if(btdata.nTraceBoxView==1)
 					{
-						bvv2.setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
+						bvv_sources.get(btdata.nChAnalysis).setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
 						//bvv2.setActive(true);
 					}
 					
@@ -504,7 +529,7 @@ public class BigTrace implements PlugIn, WindowListener
 			
 
 		//actions.namedAction(action, defaultKeyStrokes);
-		actions.install( bvv.getBvvHandle().getKeybindings(), "BigTrace actions" );
+		actions.install( bvv_main.getBvvHandle().getKeybindings(), "BigTrace actions" );
 		
 		actions.runnableAction(
 				() -> {
@@ -553,14 +578,14 @@ public class BigTrace implements PlugIn, WindowListener
 		
 		if(trace.numVertices()==1)
 		{
-			rangeTraceBox = getTraceBoxCentered(currentView,btdata.lTraceBoxSize, trace.vertices.get(0));
+			rangeTraceBox = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.lTraceBoxSize, trace.vertices.get(0));
 		}
 		else
 		{
-			rangeTraceBox = getTraceBoxNext(currentView,btdata.lTraceBoxSize, btdata.fTraceBoxShift, trace);
+			rangeTraceBox = getTraceBoxNext(sources.get(btdata.nChAnalysis),btdata.lTraceBoxSize, btdata.fTraceBoxShift, trace);
 		}
 		
-		IntervalView<UnsignedByteType> traceInterval = Views.interval(currentView, rangeTraceBox[0], rangeTraceBox[1]);
+		IntervalView<UnsignedByteType> traceInterval = Views.interval(sources.get(btdata.nChAnalysis), rangeTraceBox[0], rangeTraceBox[1]);
 		
 		//getCenteredView(traceInterval);
 		panel.setTransformAnimator(getCenteredViewAnim(traceInterval));
@@ -671,8 +696,8 @@ public class BigTrace implements PlugIn, WindowListener
 		}
 		
 		//current window dimensions
-		final int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
-		final int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
+		final int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
+		final int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
 		
 		final AffineTransform3D transform = new AffineTransform3D();
 		panel.state().getViewerTransform(transform);
@@ -754,14 +779,14 @@ public class BigTrace implements PlugIn, WindowListener
 			if(btdata.nTraceBoxView==1)
 			{
 				//bvv2.setActive(false);
-				btdata.bBrightnessRange[0]=bvv2.getConverterSetups().get(0).getDisplayRangeMin();
-				btdata.bBrightnessRange[1]=bvv2.getConverterSetups().get(0).getDisplayRangeMax();
-				bvv2.setDisplayRange(0.0, 0.0);
+				btdata.bBrightnessRange[0]=bvv_sources.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMin();
+				btdata.bBrightnessRange[1]=bvv_sources.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMax();
+				bvv_sources.get(btdata.nChAnalysis).setDisplayRange(0.0, 0.0);
 				//bvv2.getConverterSetups().get(0).setDisplayRange(0.0, 0.0);
 			}
 			
 		}
-		bvv_trace = BvvFunctions.show(weights, "weights", Bvv.options().addTo(bvv));
+		bvv_trace = BvvFunctions.show(weights, "weights", Bvv.options().addTo(bvv_main));
 		bvv_trace.setCurrent();
 		bvv_trace.setDisplayRange(0., 150.0);
 		//handl.setDisplayMode(DisplayMode.SINGLE);
@@ -782,7 +807,7 @@ public class BigTrace implements PlugIn, WindowListener
 		if(btdata.nTraceBoxView==1)
 		{
 
-			bvv2.setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
+			bvv_sources.get(btdata.nChAnalysis).setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
 		}
 	}	
 	
@@ -930,8 +955,8 @@ public class BigTrace implements PlugIn, WindowListener
 		int nH= (int)btdata.nDimIni[1][1];
 		int nD= (int)btdata.nDimIni[1][2];
 		
-		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
-		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
+		int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
+		int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
 		
 		if((double)sW/(double)nW<(double)sH/(double)nH)
 		{
@@ -958,10 +983,12 @@ public class BigTrace implements PlugIn, WindowListener
 		else
 		{
 			panel.state().setViewerTransform(t);
-			//currentView=Views.interval( img, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );				
-			currentView=Views.interval( img, img );
-			bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
-			panel.requestRepaint();
+			for(int i=0;i<sources.size();i++)
+			{
+				bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
+				bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
+			}
+
 		}
 
 //        RealRandomAccessible<UnsignedByteType> rra = new Procedural3DImageByte(
@@ -1010,8 +1037,8 @@ public class BigTrace implements PlugIn, WindowListener
 		double scale;
 		int nH= (int)btdata.nDimIni[1][1];
 		int nD= (int)btdata.nDimIni[1][2];
-		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
-		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
+		int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
+		int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
 		
 		if((double)sW/(double)nD<(double)sH/(double)nH)
 		{
@@ -1031,7 +1058,7 @@ public class BigTrace implements PlugIn, WindowListener
 		t.concatenate(t2);
 
 		
-		panel=bvv.getBvvHandle().getViewerPanel();
+		panel=bvv_main.getBvvHandle().getViewerPanel();
 		
 		SimilarityTransformAnimator anim = new SimilarityTransformAnimator(panel.state().getViewerTransform(),t,0,0,300);
 		
@@ -1043,14 +1070,14 @@ public class BigTrace implements PlugIn, WindowListener
 	{
 		int i,j;
 
-		java.awt.Point point_mouse  = bvv.getBvvHandle().getViewerPanel().getMousePosition();
+		java.awt.Point point_mouse  = bvv_main.getBvvHandle().getViewerPanel().getMousePosition();
 		System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
 														
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
 		panel.state().getViewerTransform(transform);
-		int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
-		int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
+		int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
+		int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
 		Matrix4f matPerspWorld = new Matrix4f();
 		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
 		
@@ -1165,7 +1192,51 @@ public class BigTrace implements PlugIn, WindowListener
 		//render_pl();		
 		
 	}
-	
+	/** creates and fills array colorsCh with channel colors,
+	 * taken from Christian Tischer reply in this thread
+	 * https://forum.image.sc/t/composite-image-channel-color/45196/3**/
+	public void getChannelsColors(ImagePlus imp)
+	{
+		colorsCh = new Color[imp.getNChannels()];
+	      for ( int c = 0; c < imp.getNChannels(); ++c )
+	        {
+	            if ( imp instanceof CompositeImage )
+	            {
+	                CompositeImage compositeImage = ( CompositeImage ) imp;
+					LUT channelLut = compositeImage.getChannelLut( c + 1 );
+					int mode = compositeImage.getMode();
+					if ( channelLut == null || mode == CompositeImage.GRAYSCALE )
+					{
+						colorsCh[c] = Color.WHITE;
+					}
+					else
+					{
+						IndexColorModel cm = channelLut.getColorModel();
+						if ( cm == null )
+						{
+							colorsCh[c] = Color.WHITE;
+						}
+						else
+						{
+							int i = cm.getMapSize() - 1;
+							colorsCh[c] = new Color(cm.getRed( i ) ,cm.getGreen( i ) ,cm.getBlue( i ) );
+
+						}
+
+					}
+
+					compositeImage.setC( c + 1 );
+
+	            }
+	            else
+	            {
+	            	colorsCh[c] = Color.WHITE;
+	                //channelColors.add( ImarisUtils.DEFAULT_COLOR );
+	                //channelRanges.add( "" + imp.getDisplayRangeMin() + " " +  imp.getDisplayRangeMax() );
+	                //channelNames.add( "channel_" + c );
+	            }
+	        }
+	}
 
 
 
@@ -1214,24 +1285,32 @@ public class BigTrace implements PlugIn, WindowListener
 	
 	public void closeWindows()
 	{
-		if(bvv_trace!=null)
+		/*if(bvv_trace!=null)
 		{
 			bvv_trace.removeFromBdv();
 			System.gc();
-		}
-		if(bvv2!=null)
+		}*/
+		//is it necessary? not sure
+		/*
+		if(bvv_sources!=null)
 		{
-			bvv2.removeFromBdv();
-		}
+			for(int i=0;i<bvv_sources.size();i++)
+			{
+				bvv_sources.get(i).removeFromBdv();
+			}
+		}*/
 		/*if(bvv!=null)
 		{
 			bvv.removeFromBdv();
 		}*/
 		//panel.stop();
+		//btpanel.bvv_frame.dispatchEvent(new WindowEvent(btpanel.bvv_frame, WindowEvent.WINDOW_CLOSING));
+		//finFrame.dispatchEvent(new WindowEvent(finFrame, WindowEvent.WINDOW_CLOSING));
+		
 		btpanel.bvv_frame.dispose();		
 		finFrame.dispose();
 	}
-	
+	/*
 	@SuppressWarnings( "rawtypes" )
 	private static  < T extends NativeType< T > > ImgPlus< T > convertInput(ImgPlus img_in, RealType type)
 	{
@@ -1239,7 +1318,7 @@ public class BigTrace implements PlugIn, WindowListener
 		Img< T > convertedImg = ImgView.wrap( convertedRAI, new ArrayImgFactory<T>( convertedRAI.randomAccess().get().createVariable() ) );
 		return new ImgPlus<>( convertedImg, img_in );
 	}
-
+*/
 	
 	public static void main( String... args) throws Exception
 	{

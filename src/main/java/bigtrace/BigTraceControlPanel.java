@@ -87,24 +87,30 @@ public class BigTraceControlPanel extends JPanel
 				
 				if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(btdata.nDimIni[1][0]) && bby1<=(btdata.nDimIni[1][1]) && bbz1<=(btdata.nDimIni[1][2]))
 				{
+					/*
 					btdata.nDimCurr[0]=new long[] { bbx0, bby0, bbz0 };
 					btdata.nDimCurr[1]=new long[] { bbx1, bby1, bbz1 };
-					System.out.println("min ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMin()));
-					System.out.println("max ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMax()));
-					double intMin = btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMin();
-					double intMax = btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMax();
+					
+					
+					
+					//System.out.println("min ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMin()));
+					//System.out.println("max ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMax()));
+					double intMin = btrace.bvv2.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMin();
+					double intMax = btrace.bvv2.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMax();
 					//System.out.println("max ="+Double.toString(btrace.bvv2.getConverterSetups().get(0).getDisplayRangeMax()));
 					
-					btrace.bvv2.removeFromBdv();
+					btrace.bvv2.get(btdata.nChAnalysis).removeFromBdv();
 					
 					System.gc();
 					
 					btrace.currentView=Views.interval( btrace.img, btdata.nDimCurr[0], btdata.nDimCurr[1] );
 					
-					btrace.bvv2 = BvvFunctions.show( btrace.currentView, "cropresize", Bvv.options().addTo(btrace.bvv));
+					//btrace.bvv2 = BvvFunctions.show( btrace.currentView, "cropresize", Bvv.options().addTo(btrace.bvv));
+					btrace.bvv2.set(btdata.nChAnalysis, BvvFunctions.show( btrace.currentView, "cropresize", Bvv.options().addTo(btrace.bvv)));
 					//btrace.bvv.getConverterSetups().get(1).setDisplayRange(intMin, intMax);
 					//btrace.bvv2.getConverterSetups().get(0).setDisplayRange(intMin, intMax);
-					btrace.bvv2.setDisplayRange(intMin, intMax);
+					btrace.bvv2.get(btdata.nChAnalysis).setDisplayRange(intMin, intMax);
+					*/
 				}
 			}
 		
