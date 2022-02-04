@@ -275,7 +275,12 @@ public class BigTrace implements PlugIn, WindowListener
 				 Views.interval( imgx, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
 		
 						
-		bvv_main = BvvFunctions.show( empty_view, "empty" ,Bvv.options().dCam(btdata.dCam).dClipNear(btdata.dClipNear).dClipFar(btdata.dClipFar).renderWidth( 800).renderHeight( 800 ));	
+		bvv_main = BvvFunctions.show( empty_view, "empty" ,Bvv.options().
+				dCam(btdata.dCam).
+				dClipNear(btdata.dClipNear).
+				dClipFar(btdata.dClipFar).
+				renderWidth( 800).
+				renderHeight( 800 ).ditherWidth(2));	
 		bvv_main.setActive(true);
 		panel=bvv_main.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();
@@ -533,6 +538,23 @@ public class BigTrace implements PlugIn, WindowListener
 
 		}
 	}
+	
+	/** zoom out to get full overview of current active volume view
+	 **/ 
+	public void actionZoomOut()
+	{
+		
+		if(!bInputLock)
+		{
+			if(!bTraceMode)
+			{
+			
+					panel.setTransformAnimator(getCenteredViewAnim(sources.get(btdata.nChAnalysis),1.0));
+
+			}
+
+		}
+	}
 	public void installActions()
 	{
 		final Actions actions = new Actions( new InputTriggerConfig() );
@@ -542,7 +564,8 @@ public class BigTrace implements PlugIn, WindowListener
 		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );
 		actions.runnableAction(() -> actionMoveTraceBox(),          "move trace box", "T" );
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
-		actions.runnableAction(() -> actionZoomToPoint(),	"straight line semitrace", "D" );
+		actions.runnableAction(() -> actionZoomToPoint(),			"zoom in to click", "D" );
+		actions.runnableAction(() -> actionZoomOut(),				"zoom out", "C" );
 						
 		actions.runnableAction(
 				() -> {
