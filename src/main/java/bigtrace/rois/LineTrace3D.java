@@ -39,7 +39,7 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 	public int type;
 	public int renderType;
 	
-	public LineTrace3D(final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nRenderType, final int nSectorN_)
+	/*public LineTrace3D(final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nRenderType, final int nSectorN_)
 	{
 		type = Roi3D.LINE_TRACE;
 		lineThickness=lineThickness_;
@@ -54,6 +54,29 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		segmentsVis = new ArrayList<VisPolyLineScaled>();
 		renderType= nRenderType;
 		nSectorN = nSectorN_;
+		name = "trace"+Integer.toString(this.hashCode());
+
+	}
+	*/
+	public LineTrace3D(final Roi3DPreset preset_in)
+	{
+		type = Roi3D.LINE_TRACE;
+		pointSize = preset_in.pointSize;
+		lineThickness=preset_in.lineThickness;
+		
+		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
+		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
+
+		renderType= preset_in.renderType;
+		nSectorN = preset_in.sectorN;
+		
+		vertices = new ArrayList<RealPoint>();
+		segments = new ArrayList<ArrayList<RealPoint>>();
+		verticesVis = new VisPointsScaled();
+		verticesVis.setColor(pointColor);
+		verticesVis.setSize(pointSize);
+		
+		segmentsVis = new ArrayList<VisPolyLineScaled>();
 		name = "trace"+Integer.toString(this.hashCode());
 
 	}

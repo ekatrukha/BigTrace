@@ -77,9 +77,11 @@ public class BigTraceData {
 	/** half size of tracing box (for now in all dimensions) **/
 	public long lTraceBoxSize = 50;
 	
-	/** How much the tracebox will follow the last direction of trace:
-	 * in the range [0..1], 0 = no following (center), 1 = previous point is at the edge of the box**/
-	float fTraceBoxShift = 0.9f;
+	
+	/** After advancing tracebox, this parameter defines 
+	 * how much tracebox is going to follow the last direction of trace (with respect to the last added point):
+	 * in the range [0..1], 0 = last point in the center of new tracebox, 1 = previous point is at the edge of the new tracebox**/
+	public float fTraceBoxAdvanceFraction = 0.9f;
 	/** current number of vertices in the tracebox **/
 	public int nPointsInTraceBox=0;
 	
@@ -90,5 +92,6 @@ public class BigTraceData {
 		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);
 		sigmaGlob = Prefs.get("BigTrace.sigmaGlob", 3.0);
 		nZoomBoxSize = (int) Prefs.get("BigTrace.nZoomBoxSize", 150);
+		fTraceBoxAdvanceFraction = (float) Prefs.get("BigTrace.fTraceBoxAdvanceFraction", 0.9);
 	}
 }

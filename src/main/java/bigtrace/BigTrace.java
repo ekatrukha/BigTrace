@@ -491,7 +491,7 @@ public class BigTrace implements PlugIn, WindowListener
 		}
 	}
 	/** move trace box to a position around current last added point **/
-	public void actionMoveTraceBox()
+	public void actionAdvanceTraceBox()
 	{
 		if(!bInputLock)
 		{
@@ -569,7 +569,7 @@ public class BigTrace implements PlugIn, WindowListener
 		actions.runnableAction(() -> actionRemovePoint(),       	"remove point",	"G" );
 		actions.runnableAction(() -> actionDeselect(),	            "deselect", "H" );
 		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );
-		actions.runnableAction(() -> actionMoveTraceBox(),          "move trace box", "T" );
+		actions.runnableAction(() -> actionAdvanceTraceBox(),          "move trace box", "T" );
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
 		actions.runnableAction(() -> actionZoomToPoint(),			"zoom in to click", "D" );
 		actions.runnableAction(() -> actionZoomOut(),				"zoom out", "C" );
@@ -643,7 +643,7 @@ public class BigTrace implements PlugIn, WindowListener
 		}
 		else
 		{
-			rangeTraceBox = getTraceBoxNext(sources.get(btdata.nChAnalysis),btdata.lTraceBoxSize, btdata.fTraceBoxShift, trace);
+			rangeTraceBox = getTraceBoxNext(sources.get(btdata.nChAnalysis),btdata.lTraceBoxSize, btdata.fTraceBoxAdvanceFraction, trace);
 		}
 		
 		IntervalView<UnsignedByteType> traceInterval = Views.interval(sources.get(btdata.nChAnalysis), rangeTraceBox);

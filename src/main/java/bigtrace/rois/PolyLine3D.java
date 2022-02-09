@@ -38,6 +38,7 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	public int type;
 	public int renderType;
 	
+	/*
 	public PolyLine3D(final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nRenderType, final int nSectorN_)
 	{
 		type = Roi3D.POLYLINE;
@@ -54,6 +55,33 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 		edgesVis = new VisPolyLineScaled();
 		edgesVis.setColor(lineColor_);
 		edgesVis.setThickness(lineThickness_);
+		edgesVis.setSectorN(nSectorN);
+		edgesVis.setRenderType(renderType);
+		name = "polyl"+Integer.toString(this.hashCode());
+
+	}
+	*/
+	public PolyLine3D(final Roi3DPreset preset_in)
+	{
+		type = Roi3D.POLYLINE;
+		
+		pointSize = preset_in.pointSize;
+		lineThickness=preset_in.lineThickness;
+		
+		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
+		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
+				
+		renderType = preset_in.renderType;
+		nSectorN = preset_in.sectorN;
+		
+		
+		vertices = new ArrayList<RealPoint>();
+		verticesVis = new VisPointsScaled();
+		verticesVis.setColor(pointColor);
+		verticesVis.setSize(pointSize);
+		edgesVis = new VisPolyLineScaled();
+		edgesVis.setColor(lineColor);
+		edgesVis.setThickness(lineThickness);
 		edgesVis.setSectorN(nSectorN);
 		edgesVis.setRenderType(renderType);
 		name = "polyl"+Integer.toString(this.hashCode());
