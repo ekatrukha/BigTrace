@@ -728,7 +728,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		JButton butPointDefColor = new JButton( new ColorIcon( defaultPointColor ) );	
 		butPointDefColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose default point color", defaultPointColor );
+			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose default point color", defaultPointColor );
 			if (newColor!=null)
 			{
 				selectColors.setColor(newColor, 0);
@@ -740,7 +740,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		JButton butLineDefColor = new JButton( new ColorIcon( defaultLineColor ) );	
 		butLineDefColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose default line color", defaultLineColor );
+			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose default line color", defaultLineColor );
 			if (newColor!=null)
 			{
 				selectColors.setColor(newColor, 1);
@@ -752,7 +752,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		JButton butPointActiveColor = new JButton( new ColorIcon( activePointColor ) );	
 		butPointActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose active point color", activePointColor );
+			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active point color", activePointColor );
 			if (newColor!=null)
 			{
 				selectColors.setColor(newColor, 2);
@@ -764,7 +764,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		JButton butLineActiveColor = new JButton( new ColorIcon( activeLineColor ) );	
 		butLineActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose active line color", activeLineColor );
+			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active line color", activeLineColor );
 			if (newColor!=null)
 			{
 				selectColors.setColor(newColor, 3);
@@ -930,7 +930,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		JButton butPointColor = new JButton( new ColorIcon( rois.get(activeRoi).getPointColor() ) );
 		
 		butPointColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose point color", rois.get(activeRoi).getPointColor() );
+			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose point color", rois.get(activeRoi).getPointColor() );
 			if (newColor!=null)
 			{
 				selectColors.setColor(newColor, 0);
@@ -944,7 +944,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 		
 		butLineColor.addActionListener( e -> {
-				Color newColor = JColorChooser.showDialog(bt.finFrame, "Choose line color", rois.get(activeRoi).getPointColor() );
+				Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose line color", rois.get(activeRoi).getPointColor() );
 				if (newColor!=null)
 				{	
 					selectColors.setColor(newColor, 1);							

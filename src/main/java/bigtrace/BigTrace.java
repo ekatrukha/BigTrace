@@ -3,13 +3,17 @@ package bigtrace;
 
 
 import java.awt.Color;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.IndexColorModel;
 import java.util.ArrayList;
 
-
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JFrame;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -86,9 +90,11 @@ public class BigTrace implements PlugIn, WindowListener
 	//Img< UnsignedByteType> img;
 	Img< UnsignedByteType> img_in;
 
-	public JFrame finFrame;
+	
 	VolumeViewerPanel panel;
 
+	public Actions actions = null;
+	
 	public boolean bInputLock = false;
 	
 
@@ -214,8 +220,7 @@ public class BigTrace implements PlugIn, WindowListener
 		init(0.25*Math.min(btdata.nDimIni[1][2], Math.min(btdata.nDimIni[1][0],btdata.nDimIni[1][1])));
 		
 		
-		
-		
+
 		//FlatIntelliJLaf.setup();
 	
 		
@@ -232,6 +237,7 @@ public class BigTrace implements PlugIn, WindowListener
                 createAndShowGUI();
             }
         });
+        
 
 	}
 	
@@ -285,14 +291,14 @@ public class BigTrace implements PlugIn, WindowListener
 		panel=bvv_main.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();
 		panel.setRenderScene(this::renderScene);
-		
-		installActions();
+		actions = new Actions( new InputTriggerConfig() );
+		installActions(actions);
 		resetViewXY(true);
 	}
 	private void createAndShowGUI() 
 	{
 		btpanel = new BigTraceControlPanel(this, btdata,roiManager);
-		finFrame = new JFrame("BigTrace");
+		btpanel.finFrame = new JFrame("BigTrace");
 		//btpanel.frame = new JFrame("BigTrace");
 		//btpanel.setName("TEEEST");
 		//btpanel.frame = (BigTraceControlPanel)new JFrame("BigTrace");
@@ -300,24 +306,25 @@ public class BigTrace implements PlugIn, WindowListener
 	 	
 	 	//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		//btpanel.frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		finFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		btpanel.finFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		btpanel.bvv_frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         //Create and set up the content pane.
         //JComponent newContentPane = btframe;
         //newContentPane.setOpaque(true); //content panes must be opaque
         //frame.setContentPane(newContentPane);
 		//btpanel.frame.add(btpanel);
-		finFrame.add(btpanel);
+		btpanel.finFrame.add(btpanel);
         //Display the window.
-		finFrame.setSize(400,600);
+		btpanel.finFrame.setSize(400,600);
         //frame.pack();
-		finFrame.setVisible(true);
+		btpanel.finFrame.setVisible(true);
 	    java.awt.Point bvv_p = btpanel.bvv_frame.getLocationOnScreen();
 	    java.awt.Dimension bvv_d = btpanel.bvv_frame.getSize();
 	
-	    finFrame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
-	    finFrame.addWindowListener(this);
+	    btpanel.finFrame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
+	    btpanel.finFrame.addWindowListener(this);
 	    btpanel.bvv_frame.addWindowListener(this);
+
 	    //finFrame.addWindowStateListener(this);
 	    //addWindowListener(addWindowListener(this));
 	}
@@ -331,7 +338,7 @@ public class BigTrace implements PlugIn, WindowListener
 		
 		if(!bInputLock)
 		{
-			//addPoint();
+								
 			RealPoint target = new RealPoint(3);
 			if(!bTraceMode)
 			{
@@ -555,9 +562,9 @@ public class BigTrace implements PlugIn, WindowListener
 
 		}
 	}
-	public void installActions()
+	public void installActions(final Actions actions)
 	{
-		final Actions actions = new Actions( new InputTriggerConfig() );
+		//final Actions actions = new Actions( new InputTriggerConfig() );
 		actions.runnableAction(() -> actionAddPoint(),	            "add point", "F" );
 		actions.runnableAction(() -> actionRemovePoint(),       	"remove point",	"G" );
 		actions.runnableAction(() -> actionDeselect(),	            "deselect", "H" );
@@ -566,7 +573,8 @@ public class BigTrace implements PlugIn, WindowListener
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
 		actions.runnableAction(() -> actionZoomToPoint(),			"zoom in to click", "D" );
 		actions.runnableAction(() -> actionZoomOut(),				"zoom out", "C" );
-						
+					
+		
 		actions.runnableAction(
 				() -> {
 					resetViewXY(false);
@@ -1129,6 +1137,14 @@ public class BigTrace implements PlugIn, WindowListener
 		int i,j;
 
 		java.awt.Point point_mouse  = bvv_main.getBvvHandle().getViewerPanel().getMousePosition();
+		if(point_mouse ==null)
+		{
+			return false;
+		}
+		//check if mouse position it is inside bvv window
+		//java.awt.Rectangle windowBVVbounds = btpanel.bvv_frame.getContentPane().getBounds();
+		
+		
 		System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
 														
 		//get perspective matrix:
@@ -1373,7 +1389,7 @@ public class BigTrace implements PlugIn, WindowListener
 		
 		//bvv_main.close();
 		btpanel.bvv_frame.dispose();		
-		finFrame.dispose();
+		btpanel.finFrame.dispose();
 	}
 	/*
 	@SuppressWarnings( "rawtypes" )
@@ -1402,5 +1418,6 @@ public class BigTrace implements PlugIn, WindowListener
 		
 		
 	}
+
 	
 }

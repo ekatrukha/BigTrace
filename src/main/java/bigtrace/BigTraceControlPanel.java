@@ -12,7 +12,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 
+
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -20,6 +22,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 
+import org.scijava.ui.behaviour.util.Actions;
 
 import bigtrace.gui.CropPanel;
 import bigtrace.gui.PanelTitle;
@@ -51,7 +54,9 @@ public class BigTraceControlPanel extends JPanel
 	double [][] nDisplayMinMax;
 
 	public JFrame bvv_frame;
+	public JFrame finFrame;
 	JProgressBar progressBar;
+
 	
 	public BigTraceControlPanel(final BigTrace bt_,final BigTraceData btd_, final RoiManager3D roiManager_)//, int locx, int locy) 
 	{
@@ -292,6 +297,12 @@ public class BigTraceControlPanel extends JPanel
 		        }
 		    }
 		});*/
+	    
+	    //install actions from BVV
+	    
+	    this.setActionMap(btrace.actions.getActionMap());
+	    this.setInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,btrace.actions.getInputMap());
+	    
 	}
 
 	@Override
@@ -315,6 +326,8 @@ public class BigTraceControlPanel extends JPanel
 	            	progressBar.setString(((bigtrace.BigTraceBGWorker)(evt.getSource())).getProgressState());
 	            }
 	        }
+	        
+	        
 	        
 	}
 
