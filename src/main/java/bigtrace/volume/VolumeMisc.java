@@ -3,6 +3,7 @@ package bigtrace.volume;
 import java.util.ArrayList;
 
 import bigtrace.geometry.Cuboid3D;
+import net.imglib2.AbstractInterval;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.IterableInterval;
@@ -291,9 +292,10 @@ public class VolumeMisc {
 		return pair;
 	}
 	/** function calculates overlap between newMinMax bounding box
-	 * and provided IntervalView and returns it in the newMinMax.
+	 * and provided AbstractInterval and returns it in the newMinMax.
 	 * Not sure if it handles zero overlap well, need to check. **/
-	public static boolean checkBoxInside(final IntervalView< UnsignedByteType > viewclick, final long [][] newMinMax)
+	//public static boolean checkBoxInside(final IntervalView< UnsignedByteType > viewclick, final long [][] newMinMax)
+	public static boolean checkBoxInside(final AbstractInterval viewclick, final long [][] newMinMax)
 	{ 
 		long [][] bigBox = new long[2][];
 		bigBox[0]=viewclick.minAsLongArray();

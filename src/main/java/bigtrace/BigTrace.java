@@ -3,17 +3,12 @@ package bigtrace;
 
 
 import java.awt.Color;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.IndexColorModel;
 import java.util.ArrayList;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JFrame;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -49,6 +44,7 @@ import ij.plugin.PlugIn;
 import ij.process.LUT;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
+import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
@@ -543,9 +539,21 @@ public class BigTrace implements PlugIn, WindowListener
 				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
 				{
 					
+					//FinalInterval zoomInterval = getZoomBoxCentered(btdata.nZoomBoxSize, target);
 					FinalInterval zoomInterval = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.nZoomBoxSize, target);
+					
 			
 					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,1.0));
+				}
+			}
+			else
+			{
+				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow,target))
+				{
+					//FinalInterval zoomInterval = getTraceBoxCentered(btdata.trace_weights,(long)(btdata.lTraceBoxSize*0.8), target);
+					FinalInterval zoomInterval = getZoomBoxCentered((long)(btdata.lTraceBoxSize*0.5), target);
+			
+					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,0.8));
 				}
 			}
 
@@ -564,6 +572,10 @@ public class BigTrace implements PlugIn, WindowListener
 			
 					panel.setTransformAnimator(getCenteredViewAnim(sources.get(btdata.nChAnalysis),1.0));
 
+			}
+			else
+			{
+					panel.setTransformAnimator(getCenteredViewAnim(btdata.trace_weights,0.8));
 			}
 
 		}
@@ -704,8 +716,9 @@ public class BigTrace implements PlugIn, WindowListener
 		}
 	}
 
-	//gets a box around "target" with half size of range
-	public FinalInterval getTraceBoxCentered(final IntervalView< UnsignedByteType > viewclick, final long range, final RealPoint target)
+	/** gets a box around "target" with half size of range in all axes.
+		crops the box so it is inside viewclick interval **/
+	public FinalInterval getTraceBoxCentered(final AbstractInterval viewclick, final long range, final RealPoint target)
 	{
 		long[][] rangeM = new long[2][3];
 		int i;
@@ -720,7 +733,22 @@ public class BigTrace implements PlugIn, WindowListener
 		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
 		return finInt;							
 	}
-
+	
+	//gets a box around "target" with half size of range
+	public FinalInterval getZoomBoxCentered(final long range, final RealPoint target)
+	{
+		long[][] rangeM = new long[2][3];
+		int i;
+		float [] pos = new float[3];
+		target.localize(pos);
+		for(i=0;i<3;i++)
+		{
+			rangeM[0][i]=(long)(pos[i])-range ;
+			rangeM[1][i]=(long)(pos[i])+range;								
+		}
+		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
+		return finInt;							
+	}
 	//gets a box around "target" with half size of range
 	public FinalInterval getTraceBoxNext(final IntervalView< UnsignedByteType > viewclick, final long range, final float fFollowDegree, LineTrace3D trace)
 	{
