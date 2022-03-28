@@ -26,10 +26,11 @@ import org.scijava.ui.behaviour.util.Actions;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
-import bdv.viewer.animate.SimilarityTransformAnimator;
+
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
+import bigtrace.gui.AnisotropicTransformAnimator3D;
 import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBG;
@@ -136,6 +137,10 @@ public class BigTrace implements PlugIn, WindowListener
 		
 		final ImagePlus imp = IJ.openImage( btdata.sFileNameImg );
 		
+		btdata.globCal[0] = imp.getCalibration().pixelWidth;
+		btdata.globCal[1] = imp.getCalibration().pixelHeight;
+		btdata.globCal[2] = imp.getCalibration().pixelDepth;
+		
 		/*if(!(imp.getType()==ImagePlus.GRAY8 || imp.getType()==ImagePlus.GRAY16 || imp.getType()==ImagePlus.GRAY32))
 		{
 			IJ.showMessage("Only 8/16/32-bit images supported for now.");
@@ -217,7 +222,8 @@ public class BigTrace implements PlugIn, WindowListener
 
 
 		roiManager = new RoiManager3D(this);
-		init(0.25*Math.min(btdata.nDimIni[1][2], Math.min(btdata.nDimIni[1][0],btdata.nDimIni[1][1])));
+		//init(0.25*Math.min(btdata.nDimIni[1][0]*btdata.globCal[0], Math.min(btdata.nDimIni[1][1]*btdata.globCal[1],btdata.nDimIni[1][2]*btdata.globCal[2])));
+		init(0.25*Math.min(btdata.nDimIni[1][0], Math.min(btdata.nDimIni[1][1],btdata.nDimIni[1][2])));
 		
 		
 
@@ -266,7 +272,7 @@ public class BigTrace implements PlugIn, WindowListener
 			//why is this shift?! I don't know,
 			// but looks better like this
 			nDimBox[0][i]=btdata.nDimIni[0][i]+0.5f;
-			nDimBox[1][i]=btdata.nDimIni[1][i]-1.0f;
+			nDimBox[1][i]=(btdata.nDimIni[1][i]-1.0f);
 		}
 		volumeBox = new Cube3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY);
 	}
@@ -601,9 +607,9 @@ public class BigTrace implements PlugIn, WindowListener
 					transform.scale(2.0);
 					panel.state().setViewerTransform(transform);
 					
-					/*
-					int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
-					int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
+					
+					int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
+					int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
 					int [] bothXY = new int [2];
 					bothXY[0]=sW;
 					bothXY[1]=sH;
@@ -613,7 +619,8 @@ public class BigTrace implements PlugIn, WindowListener
 					//center of the screen in the transformed coordinates
 					//take coordinates in original data volume space
 					Vector3f temp = new Vector3f();
-
+					double [] newz = new double [11];
+					int dn = 0;
 					for (float z = 0.9f;z<=1.0f;z+=0.01f)
 					{
 						matPerspWorld.unproject(0.5f*sW,0.5f*sH,z, //z=1 ->far from camera z=0 -> close to camera
@@ -623,10 +630,12 @@ public class BigTrace implements PlugIn, WindowListener
 						{
 							target.setPosition(temp.get(i), i);
 						}
-						roiManager.currPointSize=5.0f+500.0f*(z-0.9f);
+						newz[dn]=temp.z;
+						dn++;
+						//roiManager.currPointSize=5.0f+500.0f*(z-0.9f);
 						roiManager.addPoint(target);
 					}
-					*/
+					
 				},
 				"test CENTER",
 				"A" );
@@ -745,7 +754,7 @@ public class BigTrace implements PlugIn, WindowListener
 									
 	}
 	
-	public SimilarityTransformAnimator getCenteredViewAnim(final Interval inInterval, double zoomFraction)
+	public AnisotropicTransformAnimator3D getCenteredViewAnim(final Interval inInterval, double zoomFraction)
 	{
 		int i;
 		int nDim = inInterval.numDimensions();
@@ -787,7 +796,7 @@ public class BigTrace implements PlugIn, WindowListener
 		
 		//now let's move it
 		
-		Vector3f temp = new Vector3f();	
+
 		
 		//coordinates in the current transform view
 		//transform.apply(centerCoord, centerCoord);
@@ -800,11 +809,32 @@ public class BigTrace implements PlugIn, WindowListener
 				
 		//center of the screen in the transformed coordinates
 		//take coordinates in original data volume space
+		Vector3f v1 = new Vector3f();	
+		Vector3f v2 = new Vector3f();	
+		Matrix4f matWorld = new Matrix4f();
+		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matWorld );
 		
+		//two z-depth values to determine a line of view
+		//some z depth value 
+		matWorld.unproject(0.5f*sW,0.5f*sH,0.0f, //z=1 ->far from camera z=0 -> close to camera
+				new int[] { 0, 0, sW, sH },v1);
+		matWorld.unproject(0.5f*sW,0.5f*sH,1.0f, //z=1 ->far from camera z=0 -> close to camera
+				new int[] { 0, 0, sW, sH },v2);
+		float dZeroZ = v1.z/(v1.z-v2.z);
+		Vector3f tempp = new Vector3f();	
+		tempp.x = v1.x+(v2.x-v1.x)*dZeroZ;
+		tempp.y = v1.y+(v2.y-v1.y)*dZeroZ;
+		tempp.z = v1.z+(v2.z-v1.z)*dZeroZ;
+		Vector3f out =new Vector3f();
 		
-		matPerspWorld.unproject(0.5f*sW,0.5f*sH,0.95f, //z=1 ->far from camera z=0 -> close to camera
+		matPerspWorld.project(tempp, new int[] { 0, 0, sW, sH }, out);
+		
+		Vector3f temp = new Vector3f();	
+		
+		matPerspWorld.unproject(0.5f*sW,0.5f*sH,0.96f, //z=1 ->far from camera z=0 -> close to camera
 				new int[] { 0, 0, sW, sH },temp);
 
+		//temp.set(out);
 		float [] newCent = new float[3];
 		for(i=0;i<3;i++)
 		{
@@ -822,7 +852,7 @@ public class BigTrace implements PlugIn, WindowListener
 		}
 		transform_scale.setTranslation(dl);
 
-		final SimilarityTransformAnimator anim = new SimilarityTransformAnimator(transform,transform_scale,0,0,1500);		
+		final AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(transform,transform_scale,0,0,1500);		
 		//final SimilarityTransformAnimator anim = new SimilarityTransformAnimator(transform,transform,0,0,1500);		
 		
 		return anim;
@@ -892,7 +922,7 @@ public class BigTrace implements PlugIn, WindowListener
 		{
 			final AffineTransform3D transform = new AffineTransform3D();
 			panel.state().getViewerTransform(transform);
-			final SimilarityTransformAnimator anim = new SimilarityTransformAnimator(transform,btdata.transformBeforeTracing,0,0,1500);
+			final AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(transform,btdata.transformBeforeTracing,0,0,1500);
 			panel.setTransformAnimator(anim);
 		}
 	}
@@ -1015,32 +1045,41 @@ public class BigTrace implements PlugIn, WindowListener
 	{
 		
 		double scale;
-		int nW= (int)btdata.nDimIni[1][0];
-		int nH= (int)btdata.nDimIni[1][1];
-		int nD= (int)btdata.nDimIni[1][2];
+		double nW= (double)btdata.nDimIni[1][0]*btdata.globCal[0];
+		double nH= (double)btdata.nDimIni[1][1]*btdata.globCal[1];
+		double nD= (double)btdata.nDimIni[1][2]*btdata.globCal[2];
 		
-		int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
-		int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
+		double sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
+		double sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
 		
-		if((double)sW/(double)nW<(double)sH/(double)nH)
+		if(sW/nW<sH/nH)
 		{
-			scale=(double)sW/(double)nW;
+			scale=sW/nW;
 		}
 		else
 		{
-			scale=(double)sH/(double)nH;
+			scale=sH/nH;
 		}
 		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
-		t.set(scale, 0.0, 0.0, 0.5*((double)sW-scale*(double)nW), 0.0, scale, 0.0, 0.5*((double)sH-scale*(double)nH), 0.0, 0.0, scale,0.0);// (-0.5)*scale*(double)nD);
+		t.identity();
 
+		//t.set(scale, 0.0, 0.0, 0.5*(sW-scale*nW), 0.0, scale, 0.0, 0.5*(sH-scale*nH), 0.0, 0.0, scale,0.0);// (-0.5)*scale*(double)nD);
+		//t.set(scale, 0.0, 0.0, 0.5*(sW-scale*nW), 0.0, scale, 0.0, 0.5*(sH-scale*nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
+	
+		//t.scale(btdata.globCal[0], btdata.globCal[1], btdata.globCal[2]);
+		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
+		t.translate(0.5*(sW-scale*nW),0.5*(sH-scale*nH),(-0.5)*scale*(double)nD);
+		//tcenter.set(1.0, 0.0, 0.0, 0.5*(sW-scale*nW), 0.0, 1.0, 0.0, 0.5*(sH-scale*nH), 0.0, 0.0, 1.0, (-0.5)*scale*(double)nD);
+
+		//t.concatenate(tcenter);
 		//t.identity();
 		//t.set((double)0.5*sH,1,3);
 
 		if(!firstCall)
 		{
-			SimilarityTransformAnimator anim = new SimilarityTransformAnimator(panel.state().getViewerTransform(),t,0,0,400);
 			
+			AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,400);
 			panel.setTransformAnimator(anim);
 			
 		}
@@ -1049,7 +1088,13 @@ public class BigTrace implements PlugIn, WindowListener
 			panel.state().setViewerTransform(t);
 			for(int i=0;i<sources.size();i++)
 			{
+				
 				bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
+				//bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), 
+				//		Bvv.options().addTo(bvv_main).sourceTransform(
+				//				btdata.globCal[0],
+				//				btdata.globCal[1],
+				//				btdata.globCal[2])));
 				bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
 				bvv_sources.get(i).setDisplayRange(channelRanges[0][i], channelRanges[1][i]);
 				bvv_sources.get(i).setDisplayRangeBounds(0, 255);
@@ -1101,32 +1146,36 @@ public class BigTrace implements PlugIn, WindowListener
 	{
 		
 		double scale;
-		int nH= (int)btdata.nDimIni[1][1];
-		int nD= (int)btdata.nDimIni[1][2];
-		int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
-		int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
+		double nH= btdata.nDimIni[1][1]*btdata.globCal[1];
+		double nD= btdata.nDimIni[1][2]*btdata.globCal[2];
+		double sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
+		double sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
 		
-		if((double)sW/(double)nD<(double)sH/(double)nH)
+		if(sW/nD<sH/nH)
 		{
-			scale=(double)sW/(double)nD;
+			scale=sW/nD;
 		}
 		else
 		{
-			scale=(double)sH/(double)nH;
+			scale=sH/nH;
 		}
 		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
-		AffineTransform3D t2 = new AffineTransform3D();
+		//AffineTransform3D t2 = new AffineTransform3D();
 	
+		t.identity();
+		
+		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
 		t.rotate(1, (-1)*Math.PI/2.0);
-
-		t2.set(scale, 0.0, 0.0, 0.0, 0.0, scale, 0.0,0.5*((double)sH-scale*(double)nH) , 0.0, 0.0, scale, -0.5*((double)sW+scale*(double)nD));
-		t.concatenate(t2);
+		//t.translate(0.5*(sW-scale*nD),0.0,-0.5*(sW+scale*nD));
+		t.translate(0.5*(sW+scale*nD),0.5*(sH-scale*nH),0.0);
+		//t2.set(scale, 0.0, 0.0, 0.0, 0.0, scale, 0.0,0.5*((double)sH-scale*(double)nH) , 0.0, 0.0, scale, -0.5*((double)sW+scale*(double)nD));
+		//t.concatenate(t2);
 
 		
 		panel=bvv_main.getBvvHandle().getViewerPanel();
 		
-		SimilarityTransformAnimator anim = new SimilarityTransformAnimator(panel.state().getViewerTransform(),t,0,0,300);
+		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,300);
 		
 		panel.setTransformAnimator(anim);
 

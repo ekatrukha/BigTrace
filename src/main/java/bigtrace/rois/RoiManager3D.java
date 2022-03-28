@@ -55,6 +55,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 	 private static final long serialVersionUID = -2843907862066423151L;
 	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2;
+	 public static final int SECTORS_DEF=16;
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
 	 public int activeRoi = -1;
 	 
@@ -74,7 +75,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 //public float currPointSize = 6.0f;
 	 //public float currLineThickness = 4.0f;
 	 //public int currRenderType = VisPolyLineScaled.WIRE;
-	 public int currSectorN = 16;
+	 //public int currSectorN = 16;
 	 public boolean bShowAll = true;
 
 	 
@@ -92,6 +93,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JToggleButton butShowAll;
 	 JButton butSaveROIs;
 	 JButton butLoadROIs;
+	 JButton butROIPresets;
 	 
 	 JComboBox<String> cbActiveChannel;
 	 
@@ -199,6 +201,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 listScroller = new JScrollPane(jlist);
 		 listScroller.setPreferredSize(new Dimension(170, 400));
 		 listScroller.setMinimumSize(new Dimension(170, 250));
+		 
 		 JPanel roiList = new JPanel(new GridBagLayout());
 		 roiList.setBorder(new PanelTitle(" ROI Manager "));
 
@@ -246,20 +249,18 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cr.gridy++;
 		 roiList.add(butLoadROIs ,cr);
 		 
-		 
-		 String[] nCh = new String[bt.btdata.nTotalChannels];
-		 for(int i=0;i<nCh.length;i++)
-		 {
-			 nCh[i] = "channel "+Integer.toString(i+1);
-		 }
-		 cbActiveChannel = new JComboBox<>(nCh);
-		 cbActiveChannel.setSelectedIndex(0);
-		 cbActiveChannel.addActionListener(this); 
+		 butROIPresets = new JButton("Presets");
+		 butROIPresets.addActionListener(this);
 		 cr.gridy++;
-		 roiList.add(new JLabel("Active"),cr);
-		 cr.gridy++;
-		 roiList.add(cbActiveChannel,cr);
+		 roiList.add(butROIPresets ,cr);
 		 
+
+	     // Blank/filler component
+		 cr.gridx++;
+		 cr.gridy++;
+		 cr.weightx = 0.01;
+	     cr.weighty = 0.01;
+	     roiList.add(new JLabel(), cr);		 
 		 
 		 
 		 // a solution for now
@@ -271,13 +272,27 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 butDeselect.setPreferredSize(butProperties.getPreferredSize());
 		 butShowAll.setMinimumSize(butProperties.getPreferredSize());		 
 		 butShowAll.setPreferredSize(butProperties.getPreferredSize());
+		 butROIPresets.setMinimumSize(butProperties.getPreferredSize());
+		 butROIPresets.setPreferredSize(butProperties.getPreferredSize());
 
-	     // Blank/filler component
+		 JPanel panChannel = new JPanel(new GridBagLayout());
+		 panChannel.setBorder(new PanelTitle(""));
+		 
+		 String[] nCh = new String[bt.btdata.nTotalChannels];
+		 for(int i=0;i<nCh.length;i++)
+		 {
+			 nCh[i] = "channel "+Integer.toString(i+1);
+		 }
+		 cbActiveChannel = new JComboBox<>(nCh);
+		 cbActiveChannel.setSelectedIndex(0);
+		 cbActiveChannel.addActionListener(this);
+		 cr = new GridBagConstraints();
+	     cr.gridx=0;
+		 cr.gridy=0;
+		 panChannel.add(new JLabel("Active"),cr);
 		 cr.gridx++;
-		 cr.gridy++;
-		 cr.weightx = 0.01;
-	     cr.weighty = 0.01;
-	     roiList.add(new JLabel(), cr);
+		 panChannel.add(cbActiveChannel,cr);
+
 		 
 		 GridBagConstraints c = new GridBagConstraints();
 		 setLayout(new GridBagLayout());
@@ -293,8 +308,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //roi list
 		 c.gridy++;
 		 add(roiList,c);
-		 //c.gridy++;
-		 //add(panChannel,c);
+		 c.gridy++;
+		 add(panChannel,c);
 	      // Blank/filler component
 		 c.gridy++;
 		 c.weightx = 0.01;
@@ -302,7 +317,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	     add(new JLabel(), c);
 	     
 	     //initialize new default ROI preset
-	     presets.add(new Roi3DPreset("default", Color.GREEN, Color.BLUE, 4.0f, 6.0f,VisPolyLineScaled.WIRE) );
+	     presets.add(new Roi3DPreset("default", 6.0f, Color.GREEN, 4.0f, Color.BLUE, VisPolyLineScaled.WIRE,RoiManager3D.SECTORS_DEF) );
 	     nActivePreset = 0;
 	     
 		 
@@ -539,9 +554,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 butProperties.setEnabled(bState);
 			 butSaveROIs.setEnabled(bState);
 			 butLoadROIs.setEnabled(bState);
+			 butROIPresets.setEnabled(bState);
+			 cbActiveChannel.setEnabled(bState);
+			 
 			 listScroller.setEnabled(bState);			 
 			 jlist.setEnabled(bState);
-			 cbActiveChannel.setEnabled(bState);
+			 
 
 	 }
 	 public void unselect()
@@ -721,39 +739,16 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		GridBagConstraints cd = new GridBagConstraints();
 		
 		
-		////////////DEFAULT COLORS AND RENDER		
-		JPanel pDefaults = new JPanel(new GridBagLayout());
+		////////////GERERAL COLORS/INTERFACE
+		JPanel pGeneral = new JPanel(new GridBagLayout());
 		
-		JButton butPointDefColor = new JButton( new ColorIcon( defaultPointColor ) );	
-		butPointDefColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose default point color", defaultPointColor );
-			if (newColor!=null)
-			{
-				selectColors.setColor(newColor, 0);
-				//setNewPointColor(newColor);
-				butPointDefColor.setIcon(new ColorIcon(newColor));
-			}
-			
-		});
-		
-		JButton butLineDefColor = new JButton( new ColorIcon( defaultLineColor ) );	
-		butLineDefColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose default line color", defaultLineColor );
-			if (newColor!=null)
-			{
-				selectColors.setColor(newColor, 1);
-				//setNewPointColor(newColor);
-				butLineDefColor.setIcon(new ColorIcon(newColor));
-			}
-			
-		});
-		
+
 		JButton butPointActiveColor = new JButton( new ColorIcon( activePointColor ) );	
 		butPointActiveColor.addActionListener( e -> {
 			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active point color", activePointColor );
 			if (newColor!=null)
 			{
-				selectColors.setColor(newColor, 2);
+				selectColors.setColor(newColor, 0);
 				//setNewPointColor(newColor);
 				butPointActiveColor.setIcon(new ColorIcon(newColor));
 			}
@@ -765,66 +760,35 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active line color", activeLineColor );
 			if (newColor!=null)
 			{
-				selectColors.setColor(newColor, 3);
-				//setNewPointColor(newColor);
+				selectColors.setColor(newColor, 1);
+
 				butLineActiveColor.setIcon(new ColorIcon(newColor));
 			}
 			
 		});
-		NumberField nfPointSize = new NumberField(4);
-		NumberField nfLineThickness = new NumberField(4);
+
 		NumberField nfZoomBoxSize = new NumberField(4);
-		nfPointSize.setText(Float.toString(currPointSize));
-		nfLineThickness.setText(Float.toString(currLineThickness));
+
 		nfZoomBoxSize.setText(Integer.toString(bt.btdata.nZoomBoxSize));
 
-		
-		String[] sRenderType = { "Center line", "Wire", "Surface" };
-		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
-		renderTypeList.setSelectedIndex(currRenderType);
-		
+			
 		
 		cd.gridx=0;
 		cd.gridy=0;
-		pDefaults.add(new JLabel("Default new ROI point color: "),cd);
+		pGeneral.add(new JLabel("Selected ROI point color: "),cd);
 		cd.gridx++;
-		pDefaults.add(butPointDefColor,cd);
+		pGeneral.add(butPointActiveColor,cd);
 		cd.gridx=0;
 		cd.gridy++;
-		pDefaults.add(new JLabel("Default new ROI line color: "),cd);
+		pGeneral.add(new JLabel("Selected ROI line color: "),cd);
 		cd.gridx++;
-		pDefaults.add(butLineDefColor,cd);
-		cd.gridx=0;
-		cd.gridy++;
-		pDefaults.add(new JLabel("Selected ROI point color: "),cd);
-		cd.gridx++;
-		pDefaults.add(butPointActiveColor,cd);
-		cd.gridx=0;
-		cd.gridy++;
-		pDefaults.add(new JLabel("Selected ROI line color: "),cd);
-		cd.gridx++;
-		pDefaults.add(butLineActiveColor,cd);
+		pGeneral.add(butLineActiveColor,cd);
 		
 		cd.gridx=0;
 		cd.gridy++;
-		pDefaults.add(new JLabel("Default point size: "),cd);
+		pGeneral.add(new JLabel("Zoom area size (px): "),cd);
 		cd.gridx++;
-		pDefaults.add(nfPointSize,cd);
-		cd.gridx=0;
-		cd.gridy++;
-		pDefaults.add(new JLabel("Default line thickness: "),cd);
-		cd.gridx++;
-		pDefaults.add(nfLineThickness,cd);
-		cd.gridx=0;
-		cd.gridy++;
-		pDefaults.add(new JLabel("Default line render: "),cd);
-		cd.gridx++;
-		pDefaults.add(renderTypeList,cd);
-		cd.gridx=0;
-		cd.gridy++;
-		pDefaults.add(new JLabel("Zoom area size (px): "),cd);
-		cd.gridx++;
-		pDefaults.add(nfZoomBoxSize,cd);
+		pGeneral.add(nfZoomBoxSize,cd);
 		
 		
 		////////////TRACING OPTIONS
@@ -834,8 +798,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		NumberField nfTraceBoxSize = new NumberField(4);
 		NumberField nfSigma = new NumberField(4);
 		NumberField nfTBAdvance = new NumberField(4);
-		//nTraceBoxSize.setText(Integer.toString((int)(2.0*Prefs.get("BigTrace.lTraceBoxSize", 50))));
-		//nfTraceBoxSize.setText(Integer.toString((int)(2.0*Prefs.get("BigTrace.lTraceBoxSize", 50))));
+
 		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btdata.lTraceBoxSize)));
 		nfSigma.setText(Double.toString(bt.btdata.sigmaGlob));
 		nfTBAdvance.setText(Float.toString(bt.btdata.fTraceBoxAdvanceFraction));
@@ -861,7 +824,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridx++;
 		pTrace.add(nfTBAdvance,cd);
 		
-		tabPane.addTab("Defaults",pDefaults);
+		tabPane.addTab("General",pGeneral);
 		tabPane.addTab("Tracing",pTrace);
 
 		int reply = JOptionPane.showConfirmDialog(null, tabPane, "ROI Manager Settings", 
@@ -878,32 +841,17 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			tempC=selectColors.getColor(0);
 			if(tempC!=null)
 			{
-				defaultPointColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
+				activePointColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
 				selectColors.setColor(null, 0);
 			}
 			tempC=selectColors.getColor(1);
 			if(tempC!=null)
 			{
-				defaultLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
+				activeLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
 				selectColors.setColor(null, 1);
 			}
-			tempC=selectColors.getColor(2);
-			if(tempC!=null)
-			{
-				activePointColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
-				selectColors.setColor(null, 2);
-			}
-			tempC=selectColors.getColor(3);
-			if(tempC!=null)
-			{
-				activeLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
-				selectColors.setColor(null, 3);
-			}
 			
-			currPointSize = Float.parseFloat(nfPointSize.getText());
-			currLineThickness = Float.parseFloat(nfLineThickness.getText());			
-			currRenderType = renderTypeList.getSelectedIndex();
-			
+
 			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
 			Prefs.set("BigTrace.nZoomBoxSize", (double)(bt.btdata.nZoomBoxSize));
 			
@@ -944,7 +892,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			if (newColor!=null)
 			{
 				selectColors.setColor(newColor, 0);
-				//setNewPointColor(newColor);
 				butPointColor.setIcon(new ColorIcon(newColor));
 			}
 			

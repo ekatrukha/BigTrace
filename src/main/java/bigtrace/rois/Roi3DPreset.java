@@ -14,12 +14,13 @@ public class Roi3DPreset {
 	 public int renderType = VisPolyLineScaled.WIRE;
 	 public int sectorN = 16;
 	 
-	 public Roi3DPreset(String sPresetName_, Color pointColor_, Color lineColor_, float lineThickness_, float pointSize_, int renderType_)
+	 public Roi3DPreset(String sPresetName_, float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_, int sectorN_)
 	 {
 		 sPresetName=sPresetName_;
 		 lineThickness=lineThickness_;
 		 pointSize=pointSize_;
 		 renderType = renderType_;
+		 sectorN = sectorN_;
 		 setPointColor(pointColor_);
 		 setLineColor(lineColor_);
 	 }

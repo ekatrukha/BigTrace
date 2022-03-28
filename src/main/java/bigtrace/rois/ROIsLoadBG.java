@@ -155,13 +155,13 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  bt.roiManager.addRoi(roiP);
 					  	  break;
 					  case Roi3D.POLYLINE:
-						  PolyLine3D roiPL = new PolyLine3D(lineThickness,pointSize,lineColor,pointColor,nRenderType,nSectorN);
+						  PolyLine3D roiPL = new PolyLine3D(new Roi3DPreset("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
 						  roiPL.setName(sName);
 						  roiPL.setVertices(vertices);
 						  bt.roiManager.addRoi(roiPL);
 						  break;
 					  case Roi3D.LINE_TRACE:
-						  LineTrace3D roiLT = new LineTrace3D(lineThickness,pointSize,lineColor,pointColor,nRenderType,nSectorN);
+						  LineTrace3D roiLT = new LineTrace3D(new Roi3DPreset("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
 						  roiLT.setName(sName);
 						  roiLT.addFirstPoint(vertices.get(0));
 						  //segments number

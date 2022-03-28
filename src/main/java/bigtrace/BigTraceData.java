@@ -3,6 +3,7 @@ package bigtrace;
 import java.util.ArrayList;
 
 import ij.Prefs;
+import ij.measure.Calibration;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -23,6 +24,9 @@ public class BigTraceData {
 	
 	/** current dimensions of the volume/image (after crop) **/
 	public long [][] nDimCurr = new long [2][3];
+	
+	/** global voxel size (for now one for all)  **/
+	public double [] globCal = new double [3];
 	
 	/** whether or not display color coded origin of coordinates **/
 	public boolean bShowOrigin = true;

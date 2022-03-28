@@ -76,6 +76,7 @@ public class VisPointsScaled
 	
 		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
+	
 	}
 	public VisPointsScaled(final RealPoint point, final float fPointSize_,final Color color_in)
 	{		
@@ -92,13 +93,12 @@ public class VisPointsScaled
 
 		for (j=0;j<3; j++)
 		{
-			//vertices[i*3+j]=(points.get(i).getFloatPosition(j)/max_pos)-0.5f;
 			vertices[j]=point.getFloatPosition(j);
 		}					
 	
 
 	}
-	public VisPointsScaled(final ArrayList< RealPoint > points, final float fPointSize_,final Color color_in)
+	public VisPointsScaled(final ArrayList< RealPoint > points,final double scalexyz_[], final float fPointSize_,final Color color_in)
 	{
 		this();
 		int i,j;
@@ -109,13 +109,13 @@ public class VisPointsScaled
 		
 		nPointsN=points.size();
 		vertices = new float [nPointsN*3];//assume 3D
-		
+
 		for (i=0;i<nPointsN; i++)
 		{
 			for (j=0;j<3; j++)
 			{
-				//vertices[i*3+j]=(points.get(i).getFloatPosition(j)/max_pos)-0.5f;
-				vertices[i*3+j]=points.get(i).getFloatPosition(j);
+				
+				vertices[i*3+j]=(float) (points.get(i).getFloatPosition(j));
 			}
 			
 		}
@@ -133,7 +133,6 @@ public class VisPointsScaled
 		{
 			for (j=0;j<3; j++)
 			{
-				//vertices[i*3+j]=(points.get(i).getFloatPosition(j)/max_pos)-0.5f;
 				vertices[i*3+j]=points.get(i).getFloatPosition(j);
 			}
 			
