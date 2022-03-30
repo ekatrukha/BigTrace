@@ -28,6 +28,9 @@ public class BigTraceData {
 	/** global voxel size (for now one for all)  **/
 	public double [] globCal = new double [3];
 	
+	/** unit of voxel**/
+	public String sVoxelUnit = "";
+	
 	/** whether or not display color coded origin of coordinates **/
 	public boolean bShowOrigin = true;
 	

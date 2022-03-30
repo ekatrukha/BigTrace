@@ -47,6 +47,10 @@ public class NumberField extends JPanel {
 	public void setText(String s) {
 		textfield.setText(s);
 	}
+	public void setHorizontalAlignment(int param)
+	{
+		textfield.setHorizontalAlignment(param);
+	}
 
 	private void fireValueChanged(double v) {
 		for(Listener l : listener)

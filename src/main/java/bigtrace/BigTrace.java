@@ -3,12 +3,15 @@ package bigtrace;
 
 
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.KeyboardFocusManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.IndexColorModel;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -136,6 +139,7 @@ public class BigTrace implements PlugIn, WindowListener
 		btdata.globCal[0] = imp.getCalibration().pixelWidth;
 		btdata.globCal[1] = imp.getCalibration().pixelHeight;
 		btdata.globCal[2] = imp.getCalibration().pixelDepth;
+		btdata.sVoxelUnit = imp.getCalibration().getUnit();
 		
 		/*if(!(imp.getType()==ImagePlus.GRAY8 || imp.getType()==ImagePlus.GRAY16 || imp.getType()==ImagePlus.GRAY32))
 		{
@@ -587,21 +591,27 @@ public class BigTrace implements PlugIn, WindowListener
 		actions.runnableAction(() -> actionRemovePoint(),       	"remove point",	"G" );
 		actions.runnableAction(() -> actionDeselect(),	            "deselect", "H" );
 		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );
-		actions.runnableAction(() -> actionAdvanceTraceBox(),          "move trace box", "T" );
+		actions.runnableAction(() -> actionAdvanceTraceBox(),       "move trace box", "T" );
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
 		actions.runnableAction(() -> actionZoomToPoint(),			"zoom in to click", "D" );
 		actions.runnableAction(() -> actionZoomOut(),				"zoom out", "C" );
-					
+				
+		
 		
 		actions.runnableAction(
 				() -> {
-					resetViewXY(false);
+					Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+					if(!(c instanceof JTextField))
+						resetViewXY(false);
+					
 				},
 				"reset view XY",
 				"1" );
 			actions.runnableAction(
 				() -> {
-					resetViewYZ();
+					Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+					if(!(c instanceof JTextField))
+						resetViewYZ();
 				},
 				"reset view YZ",
 				"2" );

@@ -12,7 +12,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 
-
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -20,17 +19,22 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 
-import org.scijava.ui.behaviour.util.Actions;
-
+import bdv.util.Affine3DHelpers;
+import bigtrace.gui.AnisotropicTransformAnimator3D;
 import bigtrace.gui.CropPanel;
+
 import bigtrace.gui.PanelTitle;
+import bigtrace.gui.VoxelSizePanel;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.BigTraceData;
 import bvv.util.Bvv;
 import bvv.util.BvvFunctions;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.Views;
 
 public class BigTraceControlPanel extends JPanel
@@ -47,7 +51,9 @@ public class BigTraceControlPanel extends JPanel
 	BigTrace btrace;
 	BigTraceData btdata;	
 	
-	CropPanel cropPanel;	
+	public CropPanel cropPanel;	
+	public VoxelSizePanel voxelSizePanel;
+	
 	RoiManager3D roiManager;
 	
 
@@ -66,6 +72,9 @@ public class BigTraceControlPanel extends JPanel
 	
 		btdata=btd_;
 		btrace=bt_;
+		
+		
+		
 		//Interface
 		
 		//CropPanel
@@ -73,28 +82,21 @@ public class BigTraceControlPanel extends JPanel
 		cropPanel = new CropPanel(btdata.nDimIni[1]);
 		
 		cropPanel.addCropPanelListener(new CropPanel.Listener() {
-
-		/*	@Override
-			public void nearFarChanged(int near, int far) {
-				// TO DO Auto-generated method stub
-				//VolumeViewer
-				dClipNear = Math.abs(near);
-				dClipFar = (double)far;
-				bvv.getBvvHandle().getViewerPanel().setCamParams(dCam, dClipNear, dClipFar);
-				handl.requestRepaint();
-				//handl.state().setViewerTransform(transform);
-				
-			}
-			*/
-
 			@Override
 			public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
-				
-				bbChanged(bbx0, bby0, bbz0,  bbx1,  bby1,  bbz1);		
-
+				bbChanged(bbx0, bby0, bbz0,  bbx1,  bby1,  bbz1);				
 				}
-			
+		});
 		
+		//VOXEL SIZE PANEL		
+		voxelSizePanel = new VoxelSizePanel(btdata.globCal,btdata.sVoxelUnit);
+		voxelSizePanel.addVoxelSizePanelListener(new VoxelSizePanel.Listener() {
+			
+			@Override
+			public void voxelSizeChanged(double [] newVoxelSize) {
+				// TODO Auto-generated method stub
+				voxelChanged(newVoxelSize);
+			}
 		});
 		
 		
@@ -104,6 +106,7 @@ public class BigTraceControlPanel extends JPanel
 	    
 		GridBagConstraints c = new GridBagConstraints();
 
+		
 		//View Panel
 	  
 		JPanel panView=new JPanel(new GridBagLayout()); 
@@ -177,13 +180,9 @@ public class BigTraceControlPanel extends JPanel
 		
 		
 		
-		
 		//Cropping Panel
 		JPanel panCrop=new JPanel(new GridBagLayout()); 
 		panCrop.setBorder(new PanelTitle(" Cropping "));
-
-        icon_path = bigtrace.BigTrace.class.getResource("/icons/cube_icon.png");
-	    tabIcon = new ImageIcon(icon_path);
 
 	    c.gridx=0;
 	    c.gridy=0;
@@ -192,6 +191,54 @@ public class BigTraceControlPanel extends JPanel
 	    panCrop.add(cropPanel,c);
 	    
 	    
+		//Voxel size panel
+	    JPanel panVoxel=new JPanel(new GridBagLayout()); 
+	    panVoxel.setBorder(new PanelTitle(" Voxel size "));
+		
+	    c.gridx=0;
+	    c.gridy=0;
+	    c.weightx=1.0;
+	    c.fill=GridBagConstraints.HORIZONTAL;
+	    panVoxel.add(voxelSizePanel,c);
+
+
+	    /*
+		NumberField nfXSize = new NumberField(5);
+		NumberField nfYSize = new NumberField(5);
+		NumberField nfZSize = new NumberField(5);
+
+		JTextField tfUnits = new JTextField(8);
+		
+
+		
+		nfXSize.setText(String.format("%.3f", btdata.globCal[0]));
+		nfYSize.setText(String.format("%.3f", btdata.globCal[1]));
+		nfZSize.setText(String.format("%.3f", btdata.globCal[2]));
+		tfUnits.setText(btdata.sVoxelUnit);
+		
+		tfUnits.setHorizontalAlignment(SwingConstants.LEFT);
+	    
+	    c.gridx=0;
+	    c.gridy=0;
+	    panVoxel.add(new JLabel("Pixel width"),c);
+	    c.gridx++;
+	    panVoxel.add(nfXSize,c);
+	    c.gridx=0;
+	    c.gridy++;
+	    panVoxel.add(new JLabel("Pixel height"),c);
+	    c.gridx++;
+	    panVoxel.add(nfYSize,c);
+	    c.gridx=0;
+	    c.gridy++;
+	    panVoxel.add(new JLabel("Voxel depth"),c);
+	    c.gridx++;
+	    panVoxel.add(nfZSize,c);
+	    c.gridx=0;
+	    c.gridy++;
+	    panVoxel.add(new JLabel("Units"),c);
+	    c.gridx++;
+	    panVoxel.add(tfUnits,c);	
+	    */	
 	    //add panels to Navigation
 	    c.insets=new Insets(4,4,2,2);
 	    //View
@@ -206,12 +253,20 @@ public class BigTraceControlPanel extends JPanel
 	    c.gridy++;	
 	    panNavigation.add(panCrop,c);
 	    
+	    //Voxel size
+	    c.gridy++;	
+	    panNavigation.add(panVoxel,c);
+	    
         // Blank/filler component
 	    c.gridx++;
 	    c.gridy++;
 	    c.weightx = 0.01;
         c.weighty = 0.01;
         panNavigation.add(new JLabel(), c);
+        
+        
+        icon_path = bigtrace.BigTrace.class.getResource("/icons/cube_icon.png");
+	    tabIcon = new ImageIcon(icon_path);
 
 	    tabPane.addTab("",tabIcon,panNavigation, "View/Crop");
 
@@ -381,6 +436,46 @@ public class BigTraceControlPanel extends JPanel
 				System.gc();
 				
 			}
+	}
+	
+	
+	synchronized void voxelChanged(double [] newVoxelSize)
+	{
+		System.out.println("Voxel size changed!"+Double.toString(newVoxelSize[1]));
+		
+		//change the scale of the volume
+		final AffineTransform3D transform = new AffineTransform3D();
+		
+		
+		final AffineTransform3D newtransform = new AffineTransform3D();
+		btrace.panel.state().getViewerTransform(transform);
+
+		
+		double[] scaleChange = new double [3];
+		
+		for (int d = 0;d<3; d++)
+		{
+			scaleChange[d] = Affine3DHelpers.extractScale( transform, d );
+			scaleChange[d] /= btdata.globCal[d];
+			btdata.globCal[d]=newVoxelSize[d];
+			scaleChange[d]*=btdata.globCal[d];
+		}
+		
+		final double[][] Rcurrent = new double[ 3 ][ 3 ];
+		double[] qStart = new double[ 4 ];
+		Affine3DHelpers.extractRotationAnisotropic( transform, qStart );
+		LinAlgHelpers.quaternionToR( qStart, Rcurrent );
+
+		
+		final double[][] m = new double[ 3 ][ 4 ];
+		for ( int r = 0; r < 3; ++r )
+		{
+			for ( int c = 0; c < 3; ++c )
+				m[ r ][ c ] = scaleChange[c] * Rcurrent[ r ][ c ];
+			m[ r ][ 3 ] = transform.get(r, 3);
+		}
+		newtransform.set(m);
+		btrace.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,newtransform,0,0,1000));
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
