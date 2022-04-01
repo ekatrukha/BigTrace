@@ -3,7 +3,6 @@ package bigtrace;
 import java.util.ArrayList;
 
 import ij.Prefs;
-import ij.measure.Calibration;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -13,7 +12,7 @@ import net.imglib2.view.IntervalView;
 public class BigTraceData {
 
 	
-	public String sVersion = "0.0.3";
+	public String sVersion = "0.0.4";
 	
 	/////////////// input file
 	public String sFileNameImg;
@@ -63,6 +62,9 @@ public class BigTraceData {
 	/** characteristic size of zoom in area (in pixels of original volume) **/
 	public int nZoomBoxSize = 150;
 	
+	/** fraction of screen occupied by zoom box **/
+	public double dZoomBoxScreenFraction = 1.0;
+	
 	
 	///////////////////////////// tracing box
 	
@@ -84,6 +86,9 @@ public class BigTraceData {
 	/** half size of tracing box (for now in all dimensions) **/
 	public long lTraceBoxSize = 50;
 	
+	/** fraction of screen occupied by trace box **/
+	public double dTraceBoxScreenFraction = 0.5;
+	
 	
 	/** After advancing tracebox, this parameter defines 
 	 * how much tracebox is going to follow the last direction of trace (with respect to the last added point):
@@ -96,9 +101,15 @@ public class BigTraceData {
 	
 	public BigTraceData()
 	{
-		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);
-		sigmaGlob = Prefs.get("BigTrace.sigmaGlob", 3.0);
+		
+		//view 
 		nZoomBoxSize = (int) Prefs.get("BigTrace.nZoomBoxSize", 150);
+		dZoomBoxScreenFraction = Prefs.get("BigTrace.dZoomBoxScreenFraction", 1.0);
+		
+		//tracing
+		sigmaGlob = Prefs.get("BigTrace.sigmaGlob", 3.0);
+		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);				
 		fTraceBoxAdvanceFraction = (float) Prefs.get("BigTrace.fTraceBoxAdvanceFraction", 0.9);
+		dTraceBoxScreenFraction = Prefs.get("BigTrace.dTraceBoxScreenFraction", 0.5);
 	}
 }

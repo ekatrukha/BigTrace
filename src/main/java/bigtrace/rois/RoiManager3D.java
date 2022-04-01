@@ -768,9 +768,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		});
 
 		NumberField nfZoomBoxSize = new NumberField(4);
-
 		nfZoomBoxSize.setText(Integer.toString(bt.btdata.nZoomBoxSize));
 
+		NumberField nfZoomBoxScreenFraction = new NumberField(4);
+		nfZoomBoxScreenFraction.setText(Double.toString(bt.btdata.dZoomBoxScreenFraction));
 			
 		
 		cd.gridx=0;
@@ -786,20 +787,27 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		cd.gridx=0;
 		cd.gridy++;
-		pGeneral.add(new JLabel("Zoom area size (px): "),cd);
+		pGeneral.add(new JLabel("Zoom volume size (px): "),cd);
 		cd.gridx++;
 		pGeneral.add(nfZoomBoxSize,cd);
 		
+		cd.gridx=0;
+		cd.gridy++;
+		pGeneral.add(new JLabel("Zoom screen fraction (0-1): "),cd);
+		cd.gridx++;
+		pGeneral.add(nfZoomBoxScreenFraction,cd);		
 		
 		////////////TRACING OPTIONS
 		JPanel pTrace = new JPanel(new GridBagLayout());
 
 		
 		NumberField nfTraceBoxSize = new NumberField(4);
+		NumberField nfTraceBoxScreenFraction = new NumberField(4);
 		NumberField nfSigma = new NumberField(4);
 		NumberField nfTBAdvance = new NumberField(4);
 
 		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btdata.lTraceBoxSize)));
+		nfTraceBoxScreenFraction.setText(Double.toString(bt.btdata.dTraceBoxScreenFraction));
 		nfSigma.setText(Double.toString(bt.btdata.sigmaGlob));
 		nfTBAdvance.setText(Float.toString(bt.btdata.fTraceBoxAdvanceFraction));
 		
@@ -816,6 +824,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		pTrace.add(new JLabel("Trace box size (px): "),cd);
 		cd.gridx++;
 		pTrace.add(nfTraceBoxSize,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		//cd.anchor=GridBagConstraints.WEST;
+		pTrace.add(new JLabel("Trace box screen fraction (0-1): "),cd);
+		cd.gridx++;
+		pTrace.add(nfTraceBoxScreenFraction,cd);
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -855,11 +870,18 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
 			Prefs.set("BigTrace.nZoomBoxSize", (double)(bt.btdata.nZoomBoxSize));
 			
+			bt.btdata.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
+			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
+
+
+			bt.btdata.sigmaGlob = Double.parseDouble(nfSigma.getText());
+			Prefs.set("BigTrace.sigmaGlob", (double)(bt.btdata.sigmaGlob));
+			
 			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
 			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
 			
-			bt.btdata.sigmaGlob = Double.parseDouble(nfSigma.getText());
-			Prefs.set("BigTrace.sigmaGlob", (double)(bt.btdata.sigmaGlob));
+			bt.btdata.dTraceBoxScreenFraction = Double.parseDouble(nfTraceBoxScreenFraction.getText());
+			Prefs.set("BigTrace.dTraceBoxScreenFraction", (double)(bt.btdata.dTraceBoxScreenFraction));
 			
 			bt.btdata.fTraceBoxAdvanceFraction = Float.parseFloat(nfTBAdvance.getText());
 			Prefs.set("BigTrace.fTraceBoxAdvanceFraction", (double)(bt.btdata.fTraceBoxAdvanceFraction));

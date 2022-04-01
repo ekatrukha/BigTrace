@@ -562,7 +562,7 @@ public class BigTrace implements PlugIn, WindowListener
 					FinalInterval zoomInterval = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.nZoomBoxSize, target);
 					
 			
-					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,1.0));
+					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,btdata.dZoomBoxScreenFraction));
 				}
 			}
 			else
@@ -572,7 +572,7 @@ public class BigTrace implements PlugIn, WindowListener
 					//FinalInterval zoomInterval = getTraceBoxCentered(btdata.trace_weights,(long)(btdata.lTraceBoxSize*0.8), target);
 					FinalInterval zoomInterval = getZoomBoxCentered((long)(btdata.lTraceBoxSize*0.5), target);
 			
-					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,0.8));
+					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,btdata.dZoomBoxScreenFraction));
 				}
 			}
 
@@ -697,7 +697,7 @@ public class BigTrace implements PlugIn, WindowListener
 		IntervalView<UnsignedByteType> traceInterval = Views.interval(sources.get(btdata.nChAnalysis), rangeTraceBox);
 		
 		//getCenteredView(traceInterval);
-		panel.setTransformAnimator(getCenteredViewAnim(traceInterval,0.5));
+		panel.setTransformAnimator(getCenteredViewAnim(traceInterval,btdata.dTraceBoxScreenFraction));
 		//long start1, end1;
 
 		//start1 = System.currentTimeMillis();
