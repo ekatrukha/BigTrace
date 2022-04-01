@@ -341,8 +341,9 @@ public class BigTrace implements PlugIn, WindowListener
 	 **/ 
 	public void actionAddPoint()
 	{
-		
-		if(!bInputLock)
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
 		{
 								
 			RealPoint target = new RealPoint(3);
@@ -397,13 +398,16 @@ public class BigTrace implements PlugIn, WindowListener
 				}						
 			}
 		}
+		
 	}
 	/** remove last added point from ROI
 	 * (and delete ROI if it is the last point in it)
 	 * **/
 	public void actionRemovePoint()
 	{
-		if(!bInputLock)
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
 		{
 			if(!bTraceMode)
 			{
@@ -444,13 +448,16 @@ public class BigTrace implements PlugIn, WindowListener
 			panel.showMessage("Point removed");
 
 		}					
+		
 	}
 	/** deselects current ROI (and finishes tracing)
 	 *   
 	 * **/
 	public void actionDeselect()
 	{
-		if(!bInputLock)
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
 		{
 			if(!bTraceMode)
 			{
@@ -471,7 +478,9 @@ public class BigTrace implements PlugIn, WindowListener
 	public void actionReversePoints() 
 	{
 		
-		if(!bInputLock)
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
 		{
 			if(roiManager.activeRoi>=0)
 			{
@@ -499,7 +508,9 @@ public class BigTrace implements PlugIn, WindowListener
 	/** move trace box to a position around current last added point **/
 	public void actionAdvanceTraceBox()
 	{
-		if(!bInputLock)
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
 		{
 			if(bTraceMode && btdata.nPointsInTraceBox>1)
 			{
@@ -512,7 +523,9 @@ public class BigTrace implements PlugIn, WindowListener
 	 * connecting clicked and last point (to overcome semi-auto errors)**/
 	public void actionSemiTraceStraightLine()
 	{
-		if(!bInputLock)
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
 		{
 			if(bTraceMode)
 			{
@@ -534,7 +547,9 @@ public class BigTrace implements PlugIn, WindowListener
 	public void actionZoomToPoint()
 	{
 		
-		if(!bInputLock)
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
 		{
 			//addPoint();
 			RealPoint target = new RealPoint(3);
@@ -569,7 +584,9 @@ public class BigTrace implements PlugIn, WindowListener
 	public void actionZoomOut()
 	{
 		
-		if(!bInputLock)
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
 		{
 			if(!bTraceMode)
 			{
