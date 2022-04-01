@@ -441,7 +441,6 @@ public class BigTraceControlPanel extends JPanel
 	
 	synchronized void voxelChanged(double [] newVoxelSize)
 	{
-		System.out.println("Voxel size changed!"+Double.toString(newVoxelSize[1]));
 		
 		//change the scale of the volume
 		final AffineTransform3D transform = new AffineTransform3D();
