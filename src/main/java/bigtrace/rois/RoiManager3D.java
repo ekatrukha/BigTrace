@@ -96,6 +96,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JButton butROIPresets;
 	 
 	 JComboBox<String> cbActiveChannel;
+	 JComboBox<String> cbActivePreset;
 	 
 	 JToggleButton roiPointMode;
 	 JToggleButton roiPolyLineMode;
@@ -125,7 +126,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 
 		 ButtonGroup roiTraceMode = new ButtonGroup();
 		 
-
+	     //initialize new default ROI preset
+	     presets.add(new Roi3DPreset("default", 6.0f, Color.GREEN, 4.0f, Color.BLUE, VisPolyLineScaled.WIRE,RoiManager3D.SECTORS_DEF) );
+	     nActivePreset = 0;
+	     
 		 URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
 		 ImageIcon tabIcon = new ImageIcon(icon_path);
 		 roiPointMode = new JToggleButton(tabIcon);
@@ -293,7 +297,24 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cr.gridx++;
 		 panChannel.add(cbActiveChannel,cr);
 
+		 JPanel panPreset = new JPanel(new GridBagLayout());
+		 panPreset.setBorder(new PanelTitle(""));
 		 
+		 String[] nPresetNames = new String[presets.size()];
+		 for(int i=0;i<nPresetNames.length;i++)
+		 {
+			 nPresetNames[i] = presets.get(i).getName();
+		 }
+		 cbActivePreset = new JComboBox<>(nPresetNames);
+		 cbActivePreset.setSelectedIndex(0);
+		 cbActivePreset.addActionListener(this);
+		 cr = new GridBagConstraints();
+	     cr.gridx=0;
+		 cr.gridy=0;
+		 panPreset.add(new JLabel("ROI Preset"),cr);
+		 cr.gridx++;
+		 panPreset.add(cbActivePreset,cr);
+ 
 		 GridBagConstraints c = new GridBagConstraints();
 		 setLayout(new GridBagLayout());
 		 c.insets=new Insets(4,4,2,2);
@@ -310,15 +331,15 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 add(roiList,c);
 		 c.gridy++;
 		 add(panChannel,c);
+		 c.gridy++;
+		 add(panPreset,c);
 	      // Blank/filler component
 		 c.gridy++;
 		 c.weightx = 0.01;
 	     c.weighty = 0.01;
 	     add(new JLabel(), c);
 	     
-	     //initialize new default ROI preset
-	     presets.add(new Roi3DPreset("default", 6.0f, Color.GREEN, 4.0f, Color.BLUE, VisPolyLineScaled.WIRE,RoiManager3D.SECTORS_DEF) );
-	     nActivePreset = 0;
+
 	     
 		 
 	 }
@@ -556,6 +577,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 butLoadROIs.setEnabled(bState);
 			 butROIPresets.setEnabled(bState);
 			 cbActiveChannel.setEnabled(bState);
+			 cbActivePreset.setEnabled(bState);
 			 
 			 listScroller.setEnabled(bState);			 
 			 jlist.setEnabled(bState);
@@ -651,7 +673,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		if(e.getSource() == cbActiveChannel)
 		{
 			bt.btdata.nChAnalysis=cbActiveChannel.getSelectedIndex();
-		}		
+		}
+		
+		//ACTIVE PRESET
+		if(e.getSource() == cbActivePreset)
+		{
+			if(nActivePreset!=cbActivePreset.getSelectedIndex())
+			{
+				nActivePreset=cbActivePreset.getSelectedIndex();
+				unselect();
+				
+			}
+		}	
+		
 		//SHOW ALL BUTTON
 		if(e.getSource() == butShowAll)
 		{
@@ -672,6 +706,27 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		if(e.getSource() == butLoadROIs)
 		{
 			diagLoadROIs();
+		}
+		
+		//Presets Manager
+		if(e.getSource() == butROIPresets)
+		{
+			Roi3DPresetPanel dialPreset = new Roi3DPresetPanel(this);
+			dialPreset.show();
+			cbActivePreset.removeAllItems();
+			for(int i=0;i<presets.size();i++)
+			{
+				cbActivePreset.addItem(presets.get(i).getName());
+			}
+			if(nActivePreset>(cbActivePreset.getItemCount()-1))
+			{
+				cbActivePreset.setSelectedIndex(nActivePreset);
+			}
+			else
+			{
+				cbActivePreset.setSelectedIndex(0);
+			}
+			
 		}
 		
 		///SIDE ROI SPECIFIC LIST BUTTONS

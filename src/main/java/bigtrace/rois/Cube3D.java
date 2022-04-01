@@ -198,12 +198,12 @@ public class Cube3D implements Roi3D {
 
 	@Override
 	public String getName() {
-		return name;
+		return new String(name);
 	}
 
 	@Override
 	public void setName(String name) {
-		this.name = name;
+		this.name = new String(name);		
 	}
 	
 	@Override
