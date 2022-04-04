@@ -77,8 +77,9 @@ public class BigTraceData {
 	
 	
 	
-	/** characteristic size (SD) of lines (for now in all dimensions)**/
-	public double sigmaGlob = 3.0;
+	/** characteristic size (SD) of lines (for each dimension)**/
+	//public double sigmaGlob = 3.0;
+	public double [] sigmaTrace = new double [3];
 	
 	/** whether (1) or not (0) remove visibility of volume data during tracing **/
 	public int nTraceBoxView = 1;
@@ -107,7 +108,10 @@ public class BigTraceData {
 		dZoomBoxScreenFraction = Prefs.get("BigTrace.dZoomBoxScreenFraction", 1.0);
 		
 		//tracing
-		sigmaGlob = Prefs.get("BigTrace.sigmaGlob", 3.0);
+		sigmaTrace = new double [3];
+		sigmaTrace[0] = Prefs.get("BigTrace.sigmaTraceX", 2.0);
+		sigmaTrace[1] = Prefs.get("BigTrace.sigmaTraceY", 2.0);
+		sigmaTrace[2] = Prefs.get("BigTrace.sigmaTraceZ", 2.0);
 		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);				
 		fTraceBoxAdvanceFraction = (float) Prefs.get("BigTrace.fTraceBoxAdvanceFraction", 0.9);
 		dTraceBoxScreenFraction = Prefs.get("BigTrace.dTraceBoxScreenFraction", 0.5);

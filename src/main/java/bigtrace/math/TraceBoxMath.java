@@ -82,7 +82,7 @@ public class TraceBoxMath extends SwingWorker<Void, String> implements BigTraceB
 				nDerivOrder = new int [3];
 				nDerivOrder[d1]++;
 				nDerivOrder[d2]++;
-				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btdata.sigmaGlob, nDerivOrder );
+				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btdata.sigmaTrace, nDerivOrder );
 				derivKernel = Kernel1D.centralAsymmetric(kernels);
 				convObj=SeparableKernelConvolution.convolution( derivKernel );
 				convObj.setExecutor(es);

@@ -231,7 +231,7 @@ public class DerivConvolutionKernels {
 
 
 /** return 3D Gaussian derivative convolution kernels defined in derv_type */
-public static double [][] convolve_derive_kernel(double sigma, int [] deriv_type)
+public static double [][] convolve_derive_kernel(double [] sigma, int [] deriv_type)
 {
 	
   double [][] kernConv = new double[3][];
@@ -242,16 +242,16 @@ public static double [][] convolve_derive_kernel(double sigma, int [] deriv_type
 	  switch(deriv_type[i])
 	  {
 	  	case 0:
-	  		kernConv[i]=compute_gauss_mask_0(sigma);
+	  		kernConv[i]=compute_gauss_mask_0(sigma[i]);
 	  		break;
 	  	case 1:
-	  		kernConv[i]=compute_gauss_mask_1(sigma);
+	  		kernConv[i]=compute_gauss_mask_1(sigma[i]);
 	  		break;
 	  	case 2:
-	  		kernConv[i]=compute_gauss_mask_2(sigma);
+	  		kernConv[i]=compute_gauss_mask_2(sigma[i]);
 	  		break;
 	    default: //just a stub
-	    	kernConv[i]=compute_gauss_mask_0(sigma);
+	    	kernConv[i]=compute_gauss_mask_0(sigma[i]);
 	        break;
 	  		
 	  }

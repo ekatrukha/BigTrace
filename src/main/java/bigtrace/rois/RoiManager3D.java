@@ -858,20 +858,37 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		NumberField nfTraceBoxSize = new NumberField(4);
 		NumberField nfTraceBoxScreenFraction = new NumberField(4);
-		NumberField nfSigma = new NumberField(4);
+		NumberField nfSigmaX = new NumberField(4);
+		NumberField nfSigmaY = new NumberField(4);
+		NumberField nfSigmaZ = new NumberField(4);
 		NumberField nfTBAdvance = new NumberField(4);
 
 		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btdata.lTraceBoxSize)));
 		nfTraceBoxScreenFraction.setText(Double.toString(bt.btdata.dTraceBoxScreenFraction));
-		nfSigma.setText(Double.toString(bt.btdata.sigmaGlob));
+		nfSigmaX.setText(Double.toString(bt.btdata.sigmaTrace[0]));
+		nfSigmaY.setText(Double.toString(bt.btdata.sigmaTrace[1]));
+		nfSigmaZ.setText(Double.toString(bt.btdata.sigmaTrace[2]));
 		nfTBAdvance.setText(Float.toString(bt.btdata.fTraceBoxAdvanceFraction));
 		
 		cd.gridx=0;
 		cd.gridy=0;
 		//cd.anchor=GridBagConstraints.WEST;
-		pTrace.add(new JLabel("Curve thickness (SD, px): "),cd);
+		pTrace.add(new JLabel("Curve thickness X axis (SD, px): "),cd);
 		cd.gridx++;
-		pTrace.add(nfSigma,cd);
+		pTrace.add(nfSigmaX,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pTrace.add(new JLabel("Curve thickness Y axis (SD, px): "),cd);
+		cd.gridx++;
+		pTrace.add(nfSigmaY,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pTrace.add(new JLabel("Curve thickness Z axis (SD, px): "),cd);
+		cd.gridx++;
+		pTrace.add(nfSigmaZ,cd);
+		
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -929,8 +946,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
 
 
-			bt.btdata.sigmaGlob = Double.parseDouble(nfSigma.getText());
-			Prefs.set("BigTrace.sigmaGlob", (double)(bt.btdata.sigmaGlob));
+			bt.btdata.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
+			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btdata.sigmaTrace[0]));
+			
+			bt.btdata.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
+			Prefs.set("BigTrace.sigmaTraceY", (double)(bt.btdata.sigmaTrace[1]));
+			
+			bt.btdata.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
+			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btdata.sigmaTrace[2]));
 			
 			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
 			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
