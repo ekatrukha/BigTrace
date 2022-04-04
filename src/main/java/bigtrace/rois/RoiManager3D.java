@@ -94,6 +94,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JButton butSaveROIs;
 	 JButton butLoadROIs;
 	 JButton butROIPresets;
+	 JButton butApplyPreset;
 	 
 	 JComboBox<String> cbActiveChannel;
 	 JComboBox<String> cbActivePreset;
@@ -258,6 +259,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cr.gridy++;
 		 roiList.add(butROIPresets ,cr);
 		 
+		 
+		 
 
 	     // Blank/filler component
 		 cr.gridx++;
@@ -290,6 +293,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cbActiveChannel = new JComboBox<>(nCh);
 		 cbActiveChannel.setSelectedIndex(0);
 		 cbActiveChannel.addActionListener(this);
+		 
+		 
 		 cr = new GridBagConstraints();
 	     cr.gridx=0;
 		 cr.gridy=0;
@@ -307,13 +312,23 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 }
 		 cbActivePreset = new JComboBox<>(nPresetNames);
 		 cbActivePreset.setSelectedIndex(0);
+		 cbActivePreset.setPrototypeDisplayValue("tyrosinated");
+		 //Dimension size= cbActivePreset.getSize();
+		// size.setSize(width, height);
+		 //cbActivePreset.setPreferredSize(size);
 		 cbActivePreset.addActionListener(this);
+		 butApplyPreset = new JButton("Apply");
+		 butApplyPreset.addActionListener(this);
+
+		 
 		 cr = new GridBagConstraints();
 	     cr.gridx=0;
 		 cr.gridy=0;
-		 panPreset.add(new JLabel("ROI Preset"),cr);
+		 panPreset.add(new JLabel("Preset"),cr);
 		 cr.gridx++;
 		 panPreset.add(cbActivePreset,cr);
+		 cr.gridx++;
+		 panPreset.add(butApplyPreset,cr);
  
 		 GridBagConstraints c = new GridBagConstraints();
 		 setLayout(new GridBagLayout());
@@ -578,6 +593,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 butROIPresets.setEnabled(bState);
 			 cbActiveChannel.setEnabled(bState);
 			 cbActivePreset.setEnabled(bState);
+			 butApplyPreset.setEnabled(bState);
 			 
 			 listScroller.setEnabled(bState);			 
 			 jlist.setEnabled(bState);
@@ -678,14 +694,15 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		//ACTIVE PRESET
 		if(e.getSource() == cbActivePreset)
 		{
+			//Dimension size= cbActivePreset.getSize();
 			if(nActivePreset!=cbActivePreset.getSelectedIndex())
 			{
 				nActivePreset=cbActivePreset.getSelectedIndex();
-				unselect();
+				//unselect();
 				
 			}
 		}	
-		
+
 		//SHOW ALL BUTTON
 		if(e.getSource() == butShowAll)
 		{
@@ -713,18 +730,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		{
 			Roi3DPresetPanel dialPreset = new Roi3DPresetPanel(this);
 			dialPreset.show();
+			int nPresetSave = nActivePreset;
 			cbActivePreset.removeAllItems();
 			for(int i=0;i<presets.size();i++)
 			{
 				cbActivePreset.addItem(presets.get(i).getName());
 			}
-			if(nActivePreset>(cbActivePreset.getItemCount()-1))
+			if(nPresetSave>(cbActivePreset.getItemCount()-1))
 			{
-				cbActivePreset.setSelectedIndex(nActivePreset);
+				cbActivePreset.setSelectedIndex(0);
 			}
 			else
 			{
-				cbActivePreset.setSelectedIndex(0);
+				cbActivePreset.setSelectedIndex(nPresetSave);
 			}
 			
 		}
@@ -779,7 +797,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			{
 				dialProperties();
 			}
+			//APPLY PRESET
 			
+			if(e.getSource() == butApplyPreset)
+			{
+				rois.get(activeRoi).setPreset(presets.get(nActivePreset));
+			}	
 
 		}
 

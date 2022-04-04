@@ -74,17 +74,14 @@ import tpietzsch.util.MatrixMath;
 public class BigTrace implements PlugIn, WindowListener
 {
 	public  BvvStackSource< UnsignedByteType > bvv_main = null;
-	//public  BvvStackSource< UnsignedByteType > bvv2 = null;
 	public  ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<BvvStackSource< ? >>();
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	RandomAccessibleInterval< UnsignedByteType > empty_view;
-	//IntervalView< UnsignedByteType > currentView = null;
+
 	ArrayList<IntervalView< UnsignedByteType >>  sources = new ArrayList<IntervalView< UnsignedByteType >>();
 	public Color [] colorsCh;
 	public double [][] channelRanges;
-	//IntervalView< UnsignedByteType > trace_weights = null;
-	//IntervalView< FloatType > trace_vectors=null;
-	//ArrayList<long []> jump_points = null;
+
 	private boolean bTraceMode = false;
 	
 	//Img< UnsignedByteType> img;

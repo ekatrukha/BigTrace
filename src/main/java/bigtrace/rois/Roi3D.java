@@ -48,6 +48,9 @@ public interface Roi3D
 	public void setRenderType(int nRenderType);
 	public int getRenderType();
 	public void saveRoi(final FileWriter writer);
+	
+	public void setPreset(final Roi3DPreset preset_in);
+	
 	public static String intTypeToString(int nType)
 	{
 		String sType = "Point";
