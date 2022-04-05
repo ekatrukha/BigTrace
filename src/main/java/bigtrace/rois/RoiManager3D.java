@@ -1147,13 +1147,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         saveTask.execute();
         //this.setLockMode(false);
 	}
-	/** Save ROIS dialog and saving **/
+	/** Load ROIS dialog and saving **/
 	public void diagLoadROIs()
 	{
 		String filename;
 
-        //Roi3D roiIn;
-        
+   
 		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs","", "*.csv");
 		
         String path = openDial.getDirectory();
@@ -1163,13 +1162,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         filename = path+openDial.getFileName();
         
         bt.bInputLock = true;
-        //this.setLockMode(true);
+
         ROIsLoadBG loadTask = new ROIsLoadBG();
         loadTask.sFilename=filename;
         loadTask.bt=this.bt;
         loadTask.addPropertyChangeListener(bt.btpanel);
         loadTask.execute();
-        //this.setLockMode(false);
         
 	}
 

@@ -2,10 +2,9 @@ package bigtrace.rois;
 
 import java.awt.Color;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -13,7 +12,6 @@ import javax.swing.SwingWorker;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
-import ij.IJ;
 import net.imglib2.RealPoint;
 
 public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGWorker{
@@ -209,7 +207,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 		//some error reading the file
         if(bFirstPartCheck!=4)
         {
-        	 System.err.println("Not a Bigtrace ROI file format or plugin/version mismatch, loading ROIs aborted.");
+        	 System.err.println("Not a Bigtrace ROI file format or plugin/file version mismatch, loading ROIs could be incomplete.");
              //bt.bInputLock = false;
              //bt.roiManager.setLockMode(false);
         }

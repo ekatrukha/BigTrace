@@ -6,10 +6,14 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -28,7 +32,9 @@ import javax.swing.event.ListSelectionListener;
 
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.gui.NumberField;
+import ij.io.OpenDialog;
 import ij.io.SaveDialog;
+import net.imglib2.RealPoint;
 
 
 public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
@@ -298,7 +304,7 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 		return false;			
 	}
 	
-	/** Save ROIS dialog and saving **/
+	/** Save Presets dialog and saving **/
 	public void diagSavePresets()
 	{
 		String filename;
@@ -338,6 +344,116 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 		return;
 
 	}
+	
+	/** Load Presets dialog and saving **/
+	public void diagLoadPresets()
+	{
+		String filename;
+		String[] line_array;
+        int bFirstPartCheck = 0;
+        int nPresetN, nPreset;
+		OpenDialog openDial = new OpenDialog("Load BigTrace Presets","", "*.csv");
+		
+        String path = openDial.getDirectory();
+        if (path==null)
+        	return;
+
+        filename = path+openDial.getFileName();
+        
+		try {
+			
+	        BufferedReader br = new BufferedReader(new FileReader(filename));
+	        int nLineN = 0;
+
+	        String line;
+
+			while ((line = br.readLine()) != null) 
+				{
+				   // process the line.
+				  line_array = line.split(",");
+				  nLineN++;
+				  //first line check
+				  if(line_array.length==3 && nLineN==1)
+			      {
+					  bFirstPartCheck++;
+					  if(line_array[0].equals("BigTrace_presets")&& line_array[2].equals(roiManager.bt.btdata.sVersion))
+					  {
+						  bFirstPartCheck++; 
+					  }					  
+			      }
+				  //second line check
+				  if(line_array.length==2 && nLineN==2)
+			      {
+					  bFirstPartCheck++;
+					  if(line_array[0].equals("PresetsNumber"))
+					  {
+						  bFirstPartCheck++;
+						  nPresetN=Integer.parseInt(line_array[1]);
+					  }
+			      }				  
+				  if(line_array[0].equals("BT_Preset"))
+				  {
+
+				  }
+				  if(line_array[0].equals("Name"))
+				  {						  
+					  sName = line_array[1];
+				  }
+				  if(line_array[0].equals("PointSize"))
+				  {						  
+					  pointSize = Float.parseFloat(line_array[1]);
+				  }
+				  if(line_array[0].equals("LineThickness"))
+				  {						  
+					  lineThickness = Float.parseFloat(line_array[1]);
+				  }
+				  if(line_array[0].equals("PointColor"))
+				  {						  
+					  pointColor = new Color(Integer.parseInt(line_array[1]),
+							  				 Integer.parseInt(line_array[2]),
+							  				 Integer.parseInt(line_array[3]),
+							  				 Integer.parseInt(line_array[4]));
+				  }
+				  if(line_array[0].equals("LineColor"))
+				  {						  
+					  lineColor = new Color(Integer.parseInt(line_array[1]),
+							  				 Integer.parseInt(line_array[2]),
+							  				 Integer.parseInt(line_array[3]),
+							  				 Integer.parseInt(line_array[4]));
+				  }
+				  if(line_array[0].equals("RenderType"))
+				  {						  
+					  nRenderType = Integer.parseInt(line_array[1]);
+				  }
+				  if(line_array[0].equals("SectorN"))
+				  {						  
+					  nSectorN = Integer.parseInt(line_array[1]);
+				  }
+					  				  
+				}
+
+	        br.close();
+		}
+		//catching errors in file opening
+		catch (FileNotFoundException e) {
+			System.err.print(e.getMessage());
+		}	        
+		catch (IOException e) {
+			System.err.print(e.getMessage());
+		}
+        
+		//some error reading the file
+        if(bFirstPartCheck!=4)
+        {
+        	 System.err.println("Not a Bigtrace ROI file format or plugin/version mismatch, loading ROIs aborted.");
+             //bt.bInputLock = false;
+             //bt.roiManager.setLockMode(false);
+        }
+
+		return;
+
+	}
+
 
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
