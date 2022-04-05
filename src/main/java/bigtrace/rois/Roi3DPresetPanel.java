@@ -6,6 +6,9 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 
 import javax.swing.DefaultListModel;
@@ -25,6 +28,7 @@ import javax.swing.event.ListSelectionListener;
 
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.gui.NumberField;
+import ij.io.SaveDialog;
 
 
 public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
@@ -46,6 +50,9 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 	JButton butCopyNew;
 	JButton butDelete;
 	JButton butRename;
+	JButton butSave;
+	JButton butLoad;
+	
 	
 	RoiManager3D roiManager;
 	
@@ -83,7 +90,10 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 		 butRename.addActionListener(this);		 
 		 butDelete = new JButton("Delete");
 		 butDelete.addActionListener(this);
-
+		 butSave = new JButton("Save");
+		 butSave.addActionListener(this);
+		 butLoad = new JButton("Load");
+		 butLoad.addActionListener(this);
 
 		 
 		 GridBagConstraints cr = new GridBagConstraints();
@@ -104,6 +114,10 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 		 presetList.add(butRename,cr);		 
 		 cr.gridy++;
 		 presetList.add(butDelete,cr);
+		 cr.gridy++;
+		 presetList.add(butSave,cr);
+		 cr.gridy++;
+		 presetList.add(butLoad,cr);
 		 
 		 
 	     // Blank/filler component
@@ -283,6 +297,47 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 		
 		return false;			
 	}
+	
+	/** Save ROIS dialog and saving **/
+	public void diagSavePresets()
+	{
+		String filename;
+		int nPresetN, nPreset;
+		
+		filename = roiManager.bt.btdata.sFileNameImg + "_btpresets";
+		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
+        String path = sd.getDirectory();
+        if (path==null)
+        	return;
+        filename = path+sd.getFileName();
+        
+        try {
+			final File file = new File(filename);
+			
+			final FileWriter writer = new FileWriter(file);
+			writer.write("BigTrace_presets,version," + roiManager.bt.btdata.sVersion + "\n");
+			nPresetN=roiManager.presets.size();
+			writer.write("PresetsNumber,"+Integer.toString(nPresetN)+"\n");
+			for(nPreset=0;nPreset<nPresetN;nPreset++)
+			{
+				  //Sleep for up to one second.
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException ignore) {}
+				writer.write("BT_Preset,"+Integer.toString(nPreset+1)+"\n");
+				
+				roiManager.presets.get(nPreset).savePreset(writer);
+			}
+			writer.write("End of BigTrace Presets\n");
+			writer.close();
+
+		} catch (IOException e) {	
+			System.err.print(e.getMessage());
+			//e.printStackTrace();
+		}
+		return;
+
+	}
 
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
@@ -355,6 +410,12 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 				{
 					jlist.setSelectedIndex(indList-1);
 				}
+			}
+			//DELETE
+			if(ae.getSource() == butSave)
+			{
+			
+				diagSavePresets();
 			}
 		}
 	}

@@ -1,6 +1,10 @@
 package bigtrace.rois;
 
 import java.awt.Color;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 
 import bigtrace.scene.VisPolyLineScaled;
 
@@ -109,5 +113,35 @@ public class Roi3DPreset {
 	public int getRenderType()
 	{
 		return renderType;
+	}
+	
+	public void savePreset(final FileWriter writer)
+	{
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+		try {
+			
+			writer.write("Name," + this.getName()+"\n");
+			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
+			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
+									  +	Integer.toString(pointColor.getGreen()) +","
+									  +	Integer.toString(pointColor.getBlue()) +","
+									  +	Integer.toString(pointColor.getAlpha()) +"\n");
+			writer.write("LineThickness," + df3.format(this.getLineThickness())+"\n");
+			writer.write("LineColor,"+ Integer.toString(lineColor.getRed()) +","
+									  +	Integer.toString(lineColor.getGreen()) +","
+									  +	Integer.toString(lineColor.getBlue()) +","
+									  +	Integer.toString(lineColor.getAlpha()) +"\n");
+			writer.write("RenderType,"+ Integer.toString(this.getRenderType())+"\n");
+			writer.write("SectorN,"+ Integer.toString(this.sectorN)+"\n");
+			
+
+		}
+		catch (IOException e) {	
+			System.err.print(e.getMessage());
+			
+		}
+	
 	}
 }
