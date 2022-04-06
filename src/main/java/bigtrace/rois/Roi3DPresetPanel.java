@@ -32,6 +32,8 @@ import javax.swing.event.ListSelectionListener;
 
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.gui.NumberField;
+import ij.Prefs;
+import ij.gui.GenericDialog;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import net.imglib2.RealPoint;
@@ -353,11 +355,59 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
         int bFirstPartCheck = 0;
         int nPresetN, nPreset;
 		OpenDialog openDial = new OpenDialog("Load BigTrace Presets","", "*.csv");
+		///
+        float pointSize=0.0f;
+        float lineThickness =0.0f;
+        Color pointColor = Color.BLACK;
+        Color lineColor = Color.BLACK;
+        String sName = "";
+        int nRenderType = 0;
+        int nSectorN = 16;
+        
+        
+		Roi3DPreset readPreset;
 		
         String path = openDial.getDirectory();
         if (path==null)
         	return;
+        
+        
+        String [] sPresetLoadOptions = new String [] {"Overwite current presets","Append to list"};
+		
+        String input = (String) JOptionPane.showInputDialog(optionPane, "Loading ROI Presets",
+                "Loaded presets:", JOptionPane.QUESTION_MESSAGE, null, // Use
+                                                                                // default
+                                                                                // icon
+                sPresetLoadOptions, // Array of choices
+                sPresetLoadOptions[(int)Prefs.get("BigTrace.LoadPreset", 0)]);
+        
+        if(input.isEmpty())
+        	 return;
+        int nLoadMode;
+        if(input.equals("Overwite current presets"))
+        {
+        	nLoadMode = 0;
+        	roiManager.presets = new ArrayList<Roi3DPreset>();
+        	listModel.removeAllElements();
+        }
+        else
+        {
+        	nLoadMode = 1;
+        }
+        
+       // GenericDialog dgPresetLoadMode = new GenericDialog("Loading ROI Presets");
+		//dgPresetLoadMode.addChoice("Loaded presets: ",sPresetLoadOptions, Prefs.get("BigTrace.LoadPreset", "Overwite current"));
+		//dgPresetLoadMode.showDialog();
+        
+		//if (dgPresetLoadMode.wasCanceled())
+        //    return;
+		//int nLoadMode = dgPresetLoadMode.getNextChoiceIndex();
+		//Prefs.set("BigTrace.LoadPreset", sPresetLoadOptions[nLoadMode]);
+        Prefs.set("BigTrace.LoadPreset", nLoadMode);
 
+		
+		
+		
         filename = path+openDial.getFileName();
         
 		try {
@@ -428,6 +478,10 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 				  if(line_array[0].equals("SectorN"))
 				  {						  
 					  nSectorN = Integer.parseInt(line_array[1]);
+					  //read it all hopefully
+					  readPreset = new Roi3DPreset(sName, pointSize, pointColor, lineThickness, lineColor,  nRenderType, nSectorN);
+					  roiManager.presets.add(readPreset);
+					  listModel.addElement(readPreset.getName());
 				  }
 					  				  
 				}
@@ -527,12 +581,19 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 					jlist.setSelectedIndex(indList-1);
 				}
 			}
-			//DELETE
+			//SAVE
 			if(ae.getSource() == butSave)
 			{
 			
 				diagSavePresets();
 			}
+			//LOAD
+			if(ae.getSource() == butLoad)
+			{
+			
+				diagLoadPresets();
+			}
+			
 		}
 	}
 	
