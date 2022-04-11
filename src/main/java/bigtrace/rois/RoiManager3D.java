@@ -1050,9 +1050,15 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				
 		});
 		
-
 		cd.gridx=0;
 		cd.gridy=0;
+		//cd.anchor=GridBagConstraints.WEST;
+		dialProperties.add(new JLabel("ROI Type: "),cd);
+		cd.gridx++;
+		dialProperties.add(new JLabel(Roi3D.intTypeToString(rois.get(activeRoi).getType())),cd);
+
+		cd.gridx=0;
+		cd.gridy++;
 		//cd.anchor=GridBagConstraints.WEST;
 		dialProperties.add(new JLabel("Point size: "),cd);
 		cd.gridx++;
