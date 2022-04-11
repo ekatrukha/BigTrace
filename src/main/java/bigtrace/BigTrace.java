@@ -682,16 +682,20 @@ public class BigTrace implements PlugIn, WindowListener
 	{
 		FinalInterval rangeTraceBox;
 		
+		IntervalView<UnsignedByteType> traceIV;
+		
+		traceIV = getTraceInterval(btdata.bTraceOnlyCrop);
+		
 		if(trace.numVertices()==1)
 		{
-			rangeTraceBox = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.lTraceBoxSize, trace.vertices.get(0));
+			rangeTraceBox = getTraceBoxCentered(traceIV,btdata.lTraceBoxSize, trace.vertices.get(0));
 		}
 		else
 		{
-			rangeTraceBox = getTraceBoxNext(sources.get(btdata.nChAnalysis),btdata.lTraceBoxSize, btdata.fTraceBoxAdvanceFraction, trace);
+			rangeTraceBox = getTraceBoxNext(traceIV,btdata.lTraceBoxSize, btdata.fTraceBoxAdvanceFraction, trace);
 		}
 		
-		IntervalView<UnsignedByteType> traceInterval = Views.interval(sources.get(btdata.nChAnalysis), rangeTraceBox);
+		IntervalView<UnsignedByteType> traceInterval = Views.interval(traceIV, rangeTraceBox);
 		
 		//getCenteredView(traceInterval);
 		panel.setTransformAnimator(getCenteredViewAnim(traceInterval,btdata.dTraceBoxScreenFraction));
@@ -711,6 +715,28 @@ public class BigTrace implements PlugIn, WindowListener
 		//showTraceBox(btdata.trace_weights);
 		btdata.nPointsInTraceBox = 1;
 	}
+	
+	/** returns current Interval for the tracing. If bCroppedInterval is true,
+	 * returns cropped area, otherwise returns full original volume. **/
+	IntervalView<UnsignedByteType> getTraceInterval(boolean bCroppedInterval)
+	{
+		if(bCroppedInterval)
+		{
+			return sources.get(btdata.nChAnalysis);
+		}
+		else
+		{
+			if(btdata.nTotalChannels==1)
+			{
+				return Views.interval(img_in, img_in);
+			}
+			else
+			{
+				return Views.hyperSlice(img_in,2,btdata.nChAnalysis);
+			}
+		}
+	}
+	
 
 	
 	//public ArrayList<RealPoint> getSemiAutoTrace(RealPoint target)
@@ -1292,7 +1318,7 @@ public class BigTrace implements PlugIn, WindowListener
 		*/
 		
 		//current dataset
-		Cuboid3D dataCube = new Cuboid3D(btdata.nDimCurr); 
+		Cuboid3D dataCube = new Cuboid3D(viewclick); 
 		dataCube.iniFaces();
 		ArrayList<RealPoint> intersectionPoints = Intersections3D.cuboidLinesIntersect(dataCube, frustimLines);
 		// Lines(rays) truncated to the volume.

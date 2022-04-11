@@ -95,6 +95,10 @@ public class BigTraceData {
 	 * how much tracebox is going to follow the last direction of trace (with respect to the last added point):
 	 * in the range [0..1], 0 = last point in the center of new tracebox, 1 = previous point is at the edge of the new tracebox**/
 	public float fTraceBoxAdvanceFraction = 0.9f;
+	
+	/** whether to limit tracing to cropped area**/
+	public boolean bTraceOnlyCrop = false;
+	
 	/** current number of vertices in the tracebox **/
 	public int nPointsInTraceBox=0;
 	
@@ -115,5 +119,6 @@ public class BigTraceData {
 		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);				
 		fTraceBoxAdvanceFraction = (float) Prefs.get("BigTrace.fTraceBoxAdvanceFraction", 0.9);
 		dTraceBoxScreenFraction = Prefs.get("BigTrace.dTraceBoxScreenFraction", 0.5);
+		bTraceOnlyCrop= Prefs.get("BigTrace.bTraceOnlyCrop", false);
 	}
 }

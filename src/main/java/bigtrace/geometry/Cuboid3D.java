@@ -2,6 +2,7 @@ package bigtrace.geometry;
 
 import java.util.ArrayList;
 
+import net.imglib2.AbstractInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.util.LinAlgHelpers;
 /**
@@ -66,6 +67,44 @@ public class Cuboid3D {
 		{
 			dMinMax[0][i]=(long)Math.round(nMinMax[0][i]);
 			dMinMax[1][i]=(long)Math.round(nMinMax[1][i]);
+		}
+		vertices = new double [8][3];
+		double [] temp = new double[3];
+		double [] diff = new double[3];
+		
+		
+		//range
+		for(i=0;i<3;i++)
+			diff[i]=dMinMax[1][i]-dMinMax[0][i];
+		
+		LinAlgHelpers.scale(dMinMax[0],1.0, vertices[0]);
+		LinAlgHelpers.scale(dMinMax[1],1.0, vertices[6]);
+		temp[1]=diff[1]; 
+		LinAlgHelpers.add(vertices[0],temp,vertices[1]);
+		temp[0]=diff[0]; 
+		LinAlgHelpers.add(vertices[0],temp,vertices[2]);
+		temp[1]=0.0;
+		LinAlgHelpers.add(vertices[0],temp,vertices[3]);
+		temp[0]=0.0;
+		temp[2]=diff[2];
+		LinAlgHelpers.add(vertices[0],temp,vertices[4]);
+		LinAlgHelpers.add(vertices[1],temp,vertices[5]);
+		LinAlgHelpers.add(vertices[3],temp,vertices[7]);
+	}
+	
+	/**
+	 *    Creates a cube with min/max coordinates defined by interval_in.
+	 *    Does not initializes "faces", use iniFaces()
+	 * **/
+	public Cuboid3D(final AbstractInterval interval_in)
+	{
+		dMinMax = new double [2][3];
+		int i;
+		
+		for(i=0;i<3;i++)
+		{
+			dMinMax[0][i] = interval_in.min(i);
+			dMinMax[1][i] = interval_in.max(i);
 		}
 		vertices = new double [8][3];
 		double [] temp = new double[3];

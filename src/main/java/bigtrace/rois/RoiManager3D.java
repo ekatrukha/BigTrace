@@ -16,6 +16,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -879,12 +880,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		JPanel pTrace = new JPanel(new GridBagLayout());
 
 		
-		NumberField nfTraceBoxSize = new NumberField(4);
-		NumberField nfTraceBoxScreenFraction = new NumberField(4);
+
 		NumberField nfSigmaX = new NumberField(4);
 		NumberField nfSigmaY = new NumberField(4);
 		NumberField nfSigmaZ = new NumberField(4);
+		NumberField nfTraceBoxSize = new NumberField(4);
+		NumberField nfTraceBoxScreenFraction = new NumberField(4);
 		NumberField nfTBAdvance = new NumberField(4);
+		JCheckBox cbTraceOnlyCrop = new JCheckBox();
 
 		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btdata.lTraceBoxSize)));
 		nfTraceBoxScreenFraction.setText(Double.toString(bt.btdata.dTraceBoxScreenFraction));
@@ -892,6 +895,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		nfSigmaY.setText(Double.toString(bt.btdata.sigmaTrace[1]));
 		nfSigmaZ.setText(Double.toString(bt.btdata.sigmaTrace[2]));
 		nfTBAdvance.setText(Float.toString(bt.btdata.fTraceBoxAdvanceFraction));
+		cbTraceOnlyCrop.setSelected(bt.btdata.bTraceOnlyCrop);
 		
 		cd.gridx=0;
 		cd.gridy=0;
@@ -934,6 +938,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridx++;
 		pTrace.add(nfTBAdvance,cd);
 		
+		cd.gridx=0;
+		cd.gridy++;
+		//cd.anchor=GridBagConstraints.WEST;
+		pTrace.add(new JLabel("Trace only cropped volume: "),cd);
+		cd.gridx++;
+		pTrace.add(cbTraceOnlyCrop,cd);
+		
 		tabPane.addTab("General",pGeneral);
 		tabPane.addTab("Tracing",pTrace);
 
@@ -961,6 +972,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				selectColors.setColor(null, 1);
 			}
 			
+			//SAVE SELECTIONS
 
 			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
 			Prefs.set("BigTrace.nZoomBoxSize", (double)(bt.btdata.nZoomBoxSize));
@@ -986,6 +998,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			
 			bt.btdata.fTraceBoxAdvanceFraction = Float.parseFloat(nfTBAdvance.getText());
 			Prefs.set("BigTrace.fTraceBoxAdvanceFraction", (double)(bt.btdata.fTraceBoxAdvanceFraction));
+			
+			bt.btdata.bTraceOnlyCrop = cbTraceOnlyCrop.isSelected();
+			Prefs.set("BigTrace.bTraceOnlyCrop", bt.btdata.bTraceOnlyCrop);
+			
+			
 		}
 	}
 	

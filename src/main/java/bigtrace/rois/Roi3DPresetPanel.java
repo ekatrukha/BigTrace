@@ -384,7 +384,7 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
         if(input.isEmpty())
         	 return;
         int nLoadMode;
-        if(input.equals("Overwite current presets"))
+        if(input.equals("Overwrite current presets"))
         {
         	nLoadMode = 0;
         	roiManager.presets = new ArrayList<Roi3DPreset>();
