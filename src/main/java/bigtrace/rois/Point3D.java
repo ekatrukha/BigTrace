@@ -33,7 +33,7 @@ public class Point3D implements Roi3D {
 		name = "point"+Integer.toString(this.hashCode());
 
 	}*/
-	public Point3D(final RealPoint vertex_, final Roi3DPreset preset_in)
+	public Point3D(final RealPoint vertex_, final Roi3DGroup preset_in)
 	{
 		type = Roi3D.POINT;
 		pointSize = preset_in.pointSize;		
@@ -193,7 +193,7 @@ public class Point3D implements Roi3D {
 		
 	}
 	@Override
-	public void setPreset(final Roi3DPreset preset_in) {
+	public void setGroup(final Roi3DGroup preset_in) {
 		// TODO Auto-generated method stub
 		pointSize = preset_in.pointSize;		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		

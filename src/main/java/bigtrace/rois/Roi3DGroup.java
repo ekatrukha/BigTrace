@@ -8,19 +8,19 @@ import java.text.DecimalFormatSymbols;
 
 import bigtrace.scene.VisPolyLineScaled;
 
-public class Roi3DPreset {
+public class Roi3DGroup {
 	 public Color pointColor = Color.GREEN;
 	 public Color lineColor = Color.BLUE;
 	 public String sName;
-	 
+
 	 public float lineThickness = 4.0f;
 	 public float pointSize = 6.0f;
 	 public int renderType = VisPolyLineScaled.WIRE;
 	 public int sectorN = 16;
 	 
-	 public Roi3DPreset(String sPresetName_, float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_, int sectorN_)
+	 public Roi3DGroup(String sGroupName_,  float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_, int sectorN_)
 	 {
-		 sName=new String(sPresetName_);
+		 sName=new String(sGroupName_);
 		 lineThickness=lineThickness_;
 		 pointSize=pointSize_;
 		 renderType = renderType_;
@@ -28,7 +28,7 @@ public class Roi3DPreset {
 		 setPointColor(pointColor_);
 		 setLineColor(lineColor_);
 	 }
-	 public Roi3DPreset(Roi3DPreset preset_in, String name)
+	 public Roi3DGroup(Roi3DGroup preset_in, String name)
 	 {
 		 sName=new String(name);
 		 lineThickness=preset_in.getLineThickness();
@@ -115,7 +115,7 @@ public class Roi3DPreset {
 		return renderType;
 	}
 	
-	public void savePreset(final FileWriter writer)
+	public void saveGroup(final FileWriter writer)
 	{
 		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
 		symbols.setDecimalSeparator('.');

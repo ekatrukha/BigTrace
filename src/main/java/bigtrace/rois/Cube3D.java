@@ -255,7 +255,7 @@ public class Cube3D implements Roi3D {
 
 	@Override
 
-	public void setPreset(final Roi3DPreset preset_in) {
+	public void setGroup(final Roi3DGroup preset_in) {
 		
 		setPointColor(preset_in.pointColor);
 		setLineColor(preset_in.lineColor);

@@ -49,7 +49,7 @@ public interface Roi3D
 	public int getRenderType();
 	public void saveRoi(final FileWriter writer);
 	
-	public void setPreset(final Roi3DPreset preset_in);
+	public void setGroup(final Roi3DGroup preset_in);
 	
 	public static String intTypeToString(int nType)
 	{

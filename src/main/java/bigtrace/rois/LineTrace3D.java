@@ -58,7 +58,7 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 
 	}
 	*/
-	public LineTrace3D(final Roi3DPreset preset_in)
+	public LineTrace3D(final Roi3DGroup preset_in)
 	{
 		type = Roi3D.LINE_TRACE;
 		pointSize = preset_in.pointSize;
@@ -462,7 +462,7 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		
 	}
 	@Override
-	public void setPreset(final Roi3DPreset preset_in) {
+	public void setGroup(final Roi3DGroup preset_in) {
 		
 		setPointColor(preset_in.pointColor);
 		setLineColor(preset_in.lineColor);

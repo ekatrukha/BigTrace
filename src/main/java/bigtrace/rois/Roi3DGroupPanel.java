@@ -33,18 +33,13 @@ import javax.swing.event.ListSelectionListener;
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.gui.NumberField;
 import ij.Prefs;
-import ij.gui.GenericDialog;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
-import net.imglib2.RealPoint;
 
 
-public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4884102591722778043L;
+public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
+
 	private JDialog dialog;
 	private JOptionPane optionPane;
 	
@@ -66,7 +61,7 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 	
 	public ColorUserSettings selectColors = new ColorUserSettings();
 	
-	public Roi3DPresetPanel(RoiManager3D roiManager_)	
+	public Roi3DGroupPanel(RoiManager3D roiManager_)	
 	{
 		 roiManager  = roiManager_;
 		 listModel = new  DefaultListModel<String>();
@@ -81,14 +76,14 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 		 
 		 
 		 
-		 for (int i = 0;i<roiManager.presets.size();i++)
+		 for (int i = 0;i<roiManager.groups.size();i++)
 		 {
-			 listModel.addElement(roiManager.presets.get(i).getName());
+			 listModel.addElement(roiManager.groups.get(i).getName());
 		 }
-		 jlist.setSelectedIndex(roiManager.nActivePreset);
+		 jlist.setSelectedIndex(roiManager.nActiveGroup);
 		 
 		 presetList = new JPanel(new GridBagLayout());
-		 //presetList.setBorder(new PanelTitle(" Presets Manager "));
+		 //presetList.setBorder(new PanelTitle(" Groups Manager "));
 
 		 butEdit = new JButton("Edit");
 		 butEdit.addActionListener(this);
@@ -136,7 +131,7 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 	     presetList.add(new JLabel(), cr);		
 		 
 		 optionPane = new JOptionPane(presetList);
-	     dialog = optionPane.createDialog("Presets manager");
+	     dialog = optionPane.createDialog("Groups manager");
 	     dialog.setModal(true);
 		 
     }
@@ -151,8 +146,8 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
     	dialog.setVisible(false); 
     }
     
-	/** show Preset Properties dialog**/
-	public boolean dialProperties(final Roi3DPreset preset)	
+	/** show Group Properties dialog**/
+	public boolean dialProperties(final Roi3DGroup preset)	
 	{
 		JPanel dialProperties = new JPanel(new GridBagLayout());
 		GridBagConstraints cd = new GridBagConstraints();
@@ -306,13 +301,13 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 		return false;			
 	}
 	
-	/** Save Presets dialog and saving **/
-	public void diagSavePresets()
+	/** Save Groups dialog and saving **/
+	public void diagSaveGroups()
 	{
 		String filename;
-		int nPresetN, nPreset;
+		int nGroupN, nGroup;
 		
-		filename = roiManager.bt.btdata.sFileNameImg + "_btpresets";
+		filename = roiManager.bt.btdata.sFileNameImg + "_btgroups";
 		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
         String path = sd.getDirectory();
         if (path==null)
@@ -323,20 +318,20 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 			final File file = new File(filename);
 			
 			final FileWriter writer = new FileWriter(file);
-			writer.write("BigTrace_presets,version," + roiManager.bt.btdata.sVersion + "\n");
-			nPresetN=roiManager.presets.size();
-			writer.write("PresetsNumber,"+Integer.toString(nPresetN)+"\n");
-			for(nPreset=0;nPreset<nPresetN;nPreset++)
+			writer.write("BigTrace_groups,version," + roiManager.bt.btdata.sVersion + "\n");
+			nGroupN=roiManager.groups.size();
+			writer.write("GroupsNumber,"+Integer.toString(nGroupN)+"\n");
+			for(nGroup=0;nGroup<nGroupN;nGroup++)
 			{
 				  //Sleep for up to one second.
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException ignore) {}
-				writer.write("BT_Preset,"+Integer.toString(nPreset+1)+"\n");
+				writer.write("BT_Group,"+Integer.toString(nGroup+1)+"\n");
 				
-				roiManager.presets.get(nPreset).savePreset(writer);
+				roiManager.groups.get(nGroup).saveGroup(writer);
 			}
-			writer.write("End of BigTrace Presets\n");
+			writer.write("End of BigTrace Groups\n");
 			writer.close();
 
 		} catch (IOException e) {	
@@ -347,14 +342,14 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 
 	}
 	
-	/** Load Presets dialog and saving **/
-	public void diagLoadPresets()
+	/** Load Groups dialog and saving **/
+	public void diagLoadGroups()
 	{
 		String filename;
 		String[] line_array;
         int bFirstPartCheck = 0;
-        int nPresetN, nPreset;
-		OpenDialog openDial = new OpenDialog("Load BigTrace Presets","", "*.csv");
+        int nGroupN, nGroup;
+		OpenDialog openDial = new OpenDialog("Load BigTrace Groups","", "*.csv");
 		///
         float pointSize=0.0f;
         float lineThickness =0.0f;
@@ -365,29 +360,29 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
         int nSectorN = 16;
         
         
-		Roi3DPreset readPreset;
+		Roi3DGroup readGroup;
 		
         String path = openDial.getDirectory();
         if (path==null)
         	return;
         
         
-        String [] sPresetLoadOptions = new String [] {"Overwite current presets","Append to list"};
+        String [] sGroupLoadOptions = new String [] {"Overwite current groups","Append to list"};
 		
-        String input = (String) JOptionPane.showInputDialog(optionPane, "Loading ROI Presets",
-                "Loaded presets:", JOptionPane.QUESTION_MESSAGE, null, // Use
+        String input = (String) JOptionPane.showInputDialog(optionPane, "Loading ROI Groups",
+                "Loaded groups:", JOptionPane.QUESTION_MESSAGE, null, // Use
                                                                                 // default
                                                                                 // icon
-                sPresetLoadOptions, // Array of choices
-                sPresetLoadOptions[(int)Prefs.get("BigTrace.LoadPreset", 0)]);
+                sGroupLoadOptions, // Array of choices
+                sGroupLoadOptions[(int)Prefs.get("BigTrace.LoadGroup", 0)]);
         
         if(input.isEmpty())
         	 return;
         int nLoadMode;
-        if(input.equals("Overwrite current presets"))
+        if(input.equals("Overwrite current groups"))
         {
         	nLoadMode = 0;
-        	roiManager.presets = new ArrayList<Roi3DPreset>();
+        	roiManager.groups = new ArrayList<Roi3DGroup>();
         	listModel.removeAllElements();
         }
         else
@@ -395,15 +390,15 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
         	nLoadMode = 1;
         }
         
-       // GenericDialog dgPresetLoadMode = new GenericDialog("Loading ROI Presets");
-		//dgPresetLoadMode.addChoice("Loaded presets: ",sPresetLoadOptions, Prefs.get("BigTrace.LoadPreset", "Overwite current"));
-		//dgPresetLoadMode.showDialog();
+       // GenericDialog dgGroupLoadMode = new GenericDialog("Loading ROI Groups");
+		//dgGroupLoadMode.addChoice("Loaded groups: ",sGroupLoadOptions, Prefs.get("BigTrace.LoadGroup", "Overwite current"));
+		//dgGroupLoadMode.showDialog();
         
-		//if (dgPresetLoadMode.wasCanceled())
+		//if (dgGroupLoadMode.wasCanceled())
         //    return;
-		//int nLoadMode = dgPresetLoadMode.getNextChoiceIndex();
-		//Prefs.set("BigTrace.LoadPreset", sPresetLoadOptions[nLoadMode]);
-        Prefs.set("BigTrace.LoadPreset", nLoadMode);
+		//int nLoadMode = dgGroupLoadMode.getNextChoiceIndex();
+		//Prefs.set("BigTrace.LoadGroup", sGroupLoadOptions[nLoadMode]);
+        Prefs.set("BigTrace.LoadGroup", nLoadMode);
 
 		
 		
@@ -426,7 +421,7 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 				  if(line_array.length==3 && nLineN==1)
 			      {
 					  bFirstPartCheck++;
-					  if(line_array[0].equals("BigTrace_presets")&& line_array[2].equals(roiManager.bt.btdata.sVersion))
+					  if(line_array[0].equals("BigTrace_groups")&& line_array[2].equals(roiManager.bt.btdata.sVersion))
 					  {
 						  bFirstPartCheck++; 
 					  }					  
@@ -435,13 +430,13 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 				  if(line_array.length==2 && nLineN==2)
 			      {
 					  bFirstPartCheck++;
-					  if(line_array[0].equals("PresetsNumber"))
+					  if(line_array[0].equals("GroupsNumber"))
 					  {
 						  bFirstPartCheck++;
-						  nPresetN=Integer.parseInt(line_array[1]);
+						  nGroupN=Integer.parseInt(line_array[1]);
 					  }
 			      }				  
-				  if(line_array[0].equals("BT_Preset"))
+				  if(line_array[0].equals("BT_Group"))
 				  {
 
 				  }
@@ -479,9 +474,9 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 				  {						  
 					  nSectorN = Integer.parseInt(line_array[1]);
 					  //read it all hopefully
-					  readPreset = new Roi3DPreset(sName, pointSize, pointColor, lineThickness, lineColor,  nRenderType, nSectorN);
-					  roiManager.presets.add(readPreset);
-					  listModel.addElement(readPreset.getName());
+					  readGroup = new Roi3DGroup(sName, pointSize, pointColor, lineThickness, lineColor,  nRenderType, nSectorN);
+					  roiManager.groups.add(readGroup);
+					  listModel.addElement(readGroup.getName());
 				  }
 					  				  
 				}
@@ -526,18 +521,18 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 			//EDIT
 			if(ae.getSource() == butEdit)
 			{
-				dialProperties(roiManager.presets.get(indList));
-				listModel.set(indList,roiManager.presets.get(indList).getName());
+				dialProperties(roiManager.groups.get(indList));
+				listModel.set(indList,roiManager.groups.get(indList).getName());
 				
 			}
 			//COPY/NEW
 			if(ae.getSource() == butCopyNew)
 			{
-				Roi3DPreset newPreset = new Roi3DPreset(roiManager.presets.get(indList), roiManager.presets.get(indList).getName()+"_copy"); 
-				if(dialProperties(newPreset))
+				Roi3DGroup newGroup = new Roi3DGroup(roiManager.groups.get(indList), roiManager.groups.get(indList).getName()+"_copy"); 
+				if(dialProperties(newGroup))
 				{
-					roiManager.presets.add(newPreset);
-					listModel.addElement(newPreset.getName());					
+					roiManager.groups.add(newGroup);
+					listModel.addElement(newGroup.getName());					
 				}
 				
 			}			
@@ -548,16 +543,16 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 				String s = (String)JOptionPane.showInputDialog(
 						presetList,
 						"New name:",
-						"Rename Preset",
+						"Rename Group",
 						JOptionPane.PLAIN_MESSAGE,
 						null,
 						null,
-						roiManager.presets.get(indList).getName());
+						roiManager.groups.get(indList).getName());
 	
 				//If a string was returned, rename
 				if ((s != null) && (s.length() > 0)) 
 				{
-					roiManager.presets.get(indList).setName(s);
+					roiManager.groups.get(indList).setName(s);
 					listModel.set(indList,s);
 					return;
 				}
@@ -569,7 +564,7 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 				if(jlist.getModel().getSize()>1)
 				{
 					
-					 roiManager.presets.remove(indList);
+					 roiManager.groups.remove(indList);
 					 listModel.removeElementAt(indList);
 				}
 				if(indList==0)
@@ -585,13 +580,13 @@ public class Roi3DPresetPanel implements ListSelectionListener, ActionListener {
 			if(ae.getSource() == butSave)
 			{
 			
-				diagSavePresets();
+				diagSaveGroups();
 			}
 			//LOAD
 			if(ae.getSource() == butLoad)
 			{
 			
-				diagLoadPresets();
+				diagLoadGroups();
 			}
 			
 		}
