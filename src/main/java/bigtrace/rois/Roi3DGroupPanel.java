@@ -52,7 +52,6 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 	JButton butEdit;
 	JButton butCopyNew;
 	JButton butDelete;
-	JButton butRename;
 	JButton butSave;
 	JButton butLoad;
 	
@@ -88,9 +87,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 		 butEdit = new JButton("Edit");
 		 butEdit.addActionListener(this);
 		 butCopyNew = new JButton("Copy/New");
-		 butCopyNew.addActionListener(this);
-		 butRename = new JButton("Rename");
-		 butRename.addActionListener(this);		 
+		 butCopyNew.addActionListener(this);	 
 		 butDelete = new JButton("Delete");
 		 butDelete.addActionListener(this);
 		 butSave = new JButton("Save");
@@ -112,9 +109,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 		 //cr.fill = GridBagConstraints.NONE;
 		 presetList.add(butEdit,cr);		 
 		 cr.gridy++;
-		 presetList.add(butCopyNew,cr);		 
-		 cr.gridy++;
-		 presetList.add(butRename,cr);		 
+		 presetList.add(butCopyNew,cr);		 	 
 		 cr.gridy++;
 		 presetList.add(butDelete,cr);
 		 cr.gridy++;
@@ -367,7 +362,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
         	return;
         
         
-        String [] sGroupLoadOptions = new String [] {"Overwite current groups","Append to list"};
+        String [] sGroupLoadOptions = new String [] {"Overwrite current groups","Append to list"};
 		
         String input = (String) JOptionPane.showInputDialog(optionPane, "Loading ROI Groups",
                 "Loaded groups:", JOptionPane.QUESTION_MESSAGE, null, // Use
@@ -521,9 +516,11 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 			//EDIT
 			if(ae.getSource() == butEdit)
 			{
-				dialProperties(roiManager.groups.get(indList));
-				listModel.set(indList,roiManager.groups.get(indList).getName());
-				
+				if(dialProperties(roiManager.groups.get(indList)))
+				{
+					listModel.set(indList,roiManager.groups.get(indList).getName());
+					roiManager.updateROIsDisplay(indList);
+				}
 			}
 			//COPY/NEW
 			if(ae.getSource() == butCopyNew)
@@ -536,45 +533,11 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 				}
 				
 			}			
-			//RENAME
-			if(ae.getSource() == butRename)
-			{
-		
-				String s = (String)JOptionPane.showInputDialog(
-						presetList,
-						"New name:",
-						"Rename Group",
-						JOptionPane.PLAIN_MESSAGE,
-						null,
-						null,
-						roiManager.groups.get(indList).getName());
-	
-				//If a string was returned, rename
-				if ((s != null) && (s.length() > 0)) 
-				{
-					roiManager.groups.get(indList).setName(s);
-					listModel.set(indList,s);
-					return;
-				}
-	
-			}
 			//DELETE
 			if(ae.getSource() == butDelete)
 			{
-				if(jlist.getModel().getSize()>1)
-				{
-					
-					 roiManager.groups.remove(indList);
-					 listModel.removeElementAt(indList);
-				}
-				if(indList==0)
-				{
-					jlist.setSelectedIndex(0);
-				}
-				else
-				{
-					jlist.setSelectedIndex(indList-1);
-				}
+				
+				deleteGroup(indList);
 			}
 			//SAVE
 			if(ae.getSource() == butSave)
@@ -584,11 +547,78 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 			}
 			//LOAD
 			if(ae.getSource() == butLoad)
-			{
-			
+			{			
 				diagLoadGroups();
 			}
 			
+		}
+	}
+	
+	/** deletes Group and asks what to do with ROIs **/ 
+	void deleteGroup(int indList)
+	{
+		boolean bGroupPresent = false;
+		
+		//there should be at least one group
+		if(jlist.getModel().getSize()>1)
+		{
+			//let's check if ROIs from this group are present
+			for (Roi3D roi : roiManager.rois)
+			{
+				if(roi.getGroupInd()==indList)
+				{
+					bGroupPresent = true;
+					break;
+				}
+			}	
+
+			// there are ROIs from this group
+			if(bGroupPresent)
+			{
+				//ask user what he wants to do with ROIs
+				String [] sGroupDeleteOptions = new String [] {"Mark these ROIs as *undefined*","Delete group's ROIs"};
+
+				String input = (String) JOptionPane.showInputDialog(optionPane, "There are ROIS from this group in ROI Manager:",
+						"Delete ROI Group", JOptionPane.QUESTION_MESSAGE, null, // Use
+						// default
+						// icon
+						sGroupDeleteOptions, // Array of choices
+						sGroupDeleteOptions[(int)Prefs.get("BigTrace.DeleteGroup", 0)]);
+
+				if(input.isEmpty())
+					return;
+				if(input.equals("Mark these ROIs as *undefined*"))
+				{
+					roiManager.markROIsUndefined(indList);
+				}
+				else
+				{
+					roiManager.deleteROIGroup(indList);
+				}
+			}
+
+			//correct indexing
+			for (Roi3D roi : roiManager.rois)
+			{
+				if(roi.getGroupInd()>indList)
+				{
+					roi.setGroupInd(roi.getGroupInd()-1);
+				}
+			}	
+			//delete group itself
+			roiManager.groups.remove(indList);
+			listModel.removeElementAt(indList);
+
+
+			//select previous Group
+			if(indList==0)
+			{
+				jlist.setSelectedIndex(0);
+			}
+			else
+			{
+				jlist.setSelectedIndex(indList-1);
+			}
 		}
 	}
 	

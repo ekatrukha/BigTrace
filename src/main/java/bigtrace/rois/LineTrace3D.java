@@ -151,14 +151,15 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 	@Override
 	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
 		
-	
+
 		verticesVis.draw(gl, pvm, screen_size);
-		
+
 		for (VisPolyLineScaled segment : segmentsVis)
 		{
 			segment.draw(gl, pvm);
 		}
-
+		
+		
 	}
 	
 	@Override

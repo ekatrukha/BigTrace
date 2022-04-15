@@ -17,6 +17,7 @@ public class Roi3DGroup {
 	 public float pointSize = 6.0f;
 	 public int renderType = VisPolyLineScaled.WIRE;
 	 public int sectorN = 16;
+	 public boolean bVisible = true;
 	 
 	 public Roi3DGroup(String sGroupName_,  float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_, int sectorN_)
 	 {
@@ -27,6 +28,7 @@ public class Roi3DGroup {
 		 sectorN = sectorN_;
 		 setPointColor(pointColor_);
 		 setLineColor(lineColor_);
+		 bVisible = true;
 	 }
 	 public Roi3DGroup(Roi3DGroup preset_in, String name)
 	 {

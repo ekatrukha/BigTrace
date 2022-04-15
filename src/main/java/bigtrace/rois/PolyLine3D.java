@@ -129,8 +129,8 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	}
 
 	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
-			
+	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) 
+	{
 		verticesVis.draw(gl, pvm, screen_size);
 		edgesVis.draw(gl, pvm);
 		

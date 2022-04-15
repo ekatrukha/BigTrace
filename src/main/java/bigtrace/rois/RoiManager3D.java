@@ -57,26 +57,21 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 private static final long serialVersionUID = -2843907862066423151L;
 	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2;
 	 public static final int SECTORS_DEF=16;
+	 
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
 	 public int activeRoi = -1;
 	 
 	 public ArrayList<Roi3DGroup> groups = new ArrayList<Roi3DGroup>();
 	 
+	 final static String sUndefinedGroupName = "*undefined*";
+	 
 	 public int nActiveGroup = 0;
-	 
-	 
+	 	 
 	 public Color activePointColor = Color.YELLOW;
-	 //public Color defaultPointColor = Color.GREEN;
 	 public Color activeLineColor = Color.RED;
-	 //public Color defaultLineColor = Color.BLUE;
 	 
 	 public ColorUserSettings selectColors = new ColorUserSettings(); 
-
 	 public int mode;
-	 //public float currPointSize = 6.0f;
-	 //public float currLineThickness = 4.0f;
-	 //public int currRenderType = VisPolyLineScaled.WIRE;
-	 //public int currSectorN = 16;
 	 public boolean bShowAll = true;
 
 	 
@@ -96,6 +91,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JButton butLoadROIs;
 	 JButton butROIGroups;
 	 JButton butApplyGroup;
+	 JButton butDisplayGroup;
 	 
 	 JComboBox<String> cbActiveChannel;
 	 JComboBox<String> cbActiveGroup;
@@ -106,7 +102,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JButton roiSettings;
 	 
 	 
-	 private ArrayList<Listener> listeners =	new ArrayList<Listener>();
+	 private ArrayList<Listener> listeners = new ArrayList<Listener>();
 
 		
 	 public RoiManager3D(BigTrace bt)
@@ -304,7 +300,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 panChannel.add(cbActiveChannel,cr);
 
 		 JPanel panGroup = new JPanel(new GridBagLayout());
-		 panGroup.setBorder(new PanelTitle(""));
+		 panGroup.setBorder(new PanelTitle(" Groups "));
 		 
 		 String[] nGroupNames = new String[groups.size()];
 		 for(int i=0;i<nGroupNames.length;i++)
@@ -314,18 +310,20 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cbActiveGroup = new JComboBox<>(nGroupNames);
 		 cbActiveGroup.setSelectedIndex(0);
 		 cbActiveGroup.setPrototypeDisplayValue("tyrosinated");
-		 //Dimension size= cbActiveGroup.getSize();
-		// size.setSize(width, height);
-		 //cbActiveGroup.setPreferredSize(size);
 		 cbActiveGroup.addActionListener(this);
 		 butApplyGroup = new JButton("Apply");
 		 butApplyGroup.addActionListener(this);
+		 icon_path =bigtrace.BigTrace.class.getResource("/icons/group_visibility.png");
+		 tabIcon = new ImageIcon(icon_path);
+		 butDisplayGroup = new JButton(tabIcon);
+		 butDisplayGroup.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		 butDisplayGroup.addActionListener(this);
 
 		 
 		 cr = new GridBagConstraints();
 	     cr.gridx=0;
 		 cr.gridy=0;
-		 panGroup.add(new JLabel("Group"),cr);
+		 panGroup.add(butDisplayGroup,cr);
 		 cr.gridx++;
 		 panGroup.add(cbActiveGroup,cr);
 		 cr.gridx++;
@@ -353,14 +351,22 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 c.gridy++;
 		 c.weightx = 0.01;
 	     c.weighty = 0.01;
-	     add(new JLabel(), c);
-	     
-
-	     
+	     add(new JLabel(), c);    
 		 
 	 }
+	 /** makes an empty initial ROI of specific type **/
+	 public synchronized void addRoi(Roi3D newRoi)
+	 {		
+		 rois.add(newRoi);		 
+		 //listModel.addElement(newRoi.getName());
+		 listModel.addElement(getGroupRoiName(newRoi));
+		 jlist.setSelectedIndex(rois.size()-1);
+		 activeRoi = rois.size()-1;
 
-	 public synchronized Roi3D addRoi(int nRoiType)
+	 }
+	 
+	 
+	 public Roi3D makeRoi(int nRoiType)
 	 {
 		 Roi3D newRoi;
 		 
@@ -382,13 +388,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 newRoi= new Point3D(groups.get(nActiveGroup));
 		 }
 		 newRoi.setGroupInd(nActiveGroup);
-		 rois.add(newRoi);		 
-		 //listModel.addElement(newRoi.getName());
-		 listModel.addElement(getGroupRoiName(newRoi));
-		 jlist.setSelectedIndex(rois.size()-1);
-		 activeRoi = rois.size()-1;
 		 return newRoi;
 	 }
+	 
 	 /** returns name of roi with prefix of group name in squared brackets**/
 	 public String getGroupRoiName(Roi3D nRoi)
 	 {
@@ -406,17 +408,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 }
 		 return nFullName;
 	 }
-
-	/* 
-	 public synchronized void addRoi(Roi3D roi_in)
-	 {
-		 rois.add(roi_in);		 
-		 listModel.addElement(roi_in.getName());
-		 jlist.setSelectedIndex(rois.size()-1);
-		 activeRoi = rois.size()-1;
-
-	 }
-	 */
+	 
 
 	 public Roi3D getActiveRoi()
 	 {
@@ -484,7 +476,18 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	    	   }
 	    	   if(bShowAll)
 	    	   {
-	    		   roi.draw(gl, pvm, screen_size);
+	    		   if(groups.get(roi.getGroupInd()).bVisible)
+	    		   {
+	    			   roi.draw(gl, pvm, screen_size);
+	    		   }
+	    		   else
+	    		   {
+	    			   //still draw active ROI
+		    		   if(i==activeRoi)
+		    		   {
+		    			   roi.draw(gl, pvm, screen_size);
+		    		   }	    			   
+	    		   }
 	    	   }
 	    	   else
 	    	   {
@@ -520,8 +523,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //addRoi( new Point3D(point_, groups.get(nActiveGroup)));
 		 //Point3D pointROI =new Point3D(groups.get(nActiveGroup)); 
 		 //addRoi( pointROI);
-		 Point3D pointROI =(Point3D)addRoi( Roi3D.POINT); 
+		 Point3D pointROI =(Point3D)makeRoi( Roi3D.POINT); 
 		 pointROI.setVertex(point_);
+		 addRoi(pointROI);
 	 }
 	 
 	 public void addSegment(RealPoint point_, ArrayList<RealPoint> segments_)
@@ -533,8 +537,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 //tracing = new LineTrace3D(currLineThickness, currPointSize, defaultLineColor, defaultPointColor, currRenderType, currSectorN);
 			 //tracing = new LineTrace3D(groups.get(nActiveGroup));
 			 //addRoi(tracing);
-			 tracing = (LineTrace3D) addRoi(Roi3D.LINE_TRACE);
+			 tracing = (LineTrace3D) makeRoi(Roi3D.LINE_TRACE);
 			 tracing.addFirstPoint(point_);
+			 addRoi(tracing);
 			 //activeRoi = rois.size()-1; 
 			 return;
 		 }
@@ -577,8 +582,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			// polyline = new PolyLine3D(currLineThickness, currPointSize, defaultLineColor, defaultPointColor, currRenderType, currSectorN);
 			 //polyline = new PolyLine3D(groups.get(nActiveGroup));
 			// addRoi(polyline);
-			 polyline  = (PolyLine3D) addRoi(Roi3D.POLYLINE);
+			 polyline  = (PolyLine3D) makeRoi(Roi3D.POLYLINE);
 			 polyline.addPointToEnd(point_);
+			 addRoi(polyline);
 			 //activeRoi = rois.size()-1; 
 			 return;
 		 }
@@ -649,6 +655,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 cbActiveChannel.setEnabled(bState);
 			 cbActiveGroup.setEnabled(bState);
 			 butApplyGroup.setEnabled(bState);
+			 butDisplayGroup.setEnabled(bState);
 			 
 			 listScroller.setEnabled(bState);			 
 			 jlist.setEnabled(bState);
@@ -801,6 +808,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			}
 			
 		}
+		//GROUP VISIBILITY
+		if(e.getSource() == butDisplayGroup)
+		{
+			dialGroupVisibility();
+		}
 		
 		///SIDE ROI SPECIFIC LIST BUTTONS
 		if(activeRoi>=0)
@@ -852,7 +864,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			{
 				dialProperties();
 			}
-			//APPLY PRESET
+			//APPLY GROUP
 			
 			if(e.getSource() == butApplyGroup)
 			{
@@ -861,6 +873,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				activeROI.setGroupInd(nActiveGroup);
 				listModel.setElementAt(getGroupRoiName(activeROI), activeRoi);
 			}	
+			
 
 		}
 
@@ -1121,7 +1134,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridx++;
 		if(currentROI.getGroupInd()==-1 || (currentROI.getGroupInd()> groups.size()-1))
 		{
-			dialProperties.add(new JLabel("*undefined*"),cd);
+			dialProperties.add(new JLabel(RoiManager3D.sUndefinedGroupName),cd);
 		}
 		else
 		{
@@ -1265,5 +1278,48 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         
 	}
 
+	/** updates ROIs image for a specific group **/
+	void updateROIsDisplay(int nGroupN)
+	{
+		Roi3DGroup updateGroup =groups.get(nGroupN);
+		for (Roi3D roi : rois)
+		{
+			if(roi.getGroupInd()==nGroupN)
+			{
+				roi.setGroup(updateGroup);
+			}
+		}
+	}
+	/** marks ROIs of specific group as undefined and updates ROI indexes**/
+	public void markROIsUndefined(int nGroupN)
+	{
+		for (int i=0;i<rois.size();i++)
+		{
+			if(rois.get(i).getGroupInd()==nGroupN)
+			{
+				rois.get(i).setGroupInd(-1);
+				listModel.setElementAt(rois.get(i).getName(), i);
+			}
+		}
+	}
+	/** deletes ROIs of specific group **/
+	public void deleteROIGroup(int nGroupN)
+	{
+		for (int i=(rois.size()-1);i>=0;i--)
+		{
+			if(rois.get(i).getGroupInd()==nGroupN)
+			{
+				 rois.remove(i);
+				 listModel.removeElementAt(i);
+			}
+		}
+		jlist.clearSelection();
+	}
 	
+	/** show Group visibility dialog **/
+	public void dialGroupVisibility()
+	{
+		Roi3DGroupVisibility groupVis = new Roi3DGroupVisibility(this);
+		groupVis.show();
+	}
 }
