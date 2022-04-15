@@ -50,6 +50,8 @@ public interface Roi3D
 	public void saveRoi(final FileWriter writer);
 	
 	public void setGroup(final Roi3DGroup preset_in);
+	public void setGroupInd(final int nGIndex);
+	public int getGroupInd();
 	
 	public static String intTypeToString(int nType)
 	{

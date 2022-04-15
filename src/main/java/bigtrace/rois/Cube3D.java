@@ -26,10 +26,22 @@ public class Cube3D implements Roi3D {
 	private Color pointColor;
 	private String name;
 	private int type;
+	private int groupIndex=-1;
 	
-	
+	public Cube3D(final Roi3DGroup preset_in)
+	{
+		type = Roi3D.CUBE;
+
+		pointSize = preset_in.pointSize;
+		lineThickness=preset_in.lineThickness;
+		
+		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
+		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
+
+	}
 	public Cube3D(float [][] nDimBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_)
 	{
+		type = Roi3D.CUBE;
 		lineThickness=lineThickness_;
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 		verticesVis = new ArrayList<VisPointsScaled>();
@@ -264,6 +276,15 @@ public class Cube3D implements Roi3D {
 		setPointSize(preset_in.pointSize);
 		setLineThickness(preset_in.lineThickness);
 	}
-
+	@Override
+	public void setGroupInd(final int nGIndex)
+	{
+		groupIndex = nGIndex;
+	}
+	@Override
+	public int getGroupInd()
+	{
+		return groupIndex;
+	}
 
 }

@@ -131,7 +131,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 	     presetList.add(new JLabel(), cr);		
 		 
 		 optionPane = new JOptionPane(presetList);
-	     dialog = optionPane.createDialog("Groups manager");
+	     dialog = optionPane.createDialog("ROI Groups manager");
 	     dialog.setModal(true);
 		 
     }

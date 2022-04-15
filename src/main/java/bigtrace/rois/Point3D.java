@@ -21,6 +21,7 @@ public class Point3D implements Roi3D {
 	public Color pointColor;
 	public String name;
 	public int type;
+	private int groupIndex=-1;
 
 	//redundant?
 	/*public Point3D(final RealPoint vertex_, final float pointSize_, final Color pointColor_)
@@ -33,13 +34,23 @@ public class Point3D implements Roi3D {
 		name = "point"+Integer.toString(this.hashCode());
 
 	}*/
-	public Point3D(final RealPoint vertex_, final Roi3DGroup preset_in)
+	/*public Point3D(final RealPoint vertex_, final Roi3DGroup preset_in)
 	{
 		type = Roi3D.POINT;
 		pointSize = preset_in.pointSize;		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
 		vertex = new RealPoint(vertex_);
 		vertexVis = new VisPointsScaled(vertex_,pointSize,pointColor);
+		name = "point"+Integer.toString(this.hashCode());
+		
+	}*/
+	public Point3D( final Roi3DGroup preset_in)
+	{
+		type = Roi3D.POINT;
+		pointSize = preset_in.pointSize;		
+		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
+		//vertex = new RealPoint(vertex_);
+		//vertexVis = new VisPointsScaled(vertex_,pointSize,pointColor);
 		name = "point"+Integer.toString(this.hashCode());
 		
 	}
@@ -198,5 +209,15 @@ public class Point3D implements Roi3D {
 		pointSize = preset_in.pointSize;		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
 		setVertex(vertex);
+	}
+	@Override
+	public void setGroupInd(final int nGIndex)
+	{
+		groupIndex = nGIndex;
+	}
+	@Override
+	public int getGroupInd()
+	{
+		return groupIndex;
 	}
 }

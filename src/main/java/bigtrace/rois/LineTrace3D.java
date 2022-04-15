@@ -38,7 +38,7 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 	public String name;
 	public int type;
 	public int renderType;
-	
+	private int groupIndex=-1;
 	/*public LineTrace3D(final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nRenderType, final int nSectorN_)
 	{
 		type = Roi3D.LINE_TRACE;
@@ -472,7 +472,16 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		setPointSize(preset_in.pointSize);
 		setLineThickness(preset_in.lineThickness);
 	}
-
+	@Override
+	public void setGroupInd(final int nGIndex)
+	{
+		groupIndex = nGIndex;
+	}
+	@Override
+	public int getGroupInd()
+	{
+		return groupIndex;
+	}
 
 	
 }
