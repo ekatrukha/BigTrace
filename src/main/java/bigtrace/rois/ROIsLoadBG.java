@@ -153,7 +153,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  //roiP.setName(sName);
 						  //roiP.setVertex(vertices.get(0));
 						  Point3D roiP = (Point3D) bt.roiManager.makeRoi(nRoiType);
-						  roiP.setGroupInd(-1);
+						  roiP.setGroupInd(0);
 						  roiP.setName(sName);
 						  roiP.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
 						  roiP.setVertex(vertices.get(0));
@@ -167,7 +167,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  //bt.roiManager.addRoi(roiPL);
 						  PolyLine3D roiPL = (PolyLine3D) bt.roiManager.makeRoi(nRoiType);
 						  roiPL.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
-						  roiPL.setGroupInd(-1);
+						  roiPL.setGroupInd(0);
 						  roiPL.setName(sName);
 						  roiPL.setVertices(vertices);	
 						  bt.roiManager.addRoi(roiPL);
@@ -178,7 +178,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  
 						 // LineTrace3D roiLT = new LineTrace3D(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
 						  roiLT.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
-						  roiLT.setGroupInd(-1);
+						  roiLT.setGroupInd(0);
 						  roiLT.setName(sName);
 						  roiLT.addFirstPoint(vertices.get(0));
 						  //segments number
