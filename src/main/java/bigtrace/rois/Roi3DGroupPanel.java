@@ -79,7 +79,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 		 {
 			 listModel.addElement(roiManager.groups.get(i).getName());
 		 }
-		 jlist.setSelectedIndex(roiManager.nActiveGroup);
+		 
 		 
 		 presetList = new JPanel(new GridBagLayout());
 		 //presetList.setBorder(new PanelTitle(" Groups Manager "));
@@ -95,6 +95,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 		 butLoad = new JButton("Load");
 		 butLoad.addActionListener(this);
 
+		 jlist.setSelectedIndex(roiManager.nActiveGroup);
 		 
 		 GridBagConstraints cr = new GridBagConstraints();
 		 cr.gridx=0;
@@ -501,8 +502,32 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
+		
+		
 		// TODO Auto-generated method stub
+        if (jlist.getSelectedIndex() == -1) 
+        {
+        //No selection
+        // should not happen 	
 
+        } else if (jlist.getSelectedIndices().length > 1) {
+        //Multiple selection: 
+
+        } else {
+        //Single selection:
+        	//undefined group, cannot edit or delete
+        	if(jlist.getSelectedIndex() ==0)
+        	{
+        		butEdit.setEnabled(false);
+        		butDelete.setEnabled(false);
+        	}
+        	else
+        	{
+        		butEdit.setEnabled(true);
+        		butDelete.setEnabled(true);        		
+        	}
+        }
+    
 	}
 
 	@Override
@@ -525,7 +550,15 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 			//COPY/NEW
 			if(ae.getSource() == butCopyNew)
 			{
-				Roi3DGroup newGroup = new Roi3DGroup(roiManager.groups.get(indList), roiManager.groups.get(indList).getName()+"_copy"); 
+				Roi3DGroup newGroup;
+				if(jlist.getSelectedIndex()==0)
+				{
+					newGroup = new Roi3DGroup(roiManager.groups.get(indList), "new_group"); 
+				}
+				else
+				{
+					newGroup = new Roi3DGroup(roiManager.groups.get(indList), roiManager.groups.get(indList).getName()+"_copy"); 
+				}
 				if(dialProperties(newGroup))
 				{
 					roiManager.groups.add(newGroup);

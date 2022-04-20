@@ -124,8 +124,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 
 		 ButtonGroup roiTraceMode = new ButtonGroup();
 		 
-	     //initialize new default ROI preset
-	     groups.add(new Roi3DGroup("default", 6.0f, Color.GREEN, 4.0f, Color.BLUE, VisPolyLineScaled.WIRE,RoiManager3D.SECTORS_DEF) );
+	     //initialize new *undefined* ROI group
+	     groups.add(new Roi3DGroup(sUndefinedGroupName, 6.0f, Color.GREEN, 4.0f, Color.BLUE, VisPolyLineScaled.WIRE,RoiManager3D.SECTORS_DEF) );
 	     nActiveGroup = 0;
 	     
 		 URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
@@ -396,7 +396,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 {
 		 String nFullName;
 		 final int nInd = nRoi.getGroupInd(); 
-		 if(nInd ==-1 || (nInd> groups.size()-1))
+		 if(nInd == 0 || (nInd> groups.size()-1))
 		 {
 			 nFullName = nRoi.getName();
 		 }
@@ -1132,7 +1132,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridy++;
 		dialProperties.add(new JLabel("Group: "),cd);
 		cd.gridx++;
-		if(currentROI.getGroupInd()==-1 || (currentROI.getGroupInd()> groups.size()-1))
+		//just in case
+		if(currentROI.getGroupInd()> groups.size()-1)
 		{
 			dialProperties.add(new JLabel(RoiManager3D.sUndefinedGroupName),cd);
 		}
@@ -1297,7 +1298,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		{
 			if(rois.get(i).getGroupInd()==nGroupN)
 			{
-				rois.get(i).setGroupInd(-1);
+				rois.get(i).setGroupInd(0);
 				listModel.setElementAt(rois.get(i).getName(), i);
 			}
 		}
