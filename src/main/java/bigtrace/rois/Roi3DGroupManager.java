@@ -38,7 +38,7 @@ import ij.io.SaveDialog;
 
 
 
-public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
+public class Roi3DGroupManager implements ListSelectionListener, ActionListener {
 
 	private JDialog dialog;
 	private JOptionPane optionPane;
@@ -60,9 +60,13 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 	
 	public ColorUserSettings selectColors = new ColorUserSettings();
 	
-	public Roi3DGroupPanel(RoiManager3D roiManager_)	
+	public Roi3DGroupManager(RoiManager3D roiManager_)	
 	{
-		 roiManager  = roiManager_;
+		 roiManager  = roiManager_;	 
+    }
+	
+	public void initGUI()
+	{
 		 listModel = new  DefaultListModel<String>();
 		 jlist = new JList<String>(listModel);
 		 jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -129,8 +133,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 		 optionPane = new JOptionPane(presetList);
 	     dialog = optionPane.createDialog("ROI Groups manager");
 	     dialog.setModal(true);
-		 
-    }
+	}
 	
 	public void show()
 	{ 
@@ -143,7 +146,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
     }
     
 	/** show Group Properties dialog**/
-	public boolean dialProperties(final Roi3DGroup preset)	
+	public boolean dialProperties(final Roi3DGroup preset, boolean bNameChangable)	
 	{
 		JPanel dialProperties = new JPanel(new GridBagLayout());
 		GridBagConstraints cd = new GridBagConstraints();
@@ -157,6 +160,8 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 		
 		
 		tfName.setText(preset.getName());
+		tfName.setEnabled(bNameChangable);
+		
 		nfPointSize.setText(Float.toString(preset.getPointSize()));
 		nfLineThickness.setText(Float.toString(preset.getLineThickness()));
 		DecimalFormat df = new DecimalFormat("0.00");
@@ -301,7 +306,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 	public void diagSaveGroups()
 	{
 		String filename;
-		int nGroupN, nGroup;
+		//int nGroupN, nGroup;
 		
 		filename = roiManager.bt.btdata.sFileNameImg + "_btgroups";
 		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
@@ -314,6 +319,25 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 			final File file = new File(filename);
 			
 			final FileWriter writer = new FileWriter(file);
+			saveGroups(writer);
+			
+			writer.write("End of BigTrace Groups\n");
+			writer.close();
+
+		} catch (IOException e) {	
+			System.err.print(e.getMessage());
+			//e.printStackTrace();
+		}
+		return;
+
+	}
+	
+	
+	public void saveGroups (FileWriter writer)
+	{
+		int nGroupN, nGroup;
+		
+		try {
 			writer.write("BigTrace_groups,version," + roiManager.bt.btdata.sVersion + "\n");
 			nGroupN=roiManager.groups.size();
 			writer.write("GroupsNumber,"+Integer.toString(nGroupN)+"\n");
@@ -328,36 +352,21 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 				roiManager.groups.get(nGroup).saveGroup(writer);
 			}
 			writer.write("End of BigTrace Groups\n");
-			writer.close();
-
 		} catch (IOException e) {	
 			System.err.print(e.getMessage());
 			//e.printStackTrace();
 		}
-		return;
-
 	}
 	
 	/** Load Groups dialog and saving **/
 	public void diagLoadGroups()
 	{
 		String filename;
-		String[] line_array;
+
         int bFirstPartCheck = 0;
-        int nGroupN, nGroup;
+
 		OpenDialog openDial = new OpenDialog("Load BigTrace Groups","", "*.csv");
-		///
-        float pointSize=0.0f;
-        float lineThickness =0.0f;
-        Color pointColor = Color.BLACK;
-        Color lineColor = Color.BLACK;
-        String sName = "";
-        int nRenderType = 0;
-        int nSectorN = 16;
-        
-        
-		Roi3DGroup readGroup;
-		
+	
         String path = openDial.getDirectory();
         if (path==null)
         	return;
@@ -386,97 +395,16 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
         	nLoadMode = 1;
         }
         
-       // GenericDialog dgGroupLoadMode = new GenericDialog("Loading ROI Groups");
-		//dgGroupLoadMode.addChoice("Loaded groups: ",sGroupLoadOptions, Prefs.get("BigTrace.LoadGroup", "Overwite current"));
-		//dgGroupLoadMode.showDialog();
-        
-		//if (dgGroupLoadMode.wasCanceled())
-        //    return;
-		//int nLoadMode = dgGroupLoadMode.getNextChoiceIndex();
-		//Prefs.set("BigTrace.LoadGroup", sGroupLoadOptions[nLoadMode]);
         Prefs.set("BigTrace.LoadGroup", nLoadMode);
-
-		
-		
-		
+	
         filename = path+openDial.getFileName();
         
 		try {
 			
 	        BufferedReader br = new BufferedReader(new FileReader(filename));
-	        int nLineN = 0;
-
-	        String line;
-
-			while ((line = br.readLine()) != null) 
-				{
-				   // process the line.
-				  line_array = line.split(",");
-				  nLineN++;
-				  //first line check
-				  if(line_array.length==3 && nLineN==1)
-			      {
-					  bFirstPartCheck++;
-					  if(line_array[0].equals("BigTrace_groups")&& line_array[2].equals(roiManager.bt.btdata.sVersion))
-					  {
-						  bFirstPartCheck++; 
-					  }					  
-			      }
-				  //second line check
-				  if(line_array.length==2 && nLineN==2)
-			      {
-					  bFirstPartCheck++;
-					  if(line_array[0].equals("GroupsNumber"))
-					  {
-						  bFirstPartCheck++;
-						  nGroupN=Integer.parseInt(line_array[1]);
-					  }
-			      }				  
-				  if(line_array[0].equals("BT_Group"))
-				  {
-
-				  }
-				  if(line_array[0].equals("Name"))
-				  {						  
-					  sName = line_array[1];
-				  }
-				  if(line_array[0].equals("PointSize"))
-				  {						  
-					  pointSize = Float.parseFloat(line_array[1]);
-				  }
-				  if(line_array[0].equals("LineThickness"))
-				  {						  
-					  lineThickness = Float.parseFloat(line_array[1]);
-				  }
-				  if(line_array[0].equals("PointColor"))
-				  {						  
-					  pointColor = new Color(Integer.parseInt(line_array[1]),
-							  				 Integer.parseInt(line_array[2]),
-							  				 Integer.parseInt(line_array[3]),
-							  				 Integer.parseInt(line_array[4]));
-				  }
-				  if(line_array[0].equals("LineColor"))
-				  {						  
-					  lineColor = new Color(Integer.parseInt(line_array[1]),
-							  				 Integer.parseInt(line_array[2]),
-							  				 Integer.parseInt(line_array[3]),
-							  				 Integer.parseInt(line_array[4]));
-				  }
-				  if(line_array[0].equals("RenderType"))
-				  {						  
-					  nRenderType = Integer.parseInt(line_array[1]);
-				  }
-				  if(line_array[0].equals("SectorN"))
-				  {						  
-					  nSectorN = Integer.parseInt(line_array[1]);
-					  //read it all hopefully
-					  readGroup = new Roi3DGroup(sName, pointSize, pointColor, lineThickness, lineColor,  nRenderType, nSectorN);
-					  roiManager.groups.add(readGroup);
-					  listModel.addElement(readGroup.getName());
-				  }
-					  				  
-				}
-
+	        
+	        bFirstPartCheck = loadGroups(br);
+	        roiManager.updateGroupsList();
 	        br.close();
 		}
 		//catching errors in file opening
@@ -490,13 +418,114 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 		//some error reading the file
         if(bFirstPartCheck!=4)
         {
-        	 System.err.println("Not a Bigtrace ROI file format or plugin/version mismatch, loading ROIs aborted.");
+        	 System.err.println("Not a BigTrace ROI Group file format or plugin/version mismatch,\n loading Groups may be corrupted.");
              //bt.bInputLock = false;
              //bt.roiManager.setLockMode(false);
         }
 
 		return;
 
+	}
+	
+	public int loadGroups(BufferedReader br)
+	{
+        float pointSize=0.0f;
+        float lineThickness =0.0f;
+        Color pointColor = Color.BLACK;
+        Color lineColor = Color.BLACK;
+        String sName = "";
+        int nRenderType = 0;
+        int nSectorN = 16;
+        int nLineN = 0;
+        
+		String[] line_array;
+        int bFirstPartCheck = 0;
+    	Roi3DGroup readGroup;
+        String line;
+        try {
+        	line = br.readLine();
+			while (line != null) 
+				{
+					//end of group segment
+					if(line.equals("End of BigTrace Groups"))
+					{
+						break;
+					}
+					// process the line.
+					line_array = line.split(",");
+					nLineN++;
+					//first line check
+					if(line_array.length==3 && nLineN==1)
+					{
+						bFirstPartCheck++;
+						if(line_array[0].equals("BigTrace_groups")&& line_array[2].equals(roiManager.bt.btdata.sVersion))
+						{
+							bFirstPartCheck++; 
+						}					  
+					}
+					//second line check
+					if(line_array.length==2 && nLineN==2)
+					{
+						bFirstPartCheck++;
+						if(line_array[0].equals("GroupsNumber"))
+						{
+							bFirstPartCheck++;
+							// nGroupN=Integer.parseInt(line_array[1]);
+						}
+					}				  
+					if(line_array[0].equals("BT_Group"))
+					{
+	
+					}
+					if(line_array[0].equals("Name"))
+					{						  
+						sName = line_array[1];
+					}
+					if(line_array[0].equals("PointSize"))
+					{						  
+						pointSize = Float.parseFloat(line_array[1]);
+					}
+					if(line_array[0].equals("LineThickness"))
+					{						  
+						lineThickness = Float.parseFloat(line_array[1]);
+					}
+					if(line_array[0].equals("PointColor"))
+					{						  
+						pointColor = new Color(Integer.parseInt(line_array[1]),
+								Integer.parseInt(line_array[2]),
+								Integer.parseInt(line_array[3]),
+								Integer.parseInt(line_array[4]));
+					}
+					if(line_array[0].equals("LineColor"))
+					{						  
+						lineColor = new Color(Integer.parseInt(line_array[1]),
+								Integer.parseInt(line_array[2]),
+								Integer.parseInt(line_array[3]),
+								Integer.parseInt(line_array[4]));
+					}
+					if(line_array[0].equals("RenderType"))
+					{						  
+						nRenderType = Integer.parseInt(line_array[1]);
+					}
+					if(line_array[0].equals("SectorN"))
+					{						  
+						nSectorN = Integer.parseInt(line_array[1]);
+						//read it all hopefully
+						readGroup = new Roi3DGroup(sName, pointSize, pointColor, lineThickness, lineColor,  nRenderType, nSectorN);
+						roiManager.groups.add(readGroup);
+						//listModel.addElement(readGroup.getName());
+					}
+					line = br.readLine();  				  
+				}
+        }
+        //catching errors in file opening
+        catch (FileNotFoundException e) {
+        	System.err.print(e.getMessage());
+        }	        
+        catch (IOException e) {
+        	System.err.print(e.getMessage());
+        }
+        return bFirstPartCheck;
 	}
 
 
@@ -518,12 +547,12 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
         	//undefined group, cannot edit or delete
         	if(jlist.getSelectedIndex() ==0)
         	{
-        		butEdit.setEnabled(false);
+        		//butEdit.setEnabled(false);
         		butDelete.setEnabled(false);
         	}
         	else
         	{
-        		butEdit.setEnabled(true);
+        		//butEdit.setEnabled(true);
         		butDelete.setEnabled(true);        		
         	}
         }
@@ -541,7 +570,16 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 			//EDIT
 			if(ae.getSource() == butEdit)
 			{
-				if(dialProperties(roiManager.groups.get(indList)))
+				boolean bNameChange;
+				if(indList==0)
+				{
+					bNameChange= false;
+				}
+				else
+				{
+					bNameChange = true;
+				}
+				if(dialProperties(roiManager.groups.get(indList),bNameChange))
 				{
 					listModel.set(indList,roiManager.groups.get(indList).getName());
 					roiManager.updateROIsDisplay(indList);
@@ -559,7 +597,7 @@ public class Roi3DGroupPanel implements ListSelectionListener, ActionListener {
 				{
 					newGroup = new Roi3DGroup(roiManager.groups.get(indList), roiManager.groups.get(indList).getName()+"_copy"); 
 				}
-				if(dialProperties(newGroup))
+				if(dialProperties(newGroup, true))
 				{
 					roiManager.groups.add(newGroup);
 					listModel.addElement(newGroup.getName());					

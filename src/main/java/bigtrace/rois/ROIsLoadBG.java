@@ -19,6 +19,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 	private String progressState;
 	public BigTrace bt;
 	public String sFilename;
+	public int nLoadMode;
 	
 	@Override
 	public String getProgressState()
@@ -38,12 +39,14 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
         int nRoiN=1;
         int nVertN=0;
         int i,j;
+
         
         ArrayList<RealPoint> vertices;
         ArrayList<RealPoint> segment;
         
-        float pointSize=0.0f;
-        float lineThickness =0.0f;
+        int nROIGroupInd = 0;
+        float pointSize = 0.0f;
+        float lineThickness = 0.0f;
         Color pointColor = Color.BLACK;
         Color lineColor = Color.BLACK;
         String sName = "";
@@ -52,6 +55,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
         int nSectorN = 16;
         
         Roi3D nextROI;
+        Roi3DGroupManager roiGM;
 	
         bt.bInputLock = true;
         bt.roiManager.setLockMode(true);
@@ -60,9 +64,52 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 	        BufferedReader br = new BufferedReader(new FileReader(sFilename));
 	        int nLineN = 0;
 
-	        String line;
+	        String line = "";
+	        //read Groups first
+	        if(nLoadMode == 0)
+	        {
+	        	roiGM = new Roi3DGroupManager(bt.roiManager);
+	        	roiGM.loadGroups(br);
+	        	bt.roiManager.updateGroupsList();
+	        }
+	        //skip to ROI part
+	        else
+	        {
+	        	boolean bBeginROIpart = false;
+	        	line = br.readLine();
+	        	
+	        	while (!bBeginROIpart)
+	        	{
+	        		if (line == null)
+	        		{
+	        			bBeginROIpart = true;
+	        			br.close();
+	        			return null;
+	        		}
+	        		else
+	        		{
+		        		line_array = line.split(",");
+		        		
+		        		if(line_array.length==3 && line_array[0].equals("BigTrace_ROIs"))
+		        		{
+		        			bBeginROIpart = true;
+		        		}
+		        		else
+		        		{
+		        			line = br.readLine();
+		        		}
+	        			
+	        		}
+	        			
+	        	}
+	        			
+	        }
+	        if(nLoadMode==0)
+	        {
+	        	line = br.readLine();
+	        }
 
-			while ((line = br.readLine()) != null) 
+			while (line != null) 
 				{
 				   // process the line.
 				  line_array = line.split(",");
@@ -103,6 +150,11 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 				  {						  
 					  sName = line_array[1];
 				  }
+				  //append or rewrite
+				  if(line_array[0].equals("GroupInd") && nLoadMode ==0)
+				  {						  
+					  nROIGroupInd = Integer.parseInt(line_array[1]);
+				  }				  
 				  if(line_array[0].equals("PointSize"))
 				  {						  
 					  pointSize = Float.parseFloat(line_array[1]);
@@ -152,11 +204,12 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  //Point3D roiP = new Point3D(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
 						  //roiP.setName(sName);
 						  //roiP.setVertex(vertices.get(0));
-						  Point3D roiP = (Point3D) bt.roiManager.makeRoi(nRoiType);
-						  roiP.setGroupInd(0);
-						  roiP.setName(sName);
+						  Point3D roiP = (Point3D) bt.roiManager.makeRoi(nRoiType);						  
 						  roiP.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
+						  roiP.setGroupInd(nROIGroupInd);
+						  roiP.setName(sName);
 						  roiP.setVertex(vertices.get(0));
+						  
 						  bt.roiManager.addRoi(roiP);
 						  
 					  	  break;
@@ -165,11 +218,12 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  //roiPL.setName(sName);
 						  //roiPL.setVertices(vertices);
 						  //bt.roiManager.addRoi(roiPL);
-						  PolyLine3D roiPL = (PolyLine3D) bt.roiManager.makeRoi(nRoiType);
+						  PolyLine3D roiPL = (PolyLine3D) bt.roiManager.makeRoi(nRoiType);						  
 						  roiPL.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
-						  roiPL.setGroupInd(0);
+						  roiPL.setGroupInd(nROIGroupInd);
 						  roiPL.setName(sName);
-						  roiPL.setVertices(vertices);	
+						  roiPL.setVertices(vertices);
+						  
 						  bt.roiManager.addRoi(roiPL);
 						  break;
 					  case Roi3D.LINE_TRACE:
@@ -178,7 +232,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  
 						 // LineTrace3D roiLT = new LineTrace3D(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
 						  roiLT.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
-						  roiLT.setGroupInd(0);
+						  roiLT.setGroupInd(nROIGroupInd);
 						  roiLT.setName(sName);
 						  roiLT.addFirstPoint(vertices.get(0));
 						  //segments number
@@ -208,7 +262,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 					  }
 					  
 				  }
-				  
+				  line = br.readLine();
 				}
 
 	        br.close();

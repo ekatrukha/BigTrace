@@ -344,6 +344,7 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 		try {
 			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
 			writer.write("Name," + this.getName()+"\n");
+			writer.write("GroupInd," + Integer.toString(this.getGroupInd())+"\n");
 			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
 			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
 									  +	Integer.toString(pointColor.getGreen()) +","

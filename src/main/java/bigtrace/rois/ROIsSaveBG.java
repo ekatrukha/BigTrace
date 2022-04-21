@@ -32,10 +32,17 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
 
 		bt.bInputLock = true;
     	bt.roiManager.setLockMode(true);
+    	
+    	//get the group manager to save groups
+    	Roi3DGroupManager roiGM = new Roi3DGroupManager(bt.roiManager);
+    	
         try {
 			final File file = new File(sFilename);
-			setProgressState("saving ROIs...");
+			
 			final FileWriter writer = new FileWriter(file);
+			setProgressState("saving Groups...");
+			roiGM.saveGroups(writer);
+			setProgressState("saving ROIs...");
 			writer.write("BigTrace_ROIs,version," + bt.btdata.sVersion + "\n");
 			nRoiN=bt.roiManager.rois.size();
 			writer.write("ROIsNumber,"+Integer.toString(nRoiN)+"\n");

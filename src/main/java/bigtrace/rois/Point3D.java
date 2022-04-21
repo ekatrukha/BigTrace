@@ -175,6 +175,7 @@ public class Point3D implements Roi3D {
 		try {
 			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
 			writer.write("Name," + this.getName()+"\n");
+			writer.write("GroupInd," + Integer.toString(this.getGroupInd())+"\n");
 			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
 			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
 									  +	Integer.toString(pointColor.getGreen()) +","
@@ -206,7 +207,7 @@ public class Point3D implements Roi3D {
 		// TODO Auto-generated method stub
 		pointSize = preset_in.pointSize;		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
-		setVertex(vertex);
+		//setVertex(vertex);
 	}
 	@Override
 	public void setGroupInd(final int nGIndex)

@@ -131,7 +131,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
 		 ImageIcon tabIcon = new ImageIcon(icon_path);
 		 roiPointMode = new JToggleButton(tabIcon);
-		 roiPointMode .setToolTipText("Trace single point");
+		 roiPointMode.setToolTipText("Trace single point");
 		 roiPointMode.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		 //roiPointMode.setSelected(true);
 			 
@@ -316,6 +316,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 icon_path =bigtrace.BigTrace.class.getResource("/icons/group_visibility.png");
 		 tabIcon = new ImageIcon(icon_path);
 		 butDisplayGroup = new JButton(tabIcon);
+		 butDisplayGroup.setToolTipText("Toggle ROI groups visibility");
 		 butDisplayGroup.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 		 butDisplayGroup.addActionListener(this);
 
@@ -790,7 +791,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		//Groups Manager
 		if(e.getSource() == butROIGroups)
 		{
-			Roi3DGroupPanel dialGroup = new Roi3DGroupPanel(this);
+			Roi3DGroupManager dialGroup = new Roi3DGroupManager(this);
+			dialGroup.initGUI();
 			dialGroup.show();
 			int nGroupSave = nActiveGroup;
 			cbActiveGroup.removeAllItems();
@@ -1270,9 +1272,38 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         filename = path+openDial.getFileName();
         
         bt.bInputLock = true;
+        
+        
+        String [] sRoiLoadOptions = new String [] {"Clean load ROIs and groups","Append ROIs as undefined group"};
+		
+        String input = (String) JOptionPane.showInputDialog(this, "Loading ROIs",
+                "Load mode:", JOptionPane.QUESTION_MESSAGE, null, // Use
+                                                                                // default
+                                                                                // icon
+                sRoiLoadOptions, // Array of choices
+                sRoiLoadOptions[(int)Prefs.get("BigTrace.LoadRoisMode", 0)]);
+        
+        if(input.isEmpty())
+        	 return;
+        int nLoadMode;
+        if(input.equals("Clean load ROIs and groups"))
+        {
+        	nLoadMode = 0;
+        	this.groups = new ArrayList<Roi3DGroup>();
+        	this.rois = new ArrayList<Roi3D >();;
+        	listModel.removeAllElements();
+        }
+        else
+        {
+        	nLoadMode = 1;
+        }
+        
+        Prefs.set("BigTrace.LoadRoisMode", nLoadMode);
 
         ROIsLoadBG loadTask = new ROIsLoadBG();
+        
         loadTask.sFilename=filename;
+        loadTask.nLoadMode = nLoadMode;
         loadTask.bt=this.bt;
         loadTask.addPropertyChangeListener(bt.btpanel);
         loadTask.execute();
@@ -1322,5 +1353,18 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	{
 		Roi3DGroupVisibility groupVis = new Roi3DGroupVisibility(this);
 		groupVis.show();
+	}
+	
+	public void updateGroupsList()
+	{
+		 
+		 cbActiveGroup.removeAllItems();
+		 for(int i=0;i<groups.size();i++)
+		 {
+			 cbActiveGroup.addItem(groups.get(i).getName());
+		 }
+		 cbActiveGroup.setSelectedIndex(0);
+		 nActiveGroup = 0;
+
 	}
 }
