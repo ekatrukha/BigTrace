@@ -11,10 +11,10 @@
 
 	<groupId>sc.fiji</groupId>
 	<artifactId>bigtrace</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.4</version>
 
 	<name>BigTrace</name>
-	<description>TODO</description>
+	<description>Tracing of curvilinear structures in 3D</description>
 	<url>https://github.com/ekatrukha/bigtrace</url>
 	<inceptionYear>2021</inceptionYear>
 	<organization>
@@ -75,8 +75,6 @@
       			<license.licenseName>gpl_v3</license.licenseName>
         <license.copyrightOwners>Fiji distribution of ImageJ for the life sciences.</license.copyrightOwners>
 
-		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
 	</properties>
 
 	<repositories>
@@ -86,23 +84,26 @@
 		</repository>
 	</repositories>
 
-<dependencies>
+	<dependencies>
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
 			<version>2.0</version>
 		</dependency>
-		<dependency>
-  		<groupId>com.formdev</groupId>
-  			<artifactId>flatlaf-jide-oss</artifactId>
-  			<version>2.0</version>
-		</dependency>
+
 		<dependency> 
     		<groupId>com.formdev</groupId> 
     		<artifactId>jide-oss</artifactId> 
     		<version>3.7.12</version>
   		</dependency> 
-
+  		
+  		<dependency>
+  		<groupId>com.formdev</groupId>
+  			<artifactId>flatlaf-jide-oss</artifactId>
+  			<version>2.0</version>
+		</dependency>
+  		
+		<!-- ImgLib2 dependencies -->
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
@@ -115,22 +116,31 @@
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm-gpl</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-cache</artifactId>
-		</dependency>
+
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-realtransform</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-roi</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-ij</artifactId>
+		</dependency>
 
-
+		<!-- Latest bigvolumeviewer -->
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigvolumeviewer</artifactId>
 			<version>0.2.0</version>
 		</dependency>
-
+		
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>ui-behaviour</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.jogamp.jogl</groupId>
 			<artifactId>jogl-all-main</artifactId>
@@ -146,25 +156,9 @@
 			<artifactId>bigdataviewer-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>bigdataviewer-vistools</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>spim_data</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>net.imagej</groupId>
-			<artifactId>imagej</artifactId>
+			<artifactId>ij</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-legacy</artifactId>
-		</dependency>
-		<dependency>
-        	<groupId>sc.fiji</groupId>
-        	<artifactId>fiji-lib</artifactId>
-        </dependency>
-	
+
 	</dependencies>
 </project>

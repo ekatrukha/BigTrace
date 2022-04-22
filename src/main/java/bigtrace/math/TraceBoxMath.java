@@ -38,7 +38,7 @@ public class TraceBoxMath extends SwingWorker<Void, String> implements BigTraceB
 	}
 	@Override
 	protected Void doInBackground() throws Exception {
-		// TODO Auto-generated method stub
+	
 		int i;
 		double [][] kernels;
 		Kernel1D[] derivKernel;
