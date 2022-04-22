@@ -416,13 +416,18 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 		}
         
 		//some error reading the file
-        if(bFirstPartCheck!=4)
+        if(bFirstPartCheck<1)
         {
-        	 System.err.println("Not a BigTrace ROI Group file format or plugin/version mismatch,\n loading Groups may be corrupted.");
+        	 System.err.println("Not a BigTrace ROI Group file format \n Groups are not loaded.");
              //bt.bInputLock = false;
              //bt.roiManager.setLockMode(false);
         }
-
+        if(bFirstPartCheck==1)
+        {
+        	 System.err.println("Plugin/file version mismatch,\n loading Groups may be corrupted.");
+             //bt.bInputLock = false;
+             //bt.roiManager.setLockMode(false);
+        }
 		return;
 
 	}
@@ -437,6 +442,9 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
         int nRenderType = 0;
         int nSectorN = 16;
         int nLineN = 0;
+        
+        int nLoadedGroupsN = 0;
+
         
 		String[] line_array;
         int bFirstPartCheck = 0;
@@ -457,12 +465,16 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 					//first line check
 					if(line_array.length==3 && nLineN==1)
 					{
-						bFirstPartCheck++;
-						if(line_array[0].equals("BigTrace_groups")&& line_array[2].equals(roiManager.bt.btdata.sVersion))
+						if(line_array[0].equals("BigTrace_groups"))
+						{
+							bFirstPartCheck++;
+						}
+						if(line_array[2].equals(roiManager.bt.btdata.sVersion))
 						{
 							bFirstPartCheck++; 
 						}					  
 					}
+					/*
 					//second line check
 					if(line_array.length==2 && nLineN==2)
 					{
@@ -472,7 +484,8 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 							bFirstPartCheck++;
 							// nGroupN=Integer.parseInt(line_array[1]);
 						}
-					}				  
+					}		
+					*/		  
 					if(line_array[0].equals("BT_Group"))
 					{
 	
@@ -507,12 +520,13 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 					{						  
 						nRenderType = Integer.parseInt(line_array[1]);
 					}
-					if(line_array[0].equals("SectorN"))
+					if(line_array[0].equals("SectorN") && bFirstPartCheck>0)
 					{						  
 						nSectorN = Integer.parseInt(line_array[1]);
 						//read it all hopefully
 						readGroup = new Roi3DGroup(sName, pointSize, pointColor, lineThickness, lineColor,  nRenderType, nSectorN);
 						roiManager.groups.add(readGroup);
+						nLoadedGroupsN++;
 						//listModel.addElement(readGroup.getName());
 					}
 					line = br.readLine();  				  
@@ -525,7 +539,13 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
         catch (IOException e) {
         	System.err.print(e.getMessage());
         }
-        return bFirstPartCheck;
+        
+        if(nLoadedGroupsN>0)
+        {
+        	return bFirstPartCheck;
+        }
+        else
+        	return -1;
 	}
 
 

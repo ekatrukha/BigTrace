@@ -69,7 +69,12 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 	        if(nLoadMode == 0)
 	        {
 	        	roiGM = new Roi3DGroupManager(bt.roiManager);
-	        	roiGM.loadGroups(br);
+	        	if(roiGM.loadGroups(br)<0)
+	        	{
+	        		 System.err.println("Not a BigTrace ROI Group file format or plugin/file version mismatch,\nloading Groups failed.\n"+
+	        	"Try 'Append' loading mode.\n");
+	        		 return null;
+	        	}
 	        	bt.roiManager.updateGroupsList();
 	        }
 	        //skip to ROI part

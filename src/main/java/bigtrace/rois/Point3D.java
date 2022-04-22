@@ -207,7 +207,8 @@ public class Point3D implements Roi3D {
 		// TODO Auto-generated method stub
 		pointSize = preset_in.pointSize;		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
-		//setVertex(vertex);
+		if(vertex!=null)
+			setVertex(vertex);
 	}
 	@Override
 	public void setGroupInd(final int nGIndex)

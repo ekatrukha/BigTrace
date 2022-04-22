@@ -3,6 +3,7 @@ package bigtrace;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,6 +13,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -21,6 +23,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.SwingConstants;
 
 import bdv.util.Affine3DHelpers;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
@@ -94,7 +97,7 @@ public class BigTraceControlPanel extends JPanel
 			
 			@Override
 			public void voxelSizeChanged(double [] newVoxelSize) {
-				// TODO Auto-generated method stub
+		
 				voxelChanged(newVoxelSize);
 			}
 		});
@@ -103,6 +106,7 @@ public class BigTraceControlPanel extends JPanel
 		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
 		
 		JPanel panNavigation = new JPanel(new GridBagLayout());
+
 	    
 		GridBagConstraints c = new GridBagConstraints();
 
@@ -274,6 +278,10 @@ public class BigTraceControlPanel extends JPanel
 	    icon_path = bigtrace.BigTrace.class.getResource("/icons/node.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    tabPane.addTab("",tabIcon ,roiManager,"Tracing");
+	    
+	    icon_path = bigtrace.BigTrace.class.getResource("/icons/shortcut.png");
+	    tabIcon = new ImageIcon(icon_path);
+	    tabPane.addTab("",tabIcon ,informationPanel(),"Help/Shortcuts");
 
 	    roiManager.addRoiManager3DListener(new RoiManager3D.Listener() {
 
@@ -358,6 +366,32 @@ public class BigTraceControlPanel extends JPanel
 	    this.setActionMap(btrace.actions.getActionMap());
 	    this.setInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,btrace.actions.getInputMap());
 	    
+	}
+	
+	public JPanel informationPanel()
+	{
+		JPanel panInformation = new JPanel(new GridLayout());
+		panInformation.setBorder(new PanelTitle(" Main keys "));
+		String shortCutInfo ="<html><center><b>ROI Manager</b></center><br>"
+					+"&nbsp;<b>F</b> - add new point/start/continue<br>"
+					+"&nbsp;<b>G</b> - delete last point<br>"
+					+"&nbsp;<b>H</b> - finish tracing (deselect)<br>"
+					+"&nbsp;<b>T</b> - advance tracebox<br>"
+					+"&nbsp;<b>Y</b> - reverse active trace end<br>"
+					+"&nbsp;<b>R</b> - straight line (in trace mode)<br>"
+					 +"<br>"
+					+"<center><b>View/Navigation</b></center><br>"
+					+"&nbsp;<b>1</b> - show centered XY view<br>"
+					+"&nbsp;<b>2</b> - show centered YZ view<br>"
+					+"&nbsp;<b>D</b> - zoom in to a point<br>"
+					+"&nbsp;<b>C</b> - zoom out <br>"
+					+"&nbsp;<b>S</b> - brightness/color<br>"
+					+"&nbsp;<b>F6</b> - sources </html>";
+		JLabel jlInfo = new JLabel(shortCutInfo);
+		jlInfo.setVerticalAlignment(SwingConstants.CENTER);
+		jlInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		panInformation.add(jlInfo);
+		return panInformation;
 	}
 
 	@Override

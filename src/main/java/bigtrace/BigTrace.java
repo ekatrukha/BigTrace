@@ -605,7 +605,7 @@ public class BigTrace implements PlugIn, WindowListener
 		actions.runnableAction(() -> actionRemovePoint(),       	"remove point",	"G" );
 		actions.runnableAction(() -> actionDeselect(),	            "deselect", "H" );
 		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );
-		actions.runnableAction(() -> actionAdvanceTraceBox(),       "move trace box", "T" );
+		actions.runnableAction(() -> actionAdvanceTraceBox(),       "advance trace box", "T" );
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
 		actions.runnableAction(() -> actionZoomToPoint(),			"zoom in to click", "D" );
 		actions.runnableAction(() -> actionZoomOut(),				"zoom out", "C" );
