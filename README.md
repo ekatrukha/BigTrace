@@ -13,7 +13,7 @@ Main topics:
 <li> <a href="https://github.com/ekatrukha/BigTrace/wiki/How-to-cite-plugin%3F">How to cite plugin?</a></li>
 </ul>
 <br />
-The plugin is under development.
+The plugin is usable, but under "alpha-stage" development, so there are frequent updates and changes.
 <br />
 <br />
 
