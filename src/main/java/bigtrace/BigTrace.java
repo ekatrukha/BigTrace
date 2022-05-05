@@ -29,9 +29,11 @@ import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
+import bigtrace.math.DijkstraFHRestrictVector;
 import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBG;
+import bigtrace.math.TracingBGVect;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
@@ -107,6 +109,9 @@ public class BigTrace implements PlugIn, WindowListener
 	
 	public DijkstraFHRestricted dijkRBegin;
 	public DijkstraFHRestricted dijkREnd;
+	public DijkstraFHRestrictVector dijkRVBegin;
+	public DijkstraFHRestrictVector dijkVectTest;
+	public DijkstraFHRestrictVector dijkRVEnd;
 	//DijkstraBinaryHeap dijkBH;
 	//DijkstraFibonacciHeap dijkFib;
 
@@ -390,8 +395,11 @@ public class BigTrace implements PlugIn, WindowListener
 				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
 				{
 					//run trace finding in a separate thread
-					getSemiAutoTrace(target);
-
+					//getSemiAutoTrace(target);
+					getSemiAutoTraceVect(target);
+					
+					//dijkVectTest = new  DijkstraFHRestrictVector(btdata.trace_weights, btdata.trace_vectors);
+					//dijkVectTest.calcCostTwoPoints(roiManager.getLastTracePoint(),target);
 				}						
 			}
 		}
@@ -752,10 +760,23 @@ public class BigTrace implements PlugIn, WindowListener
 		return ;
 		
 	}
+	
+	public void getSemiAutoTraceVect(RealPoint target)
+	{
+		
+		bInputLock = true;
+		TracingBGVect traceBG = new TracingBGVect();
+		traceBG.target = target;
+		traceBG.bt=this;
+		traceBG.addPropertyChangeListener(btpanel);
+		traceBG.execute();
+		return ;
+		
+	}
 
 	
 	
-	void showCorners(ArrayList<long []> corners)
+	public void showCorners(ArrayList<long []> corners)
 	{
 		roiManager.mode=RoiManager3D.ADD_POINT;
 		for(int i=0;i<corners.size();i++)
