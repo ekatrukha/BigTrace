@@ -32,12 +32,14 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 	@Override
 	protected Void doInBackground() throws Exception {
 		// TODO Auto-generated method stub
-				
-		trace= new ArrayList<RealPoint>();
+						
 		
-
 		long start1, end1;
 		boolean found_path_end;
+		final DijkstraFHRestrictVector dijkRVBegin;
+		final DijkstraFHRestrictVector dijkRVEnd;
+		
+		trace= new ArrayList<RealPoint>();
 		
 		setProgress(30);
 		setProgressState("finding trace..");	
@@ -49,8 +51,8 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 		
 		start1 = System.currentTimeMillis();
 		//init Dijkstra from initial click point
-		bt.dijkRVBegin = new DijkstraFHRestrictVector(bt.btdata.trace_weights, bt.btdata.trace_vectors);
-		found_path_end = bt.dijkRVBegin.calcCostTwoPoints(bt.roiManager.getLastTracePoint(),target);
+		dijkRVBegin = new DijkstraFHRestrictVector(bt.btdata.trace_weights, bt.btdata.trace_vectors, bt.btdata.gammaTrace);
+		found_path_end = dijkRVBegin.calcCostTwoPoints(bt.roiManager.getLastTracePoint(),target);
 		end1 = System.currentTimeMillis();
 		System.out.println("Dijkstra Restr VECTOR search BEGIN: elapsed Time in milli seconds: "+ (end1-start1));
 	
@@ -60,7 +62,7 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 		//both points in the connected area
 		if (found_path_end)
 		{
-			bt.dijkRVBegin.getTrace(target, trace);
+			dijkRVBegin.getTrace(target, trace);
 			setProgress(100);
 			setProgressState("finding trace done.");
 			return null;
@@ -70,14 +72,18 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 		{
 			//showCorners(jump_points);
 			// get corners in the beginning
-			ArrayList<long []> begCorners = bt.dijkRVBegin.exploredCorners(bt.btdata.jump_points);
+			ArrayList<long []> begCorners = dijkRVBegin.exploredCorners(bt.btdata.jump_points);
 			setProgress(50);
 			start1 = System.currentTimeMillis();
-			bt.dijkRVEnd = new DijkstraFHRestrictVector(bt.btdata.trace_weights, bt.btdata.trace_vectors);
-			bt.dijkRVEnd.calcCost(target);
+			dijkRVEnd = new DijkstraFHRestrictVector(bt.btdata.trace_weights, bt.btdata.trace_vectors,bt.btdata.gammaTrace);
+
+			//bt.dijkRVEnd.calcCost(target);
+			//provide same point as start and end,
+			//so it searches everything
+			dijkRVEnd.calcCostTwoPoints(target, target);
 			end1 = System.currentTimeMillis();
 			System.out.println("Dijkstra Restr VECTOR search END: elapsed Time in milli seconds: "+ (end1-start1));
-			ArrayList<long []> endCorners = bt.dijkRVEnd.exploredCorners(bt.btdata.jump_points);
+			ArrayList<long []> endCorners = dijkRVEnd.exploredCorners(bt.btdata.jump_points);
 			setProgress(80);
 			//there are corners (jump points) in the trace area
 			// let's construct the path
@@ -90,10 +96,10 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 				pB.setPosition(pair.get(0));
 				pE.setPosition(pair.get(1));
 				ArrayList<RealPoint> traceB = new ArrayList<RealPoint> (); 
-				bt.dijkRVBegin.getTrace(pB, traceB);
+				dijkRVBegin.getTrace(pB, traceB);
 				ArrayList<RealPoint> traceE = new ArrayList<RealPoint> ();
 				ArrayList<RealPoint> traceM = new ArrayList<RealPoint> ();
-				bt.dijkRVEnd.getTrace(pE, traceE);
+				dijkRVEnd.getTrace(pE, traceE);
 				int i;
 				//connect traces
 				for(i=0;i<traceB.size();i++)

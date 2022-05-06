@@ -51,7 +51,7 @@ public class DijkstraFHRestrictVector {
 	float [][] neibIndexes = new float [26][3];
 	double [][] neibVectors = new double [26][3];
 	
-	double orientationWeight = 0.0;
+	public double orientationWeight = 0.0;
 	
 	Shape voxShape = new RectangleShape( 1, true);
 
@@ -61,7 +61,7 @@ public class DijkstraFHRestrictVector {
 	/** Computes the shortest path based on the given cost values and
 	 vectors.
 	 	**/
-	public DijkstraFHRestrictVector(IntervalView< UnsignedByteType > trace_weights_, IntervalView<FloatType> directionVectors)//, RealPoint startPoint_)
+	public DijkstraFHRestrictVector(IntervalView< UnsignedByteType > trace_weights_, IntervalView<FloatType> directionVectors, final double orientationW)//, RealPoint startPoint_)
 	{
 		
 		//int nCount=0;
@@ -78,12 +78,13 @@ public class DijkstraFHRestrictVector {
 		//vectors = directionVectors;
 		vectors = directionVectors;
 
-		queue = new FibonacciHeap<Integer>();
-		entries = new ArrayList<Entry< Integer >>(25000);
+		queue = new FibonacciHeap<Integer>();		
+		orientationWeight = orientationW; 
 		getNeighboursIndexesVectors();
 	}
 	
 	/** calculates cost to all other points/voxels of the volume from the startPoint **/
+	/*
 	public void calcCost(RealPoint startPoint_)
 	{
 		long [] currPoint = new long [dim.length];
@@ -269,6 +270,7 @@ public class DijkstraFHRestrictVector {
 		dirsRA.get().set(ININODE);
 		
 	}
+	*/
 	
 	/** calculates cost to all other points/voxels of the volume from the startPoint_. 
 	 * Stops and returns true if it reaches endPoint_,
@@ -287,6 +289,7 @@ public class DijkstraFHRestrictVector {
 			endPoint[i]=(long)Math.round(endPoint_.getFloatPosition(i));	
 		}
 		long [][] pos = new long [(int)(nTotPix)][dim.length];
+		entries = new ArrayList<Entry< Integer >>((int)(nTotPix));
 		
 		//int [] vals_test = new int[(int)(nTotPix)];
 	
@@ -325,19 +328,18 @@ public class DijkstraFHRestrictVector {
 		Cursor< Composite<FloatType> > onC;
 		//Cursor< IntType > nextNode;
 		//Entry<Cursor< IntType >> nextEntry;
-		
-		//starting point
-		ccostRA.setPosition(currPoint);
-		ccostRA.get().set(1);
-		
+	
 		//end point
 		ccostRA.setPosition(endPoint);
 		ccostRA.get().set(END_POINT);
 		
+		//starting point
+		ccostRA.setPosition(currPoint);
+		ccostRA.get().set(1);
+
 		boolean bQueue = true;
 
-		//int nCount = 0;
-		//int [] queueSize = new int[(int)(dim[0]*dim[1])];//*dim[2])];
+	
 		int nMaxQ=0;
 		int nValVox;
 		int nDir = 0;
@@ -345,14 +347,12 @@ public class DijkstraFHRestrictVector {
 		int iCurCCost;
 		int iNewCCost;
 		int nW;
-		int maxCost=0;
 		int d;
 		
 		double [] currentOrient = new double [dim.length];
 		double [] neighbourOrient = new double [dim.length];
 		double angleCost;
 		
-		//long [] testloc = new long [3];
 		
 		// Path searching:
 		while (bQueue) 
@@ -385,9 +385,8 @@ public class DijkstraFHRestrictVector {
 			
 			
 			//iterate through the neighborhood
-			//count starts from 1
+			//(direction count starts from 1)
 			nDir=0;
-			//nValVox=(-1)*ccostRA.get().get();
 			while ( cnC.hasNext() )
 			{
 				nDir++;
@@ -429,7 +428,6 @@ public class DijkstraFHRestrictVector {
 							neighbourOrient[d] = onC.get().get(d).get();
 						}
 						//calculate difference in orientation
-						//angleCost = Math.round(255*(1.0-Math.abs(LinAlgHelpers.dot(currentOrient, neighbourOrient))));
 						angleCost = getAngleCost(currentOrient, neighbourOrient,nDir-1);
 						
 						
@@ -477,16 +475,18 @@ public class DijkstraFHRestrictVector {
 			else
 			{
 				//int valZZ = queue.dequeueMin().getValue();
-				//currPoint=pos[valZZ];
-				//vals_test[valZZ]=-1100;
 				currPoint=pos[queue.dequeueMin().getValue()];
+				if(nMaxQ>queue.size())
+				{
+					nMaxQ=queue.size();
+				}
 				//System.out.println("queue size="+ Integer.toString(queue.size()));
 			}
 
 	
 		}//queue end 
 		System.out.println("max queue:"+Integer.toString(nMaxQ));
-		System.out.println("max cost:"+Integer.toString(maxCost));
+
 		//mark initial node with zero cost
 		ccostRA.setPosition(iniPoint);
 		ccostRA.get().setZero();

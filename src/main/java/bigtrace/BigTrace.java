@@ -29,10 +29,7 @@ import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
-import bigtrace.math.DijkstraFHRestrictVector;
-import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.TraceBoxMath;
-import bigtrace.math.TracingBG;
 import bigtrace.math.TracingBGVect;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTrace3D;
@@ -89,7 +86,7 @@ public class BigTrace implements PlugIn, WindowListener
 	//Img< UnsignedByteType> img;
 	Img< UnsignedByteType> img_in;
 
-	
+	/** Panel of BigVolumeViewer **/
 	VolumeViewerPanel panel;
 
 	public Actions actions = null;
@@ -103,18 +100,11 @@ public class BigTrace implements PlugIn, WindowListener
 	/** box around volume **/
 	Cube3D volumeBox;
 
-	
+	/** object storing main data/variables **/
 	public BigTraceData btdata = new BigTraceData();
+	/** BigTrace Panel **/
 	public BigTraceControlPanel btpanel;
-	
-	public DijkstraFHRestricted dijkRBegin;
-	public DijkstraFHRestricted dijkREnd;
-	public DijkstraFHRestrictVector dijkRVBegin;
-	public DijkstraFHRestrictVector dijkVectTest;
-	public DijkstraFHRestrictVector dijkRVEnd;
-	//DijkstraBinaryHeap dijkBH;
-	//DijkstraFibonacciHeap dijkFib;
-
+	/**ROI's manager + list tab **/
 	public RoiManager3D roiManager;
 		
 	public void run(String arg)
@@ -395,11 +385,8 @@ public class BigTrace implements PlugIn, WindowListener
 				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
 				{
 					//run trace finding in a separate thread
-					//getSemiAutoTrace(target);
-					getSemiAutoTraceVect(target);
+					getSemiAutoTrace(target);
 					
-					//dijkVectTest = new  DijkstraFHRestrictVector(btdata.trace_weights, btdata.trace_vectors);
-					//dijkVectTest.calcCostTwoPoints(roiManager.getLastTracePoint(),target);
 				}						
 			}
 		}
@@ -747,21 +734,8 @@ public class BigTrace implements PlugIn, WindowListener
 	
 
 	
-	//public ArrayList<RealPoint> getSemiAutoTrace(RealPoint target)
-	public void getSemiAutoTrace(RealPoint target)
-	{
-		
-		bInputLock = true;
-		TracingBG traceBG = new TracingBG();
-		traceBG.target = target;
-		traceBG.bt=this;
-		traceBG.addPropertyChangeListener(btpanel);
-		traceBG.execute();
-		return ;
-		
-	}
 	
-	public void getSemiAutoTraceVect(RealPoint target)
+	public void getSemiAutoTrace(RealPoint target)
 	{
 		
 		bInputLock = true;

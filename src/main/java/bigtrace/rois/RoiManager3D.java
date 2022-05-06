@@ -956,6 +956,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		NumberField nfSigmaX = new NumberField(4);
 		NumberField nfSigmaY = new NumberField(4);
 		NumberField nfSigmaZ = new NumberField(4);
+		NumberField nfGammaTrace = new NumberField(4);
 		NumberField nfTraceBoxSize = new NumberField(4);
 		NumberField nfTraceBoxScreenFraction = new NumberField(4);
 		NumberField nfTBAdvance = new NumberField(4);
@@ -966,6 +967,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		nfSigmaX.setText(Double.toString(bt.btdata.sigmaTrace[0]));
 		nfSigmaY.setText(Double.toString(bt.btdata.sigmaTrace[1]));
 		nfSigmaZ.setText(Double.toString(bt.btdata.sigmaTrace[2]));
+		nfGammaTrace.setText(Double.toString(bt.btdata.gammaTrace));
 		nfTBAdvance.setText(Float.toString(bt.btdata.fTraceBoxAdvanceFraction));
 		cbTraceOnlyCrop.setSelected(bt.btdata.bTraceOnlyCrop);
 		
@@ -987,6 +989,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		pTrace.add(new JLabel("Curve thickness Z axis (SD, px): "),cd);
 		cd.gridx++;
 		pTrace.add(nfSigmaZ,cd);
+		cd.gridx=0;
+		
+		cd.gridy++;
+		pTrace.add(new JLabel("Orientation weight(0-1): "),cd);
+		cd.gridx++;
+		pTrace.add(nfGammaTrace,cd);
 		
 		
 		cd.gridx=0;
@@ -1061,6 +1069,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			
 			bt.btdata.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
 			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btdata.sigmaTrace[2]));
+			
+			bt.btdata.gammaTrace = Double.parseDouble(nfGammaTrace.getText());
+			Prefs.set("BigTrace.gammaTrace", (double)(bt.btdata.gammaTrace));
 			
 			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
 			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
