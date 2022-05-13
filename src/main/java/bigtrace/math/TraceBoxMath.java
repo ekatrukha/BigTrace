@@ -10,10 +10,12 @@ import javax.swing.SwingWorker;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.volume.VolumeMisc;
+import net.imglib2.RealPoint;
 import net.imglib2.algorithm.convolution.Convolution;
 import net.imglib2.algorithm.convolution.kernel.Kernel1D;
 import net.imglib2.algorithm.convolution.kernel.SeparableKernelConvolution;
 import net.imglib2.img.array.ArrayImg;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.FloatArray;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -115,8 +117,10 @@ public class TraceBoxMath extends SwingWorker<Void, String> implements BigTraceB
 		setProgress(100);
 		setProgressState("trace box done.");
 		bt.btdata.trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
+		//bt.btdata.jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 50);
 		bt.btdata.jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
-		
+		bt.btdata.trace_vectors = directionVectors;
+		//bt.showCorners(bt.btdata.jump_points);
 		return null;
 	}
     /*

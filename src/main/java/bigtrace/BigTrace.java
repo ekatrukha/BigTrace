@@ -29,9 +29,8 @@ import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
-import bigtrace.math.DijkstraFHRestricted;
 import bigtrace.math.TraceBoxMath;
-import bigtrace.math.TracingBG;
+import bigtrace.math.TracingBGVect;
 import bigtrace.rois.Cube3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
@@ -87,7 +86,7 @@ public class BigTrace implements PlugIn, WindowListener
 	//Img< UnsignedByteType> img;
 	Img< UnsignedByteType> img_in;
 
-	
+	/** Panel of BigVolumeViewer **/
 	VolumeViewerPanel panel;
 
 	public Actions actions = null;
@@ -101,15 +100,11 @@ public class BigTrace implements PlugIn, WindowListener
 	/** box around volume **/
 	Cube3D volumeBox;
 
-	
+	/** object storing main data/variables **/
 	public BigTraceData btdata = new BigTraceData();
+	/** BigTrace Panel **/
 	public BigTraceControlPanel btpanel;
-	
-	public DijkstraFHRestricted dijkRBegin;
-	public DijkstraFHRestricted dijkREnd;
-	//DijkstraBinaryHeap dijkBH;
-	//DijkstraFibonacciHeap dijkFib;
-
+	/**ROI's manager + list tab **/
 	public RoiManager3D roiManager;
 		
 	public void run(String arg)
@@ -121,7 +116,7 @@ public class BigTrace implements PlugIn, WindowListener
 					//new UnsignedByteType() );
 		if(arg.equals(""))
 		{
-			btdata.sFileNameImg=IJ.getFilePath("Open ONI results table");
+			btdata.sFileNameImg=IJ.getFilePath("Open 8-bit TIF file (composite)...");
 		}
 		else
 		{
@@ -391,7 +386,7 @@ public class BigTrace implements PlugIn, WindowListener
 				{
 					//run trace finding in a separate thread
 					getSemiAutoTrace(target);
-
+					
 				}						
 			}
 		}
@@ -739,12 +734,12 @@ public class BigTrace implements PlugIn, WindowListener
 	
 
 	
-	//public ArrayList<RealPoint> getSemiAutoTrace(RealPoint target)
+	
 	public void getSemiAutoTrace(RealPoint target)
 	{
 		
 		bInputLock = true;
-		TracingBG traceBG = new TracingBG();
+		TracingBGVect traceBG = new TracingBGVect();
 		traceBG.target = target;
 		traceBG.bt=this;
 		traceBG.addPropertyChangeListener(btpanel);
@@ -755,7 +750,7 @@ public class BigTrace implements PlugIn, WindowListener
 
 	
 	
-	void showCorners(ArrayList<long []> corners)
+	public void showCorners(ArrayList<long []> corners)
 	{
 		roiManager.mode=RoiManager3D.ADD_POINT;
 		for(int i=0;i<corners.size();i++)

@@ -509,6 +509,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 
 	 public void addPoint(RealPoint point_)
 	 {
+		 
 		 if(mode ==RoiManager3D.ADD_POINT)
 		 {
 			 addPoint3D(point_);
@@ -517,6 +518,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 {
 			 addPointToLine(point_);
 		 }
+		
+		 
 	 }
 	 public void addPoint3D(RealPoint point_)
 	 {
@@ -576,6 +579,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	  *  if there are no active ROIS, starts new polyline **/
 	 public void addPointToLine(RealPoint point_)
 	 {
+
 		 PolyLine3D polyline;
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
@@ -600,6 +604,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 polyline = (PolyLine3D) rois.get(activeRoi);
 			 polyline.addPointToEnd(point_);
 		 }
+			
 	 
 	 }
 	 
@@ -956,6 +961,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		NumberField nfSigmaX = new NumberField(4);
 		NumberField nfSigmaY = new NumberField(4);
 		NumberField nfSigmaZ = new NumberField(4);
+		NumberField nfGammaTrace = new NumberField(4);
 		NumberField nfTraceBoxSize = new NumberField(4);
 		NumberField nfTraceBoxScreenFraction = new NumberField(4);
 		NumberField nfTBAdvance = new NumberField(4);
@@ -966,6 +972,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		nfSigmaX.setText(Double.toString(bt.btdata.sigmaTrace[0]));
 		nfSigmaY.setText(Double.toString(bt.btdata.sigmaTrace[1]));
 		nfSigmaZ.setText(Double.toString(bt.btdata.sigmaTrace[2]));
+		nfGammaTrace.setText(Double.toString(bt.btdata.gammaTrace));
 		nfTBAdvance.setText(Float.toString(bt.btdata.fTraceBoxAdvanceFraction));
 		cbTraceOnlyCrop.setSelected(bt.btdata.bTraceOnlyCrop);
 		
@@ -987,6 +994,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		pTrace.add(new JLabel("Curve thickness Z axis (SD, px): "),cd);
 		cd.gridx++;
 		pTrace.add(nfSigmaZ,cd);
+		cd.gridx=0;
+		
+		cd.gridy++;
+		pTrace.add(new JLabel("Orientation weight(0-1): "),cd);
+		cd.gridx++;
+		pTrace.add(nfGammaTrace,cd);
 		
 		
 		cd.gridx=0;
@@ -1061,6 +1074,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			
 			bt.btdata.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
 			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btdata.sigmaTrace[2]));
+			
+			bt.btdata.gammaTrace = Double.parseDouble(nfGammaTrace.getText());
+			Prefs.set("BigTrace.gammaTrace", (double)(bt.btdata.gammaTrace));
 			
 			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
 			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
