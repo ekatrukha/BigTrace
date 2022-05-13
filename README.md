@@ -1,3 +1,5 @@
+[![](https://github.com/ekatrukha/bigtrace/actions/workflows/build-main.yml/badge.svg)](https://github.com/ekatrukha/bigtrace/actions/workflows/build-main.yml)
+
 BigTrace
 ===
 
