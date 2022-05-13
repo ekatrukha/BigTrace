@@ -22,6 +22,7 @@ import net.imglib2.roi.RealMask;
 import net.imglib2.roi.RealMaskRealInterval;
 import net.imglib2.roi.geom.real.WritablePolyline;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;
+import net.imglib2.util.LinAlgHelpers;
 
 public class PolyLine3D implements Roi3D, WritablePolyline
 {
@@ -91,7 +92,21 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	//adds a point to the "end" of polyline
 	public void addPointToEnd(final RealPoint in_)
 	{
-		vertices.add(new RealPoint(in_));
+
+		if (vertices.size()>0)
+		{
+			//check if the new point is at the same place that previous or not
+			double [] dist = new double [3];
+			LinAlgHelpers.subtract(vertices.get(vertices.size()-1).positionAsDoubleArray(), in_.positionAsDoubleArray(), dist);
+			if(LinAlgHelpers.length(dist)>0.000001)
+			{
+				vertices.add(new RealPoint(in_));
+			}
+		}
+		else
+		{
+			vertices.add(new RealPoint(in_));			
+		}
 		updateRenderVertices();
 	}
 	//removes the point from the "end" and returns "true"
@@ -115,8 +130,11 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	
 	public void updateRenderVertices()
 	{
+
 		verticesVis.setVertices(vertices);
+		System.out.println("1");
 		edgesVis.setVerticesBresenham(vertices);		
+		System.out.println("2");
 		
 	}
 	public void setVertices(ArrayList<RealPoint> vertices_)

@@ -116,7 +116,7 @@ public class BigTrace implements PlugIn, WindowListener
 					//new UnsignedByteType() );
 		if(arg.equals(""))
 		{
-			btdata.sFileNameImg=IJ.getFilePath("Open ONI results table");
+			btdata.sFileNameImg=IJ.getFilePath("Open 8-bit TIF file (composite)...");
 		}
 		else
 		{

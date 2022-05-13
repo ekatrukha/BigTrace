@@ -509,6 +509,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 
 	 public void addPoint(RealPoint point_)
 	 {
+		 
 		 if(mode ==RoiManager3D.ADD_POINT)
 		 {
 			 addPoint3D(point_);
@@ -517,6 +518,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 {
 			 addPointToLine(point_);
 		 }
+		
+		 
 	 }
 	 public void addPoint3D(RealPoint point_)
 	 {
@@ -576,6 +579,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	  *  if there are no active ROIS, starts new polyline **/
 	 public void addPointToLine(RealPoint point_)
 	 {
+
 		 PolyLine3D polyline;
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
@@ -600,6 +604,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 polyline = (PolyLine3D) rois.get(activeRoi);
 			 polyline.addPointToEnd(point_);
 		 }
+			
 	 
 	 }
 	 

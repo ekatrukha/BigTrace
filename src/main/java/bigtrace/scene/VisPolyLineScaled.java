@@ -331,6 +331,8 @@ public class VisPolyLineScaled
 		Line3D contLine;
 		ArrayList< RealPoint > contour;
 		
+		
+		
 		nPointsN=points.size();
 		if(nPointsN>1)
 		{
@@ -501,6 +503,7 @@ public class VisPolyLineScaled
 			
 		}
 		setVertices(points);
+		//setVertices(pointsPL);
 	}
 	
 	/** OpenGL buffer binding, etc thing **/
