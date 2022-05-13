@@ -27,8 +27,8 @@ public class Plane3D {
 	}
 
     /** set normal vector and point in the plane
-     * @param p0 - vector on a plane
-     * @param n - normal vector (does not have to be normalized) **/
+     * @param p0_ - vector on a plane
+     * @param n_ - normal vector (does not have to be normalized) **/
 	public void setVectors(double [] p0_, double [] n_)
 	{
 		p0= new double [3]; 

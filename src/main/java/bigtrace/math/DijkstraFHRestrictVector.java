@@ -311,8 +311,8 @@ public class DijkstraFHRestrictVector {
 		final RandomAccess< Neighborhood< IntType > > enRA = entryNeighborhoods.randomAccess();
 		
 		// curve orientation 
-		final RandomAccessible< Neighborhood< Composite<FloatType> > > orientNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.collapse(Views.extendZero(vectors)) );	
-		final RandomAccess< Neighborhood< Composite<FloatType> > > onRA = orientNeighborhoods.randomAccess();
+		final RandomAccessible< Neighborhood< GenericComposite<FloatType> > > orientNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.collapse(Views.extendZero(vectors)) );	
+		final RandomAccess< Neighborhood< GenericComposite<FloatType> > > onRA = orientNeighborhoods.randomAccess();
 		
 		
 		final RandomAccess< IntType> ccostRA = ccost.randomAccess();
@@ -325,7 +325,7 @@ public class DijkstraFHRestrictVector {
 		Cursor< IntType > enC;
 		Cursor< UnsignedByteType > wnC;
 		Cursor< UnsignedByteType > dnC;
-		Cursor< Composite<FloatType> > onC;
+		Cursor< GenericComposite<FloatType> > onC;
 		//Cursor< IntType > nextNode;
 		//Entry<Cursor< IntType >> nextEntry;
 	
