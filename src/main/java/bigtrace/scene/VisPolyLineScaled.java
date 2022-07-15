@@ -52,8 +52,10 @@ import tpietzsch.shadergen.Shader;
 import tpietzsch.shadergen.generate.Segment;
 import tpietzsch.shadergen.generate.SegmentTemplate;
 
-
+import static com.jogamp.opengl.GL.GL_BLEND;
 import static com.jogamp.opengl.GL.GL_FLOAT;
+import static com.jogamp.opengl.GL.GL_ONE_MINUS_SRC_ALPHA;
+import static com.jogamp.opengl.GL.GL_SRC_ALPHA;
 
 
 public class VisPolyLineScaled
@@ -169,6 +171,7 @@ public class VisPolyLineScaled
 		}
 		initialized=false;
 	}
+	
 	/** generates triangulated surface mesh of a pipe around provided points **/
 	public void setVerticesSurface(ArrayList< RealPoint > points)
 	{
@@ -441,8 +444,9 @@ public class VisPolyLineScaled
 					vertices[vertShift+i*3+j]=contour.get(i).getFloatPosition(j);
 				}				
 			}
+			addLinesAlong();
 		}
-		addLinesAlong();
+		
 		initialized=false;
 	}
 	
@@ -550,7 +554,7 @@ public class VisPolyLineScaled
 			prog.getUniform4f("colorin").set(l_color);
 			prog.setUniforms( context );
 			prog.use( context );
-	
+
 	
 			gl.glBindVertexArray( vao );
 			

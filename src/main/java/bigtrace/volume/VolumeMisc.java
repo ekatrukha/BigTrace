@@ -6,6 +6,7 @@ import bigtrace.geometry.Cuboid3D;
 import net.imglib2.AbstractInterval;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.Point;
 import net.imglib2.RandomAccess;
@@ -17,13 +18,17 @@ import net.imglib2.algorithm.neighborhood.RectangleShape;
 import net.imglib2.algorithm.neighborhood.Shape;
 import net.imglib2.algorithm.region.BresenhamLine;
 import net.imglib2.converter.RealUnsignedByteConverter;
+import net.imglib2.converter.RealUnsignedShortConverter;
 import net.imglib2.converter.read.ConvertedRandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.ByteArray;
+import net.imglib2.img.imageplus.ImagePlusImg;
+import net.imglib2.img.imageplus.ImagePlusImgFactory;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.IntervalView;
@@ -34,7 +39,7 @@ public class VolumeMisc {
 	/** A set of points pointArray calculates their bounding box
 	 * and then finds overlap between it and provided IntervalView;
 	 * If the overlap is zero or "less dimensional", returns false **/
-	public static boolean newBoundBox(final IntervalView< UnsignedByteType > viewclick,final ArrayList<RealPoint> pointArray, final long [][] newMinMax)
+	public static boolean newBoundBox(final Interval viewclick,final ArrayList<RealPoint> pointArray, final long [][] newMinMax)
 	{ 
 		//= new long [2][3];
 		int ndim = viewclick.numDimensions();
@@ -198,6 +203,38 @@ public class VolumeMisc {
 			cvU.convert(s,t);
 		}, new UnsignedByteType() );	
 		return Views.interval(inputScaled,inputScaled.minAsLongArray(),inputScaled.maxAsLongArray());
+		
+	}
+	
+	public static Img<UnsignedShortType> convertFloatToUnsignedShort(Img<FloatType> input)
+	{
+		float minVal = Float.MAX_VALUE;
+		float maxVal = -Float.MAX_VALUE;
+		for ( final FloatType h : input )
+		{
+			final float dd = h.get();
+			minVal = Math.min( dd, minVal );
+			maxVal = Math.max( dd, maxVal );
+		}
+
+		
+		//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
+		final RealUnsignedShortConverter<FloatType> conv = new RealUnsignedShortConverter<FloatType>(minVal,maxVal);
+
+		final ImagePlusImg< UnsignedShortType, ? > output = new ImagePlusImgFactory<>( new UnsignedShortType() ).create( input );
+		
+		
+		final Cursor< FloatType > in = input.cursor();
+		final Cursor< UnsignedShortType > out = output.cursor();
+
+		while ( in.hasNext() )
+		{
+			in.fwd();
+			out.fwd();
+
+			conv.convert( in.get(), out.get() );
+		}
+		return output;
 		
 	}
 	/** function finds local "weak" maxima in the interval and returns its list as long[] **/	

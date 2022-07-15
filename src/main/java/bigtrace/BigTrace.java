@@ -60,6 +60,7 @@ import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 
 import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
@@ -70,21 +71,22 @@ import tpietzsch.example2.VolumeViewerPanel;
 import tpietzsch.util.MatrixMath;
 
 
-public class BigTrace implements PlugIn, WindowListener
+public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListener
 {
 	public  BvvStackSource< UnsignedByteType > bvv_main = null;
 	public  ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<BvvStackSource< ? >>();
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	RandomAccessibleInterval< UnsignedByteType > empty_view;
 
-	ArrayList<IntervalView< UnsignedByteType >>  sources = new ArrayList<IntervalView< UnsignedByteType >>();
+	ArrayList<IntervalView< T >>  sources = new ArrayList<IntervalView< T >>();
 	public Color [] colorsCh;
 	public double [][] channelRanges;
 
 	private boolean bTraceMode = false;
 	
 	//Img< UnsignedByteType> img;
-	Img< UnsignedByteType> img_in;
+	//Img< UnsignedByteType> img_in;
+	Img<T> img_in;
 
 	/** Panel of BigVolumeViewer **/
 	VolumeViewerPanel panel;
@@ -102,6 +104,10 @@ public class BigTrace implements PlugIn, WindowListener
 
 	/** object storing main data/variables **/
 	public BigTraceData btdata = new BigTraceData();
+	
+	/** bit depth of the source **/
+	public int nBitDepth = 8;
+	
 	/** BigTrace Panel **/
 	public BigTraceControlPanel btpanel;
 	/**ROI's manager + list tab **/
@@ -116,7 +122,7 @@ public class BigTrace implements PlugIn, WindowListener
 					//new UnsignedByteType() );
 		if(arg.equals(""))
 		{
-			btdata.sFileNameImg=IJ.getFilePath("Open 8-bit TIF file (composite)...");
+			btdata.sFileNameImg=IJ.getFilePath("Open TIF file (3D, composite)...");
 		}
 		else
 		{
@@ -138,9 +144,10 @@ public class BigTrace implements PlugIn, WindowListener
 			IJ.showMessage("Only 8/16/32-bit images supported for now.");
 			return;
 		}*/
-		if(imp.getType()!=ImagePlus.GRAY8)
+		
+		if(imp.getType()!=ImagePlus.GRAY8 && imp.getType()!=ImagePlus.GRAY16 && imp.getType()!=ImagePlus.GRAY32)
 		{
-			IJ.showMessage("Only 8-bit images supported for now.");
+			IJ.showMessage("Only 8-, 16- and 32-bit images supported for now.");
 			return;
 		}
 
@@ -153,7 +160,20 @@ public class BigTrace implements PlugIn, WindowListener
 		
 		//img = convertInput(ImagePlusAdapter.wrapImgPlus( imp ), new UnsignedByteType());
 		//ImagePlusAdapter.wrapImgPlus( imp );
-		img_in = ImageJFunctions.wrapByte( imp );
+		
+		/**/
+		nBitDepth = imp.getBitDepth();
+		if(nBitDepth<=16)
+		{
+			img_in = ImageJFunctions.wrapReal(imp);
+		}
+		else
+		{
+			img_in = (Img<T>) VolumeMisc.convertFloatToUnsignedShort(ImageJFunctions.wrapReal(imp));
+			//img_in = (Img<T>) ImageJFunctions.wrapUnsignedShort(img, title).wrapShort(imp);//rapUnsignedShort(img, title)wrapShort(imp);		
+		}
+
+		
 		btdata.nTotalChannels=imp.getNChannels();
 		if(btdata.nTotalChannels==1)
 		{
@@ -178,18 +198,6 @@ public class BigTrace implements PlugIn, WindowListener
 				//img =  Views.hyperSlice(img_in,2,1);
 			}
 		}
-		
-		/*
-		img_in = ImageJFunctions.wrapByte( imp );
-		if(imp.getNChannels()==1)
-		{
-			img = Views.interval(img_in,img_in);;
-		}
-		else
-		{
-			img =  Views.hyperSlice(img_in,2,1);
-		}
-		*/
 		
 		
 		/*
@@ -677,7 +685,7 @@ public class BigTrace implements PlugIn, WindowListener
 	{
 		FinalInterval rangeTraceBox;
 		
-		IntervalView<UnsignedByteType> traceIV;
+		IntervalView<?> traceIV;
 		
 		traceIV = getTraceInterval(btdata.bTraceOnlyCrop);
 		
@@ -690,7 +698,7 @@ public class BigTrace implements PlugIn, WindowListener
 			rangeTraceBox = getTraceBoxNext(traceIV,btdata.lTraceBoxSize, btdata.fTraceBoxAdvanceFraction, trace);
 		}
 		
-		IntervalView<UnsignedByteType> traceInterval = Views.interval(traceIV, rangeTraceBox);
+		IntervalView<?> traceInterval = Views.interval(traceIV, rangeTraceBox);
 		
 		//getCenteredView(traceInterval);
 		panel.setTransformAnimator(getCenteredViewAnim(traceInterval,btdata.dTraceBoxScreenFraction));
@@ -713,7 +721,7 @@ public class BigTrace implements PlugIn, WindowListener
 	
 	/** returns current Interval for the tracing. If bCroppedInterval is true,
 	 * returns cropped area, otherwise returns full original volume. **/
-	IntervalView<UnsignedByteType> getTraceInterval(boolean bCroppedInterval)
+	IntervalView<?> getTraceInterval(boolean bCroppedInterval)
 	{
 		if(bCroppedInterval)
 		{
@@ -795,7 +803,7 @@ public class BigTrace implements PlugIn, WindowListener
 		return finInt;							
 	}
 	//gets a box around "target" with half size of range
-	public FinalInterval getTraceBoxNext(final IntervalView< UnsignedByteType > viewclick, final long range, final float fFollowDegree, LineTrace3D trace)
+	public FinalInterval getTraceBoxNext(final IntervalView< ? > viewclick, final long range, final float fFollowDegree, LineTrace3D trace)
 	{
 		long[][] rangeM = new long[3][3];
 		int i;
@@ -1170,7 +1178,14 @@ public class BigTrace implements PlugIn, WindowListener
 				//				btdata.globCal[2])));
 				bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
 				bvv_sources.get(i).setDisplayRange(channelRanges[0][i], channelRanges[1][i]);
-				bvv_sources.get(i).setDisplayRangeBounds(0, 255);
+				if(nBitDepth<=8)
+				{
+					bvv_sources.get(i).setDisplayRangeBounds(0, 255);
+				}
+				else
+				{
+					bvv_sources.get(i).setDisplayRangeBounds(0, 65535);
+				}
 			}
 
 		}
@@ -1254,7 +1269,8 @@ public class BigTrace implements PlugIn, WindowListener
 
 	}
 	
-	public boolean findPointLocationFromClick(final IntervalView< UnsignedByteType > viewclick, final int nHalfWindowSize, final RealPoint target)
+	public <X extends RealType< X >>boolean findPointLocationFromClick(final IntervalView< X > viewclick, final int nHalfWindowSize, final RealPoint target)
+	//public boolean findPointLocationFromClick(final IntervalView< UnsignedByteType > viewclick, final int nHalfWindowSize, final RealPoint target)
 	{
 		int i,j;
 
@@ -1349,7 +1365,7 @@ public class BigTrace implements PlugIn, WindowListener
 			*/
 			
 			
-			IntervalView< UnsignedByteType > intRay = Views.interval(viewclick, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
+			IntervalView< X > intRay = Views.interval(viewclick, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
 																								   nClickMinMax[1][0],nClickMinMax[1][1],nClickMinMax[1][2]));
 			
 			//double [][] singleCube  = new double [2][3];

@@ -1306,8 +1306,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         {
         	nLoadMode = 0;
         	this.groups = new ArrayList<Roi3DGroup>();
-        	this.rois = new ArrayList<Roi3D >();;
-        	listModel.removeAllElements();
+        	this.rois = new ArrayList<Roi3D >();
+        	listModel.clear();
         }
         else
         {

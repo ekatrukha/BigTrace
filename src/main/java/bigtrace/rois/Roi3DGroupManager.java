@@ -527,6 +527,10 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 						readGroup = new Roi3DGroup(sName, pointSize, pointColor, lineThickness, lineColor,  nRenderType, nSectorN);
 						roiManager.groups.add(readGroup);
 						nLoadedGroupsN++;
+						if(listModel==null)
+						{
+							listModel = new  DefaultListModel<String>(); 
+						}
 						listModel.addElement(readGroup.getName());
 					}
 					line = br.readLine();  				  

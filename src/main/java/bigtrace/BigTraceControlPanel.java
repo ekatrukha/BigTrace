@@ -33,6 +33,9 @@ import bigtrace.rois.RoiManager3D;
 import bigtrace.BigTraceData;
 import bvv.util.Bvv;
 import bvv.util.BvvFunctions;
+import bvv.util.BvvSource;
+import bvv.util.BvvStackSource;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.LinAlgHelpers;
@@ -418,7 +421,7 @@ public class BigTraceControlPanel extends JPanel
 	        
 	}
 
-	synchronized void bbChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1)
+	synchronized <T> void bbChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1)
 	{
 		if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(btdata.nDimIni[1][0]) && bby1<=(btdata.nDimIni[1][1]) && bbz1<=(btdata.nDimIni[1][2]))
 		{
@@ -434,8 +437,8 @@ public class BigTraceControlPanel extends JPanel
 				{
 					if(btrace.bvv_sources.get(i)!=null)
 					{
-						nDisplayMinMax[i][0]=btrace.bvv_sources.get(i).getConverterSetups().get(0).getDisplayRangeMin();
-						nDisplayMinMax[i][1]=btrace.bvv_sources.get(i).getConverterSetups().get(0).getDisplayRangeMax();
+						nDisplayMinMax[i][0]=((BvvStackSource<T>) btrace.bvv_sources.get(i)).getConverterSetups().get(0).getDisplayRangeMin();
+						nDisplayMinMax[i][1]=((BvvStackSource<T>) btrace.bvv_sources.get(i)).getConverterSetups().get(0).getDisplayRangeMax();
 					}
 				}
 				//update sources
@@ -456,11 +459,18 @@ public class BigTraceControlPanel extends JPanel
 				for(i=0;i<btrace.bvv_sources.size();i++)
 				{		
 
-					btrace.bvv_sources.get(i).removeFromBdv();
-					btrace.bvv_sources.set(i, BvvFunctions.show( btrace.sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(btrace.bvv_main)));
-					btrace.bvv_sources.get(i).setDisplayRange(nDisplayMinMax[i][0], nDisplayMinMax[i][1]);
-					btrace.bvv_sources.get(i).setColor( new ARGBType(btrace.colorsCh[i].getRGB() ));
-					btrace.bvv_sources.get(i).setDisplayRangeBounds(0, 255);
+					((BvvSource) btrace.bvv_sources.get(i)).removeFromBdv();
+					btrace.bvv_sources.set(i, BvvFunctions.show( (RandomAccessibleInterval<T>) btrace.sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(btrace.bvv_main)));
+					((BvvSource) btrace.bvv_sources.get(i)).setDisplayRange(nDisplayMinMax[i][0], nDisplayMinMax[i][1]);
+					((BvvSource) btrace.bvv_sources.get(i)).setColor( new ARGBType(btrace.colorsCh[i].getRGB() ));
+					if(btrace.nBitDepth<=8)
+					{
+						((BvvSource) btrace.bvv_sources.get(i)).setDisplayRangeBounds(0, 255);
+					}
+					else
+					{
+						((BvvSource) btrace.bvv_sources.get(i)).setDisplayRangeBounds(0, 65535);
+					}
 				}	
 				/**/					
 

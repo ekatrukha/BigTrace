@@ -35,7 +35,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 	@Override
 	protected Void doInBackground() throws Exception {
 		String[] line_array;
-        int bFirstPartCheck = 0;
+       
         int nRoiN=1;
         int nVertN=0;
         int i,j;
@@ -62,7 +62,6 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 		try {
 			
 	        BufferedReader br = new BufferedReader(new FileReader(sFilename));
-	        int nLineN = 0;
 
 	        String line = "";
 	        //read Groups first
@@ -76,6 +75,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 	        		 return null;
 	        	}
 	        	bt.roiManager.updateGroupsList();
+	        	line = br.readLine();
 	        }
 	        //skip to ROI part
 	        else
@@ -109,89 +109,91 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 	        	}
 	        			
 	        }
-	        if(nLoadMode==0)
-	        {
-	        	line = br.readLine();
-	        }
+	        
+	        //initial part check
+	        
+			 line_array = line.split(",");
+			 if(!line_array[0].equals("BigTrace_ROIs"))
+			 {
+				 System.err.println("Not a BigTrace ROI file format, aborting");
+				 return null;
+			 }
+			 if(!line_array[2].equals(bt.btdata.sVersion))
+			 {
+				 System.out.println("Version mismatch: ROI file "+line_array[2]+", plugin "+bt.btdata.sVersion+". It should be fine in theory, so loading ROIs anyway.");
+			 }
+			  
 
 			while (line != null) 
-				{
+			{
+				
+				  line = br.readLine();
+				  if(line == null)
+				  {
+					  break;
+				  }
 				   // process the line.
 				  line_array = line.split(",");
-				  nLineN++;
-				  //first line check
-				  if(line_array.length==3 && nLineN==1)
-			      {
-					  bFirstPartCheck++;
-					  if(line_array[0].equals("BigTrace_ROIs")&& line_array[2].equals(bt.btdata.sVersion))
-					  {
-						  bFirstPartCheck++; 
-					  }					  
-			      }
-				  //second line check
-				  if(line_array.length==2 && nLineN==2)
-			      {
-					  bFirstPartCheck++;
-					  if(line_array[0].equals("ROIsNumber"))
-					  {
-						  bFirstPartCheck++;
-						  nRoiN=Integer.parseInt(line_array[1]);
-					  }
-			      }				  
-				  if(line_array[0].equals("BT_Roi"))
-				  {
+				  
+				  switch (line_array[0]){
+				  case "ROIsNumber":
+					  nRoiN=Integer.parseInt(line_array[1]);
+					  break;
+					  
+				  case "BT_Roi":
 					  //Sleep for up to one second.
-						try {
-							Thread.sleep(1);
-						} catch (InterruptedException ignore) {}
-						setProgress((Integer.parseInt(line_array[1])-1)*100/nRoiN);
-						setProgressState("loading ROI #"+line_array[1]+" of "+Integer.toString(nRoiN));
-				  }
-				  if(line_array[0].equals("Type"))
-				  {						  
+					  try {
+						  Thread.sleep(1);
+					  } catch (InterruptedException ignore) {}
+					  setProgress((Integer.parseInt(line_array[1])-1)*100/nRoiN);
+					  setProgressState("loading ROI #"+line_array[1]+" of "+Integer.toString(nRoiN));
+					  break;
+					  
+				  case "Type":
 					  nRoiType = Roi3D.stringTypeToInt(line_array[1]);
-				  }
-				  if(line_array[0].equals("Name"))
-				  {						  
+					  break;
+					  
+				  case "Name":					  
 					  sName = line_array[1];
-				  }
-				  //append or rewrite
-				  if(line_array[0].equals("GroupInd") && nLoadMode ==0)
-				  {						  
-					  nROIGroupInd = Integer.parseInt(line_array[1]);
-				  }				  
-				  if(line_array[0].equals("PointSize"))
-				  {						  
+					  break;
+					  
+				  case "GroupInd":
+					  if(nLoadMode ==0)
+					  {						  
+						  nROIGroupInd = Integer.parseInt(line_array[1]);
+					  }	
+					  break;
+					  
+				  case "PointSize":			  
 					  pointSize = Float.parseFloat(line_array[1]);
-				  }
-				  if(line_array[0].equals("LineThickness"))
-				  {						  
+					  break;
+
+				  case "LineThickness":  
 					  lineThickness = Float.parseFloat(line_array[1]);
-				  }
-				  if(line_array[0].equals("PointColor"))
-				  {						  
+					  break;
+
+				  case "PointColor":
 					  pointColor = new Color(Integer.parseInt(line_array[1]),
-							  				 Integer.parseInt(line_array[2]),
-							  				 Integer.parseInt(line_array[3]),
-							  				 Integer.parseInt(line_array[4]));
-				  }
-				  if(line_array[0].equals("LineColor"))
-				  {						  
+							  Integer.parseInt(line_array[2]),
+							  Integer.parseInt(line_array[3]),
+							  Integer.parseInt(line_array[4]));
+					  break;					  
+				  case "LineColor":
 					  lineColor = new Color(Integer.parseInt(line_array[1]),
-							  				 Integer.parseInt(line_array[2]),
-							  				 Integer.parseInt(line_array[3]),
-							  				 Integer.parseInt(line_array[4]));
-				  }
-				  if(line_array[0].equals("RenderType"))
-				  {						  
+							  Integer.parseInt(line_array[2]),
+							  Integer.parseInt(line_array[3]),
+							  Integer.parseInt(line_array[4]));
+					  break;
+
+				  case "RenderType":
 					  nRenderType = Integer.parseInt(line_array[1]);
-				  }
-				  if(line_array[0].equals("SectorN"))
-				  {						  
+					  break;
+
+				  case "SectorN":		  
 					  nSectorN = Integer.parseInt(line_array[1]);
-				  }
-				  if(line_array[0].equals("Vertices"))
-				  {						  
+					  break;
+					  
+				  case "Vertices":
 					  nVertN = Integer.parseInt(line_array[1]);
 					  vertices =new ArrayList<RealPoint>(); 
 					  for(i=0;i<nVertN;i++)
@@ -199,10 +201,10 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  line = br.readLine();
 						  line_array = line.split(",");
 						  vertices.add(new RealPoint(Float.parseFloat(line_array[0]),
-								  					 Float.parseFloat(line_array[1]),
-								  					 Float.parseFloat(line_array[2])));
+								  Float.parseFloat(line_array[1]),
+								  Float.parseFloat(line_array[2])));
 					  }
-					  
+
 					  switch (nRoiType)
 					  {
 					  case Roi3D.POINT:
@@ -214,10 +216,10 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  roiP.setGroupInd(nROIGroupInd);
 						  roiP.setName(sName);
 						  roiP.setVertex(vertices.get(0));
-						  
+
 						  bt.roiManager.addRoi(roiP);
-						  
-					  	  break;
+
+						  break;
 					  case Roi3D.POLYLINE:
 						  //PolyLine3D roiPL = new PolyLine3D(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
 						  //roiPL.setName(sName);
@@ -228,14 +230,14 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  roiPL.setGroupInd(nROIGroupInd);
 						  roiPL.setName(sName);
 						  roiPL.setVertices(vertices);
-						  
+
 						  bt.roiManager.addRoi(roiPL);
 						  break;
 					  case Roi3D.LINE_TRACE:
-						  
+
 						  LineTrace3D roiLT = (LineTrace3D) bt.roiManager.makeRoi(nRoiType);
-						  
-						 // LineTrace3D roiLT = new LineTrace3D(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
+
+						  // LineTrace3D roiLT = new LineTrace3D(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
 						  roiLT.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
 						  roiLT.setGroupInd(nROIGroupInd);
 						  roiLT.setName(sName);
@@ -256,18 +258,19 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 								  line = br.readLine();
 								  line_array = line.split(",");
 								  segment.add(new RealPoint(Float.parseFloat(line_array[0]),
-										  					 Float.parseFloat(line_array[1]),
-										  					 Float.parseFloat(line_array[2])));
+										  Float.parseFloat(line_array[1]),
+										  Float.parseFloat(line_array[2])));
 							  }
 							  roiLT.addPointAndSegment(vertices.get(i+1),segment); 
 						  }
 						  bt.roiManager.addRoi(roiLT);
 						  break;
-						  
+
 					  }
+					  break;
 					  
 				  }
-				  line = br.readLine();
+				 
 				}
 
 	        br.close();
@@ -283,12 +286,12 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 		}
         
 		//some error reading the file
-        if(bFirstPartCheck!=4)
+      /*  if(bFirstPartCheck!=4)
         {
         	 System.err.println("Not a Bigtrace ROI file format or plugin/file version mismatch, loading ROIs could be incomplete.");
              //bt.bInputLock = false;
              //bt.roiManager.setLockMode(false);
-        }
+        }*/
 
 		return null;
 	}
