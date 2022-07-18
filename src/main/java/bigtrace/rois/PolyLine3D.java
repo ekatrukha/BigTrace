@@ -132,9 +132,9 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	{
 
 		verticesVis.setVertices(vertices);
-		System.out.println("1");
+		//System.out.println("1");
 		edgesVis.setVerticesBresenham(vertices);		
-		System.out.println("2");
+		//System.out.println("2");
 		
 	}
 	public void setVertices(ArrayList<RealPoint> vertices_)

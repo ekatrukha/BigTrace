@@ -50,6 +50,9 @@ public class BigTraceData {
 	
 	/**number of channel used for analysis/tracing **/
 	public int nChAnalysis=0;
+	
+	
+	
 	public int nTotalChannels=0;
 	
 	

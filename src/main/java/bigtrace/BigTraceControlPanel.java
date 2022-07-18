@@ -17,8 +17,10 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
@@ -30,6 +32,7 @@ import bigtrace.gui.CropPanel;
 import bigtrace.gui.PanelTitle;
 import bigtrace.gui.VoxelSizePanel;
 import bigtrace.rois.RoiManager3D;
+import bigtrace.rois.RoiMeasure3D;
 import bigtrace.BigTraceData;
 import bvv.util.Bvv;
 import bvv.util.BvvFunctions;
@@ -59,6 +62,7 @@ public class BigTraceControlPanel extends JPanel
 	public VoxelSizePanel voxelSizePanel;
 	
 	RoiManager3D roiManager;
+	RoiMeasure3D roiMeasure;
 	
 
 	double [][] nDisplayMinMax;
@@ -72,13 +76,91 @@ public class BigTraceControlPanel extends JPanel
 	{
 		//finalPanel = new JPanel(new GridBagLayout());
 		super(new GridBagLayout());
-		roiManager=roiManager_;
-	
+
 		btdata=btd_;
-		btrace=bt_;
+		btrace=bt_;		
+		roiManager=roiManager_;
+		roiMeasure = new RoiMeasure3D(btrace);
+		roiManager.setRoiMeasure3D(roiMeasure);
 		
+		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
 		
+		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/cube_icon.png");
+	    ImageIcon tabIcon = new ImageIcon(icon_path);
+
+	    tabPane.addTab("",tabIcon,panelNavigation(), "View/Crop");
+
+	    //ROI MANAGER
+	    icon_path = bigtrace.BigTrace.class.getResource("/icons/node.png");
+	    tabIcon = new ImageIcon(icon_path);
+	    tabPane.addTab("",tabIcon ,roiManager,"Tracing");
+	    
+	    //MEASUREMENTS
+	    
+	    icon_path = bigtrace.BigTrace.class.getResource("/icons/measure.png");
+	    tabIcon = new ImageIcon(icon_path);
+	    tabPane.addTab("",tabIcon ,roiMeasure,"Measure");
+	    
+	    icon_path = bigtrace.BigTrace.class.getResource("/icons/shortcut.png");
+	    tabIcon = new ImageIcon(icon_path);
+	    tabPane.addTab("",tabIcon ,panelInformation(),"Help/Shortcuts");
+
+	    roiManager.addRoiManager3DListener(new RoiManager3D.Listener() {
+
+			@Override
+			public void activeRoiChanged(int nRoi) {
+				//render_pl();
+			}
+	    	
+	    });
+	    
+	    
+	    tabPane.setSize(350, 300);
+	    tabPane.setSelectedIndex(1);
+
+	    
+	    progressBar = new JProgressBar(0,100);
+	    //progressBar.setIndeterminate(true);
+	    progressBar.setValue(0);
+	    progressBar.setStringPainted(true);
+	    progressBar.setString("BigTrace version "+btdata.sVersion);
 		
+
+	    GridBagConstraints cv = new GridBagConstraints();
+	    cv.gridx=0;
+	    cv.gridy=0;	    
+	    cv.weightx=0.5;
+	    cv.weighty=1.0;
+	    cv.anchor = GridBagConstraints.NORTHWEST;
+	    cv.gridwidth = GridBagConstraints.REMAINDER;
+	    //cv.gridheight = GridBagConstraints.REMAINDER;
+	    cv.fill = GridBagConstraints.HORIZONTAL;
+	    cv.fill = GridBagConstraints.BOTH;
+	    //finalPanel.add(tabPane,cv);
+	    this.add(tabPane,cv);
+	    cv.gridx=0;
+	    cv.gridy=1;	    
+	    cv.gridwidth = GridBagConstraints.RELATIVE;
+	    cv.gridheight = GridBagConstraints.RELATIVE;
+	    cv.weighty=0.01;
+	    cv.anchor = GridBagConstraints.SOUTHEAST;
+	    cv.fill = GridBagConstraints.HORIZONTAL;
+
+	    this.add(progressBar,cv);
+	
+	    
+	    //install actions from BVV
+	    
+	    this.setActionMap(btrace.actions.getActionMap());
+	    this.setInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,btrace.actions.getInputMap());
+	    
+	}
+	
+
+	public JPanel panelNavigation()
+	{
+		
+		JPanel panNavigation = new JPanel(new GridBagLayout());
 		//Interface
 		
 		//CropPanel
@@ -102,13 +184,6 @@ public class BigTraceControlPanel extends JPanel
 				voxelChanged(newVoxelSize);
 			}
 		});
-		
-		
-		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
-		
-		JPanel panNavigation = new JPanel(new GridBagLayout());
-
-	    
 		GridBagConstraints c = new GridBagConstraints();
 
 		
@@ -206,44 +281,6 @@ public class BigTraceControlPanel extends JPanel
 	    c.fill=GridBagConstraints.HORIZONTAL;
 	    panVoxel.add(voxelSizePanel,c);
 
-
-	    /*
-		NumberField nfXSize = new NumberField(5);
-		NumberField nfYSize = new NumberField(5);
-		NumberField nfZSize = new NumberField(5);
-
-		JTextField tfUnits = new JTextField(8);
-		
-
-		
-		nfXSize.setText(String.format("%.3f", btdata.globCal[0]));
-		nfYSize.setText(String.format("%.3f", btdata.globCal[1]));
-		nfZSize.setText(String.format("%.3f", btdata.globCal[2]));
-		tfUnits.setText(btdata.sVoxelUnit);
-		
-		tfUnits.setHorizontalAlignment(SwingConstants.LEFT);
-	    
-	    c.gridx=0;
-	    c.gridy=0;
-	    panVoxel.add(new JLabel("Pixel width"),c);
-	    c.gridx++;
-	    panVoxel.add(nfXSize,c);
-	    c.gridx=0;
-	    c.gridy++;
-	    panVoxel.add(new JLabel("Pixel height"),c);
-	    c.gridx++;
-	    panVoxel.add(nfYSize,c);
-	    c.gridx=0;
-	    c.gridy++;
-	    panVoxel.add(new JLabel("Voxel depth"),c);
-	    c.gridx++;
-	    panVoxel.add(nfZSize,c);
-	    c.gridx=0;
-	    c.gridy++;
-	    panVoxel.add(new JLabel("Units"),c);
-	    c.gridx++;
-	    panVoxel.add(tfUnits,c);	
-	    */	
 	    //add panels to Navigation
 	    c.insets=new Insets(4,4,2,2);
 	    //View
@@ -268,108 +305,14 @@ public class BigTraceControlPanel extends JPanel
 	    c.weightx = 0.01;
         c.weighty = 0.01;
         panNavigation.add(new JLabel(), c);
-        
-        
-        icon_path = bigtrace.BigTrace.class.getResource("/icons/cube_icon.png");
-	    tabIcon = new ImageIcon(icon_path);
 
-	    tabPane.addTab("",tabIcon,panNavigation, "View/Crop");
-
-	    //ROI MANAGER
-	    icon_path = bigtrace.BigTrace.class.getResource("/icons/node.png");
-	    tabIcon = new ImageIcon(icon_path);
-	    tabPane.addTab("",tabIcon ,roiManager,"Tracing");
-	    
-	    icon_path = bigtrace.BigTrace.class.getResource("/icons/shortcut.png");
-	    tabIcon = new ImageIcon(icon_path);
-	    tabPane.addTab("",tabIcon ,informationPanel(),"Help/Shortcuts");
-
-	    roiManager.addRoiManager3DListener(new RoiManager3D.Listener() {
-
-			@Override
-			public void activeRoiChanged(int nRoi) {
-				//render_pl();
-			}
-	    	
-	    });
-	    
-	    
-	    tabPane.setSize(350, 300);
-	    tabPane.setSelectedIndex(1);
-
-	    
-	    progressBar = new JProgressBar(0,100);
-	    //progressBar.setIndeterminate(true);
-	    progressBar.setValue(0);
-	    progressBar.setStringPainted(true);
-	    progressBar.setString("BigTrace version "+btdata.sVersion);
+		return panNavigation;
 		
-	    //JPanel finalPanel = new JPanel(new GridBagLayout());
-	    GridBagConstraints cv = new GridBagConstraints();
-	    cv.gridx=0;
-	    cv.gridy=0;	    
-	    cv.weightx=0.5;
-	    cv.weighty=1.0;
-	    cv.anchor = GridBagConstraints.NORTHWEST;
-	    cv.gridwidth = GridBagConstraints.REMAINDER;
-	    //cv.gridheight = GridBagConstraints.REMAINDER;
-	    cv.fill = GridBagConstraints.HORIZONTAL;
-	    cv.fill = GridBagConstraints.BOTH;
-	    //finalPanel.add(tabPane,cv);
-	    this.add(tabPane,cv);
-	    cv.gridx=0;
-	    cv.gridy=1;	    
-	    cv.gridwidth = GridBagConstraints.RELATIVE;
-	    cv.gridheight = GridBagConstraints.RELATIVE;
-	    cv.weighty=0.01;
-	    cv.anchor = GridBagConstraints.SOUTHEAST;
-	    cv.fill = GridBagConstraints.HORIZONTAL;
-	    //finalPanel.add(tabPane,cv);
-	    this.add(progressBar,cv);
-	    
-	    //JFrame bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv.getBvvHandle().getViewerPanel());
-	    //final JDialog mainWindow = new JDialog(bvv_frame,"BigTrace");
-	    
-	    //mainWindow.add(finalPanel);
-	    //mainWindow.setVisible(true);
-	    //mainWindow.setSize(400, 500);
-	    //mainWindow.requestFocusInWindow();
-	    //final JFrame frame = new JFrame( "BigTrace" );
-	    //roiManager.setParentFrame(frame);
-		//this.add(finalPanel);
-	    //this.setSize(400,500);
-
-	    //java.awt.Point bvv_p = bvv_frame.getLocationOnScreen();
-	    //java.awt.Dimension bvv_d = bvv_frame.getSize();
-	
-	    //frame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
-	    //this.setLocation(locx, locy);
-
-	    
-	    //frame.setVisible( true );
-		//frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		
-		/*frame.addWindowListener(new java.awt.event.WindowAdapter() {
-		    @Override
-		    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-		    	{
-		    		
-		    		//panel.setRenderScene(null);
-		    		//panel.setVisible(false);		    				    		
-		    		//bvv.close();
-		            //System.exit(0);
-		        }
-		    }
-		});*/
-	    
-	    //install actions from BVV
-	    
-	    this.setActionMap(btrace.actions.getActionMap());
-	    this.setInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,btrace.actions.getInputMap());
-	    
 	}
 	
-	public JPanel informationPanel()
+
+	
+	public JPanel panelInformation()
 	{
 		JPanel panInformation = new JPanel(new GridLayout());
 		panInformation.setBorder(new PanelTitle(" Main keys "));
@@ -394,7 +337,6 @@ public class BigTraceControlPanel extends JPanel
 		panInformation.add(jlInfo);
 		return panInformation;
 	}
-
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) 
 	{

@@ -74,10 +74,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public int mode;
 	 public boolean bShowAll = true;
 
+	 //MEASURE OBJECT
+	 public RoiMeasure3D roiMeasure = null;
 	 
 	 //GUI
 	 public DefaultListModel<String> listModel; 
-	 JList<String> jlist;
+	 public JList<String> jlist;
 	 JScrollPane listScroller;
 	 public static interface Listener {
 		public void activeRoiChanged(int nRoi);				
@@ -212,6 +214,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cr.gridy=0;
 		 //cr.weighty=0.5;
 		 cr.gridheight=GridBagConstraints.REMAINDER;
+		 cr.anchor = GridBagConstraints.NORTHWEST;
 		 roiList.add(listScroller,cr);
 		 butDelete = new JButton("Delete");
 		 butDelete.addActionListener(this);
@@ -691,7 +694,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		if (e.getValueIsAdjusting() == false) 
 		{
-			 
+			
+			roiMeasure.jlist.setSelectedIndex(jlist.getSelectedIndex());
             if (jlist.getSelectedIndex() == -1) 
             {
             	activeRoi=-1;
@@ -1382,5 +1386,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 cbActiveGroup.setSelectedIndex(0);
 		 nActiveGroup = 0;
 
+	}
+	public void setRoiMeasure3D( RoiMeasure3D roiMeasure_)
+	{
+		 this.roiMeasure=roiMeasure_;
 	}
 }
