@@ -95,7 +95,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JButton butApplyGroup;
 	 JButton butDisplayGroup;
 	 
-	 JComboBox<String> cbActiveChannel;
+	 public JComboBox<String> cbActiveChannel;
 	 JComboBox<String> cbActiveGroup;
 	 
 	 JToggleButton roiPointMode;
@@ -761,6 +761,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		if(e.getSource() == cbActiveChannel)
 		{
 			bt.btdata.nChAnalysis=cbActiveChannel.getSelectedIndex();
+			roiMeasure.cbActiveChannel.setSelectedIndex(bt.btdata.nChAnalysis);
 		}
 		
 		//ACTIVE PRESET

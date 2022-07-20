@@ -41,6 +41,7 @@ import bigtrace.volume.VolumeMisc;
 import bvv.util.BvvStackSource;
 import ij.CompositeImage;
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
@@ -1547,8 +1548,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		java.net.URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
 		java.io.File file = new java.io.File(url.toURI());
 		System.setProperty("plugins.dir", file.getAbsolutePath());
-		
-		new ImageJ();*/
+		*/
+		new ImageJ();
 		BigTrace testI=new BigTrace(); 
 		
 		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");

@@ -424,6 +424,12 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	{
 		return groupIndex;
 	}
-	
+	/** returns the length of Polyline using globCal voxel size **/
+	public double getLength(final double [] globCal)
+	{
+
+		return Roi3D.getSegmentLength(vertices, globCal);
+		
+	}
 }
 

@@ -9,6 +9,7 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import net.imglib2.RealPoint;
+import net.imglib2.util.LinAlgHelpers;
 
 public interface Roi3D 
 {
@@ -96,5 +97,26 @@ public interface Roi3D
 			reversed.add(new RealPoint(vert_in.get(i)));
 		}
 		return reversed; 
+	}
+	
+	public static double getSegmentLength(final ArrayList<RealPoint> vert_in, double [] globCal)
+	{
+		double length=0.0;
+		double [] pos1 = new double [3];
+		double [] pos2 = new double [3];
+		
+		for (int i=0;i<vert_in.size()-1; i++)
+		{
+			vert_in.get(i).localize(pos1);
+			vert_in.get(i+1).localize(pos2);
+			for (int j = 0; j<3; j++)
+			{
+				pos1[j]*=globCal[j];
+				pos2[j]*=globCal[j];
+			}
+			length+=LinAlgHelpers.distance(pos1, pos2);
+		}
+		//System.out.print(length);
+		return length;
 	}
 }

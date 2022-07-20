@@ -3,16 +3,20 @@ package bigtrace.rois;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
@@ -22,9 +26,11 @@ import javax.swing.event.ListSelectionListener;
 
 import bigtrace.BigTrace;
 import bigtrace.gui.PanelTitle;
+import ij.Prefs;
+import ij.gui.GenericDialog;
+import ij.measure.ResultsTable;
 
-public class RoiMeasure3D extends JPanel implements ListSelectionListener, ActionListener{
-	
+public class RoiMeasure3D extends JPanel implements ListSelectionListener, ActionListener, Measurements { 
 	
 	/**
 	 * 
@@ -39,8 +45,14 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 	JList<String> jlist ;
 	JScrollPane listScroller;
 	
-	JComboBox<String> cbActiveChannel;
+	public JComboBox<String> cbActiveChannel;
+	// Order must agree with order of checkboxes in Set Measurements dialog box
+	private static final int[] list = { LENGTH, ENDS, MEAN, STD_DEV, AVRG_ORIENT, STD_ORIENT};
+	private static final String[] colTemplates = { "Length", "End_", "Mean_intensity", "SD_intensity", "Mean_orient_", "SD_orient_"};
+	private static int systemMeasurements = Prefs.getInt("BigTrace.Measurements",LENGTH+ENDS+MEAN);
 	
+	private static ResultsTable systemRT = new ResultsTable();
+	private ResultsTable rt;
 
 	public RoiMeasure3D(BigTrace bt)
 	{
@@ -48,6 +60,8 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 
 
 		int nButtonSize = 40;
+		
+		rt = systemRT;
 
 		JPanel panLineTools = new JPanel(new GridBagLayout());  
 		panLineTools.setBorder(new PanelTitle(" Line tools "));
@@ -174,6 +188,134 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 		add(new JLabel(), cr);    
 	}
 
+	/** show Measure settings dialog**/
+	public void dialSettings()
+	{
+		
+		JPanel pMeasureSettings = new JPanel(new GridLayout(0,2,6,0));
+	
+		ArrayList<JCheckBox> measureStates = new ArrayList<JCheckBox>();
+		
+
+		String[] labels = new String[6];
+		boolean[] states = new boolean[6];
+		labels[0]="Length"; states[0]=(systemMeasurements&LENGTH)!=0;
+		labels[1]="Ends coordinates"; states[1]=(systemMeasurements&ENDS)!=0;
+		labels[2]="Mean intensity"; states[2]=(systemMeasurements&MEAN)!=0;
+		labels[3]="SD of intensity"; states[3]=(systemMeasurements&STD_DEV)!=0;
+		labels[4]="Mean orientation"; states[4]=(systemMeasurements&AVRG_ORIENT)!=0;
+		labels[5]="SD of orientation"; states[5]=(systemMeasurements&STD_ORIENT)!=0;
+		
+		for(int i = 0;i<list.length;i++)
+		{
+
+			measureStates.add(new JCheckBox(labels[i]));
+			measureStates.get(i).setSelected(states[i]);
+			pMeasureSettings.add(measureStates.get(i));
+			
+		}
+		
+		int reply = JOptionPane.showConfirmDialog(null, pMeasureSettings, "Set Measurements", 
+		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+
+			//boolean b = false;
+			for (int i=0; i<list.length; i++) {
+				states[i] = measureStates.get(i).isSelected();
+				if (states[i])
+					systemMeasurements |= list[i];
+				else
+					systemMeasurements &= ~list[i];
+			}
+			Prefs.set("BigTrace.Measurements", systemMeasurements);
+			if (rt!=null)
+			{	
+				boolean bUpdate=false;
+				for (int i=0; i<list.length; i++) 
+				{
+					//column not selected
+					//remove it from results table
+					if(!states[i])
+					{
+						String sColName;
+						for (int nCol=0;nCol<=rt.getLastColumn();nCol++)
+						{
+							sColName = rt.getColumnHeading(nCol);
+							if(sColName.startsWith(colTemplates[i]))
+							{
+								rt.deleteColumn(sColName);
+								bUpdate=true;
+							}
+						}
+						
+					}
+				}
+				if(bUpdate)
+				{
+					rt.updateResults();
+				}
+			}
+		}
+	
+	}
+	
+	MeasureValues measureRoi(final Roi3D roi)
+	{
+
+		MeasureValues val = new MeasureValues();
+		val.setRoiName(roi.getName());
+		val.setRoiType(roi.getType());
+		if(systemMeasurements>0)
+		{
+			if (roi!=null)//should not be, but just in case
+			{
+				if((systemMeasurements&LENGTH)!=0) 
+				{
+					measureLength(roi,val);
+				}
+			}
+			
+			//update Results Table
+			//updateTable(val);
+		}
+		return val;
+		
+	}
+	
+	void updateTable(final MeasureValues val)
+	{
+		rt.incrementCounter();
+		int row = rt.getCounter()-1;
+		rt.setValue("ROI_Name", row, val.getRoiName());
+		rt.setValue("ROI_Type", row, Roi3D.intTypeToString(val.getRoiType()));
+		if ((systemMeasurements&LENGTH)!=0)
+		{
+			rt.setValue("Length", row, val.length);
+		}
+		rt.show("Results");
+	}
+	
+	void measureLength(final Roi3D roi, final MeasureValues val)
+	{
+		switch (roi.getType())
+		{
+			case Roi3D.POINT:
+				val.length=0.0;
+				break;
+			case Roi3D.POLYLINE:
+				val.length = ((PolyLine3D)roi).getLength(bt.btdata.globCal);
+				break;
+			case Roi3D.LINE_TRACE:
+				val.length = ((LineTrace3D)roi).getLength(bt.btdata.globCal);
+				break;			
+			default:
+				val.length = 0.0;
+		}
+			
+		
+	}
 	
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
@@ -191,7 +333,26 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 		// MEASURE CHANNEL
 		if(e.getSource() == cbActiveChannel)
 		{
-			//bt.btdata.nChAnalysis=cbActiveChannel.getSelectedIndex();
+			bt.btdata.nChAnalysis=cbActiveChannel.getSelectedIndex();
+			bt.roiManager.cbActiveChannel.setSelectedIndex(bt.btdata.nChAnalysis);
+		}
+		
+		//Measure one ROI
+		if(e.getSource() == butMeasure)
+		{
+			if (jlist.getSelectedIndex()>-1)
+			{
+				if(systemMeasurements>0)
+				{
+					updateTable(measureRoi(bt.roiManager.rois.get(jlist.getSelectedIndex())));
+				}
+			}
+		}
+		
+		//SETTINGS
+		if(e.getSource() == butSettings)
+		{
+			dialSettings();
 		}
 	}
 

@@ -485,6 +485,17 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		return groupIndex;
 	}
 
-	
+	/** returns the length of LineTrace using globCal voxel size **/
+	public double getLength(final double [] globCal)
+	{
+		double length = 0.0;
+		
+		for(int i=0;i<segments.size(); i++)
+		{
+			length+= Roi3D.getSegmentLength(segments.get(i), globCal);
+		}
+		return length;
+		
+	}
 }
 
