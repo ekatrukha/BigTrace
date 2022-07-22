@@ -79,7 +79,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	RandomAccessibleInterval< UnsignedByteType > empty_view;
 
-	ArrayList<IntervalView< T >>  sources = new ArrayList<IntervalView< T >>();
+	public ArrayList<IntervalView< T >>  sources = new ArrayList<IntervalView< T >>();
 	public Color [] colorsCh;
 	public double [][] channelRanges;
 

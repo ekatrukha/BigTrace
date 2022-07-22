@@ -409,22 +409,6 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 		return Roi3D.getSegmentLength(vertices, globCal);
 		
 	}
-	/** puts ends coordinates to the val **/
-	public void getEnds(final MeasureValues val, final double [] globCal)
-	{
-		val.ends = new RealPoint [2];
-		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertices.get(0),globCal));
-		if(vertices.size()>1)
-		{
-			val.ends[1]= new RealPoint(Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal));
-		}
-		else
-		{
-			val.ends[1] =Roi3D.getNaNPoint();
-		}
-		return;
-	}
-	
 	public double getEndsDistance(final double [] globCal)
 	{
 		if(vertices.size()>1)
@@ -442,5 +426,43 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 		}
 			
 	}
+
+	/** puts ends coordinates to the val **/
+	public void getEnds(final MeasureValues val, final double [] globCal)
+	{
+		val.ends = new RealPoint [2];
+		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertices.get(0),globCal));
+		if(vertices.size()>1)
+		{
+			val.ends[1]= new RealPoint(Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal));
+		}
+		else
+		{
+			val.ends[1] =Roi3D.getNaNPoint();
+		}
+		return;
+	}
+	/** returns direction of the vector from one to another end**/
+	public void getEndsDirection(final MeasureValues val, final double [] globCal)
+	{
+		if(vertices.size()>1)
+		{
+			double [] posB = new double [3];
+			double [] posE = new double [3];
+			Roi3D.scaleGlob(vertices.get(0),globCal).localize(posB);
+			Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal).localize(posE);
+			LinAlgHelpers.subtract(posE, posB, posE);
+			LinAlgHelpers.normalize(posE);
+			val.direction=new RealPoint(posE);
+		}
+		else
+		{
+			
+			val.direction = Roi3D.getNaNPoint();
+		}
+			
+	}
+	
+
 }
 

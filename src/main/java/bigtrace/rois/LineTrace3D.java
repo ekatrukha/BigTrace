@@ -15,14 +15,24 @@ import com.jogamp.opengl.GL3;
 
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
+import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessible;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
+import net.imglib2.RealRandomAccess;
+import net.imglib2.RealRandomAccessible;
+import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.roi.Masks;
 import net.imglib2.roi.RealMask;
 import net.imglib2.roi.RealMaskRealInterval;
 import net.imglib2.roi.geom.real.WritablePolyline;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
+import net.imglib2.view.IntervalView;
+import net.imglib2.view.Views;
 
 public class LineTrace3D implements Roi3D, WritablePolyline
 {
@@ -40,25 +50,7 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 	public int type;
 	public int renderType;
 	private int groupIndex=-1;
-	/*public LineTrace3D(final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nRenderType, final int nSectorN_)
-	{
-		type = Roi3D.LINE_TRACE;
-		lineThickness=lineThickness_;
-		pointSize = pointSize_;
-		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
-		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());		
-		vertices = new ArrayList<RealPoint>();
-		segments = new ArrayList<ArrayList<RealPoint>>();
-		verticesVis = new VisPointsScaled();
-		verticesVis.setColor(pointColor_);
-		verticesVis.setSize(pointSize_);
-		segmentsVis = new ArrayList<VisPolyLineScaled>();
-		renderType= nRenderType;
-		nSectorN = nSectorN_;
-		name = "trace"+Integer.toString(this.hashCode());
 
-	}
-	*/
 	public LineTrace3D(final Roi3DGroup preset_in)
 	{
 		type = Roi3D.LINE_TRACE;
@@ -124,30 +116,6 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		
 	}
 
-	/*
-	//adds a point to the "end" of polyline
-	public void addPointToEnd(final RealPoint in_)
-	{
-		vertices.add(new RealPoint(in_));
-	}
-	//removes the point from the "end" and returns "true"
-	//if it is the last point, returns "false"
-	public boolean removeEndPoint()
-	 {
-		 
-		 int nP= vertices.size();
-		 if(nP>0)
-			{
-			 	vertices.remove(nP-1);
-			 	if(nP==1)
-			 		return false;
-			 	else
-			 		return true;
-			}
-		 return false;
-	 }
-
-*/
 
 	@Override
 	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
@@ -485,6 +453,24 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 	{
 		return groupIndex;
 	}
+	
+	public ArrayList<RealPoint> makeJointSegment()
+	{
+		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		if(vertices.size()>1)
+		{
+			//first vertex
+			out.add(vertices.get(0));
+			for(int i=0;i<segments.size(); i++)
+			{
+				for(int j = 1; j<segments.get(i).size();j++)
+				{
+					out.add(segments.get(i).get(j));
+				}
+			}
+		}
+		return out;
+	}
 
 	/** returns the length of LineTrace using globCal voxel size **/
 	public double getLength(final double [] globCal)
@@ -497,20 +483,6 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		}
 		return length;
 		
-	}
-	public void getEnds(final MeasureValues val, final double [] globCal)
-	{
-		val.ends = new RealPoint [2];
-		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertices.get(0),globCal));
-		if(vertices.size()>1)
-		{
-			val.ends[1]= new RealPoint(Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal));
-		}
-		else
-		{
-			val.ends[1] =Roi3D.getNaNPoint();
-		}
-		return;
 	}
 	public double getEndsDistance(final double [] globCal)
 	{
@@ -528,6 +500,73 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 			return Double.NaN;
 		}
 			
+	}
+	public void getEnds(final MeasureValues val, final double [] globCal)
+	{
+		val.ends = new RealPoint [2];
+		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertices.get(0),globCal));
+		if(vertices.size()>1)
+		{
+			val.ends[1]= new RealPoint(Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal));
+		}
+		else
+		{
+			val.ends[1] =Roi3D.getNaNPoint();
+		}
+		return;
+	}
+
+	/** returns direction of the vector from one to another end**/
+	public void getEndsDirection(final MeasureValues val, final double [] globCal)
+	{
+		if(vertices.size()>1)
+		{
+			double [] posB = new double [3];
+			double [] posE = new double [3];
+			Roi3D.scaleGlob(vertices.get(0),globCal).localize(posB);
+			Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal).localize(posE);
+			LinAlgHelpers.subtract(posE, posB, posE);
+			LinAlgHelpers.normalize(posE);
+			val.direction=new RealPoint(posE);
+		}
+		else
+		{
+			
+			val.direction = Roi3D.getNaNPoint();
+		}
+			
+	}
+	public < T extends RealType< T > >  double [][] getIntensityProfile(final double [] globCal, final IntervalView<T> source, InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
+	{
+		ArrayList<RealPoint> allPoints = makeJointSegment();
+		double [][] out = new double [2][allPoints.size()];
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
+		RealRandomAccess<T> ra =   interpolate.realRandomAccess();
+		double [] pos1 = new double[3];
+		double [] pos2 = new double[3];
+		int i,j;
+		
+		//first point
+		out[0][0]=0.0;
+		allPoints.get(0).localize(pos1);
+		ra.setPosition(pos1);
+		//intensity
+		out[1][0]=ra.get().getRealDouble();
+		
+		for(i=1;i<allPoints.size();i++)
+		{
+			allPoints.get(i).localize(pos2);
+			ra.setPosition(pos2);
+			//intensity
+			out[1][i]=ra.get().getRealDouble();
+			out[0][i]=out[0][i-1]+LinAlgHelpers.distance(Roi3D.scaleGlob(pos1, globCal), Roi3D.scaleGlob(pos2, globCal));
+			for(j=0;j<3;j++)
+			{
+				pos1[j]=pos2[j];
+			}
+		}
+		
+		return out;
 	}
 }
 

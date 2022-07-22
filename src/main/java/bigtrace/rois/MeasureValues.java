@@ -8,9 +8,10 @@ public class MeasureValues implements Measurements {
 	public String roiName;
 	public int roiType;
 	public double length;
+	public double endsDistance;
 	public double mean;
 	public double stdDev;
-	public double endsDistance;
+	public double straightness;
 	public RealPoint [] ends;
 	public RealPoint direction = null;
 	

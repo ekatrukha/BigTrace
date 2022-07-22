@@ -27,10 +27,19 @@ import javax.swing.event.ListSelectionListener;
 import bigtrace.BigTrace;
 import bigtrace.gui.PanelTitle;
 import ij.Prefs;
-import ij.gui.GenericDialog;
-import ij.measure.ResultsTable;
 
-public class RoiMeasure3D extends JPanel implements ListSelectionListener, ActionListener, Measurements { 
+import ij.gui.Plot;
+import ij.measure.ResultsTable;
+import net.imglib2.RandomAccessible;
+import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
+import net.imglib2.type.numeric.RealType;
+
+import net.imglib2.view.IntervalView;
+
+public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements ListSelectionListener, ActionListener, Measurements { 
 	
 	/**
 	 * 
@@ -49,7 +58,14 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 	// Order must agree with order of checkboxes in Set Measurements dialog box
 	private static final int[] list = { LENGTH,  DIST_ENDS, MEAN, STD_DEV, STRAIGHTNESS, ENDS_COORDS, ENDS_DIR};
 	private static final String[] colTemplates = { "Length", "Distance_between_ends", "Mean_intensity", "SD_intensity", "Straightness", "End_","Direction_"};
+
+	InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory;
+	
+	public static final int INT_NearestNeighbor=0, INT_NearestLinear=1, INT_Lanczos=2; // Intensity interpolation types
+
 	private static int systemMeasurements = Prefs.getInt("BigTrace.Measurements",LENGTH+MEAN);
+	
+	private static int intensityInterpolation = Prefs.getInt("BigTrace.IntInterpolation",INT_NearestNeighbor);
 	
 	private static ResultsTable systemRT = new ResultsTable();
 	private ResultsTable rt;
@@ -62,9 +78,10 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 		int nButtonSize = 40;
 		
 		rt = systemRT;
-
+		
+		setInterpolationFactory();
 		JPanel panLineTools = new JPanel(new GridBagLayout());  
-		panLineTools.setBorder(new PanelTitle(" Line tools "));
+		panLineTools.setBorder(new PanelTitle(" Tools "));
 
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/line_profile.png");
 		ImageIcon tabIcon = new ImageIcon(icon_path);
@@ -280,9 +297,17 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 				{
 					measureEndsDistance(roi,val);
 				}
+				if((systemMeasurements&STRAIGHTNESS)!=0) 
+				{
+					measureStraightness(roi,val);
+				}
 				if((systemMeasurements&ENDS_COORDS)!=0) 
 				{
 					measureEndsCoords(roi,val);
+				}
+				if((systemMeasurements&ENDS_DIR)!=0) 
+				{
+					measureEndsDirection(roi,val);
 				}
 
 			}
@@ -317,6 +342,10 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 		{
 			rt.setValue("Distance_between_ends", row, val.endsDistance);
 		}
+		if ((systemMeasurements&STRAIGHTNESS)!=0)
+		{
+			rt.setValue("Straightness", row, val.straightness);
+		}
 		if ((systemMeasurements&ENDS_COORDS)!=0)
 		{
 			for(int nEnd = 0;nEnd<2;nEnd++)
@@ -326,8 +355,17 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 				rt.setValue("End_"+Integer.toString(nEnd+1)+"_Z", row, val.ends[nEnd].getDoublePosition(2));
 			}
 		}
-		if(bShow)
+
+		if ((systemMeasurements&ENDS_DIR)!=0)
 		{
+
+			rt.setValue("Direction_X", row, val.direction.getDoublePosition(0));
+			rt.setValue("Direction_Y", row, val.direction.getDoublePosition(1));
+			rt.setValue("Direction_Z", row, val.direction.getDoublePosition(2));
+
+		}
+		
+		if(bShow)		{
 			rt.show("Results");
 			rt.updateResults();
 		}
@@ -361,6 +399,40 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 			
 		
 	}
+	void measureEndsDistance(final Roi3D roi, final MeasureValues val)
+	{
+		switch (roi.getType())
+		{
+			case Roi3D.POINT:
+				val.endsDistance = Double.NaN;
+				break;
+		case Roi3D.POLYLINE:
+				val.endsDistance = ((PolyLine3D)roi).getEndsDistance(bt.btdata.globCal);
+				break;
+			case Roi3D.LINE_TRACE:
+				val.endsDistance = ((LineTrace3D)roi).getEndsDistance( bt.btdata.globCal);
+				break;			
+			default:
+				val.endsDistance = Double.NaN;
+		}
+	}
+	void measureStraightness(final Roi3D roi, final MeasureValues val)
+	{
+		switch (roi.getType())
+		{
+			case Roi3D.POINT:
+				val.straightness = Double.NaN;
+				break;
+			case Roi3D.POLYLINE:
+				val.straightness = ((PolyLine3D)roi).getEndsDistance(bt.btdata.globCal)/((PolyLine3D)roi).getLength(bt.btdata.globCal);
+				break;
+			case Roi3D.LINE_TRACE:
+				val.straightness = ((LineTrace3D)roi).getEndsDistance( bt.btdata.globCal)/((LineTrace3D)roi).getLength(bt.btdata.globCal);
+				break;			
+			default:
+				val.endsDistance = Double.NaN;
+		}
+	}
 	void measureEndsCoords(final Roi3D roi, final MeasureValues val)
 	{
 		switch (roi.getType())
@@ -378,21 +450,66 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 			
 		
 	}
-	void measureEndsDistance(final Roi3D roi, final MeasureValues val)
+	void measureEndsDirection(final Roi3D roi, final MeasureValues val)
 	{
 		switch (roi.getType())
 		{
 			case Roi3D.POINT:
-				val.endsDistance = Double.NaN;
+				val.direction = Roi3D.getNaNPoint();
 				break;
 			case Roi3D.POLYLINE:
-				val.endsDistance = ((PolyLine3D)roi).getEndsDistance(bt.btdata.globCal);
+				((PolyLine3D)roi).getEndsDirection(val, bt.btdata.globCal);
 				break;
 			case Roi3D.LINE_TRACE:
-				val.endsDistance = ((LineTrace3D)roi).getEndsDistance( bt.btdata.globCal);
+				((LineTrace3D)roi).getEndsDirection(val, bt.btdata.globCal);
 				break;			
+		}
+			
+		
+	}
+	
+	void measureLineProfile(final Roi3D roi)
+	{
+		switch (roi.getType())
+		{
+			case Roi3D.POINT:
+				//val.direction = Roi3D.getNaNPoint();
+				break;
+			case Roi3D.POLYLINE:
+				//((PolyLine3D)roi).getEndsDirection(val, bt.btdata.globCal);
+				break;
+			case Roi3D.LINE_TRACE:
+				IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
+				//final Object type = Util.getTypeFromInterval( source);
+				//double [][] li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, new NLinearInterpolatorFactory<T>());
+				double [][] li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, nInterpolatorFactory);
+				
+				
+				Plot plotProfile;
+				plotProfile = new Plot("Profile ROI "+roi.getName(),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
+				plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
+				plotProfile.show();
+				//((LineTrace3D)roi).getEndsDirection(val, bt.btdata.globCal);
+				break;			
+		}
+	}
+	
+	public void setInterpolationFactory()
+	{
+		switch (intensityInterpolation)
+		{
+			case INT_NearestNeighbor:
+				nInterpolatorFactory = new NearestNeighborInterpolatorFactory<T>();
+				break;
+			case INT_NearestLinear:
+				nInterpolatorFactory = new NLinearInterpolatorFactory<T>();
+				break;
+			case INT_Lanczos:
+				break;
 			default:
-				val.endsDistance = Double.NaN;
+				nInterpolatorFactory = new LanczosInterpolatorFactory<T>();
+				break;
+				
 		}
 	}
 	
@@ -409,13 +526,21 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		
-		// MEASURE CHANNEL
+		// MEASUREMENT CHANNEL
 		if(e.getSource() == cbActiveChannel)
 		{
 			bt.btdata.nChAnalysis=cbActiveChannel.getSelectedIndex();
 			bt.roiManager.cbActiveChannel.setSelectedIndex(bt.btdata.nChAnalysis);
 		}
 		
+		//LineProfile
+		if(e.getSource() == butLineProfile)
+		{
+			if (jlist.getSelectedIndex()>-1)
+			{
+				measureLineProfile(bt.roiManager.rois.get(jlist.getSelectedIndex()));
+			}
+		}
 		//Measure one ROI
 		if(e.getSource() == butMeasure)
 		{

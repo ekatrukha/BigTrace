@@ -110,6 +110,18 @@ public interface Roi3D
 		}
 		return out;
 	}
+	/**
+	 * transforms realpoint in pixel coordinates to space units
+	 * **/
+	public static double [] scaleGlob(final double [] in, final double [] globCal)
+	{
+		double [] out = new double [in.length];
+		for (int i=0;i<in.length;i++)
+		{
+			out[i]=in[i]*globCal[i];
+		}
+		return out;
+	}
 	/** calculates cumulative length between vert_in 3D points using globCal calibration **/
 	public static double getSegmentLength(final ArrayList<RealPoint> vert_in, double [] globCal)
 	{
