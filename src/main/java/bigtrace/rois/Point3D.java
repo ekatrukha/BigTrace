@@ -220,4 +220,12 @@ public class Point3D implements Roi3D {
 	{
 		return groupIndex;
 	}
+	public void getEnds(final MeasureValues val, final double [] globCal)
+	{
+		val.ends = new RealPoint [2];
+		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertex,globCal));
+	
+		val.ends[1] =Roi3D.getNaNPoint();
+		return;
+	}
 }

@@ -98,7 +98,19 @@ public interface Roi3D
 		}
 		return reversed; 
 	}
-	
+	/**
+	 * transforms realpoint in pixel coordinates to space units
+	 * **/
+	public static RealPoint scaleGlob(final RealPoint in, final double [] globCal)
+	{
+		RealPoint out = new RealPoint(in);
+		for (int i=0;i<in.numDimensions();i++)
+		{
+			out.setPosition(out.getDoublePosition(i)*globCal[i],i);
+		}
+		return out;
+	}
+	/** calculates cumulative length between vert_in 3D points using globCal calibration **/
 	public static double getSegmentLength(final ArrayList<RealPoint> vert_in, double [] globCal)
 	{
 		double length=0.0;
@@ -118,5 +130,27 @@ public interface Roi3D
 		}
 		//System.out.print(length);
 		return length;
+	}
+	/** calculates average orientation vector, weighted by lenght of each segment **/
+	public static RealPoint getOrientation(final ArrayList<RealPoint> vert_in, double [] globCal)
+	{
+		RealPoint orient = new RealPoint(3);
+		
+		for(int i=0;i<vert_in.size()-1;i++)
+		{
+			
+		}
+		
+		return orient;
+	}
+	/**
+	 * transforms realpoint in pixel coordinates to space units
+	 * **/
+	public static RealPoint getNaNPoint()
+	{
+		RealPoint out = new RealPoint(3);
+		for (int i = 0;i<3; i++)
+			out.setPosition(Double.NaN, i);
+		return out;
 	}
 }

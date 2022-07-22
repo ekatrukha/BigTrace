@@ -39,29 +39,7 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 	public int type;
 	public int renderType;
 	private int groupIndex = -1;
-	/*
-	public PolyLine3D(final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nRenderType, final int nSectorN_)
-	{
-		type = Roi3D.POLYLINE;
-		lineThickness=lineThickness_;
-		pointSize = pointSize_;
-		renderType = nRenderType;
-		nSectorN = nSectorN_;
-		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
-		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());		
-		vertices = new ArrayList<RealPoint>();
-		verticesVis = new VisPointsScaled();
-		verticesVis.setColor(pointColor_);
-		verticesVis.setSize(pointSize_);
-		edgesVis = new VisPolyLineScaled();
-		edgesVis.setColor(lineColor_);
-		edgesVis.setThickness(lineThickness_);
-		edgesVis.setSectorN(nSectorN);
-		edgesVis.setRenderType(renderType);
-		name = "polyl"+Integer.toString(this.hashCode());
 
-	}
-	*/
 	public PolyLine3D(final Roi3DGroup preset_in)
 	{
 		type = Roi3D.POLYLINE;
@@ -430,6 +408,39 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 
 		return Roi3D.getSegmentLength(vertices, globCal);
 		
+	}
+	/** puts ends coordinates to the val **/
+	public void getEnds(final MeasureValues val, final double [] globCal)
+	{
+		val.ends = new RealPoint [2];
+		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertices.get(0),globCal));
+		if(vertices.size()>1)
+		{
+			val.ends[1]= new RealPoint(Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal));
+		}
+		else
+		{
+			val.ends[1] =Roi3D.getNaNPoint();
+		}
+		return;
+	}
+	
+	public double getEndsDistance(final double [] globCal)
+	{
+		if(vertices.size()>1)
+		{
+			double [] posB = new double [3];
+			double [] posE = new double [3];
+			Roi3D.scaleGlob(vertices.get(0),globCal).localize(posB);
+			Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal).localize(posE);
+			return LinAlgHelpers.distance(posB, posE);
+		}
+		else
+		{
+			
+			return Double.NaN;
+		}
+			
 	}
 }
 

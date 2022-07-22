@@ -22,6 +22,7 @@ import net.imglib2.roi.RealMask;
 import net.imglib2.roi.RealMaskRealInterval;
 import net.imglib2.roi.geom.real.WritablePolyline;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;
+import net.imglib2.util.LinAlgHelpers;
 
 public class LineTrace3D implements Roi3D, WritablePolyline
 {
@@ -496,6 +497,37 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		}
 		return length;
 		
+	}
+	public void getEnds(final MeasureValues val, final double [] globCal)
+	{
+		val.ends = new RealPoint [2];
+		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertices.get(0),globCal));
+		if(vertices.size()>1)
+		{
+			val.ends[1]= new RealPoint(Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal));
+		}
+		else
+		{
+			val.ends[1] =Roi3D.getNaNPoint();
+		}
+		return;
+	}
+	public double getEndsDistance(final double [] globCal)
+	{
+		if(vertices.size()>1)
+		{
+			double [] posB = new double [3];
+			double [] posE = new double [3];
+			Roi3D.scaleGlob(vertices.get(0),globCal).localize(posB);
+			Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal).localize(posE);
+			return LinAlgHelpers.distance(posB, posE);
+		}
+		else
+		{
+			
+			return Double.NaN;
+		}
+			
 	}
 }
 

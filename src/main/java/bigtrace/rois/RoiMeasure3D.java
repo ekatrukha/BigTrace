@@ -47,9 +47,9 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 	
 	public JComboBox<String> cbActiveChannel;
 	// Order must agree with order of checkboxes in Set Measurements dialog box
-	private static final int[] list = { LENGTH, ENDS, MEAN, STD_DEV, AVRG_ORIENT, STD_ORIENT};
-	private static final String[] colTemplates = { "Length", "End_", "Mean_intensity", "SD_intensity", "Mean_orient_", "SD_orient_"};
-	private static int systemMeasurements = Prefs.getInt("BigTrace.Measurements",LENGTH+ENDS+MEAN);
+	private static final int[] list = { LENGTH,  DIST_ENDS, MEAN, STD_DEV, STRAIGHTNESS, ENDS_COORDS, ENDS_DIR};
+	private static final String[] colTemplates = { "Length", "Distance_between_ends", "Mean_intensity", "SD_intensity", "Straightness", "End_","Direction_"};
+	private static int systemMeasurements = Prefs.getInt("BigTrace.Measurements",LENGTH+MEAN);
 	
 	private static ResultsTable systemRT = new ResultsTable();
 	private ResultsTable rt;
@@ -197,14 +197,15 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 		ArrayList<JCheckBox> measureStates = new ArrayList<JCheckBox>();
 		
 
-		String[] labels = new String[6];
-		boolean[] states = new boolean[6];
+		String[] labels = new String[7];
+		boolean[] states = new boolean[7];
 		labels[0]="Length"; states[0]=(systemMeasurements&LENGTH)!=0;
-		labels[1]="Ends coordinates"; states[1]=(systemMeasurements&ENDS)!=0;
+		labels[1]="Distance between ends"; states[1]=(systemMeasurements&DIST_ENDS)!=0;
 		labels[2]="Mean intensity"; states[2]=(systemMeasurements&MEAN)!=0;
 		labels[3]="SD of intensity"; states[3]=(systemMeasurements&STD_DEV)!=0;
-		labels[4]="Mean orientation"; states[4]=(systemMeasurements&AVRG_ORIENT)!=0;
-		labels[5]="SD of orientation"; states[5]=(systemMeasurements&STD_ORIENT)!=0;
+		labels[4]="Straightness"; states[4]=(systemMeasurements&STRAIGHTNESS)!=0;
+		labels[5]="Ends coordinates"; states[5]=(systemMeasurements&ENDS_COORDS)!=0;
+		labels[6]="End-end direction"; states[6]=(systemMeasurements&ENDS_DIR)!=0;
 		
 		for(int i = 0;i<list.length;i++)
 		{
@@ -275,6 +276,15 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 				{
 					measureLength(roi,val);
 				}
+				if((systemMeasurements&DIST_ENDS)!=0) 
+				{
+					measureEndsDistance(roi,val);
+				}
+				if((systemMeasurements&ENDS_COORDS)!=0) 
+				{
+					measureEndsCoords(roi,val);
+				}
+
 			}
 			
 			//update Results Table
@@ -283,8 +293,17 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 		return val;
 		
 	}
+	void measureAll()
+	{
+		ArrayList<MeasureValues> vals = new ArrayList<MeasureValues>();
+		for(int i = 0; i<bt.roiManager.rois.size();i++)
+		{
+			vals.add(measureRoi(bt.roiManager.rois.get(i)));
+		}
+		resetTable(vals);
+	}
 	
-	void updateTable(final MeasureValues val)
+	void updateTable(final MeasureValues val, final boolean bShow)
 	{
 		rt.incrementCounter();
 		int row = rt.getCounter()-1;
@@ -294,9 +313,35 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 		{
 			rt.setValue("Length", row, val.length);
 		}
-		rt.show("Results");
+		if ((systemMeasurements&DIST_ENDS)!=0)
+		{
+			rt.setValue("Distance_between_ends", row, val.endsDistance);
+		}
+		if ((systemMeasurements&ENDS_COORDS)!=0)
+		{
+			for(int nEnd = 0;nEnd<2;nEnd++)
+			{
+				rt.setValue("End_"+Integer.toString(nEnd+1)+"_X", row, val.ends[nEnd].getDoublePosition(0));
+				rt.setValue("End_"+Integer.toString(nEnd+1)+"_Y", row, val.ends[nEnd].getDoublePosition(1));
+				rt.setValue("End_"+Integer.toString(nEnd+1)+"_Z", row, val.ends[nEnd].getDoublePosition(2));
+			}
+		}
+		if(bShow)
+		{
+			rt.show("Results");
+			rt.updateResults();
+		}
 	}
-	
+	void resetTable(final ArrayList<MeasureValues> vals)
+	{
+		rt.reset();
+		for (int i = 0;i<vals.size();i++)
+		{
+			updateTable(vals.get(i), false);
+		}
+		rt.show("Results");
+		rt.updateResults();
+	}
 	void measureLength(final Roi3D roi, final MeasureValues val)
 	{
 		switch (roi.getType())
@@ -315,6 +360,40 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 		}
 			
 		
+	}
+	void measureEndsCoords(final Roi3D roi, final MeasureValues val)
+	{
+		switch (roi.getType())
+		{
+			case Roi3D.POINT:
+				((Point3D)roi).getEnds(val, bt.btdata.globCal);
+				break;
+			case Roi3D.POLYLINE:
+				((PolyLine3D)roi).getEnds(val, bt.btdata.globCal);
+				break;
+			case Roi3D.LINE_TRACE:
+				((LineTrace3D)roi).getEnds(val, bt.btdata.globCal);
+				break;			
+		}
+			
+		
+	}
+	void measureEndsDistance(final Roi3D roi, final MeasureValues val)
+	{
+		switch (roi.getType())
+		{
+			case Roi3D.POINT:
+				val.endsDistance = Double.NaN;
+				break;
+			case Roi3D.POLYLINE:
+				val.endsDistance = ((PolyLine3D)roi).getEndsDistance(bt.btdata.globCal);
+				break;
+			case Roi3D.LINE_TRACE:
+				val.endsDistance = ((LineTrace3D)roi).getEndsDistance( bt.btdata.globCal);
+				break;			
+			default:
+				val.endsDistance = Double.NaN;
+		}
 	}
 	
 	@Override
@@ -344,11 +423,15 @@ public class RoiMeasure3D extends JPanel implements ListSelectionListener, Actio
 			{
 				if(systemMeasurements>0)
 				{
-					updateTable(measureRoi(bt.roiManager.rois.get(jlist.getSelectedIndex())));
+					updateTable(measureRoi(bt.roiManager.rois.get(jlist.getSelectedIndex())), true);
 				}
 			}
 		}
-		
+		//Measure all
+		if(e.getSource() == butMeasureAll)
+		{
+			measureAll();
+		}
 		//SETTINGS
 		if(e.getSource() == butSettings)
 		{

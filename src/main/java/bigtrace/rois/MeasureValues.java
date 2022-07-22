@@ -10,9 +10,9 @@ public class MeasureValues implements Measurements {
 	public double length;
 	public double mean;
 	public double stdDev;
+	public double endsDistance;
 	public RealPoint [] ends;
-	public RealPoint orient;
-	public RealPoint orientSD;
+	public RealPoint direction = null;
 	
 
 	void setRoiName(String roiname_)

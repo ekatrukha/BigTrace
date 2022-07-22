@@ -1,7 +1,8 @@
 package bigtrace.rois;
 
 public interface Measurements {
-	public static final int LENGTH=1, ENDS=2, MEAN=4, STD_DEV=8, AVRG_ORIENT=16, STD_ORIENT=32;
+	public static final int LENGTH=1, DIST_ENDS=2, MEAN=4, STD_DEV=8, STRAIGHTNESS=16, 
+							ENDS_COORDS=32,ENDS_DIR=64;
 	
 	/*
 	 * From ImageJ
