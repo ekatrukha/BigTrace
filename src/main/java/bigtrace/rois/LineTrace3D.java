@@ -454,23 +454,7 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		return groupIndex;
 	}
 	
-	public ArrayList<RealPoint> makeJointSegment()
-	{
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
-		if(vertices.size()>1)
-		{
-			//first vertex
-			out.add(vertices.get(0));
-			for(int i=0;i<segments.size(); i++)
-			{
-				for(int j = 1; j<segments.get(i).size();j++)
-				{
-					out.add(segments.get(i).get(j));
-				}
-			}
-		}
-		return out;
-	}
+
 
 	/** returns the length of LineTrace using globCal voxel size **/
 	public double getLength(final double [] globCal)
@@ -536,9 +520,36 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		}
 			
 	}
+	
+	public ArrayList<RealPoint> makeJointSegment()
+	{
+		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		if(vertices.size()>1)
+		{
+			//first vertex
+			out.add(vertices.get(0));
+			for(int i=0;i<segments.size(); i++)
+			{
+				for(int j = 1; j<segments.get(i).size();j++)
+				{
+					out.add(segments.get(i).get(j));
+				}
+			}
+		}
+		else 
+		{
+			return null;
+		}
+		return out;
+	}
+	
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final double [] globCal, final IntervalView<T> source, InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
 	{
 		ArrayList<RealPoint> allPoints = makeJointSegment();
+		
+		if(allPoints==null)
+			return null;
+		
 		double [][] out = new double [2][allPoints.size()];
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
 		RealRandomAccess<T> ra =   interpolate.realRandomAccess();

@@ -61,11 +61,13 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 
 	InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory;
 	
-	public static final int INT_NearestNeighbor=0, INT_NearestLinear=1, INT_Lanczos=2; // Intensity interpolation types
+	public static final int INT_NearestNeighbor=0, INT_NLinear=1, INT_Lanczos=2; // Intensity interpolation types
+	public static final int SHAPE_Voxel=0, SHAPE_Subvoxel=1; // Shape interpolation types
 
 	private static int systemMeasurements = Prefs.getInt("BigTrace.Measurements",LENGTH+MEAN);
 	
 	private static int intensityInterpolation = Prefs.getInt("BigTrace.IntInterpolation",INT_NearestNeighbor);
+	private static int shapeInterpolation = Prefs.getInt("BigTrace.ShapeInterpolation",SHAPE_Voxel);
 	
 	private static ResultsTable systemRT = new ResultsTable();
 	private ResultsTable rt;
@@ -233,6 +235,19 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			
 		}
 		
+		String[] sIntInterpolationType = { "Nearest Neighbor", "Linear", "Lanczos" };
+		JComboBox<String> intensityInterpolationList = new JComboBox<String>(sIntInterpolationType);
+		pMeasureSettings.add(new JLabel(" "));
+		pMeasureSettings.add(new JLabel("Intensity interpolation: "));
+		intensityInterpolationList.setSelectedIndex(intensityInterpolation);
+		pMeasureSettings.add(intensityInterpolationList);
+		
+		String[] sShapeInterpolationType = { "Voxel", "Subvoxel"};
+		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
+		shapeInterpolationList.setSelectedIndex(shapeInterpolation);
+		pMeasureSettings.add(new JLabel("Roi Shape interpolation: "));
+		pMeasureSettings.add(shapeInterpolationList);
+		
 		int reply = JOptionPane.showConfirmDialog(null, pMeasureSettings, "Set Measurements", 
 		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
@@ -248,6 +263,15 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 					systemMeasurements &= ~list[i];
 			}
 			Prefs.set("BigTrace.Measurements", systemMeasurements);
+			
+			//intensity interpolation
+			intensityInterpolation=intensityInterpolationList.getSelectedIndex();
+			Prefs.set("BigTrace.IntInterpolation",intensityInterpolation);
+			setInterpolationFactory();
+			
+			//Roi shape interpolation
+			shapeInterpolation= shapeInterpolationList.getSelectedIndex();
+			Prefs.set("BigTrace.ShapeInterpolation",shapeInterpolation);
 			if (rt!=null)
 			{	
 				boolean bUpdate=false;
@@ -388,7 +412,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.length=0.0;
 				break;
 			case Roi3D.POLYLINE:
-				val.length = ((PolyLine3D)roi).getLength(bt.btdata.globCal);
+				val.length = ((PolyLine3D)roi).getLength(shapeInterpolation, bt.btdata.globCal);
 				break;
 			case Roi3D.LINE_TRACE:
 				val.length = ((LineTrace3D)roi).getLength(bt.btdata.globCal);
@@ -424,7 +448,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.straightness = Double.NaN;
 				break;
 			case Roi3D.POLYLINE:
-				val.straightness = ((PolyLine3D)roi).getEndsDistance(bt.btdata.globCal)/((PolyLine3D)roi).getLength(bt.btdata.globCal);
+				val.straightness = ((PolyLine3D)roi).getEndsDistance(bt.btdata.globCal)/((PolyLine3D)roi).getLength(shapeInterpolation,bt.btdata.globCal);
 				break;
 			case Roi3D.LINE_TRACE:
 				val.straightness = ((LineTrace3D)roi).getEndsDistance( bt.btdata.globCal)/((LineTrace3D)roi).getLength(bt.btdata.globCal);
@@ -470,26 +494,35 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	
 	void measureLineProfile(final Roi3D roi)
 	{
+		IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
+		double [][] li_profile;
+		Plot plotProfile;
 		switch (roi.getType())
 		{
+		
 			case Roi3D.POINT:
 				//val.direction = Roi3D.getNaNPoint();
 				break;
 			case Roi3D.POLYLINE:
-				//((PolyLine3D)roi).getEndsDirection(val, bt.btdata.globCal);
+				
+				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, shapeInterpolation);
+				if (li_profile!=null)
+				{
+					plotProfile = new Plot("Profile ROI "+roi.getName(),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
+					plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
+					plotProfile.show();
+				}
 				break;
-			case Roi3D.LINE_TRACE:
-				IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-				//final Object type = Util.getTypeFromInterval( source);
-				//double [][] li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, new NLinearInterpolatorFactory<T>());
-				double [][] li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, nInterpolatorFactory);
 				
+			case Roi3D.LINE_TRACE:				
 				
-				Plot plotProfile;
-				plotProfile = new Plot("Profile ROI "+roi.getName(),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
-				plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
-				plotProfile.show();
-				//((LineTrace3D)roi).getEndsDirection(val, bt.btdata.globCal);
+				li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, nInterpolatorFactory);
+				if(li_profile!=null)
+				{
+					plotProfile = new Plot("Profile ROI "+roi.getName(),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
+					plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
+					plotProfile.show();
+				}
 				break;			
 		}
 	}
@@ -501,7 +534,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			case INT_NearestNeighbor:
 				nInterpolatorFactory = new NearestNeighborInterpolatorFactory<T>();
 				break;
-			case INT_NearestLinear:
+			case INT_NLinear:
 				nInterpolatorFactory = new NLinearInterpolatorFactory<T>();
 				break;
 			case INT_Lanczos:

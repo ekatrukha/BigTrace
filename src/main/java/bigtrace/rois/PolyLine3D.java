@@ -15,14 +15,22 @@ import com.jogamp.opengl.GL3;
 
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
+import bigtrace.volume.VolumeMisc;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
+import net.imglib2.RealRandomAccess;
+import net.imglib2.RealRandomAccessible;
+import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.roi.Masks;
 import net.imglib2.roi.RealMask;
 import net.imglib2.roi.RealMaskRealInterval;
 import net.imglib2.roi.geom.real.WritablePolyline;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
+import net.imglib2.view.IntervalView;
+import net.imglib2.view.Views;
 
 public class PolyLine3D implements Roi3D, WritablePolyline
 {
@@ -403,10 +411,10 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 		return groupIndex;
 	}
 	/** returns the length of Polyline using globCal voxel size **/
-	public double getLength(final double [] globCal)
+	public double getLength(int nShapeInterpolation, final double [] globCal)
 	{
 
-		return Roi3D.getSegmentLength(vertices, globCal);
+		return Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation, globCal), globCal);
 		
 	}
 	public double getEndsDistance(final double [] globCal)
@@ -461,6 +469,122 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 			val.direction = Roi3D.getNaNPoint();
 		}
 			
+	}
+
+	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
+	{
+		ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation, globCal);
+		
+		if(allPoints == null)
+			return null;
+		
+		double [][] out = new double [2][allPoints.size()];
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
+		RealRandomAccess<T> ra =   interpolate.realRandomAccess();
+		double [] pos1 = new double[3];
+		double [] pos2 = new double[3];
+		int i,j;
+		
+		//one or
+
+		//first point
+		out[0][0]=0.0;
+		allPoints.get(0).localize(pos1);
+		ra.setPosition(pos1);
+		//intensity
+		out[1][0]=ra.get().getRealDouble();
+		
+		for(i=1;i<allPoints.size();i++)
+		{
+			allPoints.get(i).localize(pos2);
+			ra.setPosition(pos2);
+			//intensity
+			out[1][i]=ra.get().getRealDouble();
+			out[0][i]=out[0][i-1]+LinAlgHelpers.distance(Roi3D.scaleGlob(pos1, globCal), Roi3D.scaleGlob(pos2, globCal));
+			for(j=0;j<3;j++)
+			{
+				pos1[j]=pos2[j];
+			}
+		}
+		
+		return out;
+	}
+	/** creates a sampled set of points along the polyline in VOXEL coordinates,
+	 * based on the shape interpolation value **/
+	private ArrayList<RealPoint> makeJointSegment(int nShapeInterpolation, final double [] globCal) {
+		
+		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> segment = new ArrayList<RealPoint>();
+		double [] pos1 = new double [3];
+		double [] pos2 = new double [3];
+
+		if(vertices.size()>1)
+		{
+
+			//first vertex
+			out.add(vertices.get(0));
+			for(int i=1;i<vertices.size(); i++)
+			{
+				vertices.get(i-1).localize(pos1);
+				vertices.get(i).localize(pos2);
+				if(LinAlgHelpers.distance(pos1, pos2)>0.0)
+				{
+					switch (nShapeInterpolation)
+					{
+					case RoiMeasure3D.SHAPE_Voxel:
+						//bresenham voxel by voxel shape interpolation
+						segment = VolumeMisc.BresenhamWrap(vertices.get(i-1), vertices.get(i));
+						break;
+					case RoiMeasure3D.SHAPE_Subvoxel:
+						segment = subPixelLine(vertices.get(i-1), vertices.get(i),globCal);
+						break;
+					}
+					for(int j = 1; j<segment.size();j++)
+					{
+						out.add(segment.get(j));
+					}
+				}
+			}
+			//in case vertices are at the same locations
+			if(out.size()<=1)
+			{
+				out= null;
+			}
+		}
+		else 
+		{
+			return null;
+		}
+		return out;
+	}
+	/** samples polyline with the step which approximate length is equal to 
+	 *  the smallest size of the voxel in all dimensions (stored in globCal variable) **/
+	public static ArrayList<RealPoint> subPixelLine(final RealPoint RP1, final RealPoint RP2, final double [] globCal)
+	{
+		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		//smallest size of the voxel in all dimensions
+		double minPixSize = Math.min(globCal[0], Math.min(globCal[1], globCal[2]));
+		double [][] pos = new double [3][3];
+		double length =0.0;
+		int nPoints;
+		double dStepSize;
+		//distance between points in space units
+		Roi3D.scaleGlob(RP1, globCal).localize(pos[0]);
+		Roi3D.scaleGlob(RP2, globCal).localize(pos[1]);
+		length = LinAlgHelpers.distance(pos[0], pos[1]);
+		nPoints = (int) Math.round(length/minPixSize);
+		dStepSize = length/nPoints;
+		out.add(RP1);
+		//direction of the vector between points
+		LinAlgHelpers.subtract(pos[1], pos[0], pos[2]);
+		LinAlgHelpers.normalize(pos[2]);
+		for(int i=1;i<=nPoints;i++)
+		{
+			LinAlgHelpers.scale(pos[2], i*dStepSize, pos[1]);
+			LinAlgHelpers.add( pos[1], pos[0], pos[1]);
+			out.add(new RealPoint(Roi3D.scaleGlobInv(pos[1], globCal)));
+		}
+		return out;
 	}
 	
 

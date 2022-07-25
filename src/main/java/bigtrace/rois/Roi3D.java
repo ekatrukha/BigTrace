@@ -111,7 +111,19 @@ public interface Roi3D
 		return out;
 	}
 	/**
-	 * transforms realpoint in pixel coordinates to space units
+	 * transforms realpoint in space units to pixels(voxels) coordinates 
+	 * **/
+	public static RealPoint scaleGlobInv(final RealPoint in, final double [] globCal)
+	{
+		RealPoint out = new RealPoint(in);
+		for (int i=0;i<in.numDimensions();i++)
+		{
+			out.setPosition(out.getDoublePosition(i)/globCal[i],i);
+		}
+		return out;
+	}
+	/**
+	 * transforms double array of pixel coordinates to space units
 	 * **/
 	public static double [] scaleGlob(final double [] in, final double [] globCal)
 	{
@@ -119,6 +131,18 @@ public interface Roi3D
 		for (int i=0;i<in.length;i++)
 		{
 			out[i]=in[i]*globCal[i];
+		}
+		return out;
+	}
+	/**
+	 * transforms double array of coordinates in space units to pixels
+	 * **/
+	public static double [] scaleGlobInv(final double [] in, final double [] globCal)
+	{
+		double [] out = new double [in.length];
+		for (int i=0;i<in.length;i++)
+		{
+			out[i]=in[i]/globCal[i];
 		}
 		return out;
 	}
