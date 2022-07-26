@@ -11,7 +11,14 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.scene.VisPointsScaled;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RealPoint;
+import net.imglib2.RealRandomAccess;
+import net.imglib2.RealRandomAccessible;
+import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.view.IntervalView;
+import net.imglib2.view.Views;
 
 public class Point3D implements Roi3D {
 
@@ -227,5 +234,12 @@ public class Point3D implements Roi3D {
 	
 		val.ends[1] =Roi3D.getNaNPoint();
 		return;
+	}
+	public < T extends RealType< T > > double getMeanIntensity(final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
+	{
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
+		RealRandomAccess<T> ra =   interpolate.realRandomAccess();
+		ra.setPosition(vertex);
+		return ra.get().getRealDouble();
 	}
 }

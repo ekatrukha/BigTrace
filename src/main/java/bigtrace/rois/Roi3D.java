@@ -153,6 +153,8 @@ public interface Roi3D
 		double [] pos1 = new double [3];
 		double [] pos2 = new double [3];
 		
+		if (vert_in==null)
+			{return 0.0;}
 		for (int i=0;i<vert_in.size()-1; i++)
 		{
 			vert_in.get(i).localize(pos1);

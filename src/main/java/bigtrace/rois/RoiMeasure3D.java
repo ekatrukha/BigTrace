@@ -321,6 +321,14 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				{
 					measureEndsDistance(roi,val);
 				}
+				if((systemMeasurements&MEAN)!=0) 
+				{
+					measureMeanIntensity(roi,val);
+				}
+				if((systemMeasurements&STD_DEV)!=0) 
+				{
+					measureSDIntensity(roi,val);
+				}
 				if((systemMeasurements&STRAIGHTNESS)!=0) 
 				{
 					measureStraightness(roi,val);
@@ -365,6 +373,14 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		if ((systemMeasurements&DIST_ENDS)!=0)
 		{
 			rt.setValue("Distance_between_ends", row, val.endsDistance);
+		}
+		if ((systemMeasurements&MEAN)!=0)
+		{
+			rt.setValue("Mean_intensity", row, val.mean);
+		}
+		if ((systemMeasurements&STD_DEV)!=0)
+		{
+			rt.setValue("SD_intensity", row, val.stdDev);
 		}
 		if ((systemMeasurements&STRAIGHTNESS)!=0)
 		{
@@ -440,6 +456,82 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.endsDistance = Double.NaN;
 		}
 	}
+	
+	void measureMeanIntensity(final Roi3D roi, final MeasureValues val)
+	{
+		IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
+		double [][] li_profile;
+		val.mean = Double.NaN;
+		switch (roi.getType())
+		{
+		
+			case Roi3D.POINT:
+				val.mean = ((Point3D)roi).getMeanIntensity(source, nInterpolatorFactory);
+				break;
+			case Roi3D.POLYLINE:
+				
+				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, shapeInterpolation);
+				if (li_profile!=null)
+				{
+					val.mean= getMeanDoubleArray(li_profile[1]);
+				}
+				break;
+				
+			case Roi3D.LINE_TRACE:				
+				
+				li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, nInterpolatorFactory);
+				if(li_profile!=null)
+				{
+					val.mean= getMeanDoubleArray(li_profile[1]);
+				}
+				break;			
+		}
+	}
+	
+	void measureSDIntensity(final Roi3D roi, final MeasureValues val)
+	{
+		IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
+		double [][] li_profile;
+		val.stdDev = Double.NaN;
+		switch (roi.getType())
+		{
+		
+			case Roi3D.POINT:
+				val.stdDev = 0.0;
+				break;
+			case Roi3D.POLYLINE:
+				
+				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, shapeInterpolation);
+				if (li_profile!=null)
+				{
+					if((systemMeasurements&MEAN)!=0) 
+					{
+						val.stdDev= getSDDoubleArray(val.mean,li_profile[1]);
+					}
+					else
+					{
+						val.stdDev= getSDDoubleArray(getMeanDoubleArray(li_profile[1]),li_profile[1]);
+					}
+				}
+				break;
+				
+			case Roi3D.LINE_TRACE:				
+				
+				li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, nInterpolatorFactory);
+				if (li_profile!=null)
+				{
+					if((systemMeasurements&MEAN)!=0) 
+					{
+						val.stdDev= getSDDoubleArray(val.mean,li_profile[1]);
+					}
+					else
+					{
+						val.stdDev= getSDDoubleArray(getMeanDoubleArray(li_profile[1]),li_profile[1]);
+					}
+				}
+				break;			
+		}
+	}
 	void measureStraightness(final Roi3D roi, final MeasureValues val)
 	{
 		switch (roi.getType())
@@ -454,7 +546,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.straightness = ((LineTrace3D)roi).getEndsDistance( bt.btdata.globCal)/((LineTrace3D)roi).getLength(bt.btdata.globCal);
 				break;			
 			default:
-				val.endsDistance = Double.NaN;
+				val.straightness = Double.NaN;
 		}
 	}
 	void measureEndsCoords(final Roi3D roi, final MeasureValues val)
@@ -544,6 +636,28 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				break;
 				
 		}
+	}
+	
+	public static double getMeanDoubleArray(final double [] values)
+	{
+		double out = 0.0;
+		for(int i=0;i<values.length;i++)
+		{
+			out+=values[i];
+		}
+		out /=values.length;
+		return out;
+	}
+	
+	public static double getSDDoubleArray(final double mean, final double [] values)
+	{
+		double out = 0.0;
+		for(int i=0;i<values.length;i++)
+		{
+			out+=(values[i]-mean)*(values[i]-mean);
+		}
+		out =Math.sqrt(out/(values.length-1));
+		return out;
 	}
 	
 	@Override
