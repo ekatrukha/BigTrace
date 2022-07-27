@@ -39,6 +39,7 @@ import com.jogamp.opengl.GL3;
 
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.BigTrace;
+import bigtrace.geometry.Smoothing;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.scene.VisPolyLineScaled;
@@ -898,7 +899,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		JTabbedPane tabPane = new JTabbedPane();
 		GridBagConstraints cd = new GridBagConstraints();
-		
+	
 		
 		////////////GERERAL COLORS/INTERFACE
 		JPanel pGeneral = new JPanel(new GridBagLayout());
@@ -929,10 +930,15 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		});
 
 		NumberField nfZoomBoxSize = new NumberField(4);
+		nfZoomBoxSize.setIntegersOnly(true);
 		nfZoomBoxSize.setText(Integer.toString(bt.btdata.nZoomBoxSize));
 
 		NumberField nfZoomBoxScreenFraction = new NumberField(4);
 		nfZoomBoxScreenFraction.setText(Double.toString(bt.btdata.dZoomBoxScreenFraction));
+		
+		NumberField nfSmoothWindow = new NumberField(2);
+		nfSmoothWindow.setIntegersOnly(true);
+		nfSmoothWindow.setText(Integer.toString(Smoothing.nSmoothWindow));
 			
 		
 		cd.gridx=0;
@@ -957,6 +963,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		pGeneral.add(new JLabel("Zoom screen fraction (0-1): "),cd);
 		cd.gridx++;
 		pGeneral.add(nfZoomBoxScreenFraction,cd);		
+		cd.gridx=0;
+		cd.gridy++;
+		pGeneral.add(new JLabel("ROI shapes' smooth window (points: "),cd);
+		cd.gridx++;
+		pGeneral.add(nfSmoothWindow,cd);	
 		
 		////////////TRACING OPTIONS
 		JPanel pTrace = new JPanel(new GridBagLayout());
@@ -1065,12 +1076,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			//SAVE SELECTIONS
 
 			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
-			Prefs.set("BigTrace.nZoomBoxSize", (double)(bt.btdata.nZoomBoxSize));
+			Prefs.set("BigTrace.nZoomBoxSize", bt.btdata.nZoomBoxSize);
 			
 			bt.btdata.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
 			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
 
-
+			if(Smoothing.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText()))
+			{
+				
+				Smoothing.nSmoothWindow = Integer.parseInt(nfSmoothWindow.getText());
+				updateROIsDisplay();
+				Prefs.set("BigTrace.nSmoothWindow", Smoothing.nSmoothWindow);
+			}
+			
 			bt.btdata.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
 			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btdata.sigmaTrace[0]));
 			
@@ -1340,6 +1358,22 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			if(roi.getGroupInd()==nGroupN)
 			{
 				roi.setGroup(updateGroup);
+			}
+		}
+	}
+	
+	/** updates all ROIs images**/
+	void updateROIsDisplay()
+	{
+		for (int nGroupN = 0; nGroupN< groups.size(); nGroupN++)
+		{
+			Roi3DGroup updateGroup =groups.get(nGroupN);
+			for (Roi3D roi : rois)
+			{
+				if(roi.getGroupInd()==nGroupN)
+				{
+					roi.setGroup(updateGroup);
+				}
 			}
 		}
 	}

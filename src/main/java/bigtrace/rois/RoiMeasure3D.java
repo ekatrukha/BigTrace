@@ -479,7 +479,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				
 			case Roi3D.LINE_TRACE:				
 				
-				li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, nInterpolatorFactory);
+				li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, shapeInterpolation);
 				if(li_profile!=null)
 				{
 					val.mean= getMeanDoubleArray(li_profile[1]);
@@ -517,7 +517,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				
 			case Roi3D.LINE_TRACE:				
 				
-				li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, nInterpolatorFactory);
+				li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, shapeInterpolation);
 				if (li_profile!=null)
 				{
 					if((systemMeasurements&MEAN)!=0) 
@@ -608,7 +608,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				
 			case Roi3D.LINE_TRACE:				
 				
-				li_profile = ((LineTrace3D)roi).getIntensityProfile(bt.btdata.globCal, source, nInterpolatorFactory);
+				li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, shapeInterpolation);
 				if(li_profile!=null)
 				{
 					plotProfile = new Plot("Profile ROI "+roi.getName(),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");

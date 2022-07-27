@@ -54,6 +54,8 @@ public interface Roi3D
 	public void setGroupInd(final int nGIndex);
 	public int getGroupInd();
 	
+
+	
 	public static String intTypeToString(int nType)
 	{
 		String sType = "Point";
@@ -191,4 +193,6 @@ public interface Roi3D
 			out.setPosition(Double.NaN, i);
 		return out;
 	}
+	
+
 }

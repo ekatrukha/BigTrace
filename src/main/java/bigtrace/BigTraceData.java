@@ -2,6 +2,7 @@ package bigtrace;
 
 import java.util.ArrayList;
 
+import bigtrace.geometry.Smoothing;
 import ij.Prefs;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -115,6 +116,8 @@ public class BigTraceData {
 		//view 
 		nZoomBoxSize = (int) Prefs.get("BigTrace.nZoomBoxSize", 150);
 		dZoomBoxScreenFraction = Prefs.get("BigTrace.dZoomBoxScreenFraction", 1.0);
+		Smoothing.nSmoothWindow = (int) Prefs.get("BigTrace.nSmoothWindow", 5);
+	
 		
 		//tracing
 		sigmaTrace = new double [3];

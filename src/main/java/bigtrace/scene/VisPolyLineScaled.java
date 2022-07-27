@@ -34,6 +34,7 @@ import com.jogamp.opengl.GL3;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
+import bigtrace.geometry.Smoothing;
 import bigtrace.volume.VolumeMisc;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -80,6 +81,8 @@ public class VisPolyLineScaled
 	public int nSectorN;
 
 	private boolean initialized;
+	
+
 
 	public VisPolyLineScaled()
 	{
@@ -154,8 +157,9 @@ public class VisPolyLineScaled
 		}
 	}
 	
-	public void setVerticesCenterLine( ArrayList< RealPoint > points)
+	public void setVerticesCenterLine( ArrayList< RealPoint > points_)
 	{
+		ArrayList< RealPoint > points= Smoothing.getSmoothVals(points_);
 		int i,j;
 		
 		
@@ -173,8 +177,9 @@ public class VisPolyLineScaled
 	}
 	
 	/** generates triangulated surface mesh of a pipe around provided points **/
-	public void setVerticesSurface(ArrayList< RealPoint > points)
+	public void setVerticesSurface(ArrayList< RealPoint > points_)
 	{
+		ArrayList< RealPoint > points= Smoothing.getSmoothVals(points_);
 		int i,j, iPoint;
         int vertShift;
 		double [][] path = new double [3][3];
@@ -320,8 +325,11 @@ public class VisPolyLineScaled
 	
 	
 	/** generates a wireframe mesh of a pipe around provided points **/
-	public void setVerticesWire( ArrayList< RealPoint > points)
+	public void setVerticesWire( ArrayList< RealPoint > points_)
+	//public void setVerticesWire( ArrayList< RealPoint > points)
 	{
+		
+		ArrayList< RealPoint > points= Smoothing.getSmoothVals(points_);
 		int i,j, iPoint;
         int vertShift;
 		double [][] path = new double [3][3];
@@ -592,4 +600,6 @@ public class VisPolyLineScaled
 			gl.glBindVertexArray( 0 );
 		}
 	}
+	
+
 }

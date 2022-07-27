@@ -13,6 +13,7 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
+import bigtrace.geometry.Smoothing;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
 import net.imglib2.RandomAccess;
@@ -82,10 +83,16 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 	
 	public void addPointAndSegment(final RealPoint in_, final ArrayList<RealPoint> segments_)
 	{
-		vertices.add(new RealPoint(in_));
-		verticesVis.setVertices(vertices);
-		segments.add(segments_);
-		segmentsVis.add(new VisPolyLineScaled(segments_,lineThickness, lineColor, nSectorN, renderType));
+		//check if the new point is at the same place that previous or not
+		double [] dist = new double [3];
+		LinAlgHelpers.subtract(vertices.get(vertices.size()-1).positionAsDoubleArray(), in_.positionAsDoubleArray(), dist);
+		if(LinAlgHelpers.length(dist)>0.000001)
+		{
+			vertices.add(new RealPoint(in_));
+			verticesVis.setVertices(vertices);
+			segments.add(segments_);
+			segmentsVis.add(new VisPolyLineScaled(segments_,lineThickness, lineColor, nSectorN, renderType));
+		}
 	}
 	
 	/** removes last segment of the tracing.
@@ -543,12 +550,16 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		return out;
 	}
 	
-	public < T extends RealType< T > >  double [][] getIntensityProfile(final double [] globCal, final IntervalView<T> source, InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
+	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
 		ArrayList<RealPoint> allPoints = makeJointSegment();
 		
 		if(allPoints==null)
 			return null;
+		if(nShapeInterpolation == RoiMeasure3D.SHAPE_Subvoxel)
+		{
+			allPoints = Smoothing.getSmoothVals(allPoints);
+		}
 		
 		double [][] out = new double [2][allPoints.size()];
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
