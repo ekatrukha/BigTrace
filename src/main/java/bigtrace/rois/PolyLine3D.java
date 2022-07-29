@@ -13,6 +13,7 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
+import bigtrace.BigTraceData;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
 import bigtrace.volume.VolumeMisc;
@@ -67,6 +68,8 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
 		edgesVis = new VisPolyLineScaled();
+	
+		edgesVis.bSmooth = false;
 		edgesVis.setColor(lineColor);
 		edgesVis.setThickness(lineThickness);
 		edgesVis.setSectorN(nSectorN);
@@ -119,7 +122,17 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 
 		verticesVis.setVertices(vertices);
 		//System.out.println("1");
-		edgesVis.setVerticesBresenham(vertices);		
+		switch (BigTraceData.shapeInterpolation)
+		{
+			case BigTraceData.SHAPE_Voxel:
+				edgesVis.setVerticesBresenham(vertices);	
+				break;
+
+			case BigTraceData.SHAPE_Subvoxel:
+				edgesVis.setVertices(vertices);	
+				break;
+		}
+		//edgesVis.setVerticesBresenham(vertices);		
 		//System.out.println("2");
 		
 	}
@@ -531,11 +544,11 @@ public class PolyLine3D implements Roi3D, WritablePolyline
 				{
 					switch (nShapeInterpolation)
 					{
-					case RoiMeasure3D.SHAPE_Voxel:
+					case BigTraceData.SHAPE_Voxel:
 						//bresenham voxel by voxel shape interpolation
 						segment = VolumeMisc.BresenhamWrap(vertices.get(i-1), vertices.get(i));
 						break;
-					case RoiMeasure3D.SHAPE_Subvoxel:
+					case BigTraceData.SHAPE_Subvoxel:
 						segment = subPixelLine(vertices.get(i-1), vertices.get(i),globCal);
 						break;
 					}

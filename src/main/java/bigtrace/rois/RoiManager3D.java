@@ -39,7 +39,8 @@ import com.jogamp.opengl.GL3;
 
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.BigTrace;
-import bigtrace.geometry.Smoothing;
+import bigtrace.BigTraceData;
+import bigtrace.geometry.ShapeInterpolation;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.scene.VisPolyLineScaled;
@@ -936,9 +937,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		NumberField nfZoomBoxScreenFraction = new NumberField(4);
 		nfZoomBoxScreenFraction.setText(Double.toString(bt.btdata.dZoomBoxScreenFraction));
 		
+		
+		String[] sShapeInterpolationType = { "Voxel", "Subvoxel"};
+		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
+		shapeInterpolationList.setSelectedIndex(BigTraceData.shapeInterpolation);
+		
 		NumberField nfSmoothWindow = new NumberField(2);
 		nfSmoothWindow.setIntegersOnly(true);
-		nfSmoothWindow.setText(Integer.toString(Smoothing.nSmoothWindow));
+		nfSmoothWindow.setText(Integer.toString(BigTraceData.nSmoothWindow));
 			
 		
 		cd.gridx=0;
@@ -965,7 +971,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		pGeneral.add(nfZoomBoxScreenFraction,cd);		
 		cd.gridx=0;
 		cd.gridy++;
-		pGeneral.add(new JLabel("ROI shapes' smooth window (points: "),cd);
+		pGeneral.add(new JLabel("Roi Shape interpolation: "),cd);
+		cd.gridx++;
+		pGeneral.add(shapeInterpolationList,cd);	
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pGeneral.add(new JLabel("Trace smoothing window (points): "),cd);
 		cd.gridx++;
 		pGeneral.add(nfSmoothWindow,cd);	
 		
@@ -1080,14 +1092,26 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			
 			bt.btdata.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
 			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
-
-			if(Smoothing.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText()))
+			
+			
+			if(BigTraceData.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText())||BigTraceData.shapeInterpolation!= shapeInterpolationList.getSelectedIndex())
+			{
+				BigTraceData.nSmoothWindow = Integer.parseInt(nfSmoothWindow.getText());
+				Prefs.set("BigTrace.nSmoothWindow", BigTraceData.nSmoothWindow);
+				BigTraceData.shapeInterpolation= shapeInterpolationList.getSelectedIndex();
+				Prefs.set("BigTrace.ShapeInterpolation",BigTraceData.shapeInterpolation);
+				updateROIsDisplay();
+			}
+			
+/*
+			if(BigTraceData.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText()))
 			{
 				
-				Smoothing.nSmoothWindow = Integer.parseInt(nfSmoothWindow.getText());
+				BigTraceData.nSmoothWindow = Integer.parseInt(nfSmoothWindow.getText());
 				updateROIsDisplay();
-				Prefs.set("BigTrace.nSmoothWindow", Smoothing.nSmoothWindow);
-			}
+				Prefs.set("BigTrace.nSmoothWindow", BigTraceData.nSmoothWindow);
+			}*/
+			
 			
 			bt.btdata.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
 			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btdata.sigmaTrace[0]));
@@ -1365,17 +1389,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	/** updates all ROIs images**/
 	void updateROIsDisplay()
 	{
-		for (int nGroupN = 0; nGroupN< groups.size(); nGroupN++)
-		{
-			Roi3DGroup updateGroup =groups.get(nGroupN);
+
 			for (Roi3D roi : rois)
 			{
-				if(roi.getGroupInd()==nGroupN)
-				{
-					roi.setGroup(updateGroup);
-				}
+				roi.setGroup(groups.get(roi.getGroupInd()));
 			}
-		}
 	}
 	/** marks ROIs of specific group as undefined and updates ROI indexes**/
 	public void markROIsUndefined(int nGroupN)

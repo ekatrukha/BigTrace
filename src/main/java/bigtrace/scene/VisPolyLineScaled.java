@@ -31,10 +31,11 @@ package bigtrace.scene;
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 
+import bigtrace.BigTraceData;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
-import bigtrace.geometry.Smoothing;
+import bigtrace.geometry.ShapeInterpolation;
 import bigtrace.volume.VolumeMisc;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -53,10 +54,8 @@ import tpietzsch.shadergen.Shader;
 import tpietzsch.shadergen.generate.Segment;
 import tpietzsch.shadergen.generate.SegmentTemplate;
 
-import static com.jogamp.opengl.GL.GL_BLEND;
 import static com.jogamp.opengl.GL.GL_FLOAT;
-import static com.jogamp.opengl.GL.GL_ONE_MINUS_SRC_ALPHA;
-import static com.jogamp.opengl.GL.GL_SRC_ALPHA;
+
 
 
 public class VisPolyLineScaled
@@ -82,6 +81,8 @@ public class VisPolyLineScaled
 
 	private boolean initialized;
 	
+	/** whether or not use smoothing in the render **/
+	public boolean bSmooth = true;
 
 
 	public VisPolyLineScaled()
@@ -157,11 +158,22 @@ public class VisPolyLineScaled
 		}
 	}
 	
-	public void setVerticesCenterLine( ArrayList< RealPoint > points_)
+	public void setVerticesCenterLine( final ArrayList< RealPoint > points_)
 	{
-		ArrayList< RealPoint > points= Smoothing.getSmoothVals(points_);
-		int i,j;
 		
+		int i,j;
+
+		ArrayList< RealPoint > points;
+		
+		//smoothing, if necessary
+		if(bSmooth && BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Subvoxel)
+		{
+			points= ShapeInterpolation.getSmoothVals(points_);
+		}
+		else
+		{
+			points = points_;
+		}	
 		
 		nPointsN=points.size();
 		vertices = new float [nPointsN*3];//assume 3D	
@@ -177,9 +189,9 @@ public class VisPolyLineScaled
 	}
 	
 	/** generates triangulated surface mesh of a pipe around provided points **/
-	public void setVerticesSurface(ArrayList< RealPoint > points_)
+	public void setVerticesSurface(final ArrayList< RealPoint > points_)
 	{
-		ArrayList< RealPoint > points= Smoothing.getSmoothVals(points_);
+		
 		int i,j, iPoint;
         int vertShift;
 		double [][] path = new double [3][3];
@@ -192,6 +204,19 @@ public class VisPolyLineScaled
 		Line3D contLine;
 		ArrayList< RealPoint > contour_curr;
 		ArrayList< RealPoint > contour_next;
+		ArrayList< RealPoint > points;
+		
+		//smoothing, if necessary		
+		if(bSmooth && BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Subvoxel)
+		{
+			points= ShapeInterpolation.getSmoothVals(points_);
+		}
+		else
+		{
+			points = points_;
+		}
+		
+		
 		
 		nPointsN=points.size();
 		if(nPointsN>1)
@@ -325,11 +350,10 @@ public class VisPolyLineScaled
 	
 	
 	/** generates a wireframe mesh of a pipe around provided points **/
-	public void setVerticesWire( ArrayList< RealPoint > points_)
+	public void setVerticesWire( final ArrayList< RealPoint > points_)
 	//public void setVerticesWire( ArrayList< RealPoint > points)
 	{
 		
-		ArrayList< RealPoint > points= Smoothing.getSmoothVals(points_);
 		int i,j, iPoint;
         int vertShift;
 		double [][] path = new double [3][3];
@@ -341,7 +365,17 @@ public class VisPolyLineScaled
 		ArrayList<Line3D> extrudeLines;
 		Line3D contLine;
 		ArrayList< RealPoint > contour;
+		ArrayList< RealPoint > points;
 		
+		//smoothing, if necessary
+		if(bSmooth && BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Subvoxel)
+		{
+			points= ShapeInterpolation.getSmoothVals(points_);
+		}
+		else
+		{
+			points = points_;
+		}
 		
 		
 		nPointsN=points.size();

@@ -13,9 +13,11 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
-import bigtrace.geometry.Smoothing;
+import bigtrace.BigTraceData;
+import bigtrace.geometry.ShapeInterpolation;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
+import bigtrace.volume.VolumeMisc;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
@@ -464,15 +466,12 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 
 
 	/** returns the length of LineTrace using globCal voxel size **/
-	public double getLength(final double [] globCal)
+	public double getLength(final int nShapeInterpolation, final double [] globCal)
 	{
-		double length = 0.0;
+		//double length = 0.0;
 		
-		for(int i=0;i<segments.size(); i++)
-		{
-			length+= Roi3D.getSegmentLength(segments.get(i), globCal);
-		}
-		return length;
+		return  Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation), globCal);
+
 		
 	}
 	public double getEndsDistance(final double [] globCal)
@@ -528,7 +527,7 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 			
 	}
 	
-	public ArrayList<RealPoint> makeJointSegment()
+	public ArrayList<RealPoint> makeJointSegment(final int nShapeInterpolation)
 	{
 		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
 		if(vertices.size()>1)
@@ -542,6 +541,10 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 					out.add(segments.get(i).get(j));
 				}
 			}
+			if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
+			{
+				out = ShapeInterpolation.getSmoothVals(out);
+			}
 		}
 		else 
 		{
@@ -552,13 +555,13 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 	
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
-		ArrayList<RealPoint> allPoints = makeJointSegment();
+		ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation);
 		
 		if(allPoints==null)
 			return null;
-		if(nShapeInterpolation == RoiMeasure3D.SHAPE_Subvoxel)
+		if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
 		{
-			allPoints = Smoothing.getSmoothVals(allPoints);
+			allPoints = ShapeInterpolation.getSmoothVals(allPoints);
 		}
 		
 		double [][] out = new double [2][allPoints.size()];

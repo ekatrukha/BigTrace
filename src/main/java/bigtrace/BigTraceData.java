@@ -2,7 +2,7 @@ package bigtrace;
 
 import java.util.ArrayList;
 
-import bigtrace.geometry.Smoothing;
+import bigtrace.geometry.ShapeInterpolation;
 import ij.Prefs;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -108,6 +108,14 @@ public class BigTraceData {
 	/** current number of vertices in the tracebox **/
 	public int nPointsInTraceBox=0;
 	
+	/** ROI shape interpolation types **/
+	public static final int SHAPE_Voxel=0, SHAPE_Subvoxel=1; 
+	/** current ROI shape interpolation **/
+	public static int shapeInterpolation = Prefs.getInt("BigTrace.ShapeInterpolation",SHAPE_Voxel);
+	
+	/** size of moving average window to smooth traces (in points) **/
+	public static int nSmoothWindow=5;
+	
 	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
 	
 	public BigTraceData()
@@ -116,7 +124,7 @@ public class BigTraceData {
 		//view 
 		nZoomBoxSize = (int) Prefs.get("BigTrace.nZoomBoxSize", 150);
 		dZoomBoxScreenFraction = Prefs.get("BigTrace.dZoomBoxScreenFraction", 1.0);
-		Smoothing.nSmoothWindow = (int) Prefs.get("BigTrace.nSmoothWindow", 5);
+		BigTraceData.nSmoothWindow = (int) Prefs.get("BigTrace.nSmoothWindow", 5);
 	
 		
 		//tracing

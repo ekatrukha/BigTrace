@@ -232,7 +232,7 @@ public class Point3D implements Roi3D {
 		val.ends = new RealPoint [2];
 		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertex,globCal));
 	
-		val.ends[1] =Roi3D.getNaNPoint();
+		val.ends[1] = Roi3D.getNaNPoint();
 		return;
 	}
 	public < T extends RealType< T > > double getMeanIntensity(final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
