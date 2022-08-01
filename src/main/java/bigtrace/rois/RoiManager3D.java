@@ -1374,7 +1374,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	}
 
 	/** updates ROIs image for a specific group **/
-	void updateROIsDisplay(int nGroupN)
+	void updateROIsGroupDisplay(int nGroupN)
 	{
 		Roi3DGroup updateGroup =groups.get(nGroupN);
 		for (Roi3D roi : rois)
@@ -1392,7 +1392,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 			for (Roi3D roi : rois)
 			{
-				roi.setGroup(groups.get(roi.getGroupInd()));
+				roi.updateRenderVertices();
+				//roi.setGroup(groups.get(roi.getGroupInd()));
 			}
 	}
 	/** marks ROIs of specific group as undefined and updates ROI indexes**/

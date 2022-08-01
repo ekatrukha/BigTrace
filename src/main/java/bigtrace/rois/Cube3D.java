@@ -287,5 +287,10 @@ public class Cube3D implements Roi3D {
 	{
 		return groupIndex;
 	}
+	@Override
+	public void updateRenderVertices() {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

@@ -53,6 +53,7 @@ public interface Roi3D
 	public void setGroup(final Roi3DGroup preset_in);
 	public void setGroupInd(final int nGIndex);
 	public int getGroupInd();
+	public void updateRenderVertices();
 	
 
 	
@@ -171,18 +172,7 @@ public interface Roi3D
 		//System.out.print(length);
 		return length;
 	}
-	/** calculates average orientation vector, weighted by lenght of each segment **/
-	public static RealPoint getOrientation(final ArrayList<RealPoint> vert_in, double [] globCal)
-	{
-		RealPoint orient = new RealPoint(3);
-		
-		for(int i=0;i<vert_in.size()-1;i++)
-		{
-			
-		}
-		
-		return orient;
-	}
+
 	/**
 	 * transforms realpoint in pixel coordinates to space units
 	 * **/

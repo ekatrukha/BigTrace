@@ -17,16 +17,12 @@ import bigtrace.BigTraceData;
 import bigtrace.geometry.ShapeInterpolation;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
-import bigtrace.volume.VolumeMisc;
-import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.interpolation.InterpolatorFactory;
-import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.roi.Masks;
 import net.imglib2.roi.RealMask;
 import net.imglib2.roi.RealMaskRealInterval;
@@ -216,8 +212,8 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		for (int i=0;i<segmentsVis.size();i++)
 		{
 			segmentsVis.get(i).setThickness(lineThickness);
-			segmentsVis.get(i).setVertices(segments.get(i));
 		}
+		updateRenderVertices();
 	}
 	
 	@Override
@@ -235,8 +231,8 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		for (int i=0;i<segmentsVis.size();i++)
 		{
 			segmentsVis.get(i).setRenderType(renderType);
-			segmentsVis.get(i).setVertices(segments.get(i));
 		}
+		updateRenderVertices();
 
 	}	
 	
@@ -434,10 +430,8 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		segments = segments_r;
 		
 		//update drawing component
-		for(i=0;i< segments.size(); i++)
-		{
-			segmentsVis.get(i).setVertices(segments.get(i));
-		}
+		updateRenderVertices();
+		
 		return;
 		
 	}
@@ -592,6 +586,16 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		}
 		
 		return out;
+	}
+	@Override
+	public void updateRenderVertices() {
+		
+		//update drawing component
+		for(int i=0;i< segments.size(); i++)
+		{
+			segmentsVis.get(i).setVertices(segments.get(i));
+		}
+		
 	}
 }
 

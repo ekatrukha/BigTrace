@@ -29,7 +29,7 @@ public class BigTraceData {
 	public double [] globCal = new double [3];
 	
 	/** unit of voxel**/
-	public String sVoxelUnit = "";
+	public String sVoxelUnit = "pixel";
 	
 	/** whether or not display color coded origin of coordinates **/
 	public boolean bShowOrigin = true;
@@ -120,7 +120,10 @@ public class BigTraceData {
 	
 	public BigTraceData()
 	{
-		
+		//default scale
+		globCal[0]= 1.0;
+		globCal[1]= 1.0;
+		globCal[2]= 1.0;
 		//view 
 		nZoomBoxSize = (int) Prefs.get("BigTrace.nZoomBoxSize", 150);
 		dZoomBoxScreenFraction = Prefs.get("BigTrace.dZoomBoxScreenFraction", 1.0);

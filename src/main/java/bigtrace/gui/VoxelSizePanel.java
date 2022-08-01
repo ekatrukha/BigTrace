@@ -110,6 +110,16 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 		if(updateVoxelSize())
 			fireVoxelSizeChanged(vxAllSize);
 	}
+	public void setVoxelSize(double [] dVoxelSize, String sUnits)
+	{
+		tfUnits.setText(sUnits);
+		for (int i=0;i<3;i++)
+		{
+			nfAllSize[i].setText(String.format("%.3f", dVoxelSize[i]));
+			vxAllSize[i]= dVoxelSize[i];
+		}
+		fireVoxelSizeChanged(vxAllSize);
+	}
 	
 	private boolean updateVoxelSize()
 	{

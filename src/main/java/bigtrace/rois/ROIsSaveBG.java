@@ -44,6 +44,10 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
 			roiGM.saveGroups(writer);
 			setProgressState("saving ROIs...");
 			writer.write("BigTrace_ROIs,version," + bt.btdata.sVersion + "\n");
+			writer.write("ImageUnits,"+bt.btdata.sVoxelUnit+"\n");
+			writer.write("ImageVoxelWidth," + bt.btdata.globCal[0] + "\n");
+			writer.write("ImageVoxelHeight," + bt.btdata.globCal[1] + "\n");
+			writer.write("ImageVoxelDepth," + bt.btdata.globCal[2] + "\n");
 			nRoiN=bt.roiManager.rois.size();
 			writer.write("ROIsNumber,"+Integer.toString(nRoiN)+"\n");
 			for(nRoi=0;nRoi<nRoiN;nRoi++)

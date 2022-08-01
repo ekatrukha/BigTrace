@@ -606,7 +606,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 				if(dialProperties(roiManager.groups.get(indList),bNameChange))
 				{
 					listModel.set(indList,roiManager.groups.get(indList).getName());
-					roiManager.updateROIsDisplay(indList);
+					roiManager.updateROIsGroupDisplay(indList);
 				}
 			}
 			//COPY/NEW

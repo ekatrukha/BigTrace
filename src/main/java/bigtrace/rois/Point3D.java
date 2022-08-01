@@ -242,4 +242,9 @@ public class Point3D implements Roi3D {
 		ra.setPosition(vertex);
 		return ra.get().getRealDouble();
 	}
+	@Override
+	public void updateRenderVertices() {
+		// TODO Auto-generated method stub
+		
+	}
 }
