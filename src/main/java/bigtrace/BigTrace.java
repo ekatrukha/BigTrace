@@ -401,6 +401,28 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		
 	}
+	
+	/** works only in trace mode, deselects current tracing
+	 * and starts a new one in the trace mode**/
+	public void actionNewRoiTraceMode()
+	{
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
+		{
+								
+			RealPoint target = new RealPoint(3);
+			if(bTraceMode)
+			{
+				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+				{
+					roiManager.unselect();
+					roiManager.addSegment(target, null);																
+					calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+				}				
+			}
+		}
+	}
 	/** remove last added point from ROI
 	 * (and delete ROI if it is the last point in it)
 	 * **/
@@ -606,6 +628,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	{
 		//final Actions actions = new Actions( new InputTriggerConfig() );
 		actions.runnableAction(() -> actionAddPoint(),	            "add point", "F" );
+		actions.runnableAction(() -> actionNewRoiTraceMode(),	    "new trace", "V" );		
 		actions.runnableAction(() -> actionRemovePoint(),       	"remove point",	"G" );
 		actions.runnableAction(() -> actionDeselect(),	            "deselect", "H" );
 		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );

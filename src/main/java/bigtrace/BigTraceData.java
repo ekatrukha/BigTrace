@@ -111,7 +111,7 @@ public class BigTraceData {
 	/** ROI shape interpolation types **/
 	public static final int SHAPE_Voxel=0, SHAPE_Subvoxel=1; 
 	/** current ROI shape interpolation **/
-	public static int shapeInterpolation = Prefs.getInt("BigTrace.ShapeInterpolation",SHAPE_Voxel);
+	public static int shapeInterpolation = Prefs.getInt("BigTrace.ShapeInterpolation",SHAPE_Subvoxel);
 	
 	/** size of moving average window to smooth traces (in points) **/
 	public static int nSmoothWindow=5;

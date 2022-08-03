@@ -57,12 +57,12 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 		setLayout(gridbag);
 		c.gridx=0;
 		c.gridy=0;
-		this.add(new JLabel("Pixel width"),c);
+		this.add(new JLabel("Voxel width"),c);
 		c.gridx++;
 		this.add(nfAllSize[0],c);
 		c.gridx=0;
 		c.gridy++;
-		this.add(new JLabel("Pixel height"),c);
+		this.add(new JLabel("Voxel height"),c);
 		c.gridx++;
 		this.add(nfAllSize[1],c);
 		c.gridx=0;

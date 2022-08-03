@@ -323,6 +323,7 @@ public class BigTraceControlPanel extends JPanel
 					+"&nbsp;<b>T</b> - advance tracebox<br>"
 					+"&nbsp;<b>Y</b> - reverse active trace end<br>"
 					+"&nbsp;<b>R</b> - straight line (in trace mode)<br>"
+					+"&nbsp;<b>V</b> - new trace (in trace mode)<br>"
 					 +"<br>"
 					+"<center><b>View/Navigation</b></center><br>"
 					+"&nbsp;<b>1</b> - show centered XY view<br>"
