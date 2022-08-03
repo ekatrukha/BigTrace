@@ -68,7 +68,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 
 	private static int systemMeasurements = Prefs.getInt("BigTrace.Measurements",LENGTH+MEAN);
 	
-	private static int intensityInterpolation = Prefs.getInt("BigTrace.IntInterpolation",INT_NearestNeighbor);
+	private static int intensityInterpolation = Prefs.getInt("BigTrace.IntInterpolation",INT_NLinear);
 
 	
 	private static ResultsTable systemRT = new ResultsTable();
