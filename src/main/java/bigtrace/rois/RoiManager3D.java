@@ -971,7 +971,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		pGeneral.add(nfZoomBoxScreenFraction,cd);		
 		cd.gridx=0;
 		cd.gridy++;
-		pGeneral.add(new JLabel("Roi Shape interpolation: "),cd);
+		pGeneral.add(new JLabel("ROI Shape interpolation: "),cd);
 		cd.gridx++;
 		pGeneral.add(shapeInterpolationList,cd);	
 		

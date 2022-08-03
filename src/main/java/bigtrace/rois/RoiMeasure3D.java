@@ -247,7 +247,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		String[] sShapeInterpolationType = { "Voxel", "Subvoxel"};
 		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
 		shapeInterpolationList.setSelectedIndex(BigTraceData.shapeInterpolation);
-		pMeasureSettings.add(new JLabel("Roi Shape interpolation: "));
+		pMeasureSettings.add(new JLabel("ROI Shape interpolation: "));
 		pMeasureSettings.add(shapeInterpolationList);
 		
 		NumberField nfSmoothWindow = new NumberField(2);
