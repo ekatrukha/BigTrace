@@ -57,7 +57,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 BigTrace bt;
 
 	 private static final long serialVersionUID = -2843907862066423151L;
-	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2;
+	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2, ADD_POINT_PLANE=3;
 	 public static final int SECTORS_DEF=16;
 	 
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
@@ -103,6 +103,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JToggleButton roiPointMode;
 	 JToggleButton roiPolyLineMode;
 	 JToggleButton roiPolySemiAMode;
+	 JToggleButton roiPlaneMode;
 	 JButton roiSettings;
 	 
 	 
@@ -156,6 +157,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 roiPolySemiAMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 		 //roiPolySemiAMode.setSelected(true);	
 		 
+		 icon_path = bigtrace.BigTrace.class.getResource("/icons/plane.png");
+		 tabIcon = new ImageIcon(icon_path);
+		 roiPlaneMode = new JToggleButton(tabIcon);
+		 roiPlaneMode.setToolTipText("Plane");
+		 roiPlaneMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		 //roiPolySemiAMode.setSelected(true);	
+		 
 		 icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
 		 tabIcon = new ImageIcon(icon_path);
 		 roiSettings = new JButton(tabIcon);
@@ -166,10 +174,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 roiTraceMode.add(roiPointMode);
 		 roiTraceMode.add(roiPolyLineMode);
 		 roiTraceMode.add(roiPolySemiAMode);
+		 roiTraceMode.add(roiPlaneMode);
 		 
 		 roiPointMode.addActionListener(this);
 		 roiPolyLineMode.addActionListener(this);
 		 roiPolySemiAMode.addActionListener(this);
+		 roiPlaneMode.addActionListener(this);
+		 
 		 roiSettings.addActionListener(this);
 		 //add to the panel
 		 GridBagConstraints ct = new GridBagConstraints();
@@ -180,6 +191,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 panTracing.add(roiPolyLineMode,ct);
 		 ct.gridx++;
 		 panTracing.add(roiPolySemiAMode,ct);
+		 ct.gridx++;
+		 panTracing.add(roiPlaneMode,ct);
 		 ct.gridx++;
 		 JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
 		 sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
@@ -387,6 +400,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 case Roi3D.LINE_TRACE:
 			 newRoi = new LineTrace3D(groups.get(nActiveGroup));
 			 break;
+		 case Roi3D.PLANE:
+			 newRoi = new Plane3D(groups.get(nActiveGroup));
+			 break;
 		 case Roi3D.CUBE:
 			 newRoi = new Cube3D(groups.get(nActiveGroup));
 			 break;
@@ -439,6 +455,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 jlist.clearSelection();
 		 }
 	 }
+	 
+	 
 	 /** removes active ROI and updates ListModel
 	  * and activeRoi index **/
 	 public void removeActiveRoi()
@@ -457,6 +475,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 }
 
 	 }
+	 
 	 public void removeAll()
 	 {
 		 rois =  new ArrayList<Roi3D >();
@@ -512,18 +531,23 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	       }
 	 }
 	 
+	 /**adds new point to Point3D, Polyline3D or Plane3D ROI **/
 	 public void addPoint(RealPoint point_)
 	 {
 		 
-		 if(mode ==RoiManager3D.ADD_POINT)
-		 {
+		 switch (mode){
+		 
+		 case RoiManager3D.ADD_POINT:
 			 addPoint3D(point_);
-		 }
-		 if(mode ==RoiManager3D.ADD_POINT_LINE)
-		 {
+			 break;
+		 case RoiManager3D.ADD_POINT_LINE:
 			 addPointToLine(point_);
+			 break;
+		 case RoiManager3D.ADD_POINT_PLANE:
+			 addPointToPlane(point_);
+			 break;
+
 		 }
-		
 		 
 	 }
 	 public void addPoint3D(RealPoint point_)
@@ -579,7 +603,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 return tracing.removeLastSegment();
 	 }
 
-	 /** adds point to active polyline
+	 /** adds point to active Polyline3D ROI
 	  *  if active ROI is not a polyline, does nothing
 	  *  if there are no active ROIS, starts new polyline **/
 	 public void addPointToLine(RealPoint point_)
@@ -589,20 +613,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
 		 {
-			// polyline = new PolyLine3D(currLineThickness, currPointSize, defaultLineColor, defaultPointColor, currRenderType, currSectorN);
-			 //polyline = new PolyLine3D(groups.get(nActiveGroup));
-			// addRoi(polyline);
 			 polyline  = (PolyLine3D) makeRoi(Roi3D.POLYLINE);
 			 polyline.addPointToEnd(point_);
 			 addRoi(polyline);
 			 //activeRoi = rois.size()-1; 
 			 return;
 		 }
-		 //active ROI is not a line
-		 /*if(rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
-		 {
-			 return;
-		 }*/
+
 		 //add point to line
 		 else
 		 {
@@ -613,31 +630,64 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 
 	 }
 	 
-	 /** removes point from the active polyline
-	  *  if active ROI is not a polyline, does nothing
-	  *  if it is a last point, removes polyline object
-	  *  and activates previous Roi in the list (if any) 
-	  * **/
-	 public void removePointFromLine()
+	 /** adds point to active plane3D ROI
+	  *  if active ROI is not a plane, does nothing
+	  *  if there are no active ROIS, starts new polyline **/
+	 public void addPointToPlane(RealPoint point_)
 	 {
-		 PolyLine3D polyline;
-		 if(activeRoi<0)
-			 return;
-		 //active ROI is not a line or none ROI selected
-		 if(rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
-		 {
+
+		 Plane3D plane;
+		 //new Plane
+		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.PLANE)
+		 {	
+			 plane  = (Plane3D) makeRoi(Roi3D.PLANE);
+			 plane.addPoint(point_);
+			 addRoi(plane);
+			 //activeRoi = rois.size()-1; 
 			 return;
 		 }
+
+		 //add point to plane
 		 else
 		 {
-			 polyline = (PolyLine3D) rois.get(activeRoi);
-			 if(!polyline.removeEndPoint())
+			 plane = (Plane3D) rois.get(activeRoi);
+			 plane.addPoint(point_);
+		 }
+			
+	 
+	 }
+	 
+	 /** removes point from the active polyline3D/plane3D ROIS
+	  *  if active ROI is not that type, does nothing
+	  *  if it is a last point, removes ROI object
+	  *  and activates previous Roi in the list (if any of the same type) 
+	  * **/
+	 public void removePointLinePlane()
+	 {
+		 boolean bPointRemoved =false;
+		 
+		 if(activeRoi<0)
+			 return;
+		 final int nRoiType = rois.get(activeRoi).getType();
+		 //active ROI is not a line or none ROI selected
+		 if(nRoiType==Roi3D.POLYLINE || nRoiType==Roi3D.PLANE)
+		 {
+			 switch (nRoiType)
 			 {
-				 //rois.remove(activeRoi);
+			 case Roi3D.POLYLINE:
+				 bPointRemoved = ((PolyLine3D) rois.get(activeRoi)).removeEndPoint();
+				 break;
+			 case Roi3D.PLANE:
+				 bPointRemoved = ((Plane3D) rois.get(activeRoi)).removePoint();
+				 break;
+			 }
+			
+			 if(!bPointRemoved)
+			 {
 				 removeRoi(activeRoi);
 				 if(activeRoi>=0)
 				 {
-					 if(rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
+					 if(rois.get(activeRoi).getType()!=nRoiType)
 					 {
 						 activeRoi=-1;
 						 jlist.clearSelection();
@@ -655,6 +705,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 	 boolean bState = !bLockMode;
 			 roiPointMode.setEnabled(bState);
 			 roiPolyLineMode.setEnabled(bState);
+			 roiPolySemiAMode.setEnabled(bState);
+			 roiPlaneMode.setEnabled(bState);
 			 roiSettings.setEnabled(bState);
 			 butDelete.setEnabled(bState);
 			 butRename.setEnabled(bState);
@@ -751,6 +803,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			if(this.mode != RoiManager3D.ADD_POINT_SEMIAUTOLINE)
 			{
 				this.mode = RoiManager3D.ADD_POINT_SEMIAUTOLINE;
+				unselect();
+			}
+		}
+		if(e.getSource() == roiPlaneMode)
+		{
+			if(this.mode != RoiManager3D.ADD_POINT_PLANE)
+			{
+				this.mode = RoiManager3D.ADD_POINT_PLANE;
 				unselect();
 			}
 		}

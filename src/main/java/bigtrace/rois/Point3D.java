@@ -20,42 +20,19 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
-public class Point3D implements Roi3D {
+public class Point3D extends AbstractRoi3D implements Roi3D {
 
 	public RealPoint vertex;
 	public VisPointsScaled vertexVis;
-	public float pointSize;
-	public Color pointColor;
-	public String name;
-	public int type;
-	private int groupIndex=-1;
 
-	//redundant?
-	/*public Point3D(final RealPoint vertex_, final float pointSize_, final Color pointColor_)
-	{
-		type = Roi3D.POINT;
-		pointSize = pointSize_;		
-		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());		
-		vertex = new RealPoint(vertex_);
-		vertexVis = new VisPointsScaled(vertex_,pointSize_,pointColor_);
-		name = "point"+Integer.toString(this.hashCode());
 
-	}*/
-	/*public Point3D(final RealPoint vertex_, final Roi3DGroup preset_in)
-	{
-		type = Roi3D.POINT;
-		pointSize = preset_in.pointSize;		
-		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
-		vertex = new RealPoint(vertex_);
-		vertexVis = new VisPointsScaled(vertex_,pointSize,pointColor);
-		name = "point"+Integer.toString(this.hashCode());
-		
-	}*/
 	public Point3D( final Roi3DGroup preset_in)
 	{
 		type = Roi3D.POINT;
 		pointSize = preset_in.pointSize;		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
+		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
+
 		//vertex = new RealPoint(vertex_);
 		//vertexVis = new VisPointsScaled(vertex_,pointSize,pointColor);
 		name = "point"+Integer.toString(this.hashCode());
@@ -66,7 +43,9 @@ public class Point3D implements Roi3D {
 	{
 		type = Roi3D.POINT;
 		pointSize = pointSize_;		
-		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());		
+		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
+		lineColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
+
 		name = "point"+Integer.toString(this.hashCode());
 
 	}
@@ -77,20 +56,6 @@ public class Point3D implements Roi3D {
 		vertexVis = new VisPointsScaled(vertex_,pointSize,pointColor);
 	}
 	
-	@Override
-	public int getType() {
-		return type;
-	}
-
-	@Override
-	public String getName() {
-		return new String(name);
-	}
-
-	@Override
-	public void setName(String name) {
-		this.name = new String(name);		
-	}
 
 	@Override
 	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) 
@@ -99,65 +64,6 @@ public class Point3D implements Roi3D {
 			vertexVis.draw( gl, pvm, screen_size);
 	}
 
-
-	@Override
-	public void setPointColor(Color pointColor_) {
-
-		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
-		vertexVis.setColor(pointColor);
-	}
-	
-	@Override
-	public void setPointColorRGB(Color pointColor_){
-		setPointColor(new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor.getAlpha()));
-	}
-	
-	@Override
-	public void setLineColor(Color lineColor_) {
-		return;
-	}
-	
-	@Override
-	public void setLineColorRGB(Color lineColor_) {
-		return;
-	}
-	@Override
-	public Color getPointColor()
-	{
-		return new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),pointColor.getAlpha());
-	}
-	
-	@Override
-	public Color getLineColor()
-	{
-		return new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),pointColor.getAlpha());
-	}
-	
-	@Override
-	public void setOpacity(float fOpacity)
-	{
-		setPointColor(new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),(int)(fOpacity*255)));
-	}
-	@Override
-	public float getOpacity()
-	{
-		return ((float)(pointColor.getAlpha())/255.0f);
-	}
-
-	@Override
-	public float getLineThickness() {
-		return 0;
-	}
-
-	@Override
-	public float getPointSize() {
-		return pointSize;
-	}
-
-	@Override
-	public void setLineThickness(float line_thickness) {
-		return;
-	}
 
 	@Override
 	public void setPointSize(float point_size) {
@@ -211,22 +117,13 @@ public class Point3D implements Roi3D {
 	}
 	@Override
 	public void setGroup(final Roi3DGroup preset_in) {
-		// TODO Auto-generated method stub
+
 		pointSize = preset_in.pointSize;		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
 		if(vertex!=null)
 			setVertex(vertex);
 	}
-	@Override
-	public void setGroupInd(final int nGIndex)
-	{
-		groupIndex = nGIndex;
-	}
-	@Override
-	public int getGroupInd()
-	{
-		return groupIndex;
-	}
+
 	public void getEnds(final MeasureValues val, final double [] globCal)
 	{
 		val.ends = new RealPoint [2];
@@ -244,7 +141,24 @@ public class Point3D implements Roi3D {
 	}
 	@Override
 	public void updateRenderVertices() {
-		// TODO Auto-generated method stub
 		
+		
+	}
+	@Override
+	public void setLineColor(Color lineColor_) {
+		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
+	}
+	@Override
+	public void setPointColor(Color pointColor_) {
+
+		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
+		vertexVis.setColor(pointColor);
+	}
+	
+	@Override
+	public void setLineThickness(float line_thickness) {
+		
+		lineThickness=line_thickness;
+		return;
 	}
 }

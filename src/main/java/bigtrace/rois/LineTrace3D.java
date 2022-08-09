@@ -33,22 +33,14 @@ import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
-public class LineTrace3D implements Roi3D, WritablePolyline
+public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 {
 	
 	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> segments;
 	public VisPointsScaled verticesVis;
 	public ArrayList<VisPolyLineScaled> segmentsVis;
-	public float lineThickness;
-	public float pointSize;
-	public Color lineColor;
-	public Color pointColor;
-	public int nSectorN;
-	public String name;
-	public int type;
-	public int renderType;
-	private int groupIndex=-1;
+
 
 	public LineTrace3D(final Roi3DGroup preset_in)
 	{
@@ -153,43 +145,6 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 			segment.setColor(lineColor);
 		}
 	}
-
-
-	
-	@Override
-	public void setPointColorRGB(Color pointColor_){
-		setPointColor(new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor.getAlpha()));
-	}
-	
-	@Override
-	public void setLineColorRGB(Color lineColor_){
-		setLineColor(new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor.getAlpha()));
-	}
-	
-	@Override
-	public Color getPointColor()
-	{
-		return new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),pointColor.getAlpha());
-	}
-	
-	@Override
-	public Color getLineColor()
-	{
-		return new Color(lineColor.getRed(),lineColor.getGreen(),lineColor.getBlue(),lineColor.getAlpha());
-	}
-	
-	@Override
-	public void setOpacity(float fOpacity)
-	{
-		setPointColor(new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),(int)(fOpacity*255)));
-		setLineColor(new Color(lineColor.getRed(),lineColor.getGreen(),lineColor.getBlue(),(int)(fOpacity*255)));
-	}
-	
-	@Override
-	public float getOpacity()
-	{
-		return ((float)(pointColor.getAlpha())/255.0f);
-	}
 	
 	@Override
 	public void setPointSize(float point_size) {
@@ -198,12 +153,7 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		verticesVis.setSize(pointSize);
 	}
 	
-	@Override
-	public float getPointSize() {
 
-		return pointSize;
-	}
-	
 	@Override
 	public void setLineThickness(float line_thickness) {
 
@@ -216,12 +166,6 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		updateRenderVertices();
 	}
 	
-	@Override
-	public float getLineThickness() {
-
-		return lineThickness;
-	}
-
 	
 	@Override
 	public void setRenderType(int nRenderType){
@@ -235,26 +179,6 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		updateRenderVertices();
 
 	}	
-	
-	@Override
-	public int getRenderType(){
-		return renderType;
-	}
-
-	@Override
-	public int getType() {
-		
-		return type;
-	}
-	@Override
-	public String getName() {
-		return new String(name);
-	}
-
-	@Override
-	public void setName(String name) {
-		this.name = new String(name);		
-	}
 
 	
 	/** Methods from imglib2 Polyline, 
@@ -446,17 +370,6 @@ public class LineTrace3D implements Roi3D, WritablePolyline
 		setPointSize(preset_in.pointSize);
 		setLineThickness(preset_in.lineThickness);
 	}
-	@Override
-	public void setGroupInd(final int nGIndex)
-	{
-		groupIndex = nGIndex;
-	}
-	@Override
-	public int getGroupInd()
-	{
-		return groupIndex;
-	}
-	
 
 
 	/** returns the length of LineTrace using globCal voxel size **/

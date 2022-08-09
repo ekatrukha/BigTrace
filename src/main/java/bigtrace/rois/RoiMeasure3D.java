@@ -33,6 +33,7 @@ import ij.Prefs;
 import ij.gui.Plot;
 import ij.measure.ResultsTable;
 import net.imglib2.RandomAccessible;
+import net.imglib2.RealPoint;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
@@ -449,7 +450,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.length = ((LineTrace3D)roi).getLength(BigTraceData.shapeInterpolation, bt.btdata.globCal);
 				break;			
 			default:
-				val.length = 0.0;
+				val.length = Double.NaN;
 		}
 			
 		
@@ -499,7 +500,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				{
 					val.mean= getMeanDoubleArray(li_profile[1]);
 				}
-				break;			
+				break;		
+			default:
+				val.mean = Double.NaN;
 		}
 	}
 	
@@ -544,7 +547,10 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 						val.stdDev= getSDDoubleArray(getMeanDoubleArray(li_profile[1]),li_profile[1]);
 					}
 				}
-				break;			
+				break;	
+			default:
+				val.stdDev = Double.NaN;
+				
 		}
 	}
 	void measureStraightness(final Roi3D roi, final MeasureValues val)
@@ -576,7 +582,11 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				break;
 			case Roi3D.LINE_TRACE:
 				((LineTrace3D)roi).getEnds(val, bt.btdata.globCal);
-				break;			
+				break;	
+			default:
+				val.ends = new RealPoint [2];
+				val.ends[0] =Roi3D.getNaNPoint();
+				val.ends[1] =Roi3D.getNaNPoint();
 		}
 			
 		
@@ -593,7 +603,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				break;
 			case Roi3D.LINE_TRACE:
 				((LineTrace3D)roi).getEndsDirection(val, bt.btdata.globCal);
-				break;			
+				break;	
+			default:
+				val.direction = Roi3D.getNaNPoint();
 		}
 			
 		

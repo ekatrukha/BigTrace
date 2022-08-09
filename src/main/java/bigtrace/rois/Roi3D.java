@@ -14,7 +14,7 @@ import net.imglib2.util.LinAlgHelpers;
 public interface Roi3D 
 {
 
-	public static final int POINT=0, POLYLINE=1, LINE_TRACE=2, CUBE=3; // Types
+	public static final int POINT=0, POLYLINE=1, LINE_TRACE=2, PLANE=3, CUBE=4; // Types
 	
 	/** returns ROI type**/
 	public int getType();
@@ -71,6 +71,9 @@ public interface Roi3D
 		 case LINE_TRACE:
 			 sType = "LineTrace";
 			 break;
+		 case PLANE:
+			 sType = "Plane";
+			 break;
 		 case CUBE:
 			 sType = "Cube";
 			 break;
@@ -86,6 +89,8 @@ public interface Roi3D
 		{ return POLYLINE;};
 		if(sType.equals("LineTrace"))
 		{ return LINE_TRACE;};
+		if(sType.equals("Plane"))
+		{ return PLANE;};
 		if(sType.equals("Cube"))
 		{ return CUBE;};
 		

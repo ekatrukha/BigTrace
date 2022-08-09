@@ -352,13 +352,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			{
 				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
 				{
-					//point or line
-					if(roiManager.mode<=RoiManager3D.ADD_POINT_LINE)
-					{
-						roiManager.addPoint(target);
-					}
 					//semi auto tracing initialize
-					else
+					if(roiManager.mode==RoiManager3D.ADD_POINT_SEMIAUTOLINE)
 					{
 						setTraceBoxMode(true);
 						//bTraceMode= true;								
@@ -385,6 +380,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 								calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
 							}
 						}
+
+					}
+					//point, polyline or plane
+					else
+					{
+						roiManager.addPoint(target);
 					}
 				}
 			}
@@ -434,7 +435,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			if(!bTraceMode)
 			{
-				roiManager.removePointFromLine();
+				roiManager.removePointLinePlane();
 			}
 			else
 			{
