@@ -142,6 +142,8 @@ public class VisPolygonFlat {
 		
 		int i,j;
 
+		double nGridStep = 20;
+		
 		nPointsN=points.size();
 		
 		if (nPointsN<3)
@@ -158,6 +160,7 @@ public class VisPolygonFlat {
 		Line3D gridDirection = new Line3D(lineP1,lineP2);
 		double [] gridPlaneN = new double [3];
 		LinAlgHelpers.cross(plane.n, gridDirection.linev[1], gridPlaneN);
+		
 		//plane containing the first edge and perpendicular to the polygon plane 
 		Plane3D gridPlane = new Plane3D();
 		gridPlane.setVectors(lineP1,gridPlaneN);
@@ -175,10 +178,11 @@ public class VisPolygonFlat {
 		}
 		ArrayList<ArrayList< RealPoint >> gridLines = new ArrayList<ArrayList< RealPoint >>(); 
 		double [] interSect = new double [3];
-		int nStep = 20;
-		for(i=1;i<=Math.abs(maxDist);i+=nStep )
+		
+		double nGridStepEquidist = maxDist/Math.round(maxDist/nGridStep);
+		for(double dShift=nGridStepEquidist;dShift<=Math.abs(maxDist);dShift+=nGridStepEquidist )
 		{
-			LinAlgHelpers.scale(gridPlane.n, (double)(i), lineP2);
+			LinAlgHelpers.scale(gridPlane.n, dShift, lineP2);
 			LinAlgHelpers.add(lineP2, lineP1, lineP2);
 			gridPlane.setVectors(lineP2, gridPlane.n);
 			ArrayList< RealPoint > gridEdge = new ArrayList< RealPoint >(); 
@@ -195,6 +199,50 @@ public class VisPolygonFlat {
 				}
 			}
 		}
+		
+		
+		//plane perpendicular to the first edge and perpendicular to the polygon plane 
+		gridPlane.setVectors(lineP1,gridDirection.linev[1]);
+		
+		double minDist = Double.MAX_VALUE;
+		maxDist = (-1)*Double.MAX_VALUE;
+		pointDist =0.0;
+		for(i=0;i<points.size();i++)
+		{
+			pointDist=gridPlane.signedDistance(points.get(i));
+			if(pointDist>maxDist)
+			{
+				maxDist=pointDist;
+			}
+			if(pointDist<minDist)
+			{
+				minDist=pointDist;
+			}
+			
+		}
+
+		nGridStepEquidist = (maxDist-minDist)/Math.round((maxDist-minDist)/nGridStep);
+		for(double dShift=minDist;dShift<=maxDist;dShift+=nGridStepEquidist )
+		{
+			LinAlgHelpers.scale(gridPlane.n, dShift, lineP2);
+			LinAlgHelpers.add(lineP2, lineP1, lineP2);
+			gridPlane.setVectors(lineP2, gridPlane.n);
+			ArrayList< RealPoint > gridEdge = new ArrayList< RealPoint >(); 
+			for(j=0;j<edges.size();j++)
+			{
+				if( Intersections3D.planeEdgeIntersect(gridPlane, edges.get(j).get(0), edges.get(j).get(1), interSect))
+				{
+					gridEdge.add(new RealPoint(interSect));
+				}
+				if(gridEdge.size()==2)
+				{
+					gridLines.add(gridEdge);
+					
+				}
+			}
+		}
+
+		
 		
 		nGridEdges = gridLines.size();
 
