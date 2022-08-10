@@ -493,7 +493,7 @@ public class VisPolyLineScaled
 	}
 	
 	/** for the WIRE mode, generates a set of lines running along the main path,
-	 * assuming that transverse contours alreade generated and put to vertices **/
+	 * assuming that transverse contours already generated and put to vertices **/
 	private void addLinesAlong()
 	{
 		int nShift = nSectorN*3*nPointsN;

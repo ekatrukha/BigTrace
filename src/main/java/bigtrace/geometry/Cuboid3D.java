@@ -34,11 +34,7 @@ public class Cuboid3D {
 	{
 		vertices = new double [8][3];
 		dMinMax = new double [2][3];
-		//int i;
-		//for (i=0;i<8;i++)
-		//{
-			//vertices_in.get(i).localize(vertices[i]);
-		//}
+
 		vertices_in.get(0).localize(vertices[1]); // minx.maxy.minz
 		vertices_in.get(1).localize(vertices[5]); // minx.maxy.maxz
 		vertices_in.get(2).localize(vertices[0]); // minx.miny.minz
@@ -47,7 +43,7 @@ public class Cuboid3D {
 		vertices_in.get(5).localize(vertices[6]); // maxx.maxy.maxz
 		vertices_in.get(6).localize(vertices[3]); // maxx.miny.minz
 		vertices_in.get(7).localize(vertices[7]); // maxx.miny.maxz
-		
+	
 		//range
 		Intersections3D.makeBoundBox(vertices_in, dMinMax);
 		

@@ -31,7 +31,7 @@ import bigtrace.geometry.Line3D;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
-import bigtrace.rois.Cube3D;
+import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
@@ -101,7 +101,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	ArrayList<VisPolyLineSimple> originVis = new ArrayList<VisPolyLineSimple>();
 
 	/** box around volume **/
-	Cube3D volumeBox;
+	Box3D volumeBox;
 
 	/** object storing main data/variables **/
 	public BigTraceData btdata = new BigTraceData();
@@ -275,7 +275,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			nDimBox[0][i]=btdata.nDimIni[0][i]+0.5f;
 			nDimBox[1][i]=(btdata.nDimIni[1][i]-1.0f);
 		}
-		volumeBox = new Cube3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY);
+		volumeBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY);
 	}
 	public void init(double origin_axis_length)
 	{

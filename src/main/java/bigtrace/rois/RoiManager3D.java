@@ -401,10 +401,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 newRoi = new LineTrace3D(groups.get(nActiveGroup));
 			 break;
 		 case Roi3D.PLANE:
-			 newRoi = new Plane3D(groups.get(nActiveGroup));
+			 newRoi = new CrossSection3D(groups.get(nActiveGroup),bt.btdata.nDimIni);
 			 break;
-		 case Roi3D.CUBE:
-			 newRoi = new Cube3D(groups.get(nActiveGroup));
+		 case Roi3D.BOX:
+			 newRoi = new Box3D(groups.get(nActiveGroup));
 			 break;
 		 default:
 			 newRoi= new Point3D(groups.get(nActiveGroup));
@@ -636,11 +636,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public void addPointToPlane(RealPoint point_)
 	 {
 
-		 Plane3D plane;
+		 CrossSection3D plane;
 		 //new Plane
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.PLANE)
 		 {	
-			 plane  = (Plane3D) makeRoi(Roi3D.PLANE);
+			 plane  = (CrossSection3D) makeRoi(Roi3D.PLANE);
 			 plane.addPoint(point_);
 			 addRoi(plane);
 			 //activeRoi = rois.size()-1; 
@@ -650,7 +650,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //add point to plane
 		 else
 		 {
-			 plane = (Plane3D) rois.get(activeRoi);
+			 plane = (CrossSection3D) rois.get(activeRoi);
 			 plane.addPoint(point_);
 		 }
 			
@@ -678,7 +678,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				 bPointRemoved = ((PolyLine3D) rois.get(activeRoi)).removeEndPoint();
 				 break;
 			 case Roi3D.PLANE:
-				 bPointRemoved = ((Plane3D) rois.get(activeRoi)).removePoint();
+				 bPointRemoved = ((CrossSection3D) rois.get(activeRoi)).removePoint();
 				 break;
 			 }
 			

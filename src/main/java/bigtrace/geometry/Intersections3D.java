@@ -30,6 +30,39 @@ public class Intersections3D {
 		}												
 		
 	}
+	
+	/** Function returns intersection points between "Plane3D" and an edge (defined by RP1 and RP2)  
+	 *  in the "intersectionPoint" variable.
+	 *  Returns "false" if the edge does not intersect a plane
+	 *  or lies in the plane completely. **/
+	public static boolean planeEdgeIntersect(final Plane3D plane, final RealPoint RP1, final RealPoint RP2, final double [] intersectionPoint)
+	{
+		
+		final Line3D line = new Line3D(RP1,RP2);
+		double dln=LinAlgHelpers.dot(line.linev[1], plane.n);
+		// maybe it is not a good idea, but ok for now
+		if (Math.abs(dln)< 2 * Double.MIN_VALUE )
+			{return false;}
+		else
+		{
+			for(int i =0; i<3; i++)
+			{
+				intersectionPoint[i]=plane.p0[i]-line.linev[0][i];
+			}
+			dln=LinAlgHelpers.dot(intersectionPoint, plane.n)/dln;
+			double edgeLn = LinAlgHelpers.distance(RP1.positionAsDoubleArray(), RP2.positionAsDoubleArray());
+			if(dln>=0 && dln <=edgeLn)
+			{
+				line.value(dln,intersectionPoint);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}												
+		
+	}
 	/** given a set of input lines, generates points of intersection
 	 * between them and input cuboid **/
 	public static ArrayList<RealPoint> cuboidLinesIntersect(final Cuboid3D cuboid, final ArrayList<Line3D> lines)

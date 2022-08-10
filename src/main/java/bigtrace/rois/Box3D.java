@@ -14,7 +14,7 @@ import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineSimple;
 import net.imglib2.RealPoint;
 
-public class Cube3D extends AbstractRoi3D implements Roi3D {
+public class Box3D extends AbstractRoi3D implements Roi3D {
 
 	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> edges;
@@ -22,9 +22,9 @@ public class Cube3D extends AbstractRoi3D implements Roi3D {
 	public ArrayList<VisPolyLineSimple> edgesVis;
 
 	
-	public Cube3D(final Roi3DGroup preset_in)
+	public Box3D(final Roi3DGroup preset_in)
 	{
-		type = Roi3D.CUBE;
+		type = Roi3D.BOX;
 
 		pointSize = preset_in.pointSize;
 		lineThickness=preset_in.lineThickness;
@@ -33,67 +33,20 @@ public class Cube3D extends AbstractRoi3D implements Roi3D {
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
 
 	}
-	public Cube3D(float [][] nDimBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_)
+	public Box3D(float [][] nDimBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_)
 	{
-		type = Roi3D.CUBE;
+		type = Roi3D.BOX;
 		lineThickness=lineThickness_;
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 		verticesVis = new ArrayList<VisPointsScaled>();
 		edgesVis = new ArrayList<VisPolyLineSimple>();
-		int i,j,z;
-		//float [] vbox_color = new float[]{0.4f,0.4f,0.4f};
-		//float vbox_thickness = 0.5f;
-		int [][] edgesxy = new int [5][2];
-		edgesxy[0]=new int[]{0,0};
-		edgesxy[1]=new int[]{1,0};
-		edgesxy[2]=new int[]{1,1};
-		edgesxy[3]=new int[]{0,1};
-		edgesxy[4]=new int[]{0,0};
+		int i;
 		
-		//draw front and back
-		RealPoint vertex1=new RealPoint(0,0,0);
-		RealPoint vertex2=new RealPoint(0,0,0);
-		for (z=0;z<2;z++)
+		ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
+		for(i=0;i<edgesPairPoints.size(); i++)
 		{
-			for (i=0;i<4;i++)
-			{
-				for (j=0;j<2;j++)
-				{
-					vertex1.setPosition(nDimBox[edgesxy[i][j]][j], j);
-					vertex2.setPosition(nDimBox[edgesxy[i+1][j]][j], j);
-				}
-				//z coord
-				vertex1.setPosition(nDimBox[z][2], 2);
-				vertex2.setPosition(nDimBox[z][2], 2);
-				
-				ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
-				point_coords.add(new RealPoint(vertex1));
-				point_coords.add(new RealPoint(vertex2));
-
-				edgesVis.add(new VisPolyLineSimple(point_coords, lineThickness,lineColor));
-
-			}
+			edgesVis.add(new VisPolyLineSimple(edgesPairPoints.get(i), lineThickness,lineColor));
 		}
-		//draw the rest 4 edges
-
-		for (i=0;i<4;i++)
-		{
-			for (j=0;j<2;j++)
-			{
-				vertex1.setPosition(nDimBox[edgesxy[i][j]][j], j);
-				vertex2.setPosition(nDimBox[edgesxy[i][j]][j], j);
-			}
-			//z coord
-			vertex1.setPosition(nDimBox[0][2], 2);
-			vertex2.setPosition(nDimBox[1][2], 2);
-			ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
-
-			point_coords.add(new RealPoint(vertex1));
-			point_coords.add(new RealPoint(vertex2));
-
-			edgesVis.add(new VisPolyLineSimple(point_coords, lineThickness,lineColor));
-	
-		}	
 	}
 	
 	@Override
@@ -214,5 +167,62 @@ public class Cube3D extends AbstractRoi3D implements Roi3D {
 		// TODO Auto-generated method stub
 		
 	}
+	/** returns array of paired coordinates for each edge of the box,
+	 * specified by nDimBox[0]<- one corner, nDimBox[1]<- opposite corner.
+	 * no checks on provided coordinates performed  **/
+	public static ArrayList<ArrayList< RealPoint >> getEdgesPairPoints(final float [][] nDimBox)
+	{
+		int i,j,z;
+		ArrayList<ArrayList< RealPoint >> out = new ArrayList<ArrayList< RealPoint >>();
+		int [][] edgesxy = new int [5][2];
+		edgesxy[0]=new int[]{0,0};
+		edgesxy[1]=new int[]{1,0};
+		edgesxy[2]=new int[]{1,1};
+		edgesxy[3]=new int[]{0,1};
+		edgesxy[4]=new int[]{0,0};
+		//draw front and back
+		RealPoint vertex1=new RealPoint(0,0,0);
+		RealPoint vertex2=new RealPoint(0,0,0);
+		for (z=0;z<2;z++)
+		{
+			for (i=0;i<4;i++)
+			{
+				for (j=0;j<2;j++)
+				{
+					vertex1.setPosition(nDimBox[edgesxy[i][j]][j], j);
+					vertex2.setPosition(nDimBox[edgesxy[i+1][j]][j], j);
+				}
+				//z coord
+				vertex1.setPosition(nDimBox[z][2], 2);
+				vertex2.setPosition(nDimBox[z][2], 2);
+				
+				ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
+				point_coords.add(new RealPoint(vertex1));
+				point_coords.add(new RealPoint(vertex2));
 
+				out.add(point_coords);
+
+			}
+		}
+		//draw the rest 4 edges
+
+		for (i=0;i<4;i++)
+		{
+			for (j=0;j<2;j++)
+			{
+				vertex1.setPosition(nDimBox[edgesxy[i][j]][j], j);
+				vertex2.setPosition(nDimBox[edgesxy[i][j]][j], j);
+			}
+			//z coord
+			vertex1.setPosition(nDimBox[0][2], 2);
+			vertex2.setPosition(nDimBox[1][2], 2);
+			ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
+
+			point_coords.add(new RealPoint(vertex1));
+			point_coords.add(new RealPoint(vertex2));
+			out.add(point_coords);
+	
+		}	
+		return out;
+	}
 }
