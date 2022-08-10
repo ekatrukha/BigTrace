@@ -11,10 +11,10 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.geometry.Intersections3D;
-import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
+import bigtrace.scene.VisPolygonFlat;
 import net.imglib2.RealPoint;
 import net.imglib2.util.LinAlgHelpers;
 
@@ -22,7 +22,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	
 	public ArrayList<RealPoint> vertices;
 	public VisPointsScaled verticesVis;
-	public VisPolyLineScaled edgesVis;
+	public VisPolygonFlat planeVis;
 	public float [][] nDimBox;
 
 
@@ -36,8 +36,8 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
 				
-		//renderType = preset_in.renderType;
-		renderType = VisPolyLineScaled.CENTER_LINE;
+		renderType = preset_in.renderType;
+	
 		nSectorN = preset_in.sectorN;
 		
 		
@@ -45,13 +45,12 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
-		edgesVis = new VisPolyLineScaled();
+		planeVis = new VisPolygonFlat();
 	
-		edgesVis.bSmooth = false;
-		edgesVis.setColor(lineColor);
-		edgesVis.setThickness(lineThickness);
-		edgesVis.setSectorN(nSectorN);
-		edgesVis.setRenderType(renderType);
+	
+		planeVis.setColor(lineColor);
+		planeVis.setThickness(lineThickness);
+		planeVis.setRenderType(renderType);
 		name = "plane"+Integer.toString(this.hashCode());
 		nDimBox = new float [2][3];
 		for(int i=0;i<2;i++)
@@ -99,7 +98,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	@Override
 	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
 		verticesVis.draw(gl, pvm, screen_size);
-		edgesVis.draw(gl, pvm);
+		planeVis.draw(gl, pvm);
 		
 	}
 
@@ -115,7 +114,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	public void setLineColor(Color lineColor_) {
 		
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
-		edgesVis.setColor(lineColor);
+		planeVis.setColor(lineColor);
 	}
 
 
@@ -130,7 +129,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	public void setLineThickness(float line_thickness) {
 
 		lineThickness=line_thickness;
-		edgesVis.setThickness(lineThickness);
+		planeVis.setThickness(lineThickness);
 		updateRenderVertices();
 	}
 
@@ -144,25 +143,14 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		
 	}
 
-
-
 	@Override
 	public void setRenderType(int nRenderType) 
 	{
-		//for cross-section wire and center line is the same for now
-		//if(nRenderType==VisPolyLineScaled.WIRE)
-	//	{
-			renderType=VisPolyLineScaled.CENTER_LINE;
-		//}
-		//else
-		//{
-			renderType=nRenderType;
-		//}
-		edgesVis.setRenderType(renderType);
+
+		renderType=nRenderType;
+		planeVis.setRenderType(renderType);
 		updateRenderVertices();
 	}
-
-
 
 	@Override
 	public void saveRoi(FileWriter writer) {
@@ -206,13 +194,16 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 			if(outline.size()>1)
 			{
 				sortPolygonVertices(outline,planeG.n);
-				outline.add(new RealPoint(outline.get(0)));
-				edgesVis.setVertices(outline);
+				//outline.add(new RealPoint(outline.get(0)));
+				planeVis.setVertices(outline);
 			}
 		}
 	}
-	/** given a set of points (more than 2), assuming they form convex polygon,
-	 * sorts them to form outline. Maybe better to use ConvexHull, but ok for now.
+	/** given a set of points (more than 2) 
+	 * 1) all lying in the same plane (with its normal vector in planeNormal); 
+	 * 2) assuming they form convex polygon,
+	 * sorts them to form outline. 
+	 * Maybe better to use ConvexHull, but ok for now.
 	 * Taken from https://www.asawicki.info/news_1428_finding_polygon_of_plane-aabb_intersection **/
 	public static void sortPolygonVertices(final ArrayList< RealPoint > vertices, final double [] planeNormal )
 	{

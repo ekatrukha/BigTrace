@@ -160,7 +160,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 icon_path = bigtrace.BigTrace.class.getResource("/icons/plane.png");
 		 tabIcon = new ImageIcon(icon_path);
 		 roiPlaneMode = new JToggleButton(tabIcon);
-		 roiPlaneMode.setToolTipText("Plane");
+		 roiPlaneMode.setToolTipText("Cross-section");
 		 roiPlaneMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 		 //roiPolySemiAMode.setSelected(true);	
 		 

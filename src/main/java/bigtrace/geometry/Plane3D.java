@@ -107,4 +107,22 @@ public class Plane3D {
 		LinAlgHelpers.cross(v12, v32, n);
 		LinAlgHelpers.normalize(n);
 	}	
+	/** returns absolute distance from a point p to the current plane **/
+	public double distance(RealPoint p)
+	{
+		double [] v = p.positionAsDoubleArray();
+		LinAlgHelpers.subtract(v, p0, v);
+		
+		return Math.abs(LinAlgHelpers.dot(v, n));
+	}
+	
+	/** returns signed distance from a point p to the current plane,
+	 * it is negative if point is below plane's normal vector direction**/
+	public double signedDistance(RealPoint p)
+	{
+		double [] v = p.positionAsDoubleArray();
+		LinAlgHelpers.subtract(v, p0, v);
+		
+		return LinAlgHelpers.dot(v, n);
+	}
 }

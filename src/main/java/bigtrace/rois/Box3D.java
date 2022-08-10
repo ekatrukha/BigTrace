@@ -168,7 +168,7 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 		
 	}
 	/** returns array of paired coordinates for each edge of the box,
-	 * specified by nDimBox[0]<- one corner, nDimBox[1]<- opposite corner.
+	 * specified by nDimBox[0] - one corner, nDimBox[1] - opposite corner.
 	 * no checks on provided coordinates performed  **/
 	public static ArrayList<ArrayList< RealPoint >> getEdgesPairPoints(final float [][] nDimBox)
 	{
