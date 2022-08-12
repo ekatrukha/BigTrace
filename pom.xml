@@ -152,8 +152,6 @@
 			<groupId>org.joml</groupId>
 			<artifactId>joml</artifactId>
 		</dependency>
-
-
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>
@@ -162,6 +160,10 @@
 			<groupId>net.imagej</groupId>
 			<artifactId>ij</artifactId>
 		</dependency>
+		<dependency>
+        	<groupId>gov.nist.math</groupId>
+        	<artifactId>jama</artifactId>
+        </dependency>
 
 	</dependencies>
 </project>

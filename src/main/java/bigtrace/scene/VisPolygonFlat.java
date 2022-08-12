@@ -142,31 +142,37 @@ public class VisPolygonFlat {
 		
 		int i,j;
 
-		double nGridStep = 20;
+		double nGridStep = BigTraceData.crossSectionGridStep;
 		
 		nPointsN=points.size();
 		
 		if (nPointsN<3)
 			return;
 		
-		//get a plane of polygon
+		//get a plane of the polygon
 		Plane3D plane = new Plane3D(points.get(1),points.get(0),points.get(2));
-		//get edges
+		//get edges of the polygon
 		ArrayList<ArrayList< RealPoint >> edges = getPolygonEdgesPairPoints(points);
-		//first edge line
+		
+		//GRID LINES DIRECTION ONE
+		//first edge points
 		double [] lineP1 = edges.get(0).get(0).positionAsDoubleArray();
 		double [] lineP2 = edges.get(0).get(1).positionAsDoubleArray();
-
+		//make a line along first edge
 		Line3D gridDirection = new Line3D(lineP1,lineP2);
+		
+		//make a plane containing the first edge and perpendicular to the polygon plane: 
+		//its normal vector would be 
 		double [] gridPlaneN = new double [3];
 		LinAlgHelpers.cross(plane.n, gridDirection.linev[1], gridPlaneN);
-		
-		//plane containing the first edge and perpendicular to the polygon plane 
+		//start it from the first point of the polygon
 		Plane3D gridPlane = new Plane3D();
 		gridPlane.setVectors(lineP1,gridPlaneN);
 		
 		double maxDist = 0.0;
 		double pointDist =0.0;
+		// Find most distant vertex of the polygon, this would define the range of the grid
+		//We can skip first two points, since they form the edge/lie in the plane 
 		for(i=2;i<points.size();i++)
 		{
 			pointDist=gridPlane.signedDistance(points.get(i));
@@ -176,16 +182,21 @@ public class VisPolygonFlat {
 			}
 			
 		}
+		//array holding grid lines as pairs of RealPoints
 		ArrayList<ArrayList< RealPoint >> gridLines = new ArrayList<ArrayList< RealPoint >>(); 
 		double [] interSect = new double [3];
 		
+		//shift grid plane and chop the polygon (find intersection points)
+		//round up grid step
 		double nGridStepEquidist = maxDist/Math.round(maxDist/nGridStep);
 		for(double dShift=nGridStepEquidist;dShift<=Math.abs(maxDist);dShift+=nGridStepEquidist )
 		{
+			
 			LinAlgHelpers.scale(gridPlane.n, dShift, lineP2);
 			LinAlgHelpers.add(lineP2, lineP1, lineP2);
 			gridPlane.setVectors(lineP2, gridPlane.n);
 			ArrayList< RealPoint > gridEdge = new ArrayList< RealPoint >(); 
+			//again, can skip the first edge, since it is already in the plane
 			for(j=1;j<edges.size();j++)
 			{
 				if( Intersections3D.planeEdgeIntersect(gridPlane, edges.get(j).get(0), edges.get(j).get(1), interSect))
@@ -200,7 +211,7 @@ public class VisPolygonFlat {
 			}
 		}
 		
-		
+		//GRID LINES DIRECTION TWO
 		//plane perpendicular to the first edge and perpendicular to the polygon plane 
 		gridPlane.setVectors(lineP1,gridDirection.linev[1]);
 		

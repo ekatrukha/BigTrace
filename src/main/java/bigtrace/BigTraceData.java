@@ -13,7 +13,7 @@ import net.imglib2.view.IntervalView;
 public class BigTraceData {
 
 	
-	public String sVersion = "0.0.6																																																															";
+	public String sVersion = "0.0.6";
 	
 	/////////////// input file
 	public String sFileNameImg;
@@ -114,7 +114,10 @@ public class BigTraceData {
 	public static int shapeInterpolation = Prefs.getInt("BigTrace.ShapeInterpolation",SHAPE_Subvoxel);
 	
 	/** size of moving average window to smooth traces (in points) **/
-	public static int nSmoothWindow=5;
+	public static int nSmoothWindow=(int) Prefs.get("BigTrace.nSmoothWindow", 5);
+	
+	/** step of gridline displaying Crossection ROI in wired mode**/
+	public static int crossSectionGridStep = 20;
 	
 	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
 	
@@ -124,12 +127,11 @@ public class BigTraceData {
 		globCal[0]= 1.0;
 		globCal[1]= 1.0;
 		globCal[2]= 1.0;
+		
 		//view 
 		nZoomBoxSize = (int) Prefs.get("BigTrace.nZoomBoxSize", 150);
 		dZoomBoxScreenFraction = Prefs.get("BigTrace.dZoomBoxScreenFraction", 1.0);
-		BigTraceData.nSmoothWindow = (int) Prefs.get("BigTrace.nSmoothWindow", 5);
-	
-		
+
 		//tracing
 		sigmaTrace = new double [3];
 		sigmaTrace[0] = Prefs.get("BigTrace.sigmaTraceX", 2.0);
