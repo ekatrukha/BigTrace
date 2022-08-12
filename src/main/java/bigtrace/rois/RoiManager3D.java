@@ -73,7 +73,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public Color activeLineColor = Color.RED;
 	 
 	 public ColorUserSettings selectColors = new ColorUserSettings(); 
-	 public int mode;
+	 public static int mode = (int) Prefs.get("BigTrace.RoiManagerMode", ADD_POINT_LINE);
 	 public boolean bShowAll = true;
 
 	 //MEASURE OBJECT
@@ -138,31 +138,34 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 roiPointMode = new JToggleButton(tabIcon);
 		 roiPointMode.setToolTipText("Trace single point");
 		 roiPointMode.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
-		 //roiPointMode.setSelected(true);
+		 if(mode==RoiManager3D.ADD_POINT)
+		 	{roiPointMode.setSelected(true);}
 			 
-	     //icon_path = classLoader.getResource("icons/polyline.png").getFile();
+
 		 icon_path =bigtrace.BigTrace.class.getResource("/icons/polyline.png");
-		 //icon_path = RoiManager3D.class.getResource("/polyline.png").getFile();
-		 //icon_path = RoiManager3D.class.getResource("icons/polyline.png").getFile();
 		 tabIcon = new ImageIcon(icon_path);
 		 roiPolyLineMode = new JToggleButton(tabIcon);
 		 roiPolyLineMode.setToolTipText("Trace polyline");
 		 roiPolyLineMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 roiPolyLineMode.setSelected(true);
+		 if(mode==RoiManager3D.ADD_POINT_LINE)
+			 {roiPolyLineMode.setSelected(true);}
 	     
 		 icon_path = bigtrace.BigTrace.class.getResource("/icons/semiauto.png");
 		 tabIcon = new ImageIcon(icon_path);
 		 roiPolySemiAMode = new JToggleButton(tabIcon);
 		 roiPolySemiAMode.setToolTipText("Semi auto trace");
 		 roiPolySemiAMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 //roiPolySemiAMode.setSelected(true);	
+		 if(mode==RoiManager3D.ADD_POINT_SEMIAUTOLINE)
+		 	{roiPolySemiAMode.setSelected(true);}
+
 		 
 		 icon_path = bigtrace.BigTrace.class.getResource("/icons/plane.png");
 		 tabIcon = new ImageIcon(icon_path);
 		 roiPlaneMode = new JToggleButton(tabIcon);
 		 roiPlaneMode.setToolTipText("Cross-section");
 		 roiPlaneMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 //roiPolySemiAMode.setSelected(true);	
+		 if(mode==RoiManager3D.ADD_POINT_PLANE)
+		 	{roiPlaneMode.setSelected(true);}
 		 
 		 icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
 		 tabIcon = new ImageIcon(icon_path);
@@ -198,7 +201,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
 		 panTracing.add(sp,ct);
 		 ct.gridx++;
-		 //panTracing.add(roiSettings,ct);
+		 
 		 //filler
 		 //ct.gridx++;
 		 ct.weightx = 0.01;
@@ -209,8 +212,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 
 		 ///RoiLIST and buttons
-		 mode = RoiManager3D.ADD_POINT_LINE;
-		 //mode = RoiManager3D.ADD_POINT;
 		 listModel = new  DefaultListModel<String>();
 		 jlist = new JList<String>(listModel);
 		 jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -552,10 +553,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 }
 	 public void addPoint3D(RealPoint point_)
 	 {
-		 //addRoi( new Point3D(point_, presets.get(nActiveGroup).pointSize, presets.get(nActiveGroup).pointColor));
-		 //addRoi( new Point3D(point_, groups.get(nActiveGroup)));
-		 //Point3D pointROI =new Point3D(groups.get(nActiveGroup)); 
-		 //addRoi( pointROI);
+
 		 Point3D pointROI =(Point3D)makeRoi( Roi3D.POINT); 
 		 pointROI.setVertex(point_);
 		 addRoi(pointROI);
@@ -567,20 +565,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.LINE_TRACE)
 		 {
-			 //tracing = new LineTrace3D(currLineThickness, currPointSize, defaultLineColor, defaultPointColor, currRenderType, currSectorN);
-			 //tracing = new LineTrace3D(groups.get(nActiveGroup));
-			 //addRoi(tracing);
 			 tracing = (LineTrace3D) makeRoi(Roi3D.LINE_TRACE);
 			 tracing.addFirstPoint(point_);
 			 addRoi(tracing);
 			 //activeRoi = rois.size()-1; 
 			 return;
 		 }
-		 //active ROI is not a line
-		 /*if(rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
-		 {
-			 return;
-		 }*/
 		 //add point to line
 		 else
 		 {
@@ -787,6 +777,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			if(this.mode != RoiManager3D.ADD_POINT)
 			{
 				this.mode = RoiManager3D.ADD_POINT;
+				Prefs.set("BigTrace.RoiManagerMode", this.mode);
 				unselect();
 			}
 		}
@@ -795,6 +786,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			if(this.mode != RoiManager3D.ADD_POINT_LINE)
 			{
 				this.mode = RoiManager3D.ADD_POINT_LINE;
+				Prefs.set("BigTrace.RoiManagerMode", this.mode);
 				unselect();
 			}
 		}
@@ -803,6 +795,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			if(this.mode != RoiManager3D.ADD_POINT_SEMIAUTOLINE)
 			{
 				this.mode = RoiManager3D.ADD_POINT_SEMIAUTOLINE;
+				Prefs.set("BigTrace.RoiManagerMode", this.mode);
 				unselect();
 			}
 		}
@@ -811,6 +804,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			if(this.mode != RoiManager3D.ADD_POINT_PLANE)
 			{
 				this.mode = RoiManager3D.ADD_POINT_PLANE;
+				Prefs.set("BigTrace.RoiManagerMode", this.mode);
 				unselect();
 			}
 		}

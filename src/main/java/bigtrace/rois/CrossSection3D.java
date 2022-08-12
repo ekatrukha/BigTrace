@@ -225,6 +225,10 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 				planeVis.setVertices(outline);
 			}
 		}
+		else
+		{
+			planeVis.setVertices(new ArrayList<RealPoint>());
+		}
 	}
 	/** given a set of points (more than 2) 
 	 * 1) all lying in the same plane (with its normal vector in planeNormal); 
