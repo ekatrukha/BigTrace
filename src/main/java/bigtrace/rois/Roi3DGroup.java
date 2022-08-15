@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
+import bigtrace.BigTraceData;
 import bigtrace.scene.VisPolyLineScaled;
 
 public class Roi3DGroup {
@@ -16,16 +17,14 @@ public class Roi3DGroup {
 	 public float lineThickness = 4.0f;
 	 public float pointSize = 6.0f;
 	 public int renderType = VisPolyLineScaled.WIRE;
-	 public int sectorN = 16;
 	 public boolean bVisible = true;
 	 
-	 public Roi3DGroup(String sGroupName_,  float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_, int sectorN_)
+	 public Roi3DGroup(String sGroupName_,  float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_)
 	 {
 		 sName=new String(sGroupName_);
 		 lineThickness=lineThickness_;
 		 pointSize=pointSize_;
 		 renderType = renderType_;
-		 sectorN = sectorN_;
 		 setPointColor(pointColor_);
 		 setLineColor(lineColor_);
 		 bVisible = true;
@@ -36,7 +35,6 @@ public class Roi3DGroup {
 		 lineThickness=preset_in.getLineThickness();
 		 pointSize=preset_in.getPointSize();
 		 renderType = preset_in.getRenderType();
-		 sectorN = preset_in.sectorN;
 		 setPointColor(preset_in.getPointColor());
 		 setLineColor(preset_in.getLineColor());		 
 	 }
@@ -136,7 +134,7 @@ public class Roi3DGroup {
 									  +	Integer.toString(lineColor.getBlue()) +","
 									  +	Integer.toString(lineColor.getAlpha()) +"\n");
 			writer.write("RenderType,"+ Integer.toString(this.getRenderType())+"\n");
-			writer.write("SectorN,"+ Integer.toString(this.sectorN)+"\n");
+
 			
 
 		}

@@ -52,7 +52,6 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
 
 		renderType= preset_in.renderType;
-		nSectorN = preset_in.sectorN;
 		
 		vertices = new ArrayList<RealPoint>();
 		segments = new ArrayList<ArrayList<RealPoint>>();
@@ -81,7 +80,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 			vertices.add(new RealPoint(in_));
 			verticesVis.setVertices(vertices);
 			segments.add(segments_);
-			segmentsVis.add(new VisPolyLineScaled(segments_,lineThickness, lineColor, nSectorN, renderType));
+			segmentsVis.add(new VisPolyLineScaled(segments_,lineThickness, lineColor, renderType));
 		}
 	}
 	
@@ -300,7 +299,6 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 									  +	Integer.toString(lineColor.getBlue()) +","
 									  +	Integer.toString(lineColor.getAlpha()) +"\n");
 			writer.write("RenderType,"+ Integer.toString(this.getRenderType())+"\n");
-			writer.write("SectorN,"+ Integer.toString(this.nSectorN)+"\n");
 			
 			writer.write("Vertices,"+Integer.toString(vertices.size())+"\n");
 			vert = new float[3];
@@ -366,7 +364,6 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		setLineColor(preset_in.lineColor);
 
 		setRenderType(preset_in.renderType);
-		nSectorN = preset_in.sectorN;
 		setPointSize(preset_in.pointSize);
 		setLineThickness(preset_in.lineThickness);
 	}

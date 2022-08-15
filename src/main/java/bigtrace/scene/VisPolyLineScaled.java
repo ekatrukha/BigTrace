@@ -77,7 +77,7 @@ public class VisPolyLineScaled
 	/** number of segments in the cylinder cross-section (stack count),
 	 *  3 = prism, 4 = cuboid, etc.
 	 *  The more the number, more smooth is surface **/
-	public int nSectorN;
+	//public final int nSectorN = BigTraceData.sectorN;
 
 	private boolean initialized;
 	
@@ -95,12 +95,11 @@ public class VisPolyLineScaled
 	}
 	
 	
-	public VisPolyLineScaled(final ArrayList< RealPoint > points, final float fLineThickness_, final Color color_in, final int nSectorN_, final int nRenderType)
+	public VisPolyLineScaled(final ArrayList< RealPoint > points, final float fLineThickness_, final Color color_in, final int nRenderType)
 	{
 		this();
 		
 		fLineThickness= fLineThickness_;	
-		nSectorN= nSectorN_;
 		l_color = new Vector4f(color_in.getComponents(null));		
 		renderType = nRenderType;
 		setVertices(points);
@@ -117,16 +116,11 @@ public class VisPolyLineScaled
 		l_color = new Vector4f(color_in.getComponents(null));
 	}
 
-	public void setSectorN(int nSectorN_)
-	{
-		nSectorN= nSectorN_;
-	}
 
 	public void setParams(final ArrayList< RealPoint > points, final float fLineThickness_, final int nSectorN_, final Color color_in)
 	{
 		
 		fLineThickness= fLineThickness_;		
-		nSectorN= nSectorN_;
 		l_color = new Vector4f(color_in.getComponents(null));		
 		setVertices(points);
 	}
@@ -176,6 +170,7 @@ public class VisPolyLineScaled
 		}	
 		
 		nPointsN=points.size();
+		
 		vertices = new float [nPointsN*3];//assume 3D	
 
 		for (i=0;i<nPointsN; i++)
@@ -217,7 +212,7 @@ public class VisPolyLineScaled
 		}
 		
 		
-		
+		final int nSectorN = BigTraceData.sectorN;
 		nPointsN=points.size();
 		if(nPointsN>1)
 		{
@@ -377,7 +372,7 @@ public class VisPolyLineScaled
 			points = points_;
 		}
 		
-		
+		final int nSectorN = BigTraceData.sectorN;
 		nPointsN=points.size();
 		if(nPointsN>1)
 		{
@@ -496,6 +491,7 @@ public class VisPolyLineScaled
 	 * assuming that transverse contours already generated and put to vertices **/
 	private void addLinesAlong()
 	{
+		final int nSectorN = BigTraceData.sectorN;
 		int nShift = nSectorN*3*nPointsN;
 		int i,j,k;
 		for (i=0;i<nSectorN;i++)
@@ -511,6 +507,7 @@ public class VisPolyLineScaled
 	{
 		 ArrayList< RealPoint > contourXY = new  ArrayList< RealPoint > ();
 		 
+		 final int nSectorN = BigTraceData.sectorN;
 		 double dAngleInc = 2.0*Math.PI/(nSectorN);
 		 double dAngle = 0.0;
 		 
@@ -589,7 +586,7 @@ public class VisPolyLineScaled
 
 		if(nPointsN>1)
 		{
-
+			final int nSectorN = BigTraceData.sectorN;
 			JoglGpuContext context = JoglGpuContext.get( gl );
 	
 			prog.getUniformMatrix4f( "pvm" ).set( pvm );

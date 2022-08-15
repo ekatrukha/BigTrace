@@ -58,7 +58,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 	 private static final long serialVersionUID = -2843907862066423151L;
 	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2, ADD_POINT_PLANE=3;
-	 public static final int SECTORS_DEF=16;
+	 ///public static final int SECTORS_DEF=16;
 	 
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
 	 public int activeRoi = -1;
@@ -130,7 +130,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 ButtonGroup roiTraceMode = new ButtonGroup();
 		 
 	     //initialize new *undefined* ROI group
-	     groups.add(new Roi3DGroup(sUndefinedGroupName, 6.0f, Color.GREEN, 4.0f, Color.BLUE, VisPolyLineScaled.WIRE,RoiManager3D.SECTORS_DEF) );
+	     groups.add(new Roi3DGroup(sUndefinedGroupName, 6.0f, Color.GREEN, 4.0f, Color.BLUE, VisPolyLineScaled.WIRE) );
 	     nActiveGroup = 0;
 	     
 		 URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
@@ -960,29 +960,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		JPanel pGeneral = new JPanel(new GridBagLayout());
 		
 
-		JButton butPointActiveColor = new JButton( new ColorIcon( activePointColor ) );	
-		butPointActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active point color", activePointColor );
-			if (newColor!=null)
-			{
-				selectColors.setColor(newColor, 0);
-				//setNewPointColor(newColor);
-				butPointActiveColor.setIcon(new ColorIcon(newColor));
-			}
-			
-		});
-		
-		JButton butLineActiveColor = new JButton( new ColorIcon( activeLineColor ) );	
-		butLineActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active line color", activeLineColor );
-			if (newColor!=null)
-			{
-				selectColors.setColor(newColor, 1);
 
-				butLineActiveColor.setIcon(new ColorIcon(newColor));
-			}
-			
-		});
 
 		NumberField nfZoomBoxSize = new NumberField(4);
 		nfZoomBoxSize.setIntegersOnly(true);
@@ -1003,17 +981,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		cd.gridx=0;
 		cd.gridy=0;
-		pGeneral.add(new JLabel("Selected ROI point color: "),cd);
-		cd.gridx++;
-		pGeneral.add(butPointActiveColor,cd);
-		cd.gridx=0;
-		cd.gridy++;
-		pGeneral.add(new JLabel("Selected ROI line color: "),cd);
-		cd.gridx++;
-		pGeneral.add(butLineActiveColor,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
+
 		pGeneral.add(new JLabel("Zoom volume size (px): "),cd);
 		cd.gridx++;
 		pGeneral.add(nfZoomBoxSize,cd);
@@ -1112,18 +1080,93 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridx++;
 		pTrace.add(cbTraceOnlyCrop,cd);
 		
+		
+		////////////ROI RENDER OPTIONS
+		JPanel pROIrender = new JPanel(new GridBagLayout());
+		JButton butPointActiveColor = new JButton( new ColorIcon( activePointColor ) );	
+		butPointActiveColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active point color", activePointColor );
+			if (newColor!=null)
+			{
+				selectColors.setColor(newColor, 0);
+				//setNewPointColor(newColor);
+				butPointActiveColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
+		
+		JButton butLineActiveColor = new JButton( new ColorIcon( activeLineColor ) );	
+		butLineActiveColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active line color", activeLineColor );
+			if (newColor!=null)
+			{
+				selectColors.setColor(newColor, 1);
+
+				butLineActiveColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
+		
+		NumberField nfSectorNLines = new NumberField(4);
+		nfSectorNLines.setIntegersOnly(true);
+		nfSectorNLines.setText(Integer.toString(BigTraceData.sectorN));
+		
+		NumberField nfCrossSectionGridStep = new NumberField(4);
+		nfCrossSectionGridStep.setIntegersOnly(true);
+		nfCrossSectionGridStep.setText(Integer.toString(BigTraceData.crossSectionGridStep));
+		
+		cd.gridx=0;
+		cd.gridy=0;
+		pROIrender.add(new JLabel("Selected ROI point color: "),cd);
+		cd.gridx++;
+		pROIrender.add(butPointActiveColor,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("Selected ROI line color: "),cd);
+		cd.gridx++;
+		pROIrender.add(butLineActiveColor,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("# sectors line render: "),cd);
+		cd.gridx++;
+		pROIrender.add(nfSectorNLines,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("Cross-section grid step (px): "),cd);
+		cd.gridx++;
+		pROIrender.add(nfCrossSectionGridStep,cd);
+		
+		
 		tabPane.addTab("General",pGeneral);
 		tabPane.addTab("Tracing",pTrace);
+		tabPane.addTab("ROI render",pROIrender);
+		
+		
 
 		int reply = JOptionPane.showConfirmDialog(null, tabPane, "ROI Manager Settings", 
         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-//		int reply = JOptionPane.showConfirmDialog(null, dialRoiSet, "ROI Manager Settings", 
-		        //JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
 		if (reply == JOptionPane.OK_OPTION) 
 		{
 			
 
+
+			
+			//ZOOM BOX
+
+			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
+			Prefs.set("BigTrace.nZoomBoxSize", bt.btdata.nZoomBoxSize);
+			
+			bt.btdata.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
+			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
+			
+			//ROI appearance
+			
+			boolean bUpdateROIs = false;
+			
 			Color tempC;
 			
 			tempC=selectColors.getColor(0);
@@ -1139,14 +1182,27 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				selectColors.setColor(null, 1);
 			}
 			
-			//SAVE SELECTIONS
-
-			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
-			Prefs.set("BigTrace.nZoomBoxSize", bt.btdata.nZoomBoxSize);
+			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
+			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
 			
-			bt.btdata.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
-			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
+			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
+			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
 			
+			if(BigTraceData.sectorN!= Integer.parseInt(nfSectorNLines.getText()))
+			{
+				BigTraceData.sectorN= Integer.parseInt(nfSectorNLines.getText());
+				Prefs.set("BigTrace.nSectorN", BigTraceData.sectorN);
+				bUpdateROIs  = true;
+			}
+			
+			if(BigTraceData.crossSectionGridStep!= Integer.parseInt(nfCrossSectionGridStep.getText()))
+			{
+				BigTraceData.crossSectionGridStep= Integer.parseInt(nfCrossSectionGridStep.getText());
+				Prefs.set("BigTrace.crossSectionGridStep", BigTraceData.crossSectionGridStep);
+				bUpdateROIs  = true;
+			}
+			
+			//INTERPOLATION
 			
 			if(BigTraceData.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText())||BigTraceData.shapeInterpolation!= shapeInterpolationList.getSelectedIndex())
 			{
@@ -1154,18 +1210,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				Prefs.set("BigTrace.nSmoothWindow", BigTraceData.nSmoothWindow);
 				BigTraceData.shapeInterpolation= shapeInterpolationList.getSelectedIndex();
 				Prefs.set("BigTrace.ShapeInterpolation",BigTraceData.shapeInterpolation);
-				updateROIsDisplay();
+				bUpdateROIs  = true;				
 			}
 			
-/*
-			if(BigTraceData.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText()))
-			{
-				
-				BigTraceData.nSmoothWindow = Integer.parseInt(nfSmoothWindow.getText());
-				updateROIsDisplay();
-				Prefs.set("BigTrace.nSmoothWindow", BigTraceData.nSmoothWindow);
-			}*/
 			
+			if(bUpdateROIs)
+				{updateROIsDisplay();}
+			
+			//TRACING OPTIONS
 			
 			bt.btdata.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
 			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btdata.sigmaTrace[0]));

@@ -404,8 +404,6 @@ public class BigTraceControlPanel extends JPanel
 
 					((BvvSource) btrace.bvv_sources.get(i)).removeFromBdv();
 					btrace.bvv_sources.set(i, BvvFunctions.show( (RandomAccessibleInterval<T>) btrace.sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(btrace.bvv_main)));
-					((BvvSource) btrace.bvv_sources.get(i)).setDisplayRange(nDisplayMinMax[i][0], nDisplayMinMax[i][1]);
-					((BvvSource) btrace.bvv_sources.get(i)).setColor( new ARGBType(btrace.colorsCh[i].getRGB() ));
 					if(btrace.nBitDepth<=8)
 					{
 						((BvvSource) btrace.bvv_sources.get(i)).setDisplayRangeBounds(0, 255);
@@ -414,6 +412,9 @@ public class BigTraceControlPanel extends JPanel
 					{
 						((BvvSource) btrace.bvv_sources.get(i)).setDisplayRangeBounds(0, 65535);
 					}
+					((BvvSource) btrace.bvv_sources.get(i)).setDisplayRange(nDisplayMinMax[i][0], nDisplayMinMax[i][1]);
+					((BvvSource) btrace.bvv_sources.get(i)).setColor( new ARGBType(btrace.colorsCh[i].getRGB() ));
+
 				}	
 				/**/					
 

@@ -8,7 +8,6 @@ public abstract class AbstractRoi3D implements Roi3D {
 	public float pointSize;
 	public Color lineColor;
 	public Color pointColor;
-	public int nSectorN;
 	public String name;
 	public int type;
 	public int renderType;

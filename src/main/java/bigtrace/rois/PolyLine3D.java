@@ -52,9 +52,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
 				
 		renderType = preset_in.renderType;
-		nSectorN = preset_in.sectorN;
-		
-		
+
 		vertices = new ArrayList<RealPoint>();
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor);
@@ -64,7 +62,6 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		edgesVis.bSmooth = false;
 		edgesVis.setColor(lineColor);
 		edgesVis.setThickness(lineThickness);
-		edgesVis.setSectorN(nSectorN);
 		edgesVis.setRenderType(renderType);
 		name = "polyl"+Integer.toString(this.hashCode());
 
@@ -300,7 +297,6 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 									  +	Integer.toString(lineColor.getBlue()) +","
 									  +	Integer.toString(lineColor.getAlpha()) +"\n");
 			writer.write("RenderType,"+ Integer.toString(this.getRenderType())+"\n");
-			writer.write("SectorN,"+ Integer.toString(this.nSectorN)+"\n");
 			
 			writer.write("Vertices,"+Integer.toString(vertices.size())+"\n");
 			vert = new float[3];
@@ -336,7 +332,6 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		setLineColor(preset_in.lineColor);
 
 		setRenderType(preset_in.renderType);
-		nSectorN = preset_in.sectorN;
 		setPointSize(preset_in.pointSize);
 		setLineThickness(preset_in.lineThickness);
 	}

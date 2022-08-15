@@ -440,7 +440,6 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
         Color lineColor = Color.BLACK;
         String sName = "";
         int nRenderType = 0;
-        int nSectorN = 16;
         int nLineN = 0;
         
         int nLoadedGroupsN = 0;
@@ -474,18 +473,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 							bFirstPartCheck++; 
 						}					  
 					}
-					/*
-					//second line check
-					if(line_array.length==2 && nLineN==2)
-					{
-						bFirstPartCheck++;
-						if(line_array[0].equals("GroupsNumber"))
-						{
-							bFirstPartCheck++;
-							// nGroupN=Integer.parseInt(line_array[1]);
-						}
-					}		
-					*/		  
+  
 					if(line_array[0].equals("BT_Group"))
 					{
 	
@@ -516,15 +504,11 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 								Integer.parseInt(line_array[3]),
 								Integer.parseInt(line_array[4]));
 					}
-					if(line_array[0].equals("RenderType"))
+					if(line_array[0].equals("RenderType")&& bFirstPartCheck>0)
 					{						  
 						nRenderType = Integer.parseInt(line_array[1]);
-					}
-					if(line_array[0].equals("SectorN") && bFirstPartCheck>0)
-					{						  
-						nSectorN = Integer.parseInt(line_array[1]);
 						//read it all hopefully
-						readGroup = new Roi3DGroup(sName, pointSize, pointColor, lineThickness, lineColor,  nRenderType, nSectorN);
+						readGroup = new Roi3DGroup(sName, pointSize, pointColor, lineThickness, lineColor,  nRenderType);
 						roiManager.groups.add(readGroup);
 						nLoadedGroupsN++;
 						if(listModel==null)

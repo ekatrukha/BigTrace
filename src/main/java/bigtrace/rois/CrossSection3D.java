@@ -44,8 +44,6 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
 				
 		renderType = preset_in.renderType;
-	
-		nSectorN = preset_in.sectorN;
 		
 		
 		vertices = new ArrayList<RealPoint>();
@@ -191,7 +189,6 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		setLineColor(preset_in.lineColor);
 
 		setRenderType(preset_in.renderType);
-		nSectorN = preset_in.sectorN;
 		setPointSize(preset_in.pointSize);
 		setLineThickness(preset_in.lineThickness);
 		updateRenderVertices();

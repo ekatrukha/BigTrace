@@ -52,7 +52,6 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
         String sName = "";
         int nRoiType = Roi3D.POINT;
         int nRenderType = 0;
-        int nSectorN = 16;
         double [] globCal  = new double [3];
         globCal[0]= Double.NaN;
         globCal[1]= Double.NaN;
@@ -206,10 +205,6 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 				  case "RenderType":
 					  nRenderType = Integer.parseInt(line_array[1]);
 					  break;
-
-				  case "SectorN":		  
-					  nSectorN = Integer.parseInt(line_array[1]);
-					  break;
 					  
 				  case "Vertices":
 					  nVertN = Integer.parseInt(line_array[1]);
@@ -230,7 +225,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  //roiP.setName(sName);
 						  //roiP.setVertex(vertices.get(0));
 						  Point3D roiP = (Point3D) bt.roiManager.makeRoi(nRoiType);						  
-						  roiP.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
+						  roiP.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
 						  roiP.setGroupInd(nROIGroupInd);
 						  roiP.setName(sName);
 						  roiP.setVertex(vertices.get(0));
@@ -244,7 +239,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  //roiPL.setVertices(vertices);
 						  //bt.roiManager.addRoi(roiPL);
 						  PolyLine3D roiPL = (PolyLine3D) bt.roiManager.makeRoi(nRoiType);						  
-						  roiPL.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
+						  roiPL.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
 						  roiPL.setGroupInd(nROIGroupInd);
 						  roiPL.setName(sName);
 						  roiPL.setVertices(vertices);
@@ -256,7 +251,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  LineTrace3D roiLT = (LineTrace3D) bt.roiManager.makeRoi(nRoiType);
 
 						  // LineTrace3D roiLT = new LineTrace3D(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
-						  roiLT.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType,nSectorN));
+						  roiLT.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
 						  roiLT.setGroupInd(nROIGroupInd);
 						  roiLT.setName(sName);
 						  roiLT.addFirstPoint(vertices.get(0));
