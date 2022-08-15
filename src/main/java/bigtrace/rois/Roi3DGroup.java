@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
-import bigtrace.BigTraceData;
 import bigtrace.scene.VisPolyLineScaled;
 
 public class Roi3DGroup {
@@ -16,7 +15,7 @@ public class Roi3DGroup {
 
 	 public float lineThickness = 4.0f;
 	 public float pointSize = 6.0f;
-	 public int renderType = VisPolyLineScaled.WIRE;
+	 public int renderType = Roi3D.WIRE;
 	 public boolean bVisible = true;
 	 
 	 public Roi3DGroup(String sGroupName_,  float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_)

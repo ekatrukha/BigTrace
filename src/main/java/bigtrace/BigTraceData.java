@@ -116,11 +116,12 @@ public class BigTraceData {
 	/** size of moving average window to smooth traces (in points) **/
 	public static int nSmoothWindow=(int) Prefs.get("BigTrace.nSmoothWindow", 5);
 
-	/** Number of sectors in wired/surface render of polylines and traces 
-	 * (perpendicular) **/
+	/** number of segments in the cylinder cross-section (for polyline/trace ROIs),
+	 *  3 = prism, 4 = cuboid, etc.
+	 *  The more the number, more smooth is surface **/
 	public static int sectorN = (int) Prefs.get("BigTrace.nSectorN", 16);
 	
-	/** step of gridline displaying Crossection ROI in wired mode (in voxels)**/
+	/** step of gridline displaying cross-section ROI in wired mode (in voxels)**/
 	public static int crossSectionGridStep = (int) Prefs.get("BigTrace.crossSectionGridStep", 20);
 	
 	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 

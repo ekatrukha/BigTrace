@@ -130,7 +130,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 ButtonGroup roiTraceMode = new ButtonGroup();
 		 
 	     //initialize new *undefined* ROI group
-	     groups.add(new Roi3DGroup(sUndefinedGroupName, 6.0f, Color.GREEN, 4.0f, Color.BLUE, VisPolyLineScaled.WIRE) );
+	     groups.add(new Roi3DGroup(sUndefinedGroupName, 6.0f, Color.GREEN, 4.0f, Color.BLUE, Roi3D.WIRE) );
 	     nActiveGroup = 0;
 	     
 		 URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
@@ -1259,7 +1259,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		Roi3D currentROI = rois.get(activeRoi);
 
-		String[] sRenderType = { "Center line", "Wire", "Surface" };
+		String[] sRenderType = { "Outline", "Wire", "Surface" };
 		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
 		nfPointSize.setText(Float.toString(currentROI.getPointSize()));
 		nfLineThickness.setText(Float.toString(currentROI.getLineThickness()));

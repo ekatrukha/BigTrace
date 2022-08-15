@@ -16,6 +16,9 @@ public interface Roi3D
 
 	public static final int POINT=0, POLYLINE=1, LINE_TRACE=2, PLANE=3, BOX=4; // Types
 	
+	/** render types **/
+	public static final int OUTLINE=0, WIRE=1, SURFACE=2;
+	
 	/** returns ROI type**/
 	public int getType();
 	

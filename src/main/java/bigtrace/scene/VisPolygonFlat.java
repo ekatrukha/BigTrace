@@ -17,6 +17,7 @@ import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
 import bigtrace.geometry.ShapeInterpolation;
+import bigtrace.rois.Roi3D;
 import bigtrace.volume.VolumeMisc;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -28,8 +29,8 @@ import tpietzsch.shadergen.generate.Segment;
 import tpietzsch.shadergen.generate.SegmentTemplate;
 
 public class VisPolygonFlat {
+
 	
-	public static final int CENTER_LINE=0, WIRE=1, SURFACE=2;
 	private final Shader prog;
 
 	private int vao;
@@ -39,7 +40,7 @@ public class VisPolygonFlat {
 	private int nPointsN=0;
 	private int nGridEdges=0;
 
-	public int renderType = WIRE;
+	public int renderType = Roi3D.WIRE;
 	private Vector4f l_color;	
 	public float fLineThickness;
 
@@ -101,16 +102,16 @@ public class VisPolygonFlat {
 	}
 	public void setVertices( ArrayList< RealPoint > points)
 	{
-		if(renderType == VisPolyLineScaled.CENTER_LINE)
+		if(renderType == Roi3D.OUTLINE)
 		{
 			setVerticesCenterLine(points);
 		}
 
-		if(renderType == VisPolyLineScaled.WIRE)
+		if(renderType == Roi3D.WIRE)
 		{
 			setVerticesWire(points);
 		}
-		if(renderType == VisPolyLineScaled.SURFACE)
+		if(renderType == Roi3D.SURFACE)
 		{
 			setVerticesCenterLine(points);
 		}
@@ -336,13 +337,13 @@ public class VisPolygonFlat {
 			gl.glBindVertexArray( vao );
 			
 
-			if(renderType == VisPolyLineScaled.CENTER_LINE)
+			if(renderType == Roi3D.OUTLINE)
 			{
 				gl.glLineWidth(fLineThickness);
 				gl.glDrawArrays( GL.GL_LINE_LOOP, 0, nPointsN);
 			}
 			
-			if(renderType == VisPolyLineScaled.WIRE)
+			if(renderType == Roi3D.WIRE)
 			{
 				gl.glLineWidth(fLineThickness);
 				gl.glDrawArrays( GL.GL_LINE_LOOP, 0, nPointsN);
@@ -353,7 +354,7 @@ public class VisPolygonFlat {
 				}
 			}
 
-			if(renderType == VisPolyLineScaled.SURFACE)
+			if(renderType == Roi3D.SURFACE)
 			{
 				gl.glLineWidth(1.0f);
 				gl.glDrawArrays( GL.GL_TRIANGLE_FAN, 0, nPointsN);

@@ -155,7 +155,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 		NumberField nfLineThickness = new NumberField(4);
 		NumberField nfOpacity = new NumberField(4);
 
-		String[] sRenderType = { "Center line", "Wire", "Surface" };
+		String[] sRenderType = { "Outline", "Wire", "Surface" };
 		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
 		
 		

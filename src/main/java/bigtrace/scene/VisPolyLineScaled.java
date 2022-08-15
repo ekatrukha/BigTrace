@@ -36,6 +36,7 @@ import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
 import bigtrace.geometry.ShapeInterpolation;
+import bigtrace.rois.Roi3D;
 import bigtrace.volume.VolumeMisc;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -61,7 +62,7 @@ import static com.jogamp.opengl.GL.GL_FLOAT;
 public class VisPolyLineScaled
 {
 	
-	public static final int CENTER_LINE=0, WIRE=1, SURFACE=2;
+	
 	private final Shader prog;
 
 	private int vao;
@@ -70,7 +71,7 @@ public class VisPolyLineScaled
 	private float vertices[]; 
 	private int nPointsN=0;
 
-	public int renderType = WIRE;
+	public int renderType = Roi3D.WIRE;
 	private Vector4f l_color;	
 	public float fLineThickness;
 
@@ -137,16 +138,16 @@ public class VisPolyLineScaled
 	}
 	public void setVertices( ArrayList< RealPoint > points)
 	{
-		if(renderType == VisPolyLineScaled.CENTER_LINE)
+		if(renderType == Roi3D.OUTLINE)
 		{
 			setVerticesCenterLine(points);
 		}
 
-		if(renderType == VisPolyLineScaled.WIRE)
+		if(renderType == Roi3D.WIRE)
 		{
 			setVerticesWire(points);
 		}
-		if(renderType == VisPolyLineScaled.SURFACE)
+		if(renderType == Roi3D.SURFACE)
 		{
 			setVerticesSurface(points);
 		}
@@ -598,13 +599,13 @@ public class VisPolyLineScaled
 			gl.glBindVertexArray( vao );
 			
 
-			if(renderType == VisPolyLineScaled.CENTER_LINE)
+			if(renderType == Roi3D.OUTLINE)
 			{
 				gl.glLineWidth(fLineThickness);
 				gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
 			}
 			
-			if(renderType == VisPolyLineScaled.WIRE)
+			if(renderType == Roi3D.WIRE)
 			{
 				gl.glLineWidth(1.0f);
 				for(nPointIt=0;nPointIt<nPointsN;nPointIt+=1)
@@ -620,7 +621,7 @@ public class VisPolyLineScaled
 				}
 			}
 
-			if(renderType == VisPolyLineScaled.SURFACE)
+			if(renderType == Roi3D.SURFACE)
 			{
 				gl.glLineWidth(1.0f);
 				for(nPointIt=0;nPointIt<(nPointsN-1);nPointIt+=1)
