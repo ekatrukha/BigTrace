@@ -12,6 +12,7 @@ import javax.swing.SwingWorker;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
+import bigtrace.BigTraceData;
 import net.imglib2.RealPoint;
 
 public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGWorker{
@@ -123,9 +124,9 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 				 System.err.println("Not a BigTrace ROI file format, aborting");
 				 return null;
 			 }
-			 if(!line_array[2].equals(bt.btdata.sVersion))
+			 if(!line_array[2].equals(BigTraceData.sVersion))
 			 {
-				 System.out.println("Version mismatch: ROI file "+line_array[2]+", plugin "+bt.btdata.sVersion+". It should be fine in theory, so loading ROIs anyway.");
+				 System.out.println("Version mismatch: ROI file "+line_array[2]+", plugin "+BigTraceData.sVersion+". It should be fine in theory, so loading ROIs anyway.");
 			 }
 			  
 

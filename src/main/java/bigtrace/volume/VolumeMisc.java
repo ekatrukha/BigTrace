@@ -3,6 +3,8 @@ package bigtrace.volume;
 import java.util.ArrayList;
 
 import bigtrace.geometry.Cuboid3D;
+import ij.ImagePlus;
+import ij.measure.Calibration;
 import net.imglib2.AbstractInterval;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
@@ -11,6 +13,7 @@ import net.imglib2.IterableInterval;
 import net.imglib2.Point;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.algorithm.neighborhood.Neighborhood;
@@ -24,9 +27,11 @@ import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.ByteArray;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.img.imageplus.ImagePlusImg;
 import net.imglib2.img.imageplus.ImagePlusImgFactory;
 import net.imglib2.type.Type;
+import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -395,5 +400,26 @@ public class VolumeMisc {
 		return Intervals.createMinMax(minL[0],minL[1],minL[2], maxL[0],maxL[1],maxL[2]);
 	}
 	
-
+	/** assume there is no time axis 
+	 * @param <T>**/
+	public static <T extends NumericType<T> > ImagePlus wrapImgImagePlusCal(RandomAccessibleInterval< T > img, String sTitle, Calibration cal)
+	{
+		ImagePlus outIP = ImageJFunctions.wrap(img,sTitle);
+		
+		
+		if(img.numDimensions()==3)
+		{
+			outIP.setDimensions(1, (int)img.dimension(2), 1);		
+		}
+		if(img.numDimensions()==4)
+		{
+			outIP.setDimensions((int)img.dimension(2), (int)img.dimension(3), 1);
+		}
+		if(cal!=null)
+		{
+			outIP.setCalibration(cal);
+		}
+		return outIP;
+		//outIP.show();
+	}
 }

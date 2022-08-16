@@ -8,6 +8,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
@@ -28,18 +30,22 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.volume.VolumeMisc;
+import ij.ImagePlus;
 import ij.Prefs;
 
 import ij.gui.Plot;
+import ij.measure.Calibration;
 import ij.measure.ResultsTable;
+import net.imglib2.Cursor;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealPoint;
+import net.imglib2.img.Img;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import net.imglib2.type.numeric.RealType;
-
 import net.imglib2.view.IntervalView;
 
 public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements ListSelectionListener, ActionListener, Measurements { 
@@ -48,7 +54,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	 * 
 	 */
 	private static final long serialVersionUID = -4635723145578489755L;
-	BigTrace bt;
+	BigTrace<T> bt;
 	
 	JButton butLineProfile;
 	JButton butSlice;
@@ -76,7 +82,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	private static ResultsTable systemRT = new ResultsTable();
 	private ResultsTable rt;
 
-	public RoiMeasure3D(BigTrace bt)
+	public RoiMeasure3D(BigTrace<T> bt)
 	{
 		this.bt = bt;
 
@@ -698,10 +704,75 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		return out;
 	}
 	
+	/** given cross-section ROI, splits provided volume in two and shows them **/
+	public void sliceVolume(CrossSection3D crossSection)
+	{
+		//check if there is aplane
+		if (crossSection.fittedPlane==null)
+			return;
+		boolean nCh;
+		if(bt.btdata.nTotalChannels==1)
+		{
+			nCh=false;
+		}
+		else
+		{
+			nCh=true;
+		}
+		
+		Img<T>out1 = bt.img_in.copy();
+		Img<T>out2 = bt.img_in.copy();
+		Cursor<T> cursor1 = out1.localizingCursor();
+		Cursor<T> cursor2 = out2.localizingCursor();
+		RealPoint rp = new RealPoint(3);
+		double [] position = new double [out1.numDimensions()];
+		double [] position3 = new double [3];
+		
+		while (cursor1.hasNext())
+		{
+			cursor1.fwd();
+			cursor2.fwd();
+			cursor1.localize(position);
+			if(!nCh)
+			{
+				rp.setPosition(position);
+			}
+			else
+			{
+				position3[0]=position[0];
+				position3[1]=position[1];
+				position3[2]=position[3];
+				rp.setPosition(position3);
+			}
+			
+			if(crossSection.fittedPlane.signedDistance(rp)>0.0)
+			{
+				cursor1.get().setZero();
+			}
+			else
+			{
+				cursor2.get().setZero();
+			}
+		}
+		Calibration cal = new Calibration();
+		cal.setUnit(bt.btdata.sVoxelUnit);
+		cal.pixelWidth= bt.btdata.globCal[0];
+		cal.pixelHeight= bt.btdata.globCal[1];
+		cal.pixelDepth= bt.btdata.globCal[2];
+		Path p = Paths.get(bt.btdata.sFileNameFullImg);
+		String fileName = p.getFileName().toString()+"_"+crossSection.getName();
+		
+		ImagePlus outIP1 = VolumeMisc.wrapImgImagePlusCal(out1,fileName+"_vol1", cal);
+		ImagePlus outIP2 = VolumeMisc.wrapImgImagePlusCal(out2,fileName+"_vol2", cal);
+		outIP1.show();
+		outIP2.show();
+
+	}
+	
+	
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
 		
-		// TODO Auto-generated method stub
 		if (e.getValueIsAdjusting() == false) 
 		{
 			bt.roiManager.jlist.setSelectedIndex(jlist.getSelectedIndex());
@@ -709,7 +780,6 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
 		
 		// MEASUREMENT CHANNEL
 		if(e.getSource() == cbActiveChannel)
@@ -724,6 +794,17 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			if (jlist.getSelectedIndex()>-1)
 			{
 				measureLineProfile(bt.roiManager.rois.get(jlist.getSelectedIndex()));
+			}
+		}
+		//Slice volume
+		if(e.getSource() == butSlice)
+		{
+			if (jlist.getSelectedIndex()>-1)
+			{
+					if(bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.PLANE)
+					{
+						sliceVolume((CrossSection3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
+					}
 			}
 		}
 		//Measure one ROI

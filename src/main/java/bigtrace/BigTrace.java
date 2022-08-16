@@ -75,8 +75,14 @@ import tpietzsch.util.MatrixMath;
 public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListener
 {
 	public  BvvStackSource< UnsignedByteType > bvv_main = null;
+	
+	/** BVV sources used for the volume visualization **/
 	public  ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<BvvStackSource< ? >>();
+	
+	/** saliency view (TraceBox) for semi-auto tracing **/
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
+	
+	/** "dummy" interval used to keep BVV alive in the absence of sources**/
 	RandomAccessibleInterval< UnsignedByteType > empty_view;
 
 	public ArrayList<IntervalView< T >>  sources = new ArrayList<IntervalView< T >>();
@@ -85,15 +91,14 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	private boolean bTraceMode = false;
 	
-	//Img< UnsignedByteType> img;
-	//Img< UnsignedByteType> img_in;
-	Img<T> img_in;
+	public Img<T> img_in;
 
 	/** Panel of BigVolumeViewer **/
 	VolumeViewerPanel panel;
 
 	public Actions actions = null;
 	
+	/** flag to check if user interface is frozen **/
 	public boolean bInputLock = false;
 	
 
@@ -111,58 +116,45 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	/** BigTrace Panel **/
 	public BigTraceControlPanel btpanel;
+	
 	/**ROI's manager + list tab **/
 	public RoiManager3D roiManager;
 		
 	public void run(String arg)
 	{
 		
-		
-		//img = SimplifiedIO.openImage(
-					//test_BVV_inteface.class.getResource( "home/eugene/workspace/ExM_MT.tif" ).getFile(),
-					//new UnsignedByteType() );
 		if(arg.equals(""))
 		{
-			btdata.sFileNameImg=IJ.getFilePath("Open TIF file (3D, composite)...");
+			btdata.sFileNameFullImg=IJ.getFilePath("Open TIF file (3D, composite)...");
 		}
 		else
 		{
-			btdata.sFileNameImg=arg;
+			btdata.sFileNameFullImg=arg;
 		}
 
-		if(btdata.sFileNameImg==null)
+		if(btdata.sFileNameFullImg==null)
 			return;
 		
-		final ImagePlus imp = IJ.openImage( btdata.sFileNameImg );
+		final ImagePlus imp = IJ.openImage( btdata.sFileNameFullImg );
+		
+		if (imp == null)
+		{
+			IJ.showMessage("BigTrace: cannot open selected TIF file. Plugin terminated.");
+			return;
+		}
 		
 		btdata.globCal[0] = imp.getCalibration().pixelWidth;
 		btdata.globCal[1] = imp.getCalibration().pixelHeight;
 		btdata.globCal[2] = imp.getCalibration().pixelDepth;
 		btdata.sVoxelUnit = imp.getCalibration().getUnit();
 		
-		/*if(!(imp.getType()==ImagePlus.GRAY8 || imp.getType()==ImagePlus.GRAY16 || imp.getType()==ImagePlus.GRAY32))
-		{
-			IJ.showMessage("Only 8/16/32-bit images supported for now.");
-			return;
-		}*/
 		
 		if(imp.getType()!=ImagePlus.GRAY8 && imp.getType()!=ImagePlus.GRAY16 && imp.getType()!=ImagePlus.GRAY32)
 		{
 			IJ.showMessage("Only 8-, 16- and 32-bit images supported for now.");
 			return;
 		}
-
-		//if(imp.getNChannels()>1)
-		//{
-			//IJ.showMessage("Only single channel images supported for now.");
-			//return;			
-	//	}
-		
-		
-		//img = convertInput(ImagePlusAdapter.wrapImgPlus( imp ), new UnsignedByteType());
-		//ImagePlusAdapter.wrapImgPlus( imp );
-		
-		/**/
+				
 		nBitDepth = imp.getBitDepth();
 		if(nBitDepth<=16)
 		{
@@ -171,7 +163,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		else
 		{
 			img_in = (Img<T>) VolumeMisc.convertFloatToUnsignedShort(ImageJFunctions.wrapReal(imp));
-			//img_in = (Img<T>) ImageJFunctions.wrapUnsignedShort(img, title).wrapShort(imp);//rapUnsignedShort(img, title)wrapShort(imp);		
 		}
 
 		
@@ -189,31 +180,14 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		else
 		{
 			getChannelsColors(imp);
-			//colorsCh = new Color [imp.getNChannels()];
-			//CompositeImage multichannels_imp = (CompositeImage) imp;
+
 			for(int i=0;i<btdata.nTotalChannels;i++)
 			{
-				//multichannels_imp.setC(i+1);
-				//colorsCh[i] = multichannels_imp.getChannelColor();
 				sources.add( Views.hyperSlice(img_in,2,i));
-				//img =  Views.hyperSlice(img_in,2,1);
 			}
 		}
 		
 		
-		/*
-		ImgOpener io = new ImgOpener();
-		
-		img = io.openImgs( btdata.sFileNameImg,
-			new UnsignedByteType() ).get( 0 );*/
-		//img = SimplifiedIO.openImage(btdata.sFileNameImg, new UnsignedByteType());
-		//img = SimplifiedIO.openImage("/home/eugene/workspace/linetest_horz.tif", new UnsignedByteType());
-		//final ImagePlus imp = IJ.openImage(		"/home/eugene/workspace/ExM_MT.tif");	
-		//img = ImageJFunctions.wrapByte( imp );
-		//img = SimplifiedIO.openImage(
-		//		test_BVV_inteface.class.getResource( "/t1-head.tif" ).getFile(),
-		//		new UnsignedByteType() );
-	
 		sources.get(0);
 		sources.get(0).min(btdata.nDimIni[0]);
 		sources.get(0).max(btdata.nDimIni[1]);
@@ -302,13 +276,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		installActions(actions);
 		resetViewXY(true);
 	}
+	
+	
 	private void createAndShowGUI() 
 	{
 		btpanel = new BigTraceControlPanel(this, btdata,roiManager);
 		btpanel.finFrame = new JFrame("BigTrace");
-		//btpanel.frame = new JFrame("BigTrace");
-		//btpanel.setName("TEEEST");
-		//btpanel.frame = (BigTraceControlPanel)new JFrame("BigTrace");
+
 		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv_main.getBvvHandle().getViewerPanel());
 	 	
 	 	//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -321,6 +295,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
         //frame.setContentPane(newContentPane);
 		//btpanel.frame.add(btpanel);
 		btpanel.finFrame.add(btpanel);
+		
         //Display the window.
 		btpanel.finFrame.setSize(400,600);
         //frame.pack();
@@ -353,7 +328,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
 				{
 					//semi auto tracing initialize
-					if(roiManager.mode==RoiManager3D.ADD_POINT_SEMIAUTOLINE)
+					if(RoiManager3D.mode==RoiManager3D.ADD_POINT_SEMIAUTOLINE)
 					{
 						setTraceBoxMode(true);
 						//bTraceMode= true;								
@@ -785,7 +760,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	public void showCorners(ArrayList<long []> corners)
 	{
-		roiManager.mode=RoiManager3D.ADD_POINT;
+		RoiManager3D.mode=RoiManager3D.ADD_POINT;
 		for(int i=0;i<corners.size();i++)
 		{
 			RealPoint vv = new RealPoint(0.,0.,0.);
@@ -1574,7 +1549,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		System.setProperty("plugins.dir", file.getAbsolutePath());
 		*/
 		new ImageJ();
-		BigTrace testI=new BigTrace(); 
+		BigTrace testI = new BigTrace(); 
 		
 		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
 		testI.run("");

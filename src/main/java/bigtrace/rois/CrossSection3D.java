@@ -33,7 +33,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	public VisPolygonFlat planeVis;
 	public float [][] nDimBox;
 	
-	public Plane3D fittedPlane;
+	public Plane3D fittedPlane = null;
 
 
 	public CrossSection3D(final Roi3DGroup preset_in, final long [][] nDimIni_)
@@ -249,6 +249,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		
 		verticesVis.setVertices(vertices);
 		ArrayList< RealPoint > outline = new ArrayList< RealPoint >();
+		fittedPlane = null;
 		if(vertices.size()>2)
 		{
 			double [] intersectionPoint = new double[3];

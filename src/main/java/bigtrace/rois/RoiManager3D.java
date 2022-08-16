@@ -1410,7 +1410,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	{
 		String filename;
 		
-		filename = bt.btdata.sFileNameImg + "_btrois";
+		filename = bt.btdata.sFileNameFullImg + "_btrois";
 		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
         String path = sd.getDirectory();
         if (path==null)

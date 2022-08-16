@@ -308,7 +308,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 		String filename;
 		//int nGroupN, nGroup;
 		
-		filename = roiManager.bt.btdata.sFileNameImg + "_btgroups";
+		filename = roiManager.bt.btdata.sFileNameFullImg + "_btgroups";
 		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
         String path = sd.getDirectory();
         if (path==null)
