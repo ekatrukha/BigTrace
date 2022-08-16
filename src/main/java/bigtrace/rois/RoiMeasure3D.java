@@ -51,6 +51,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	BigTrace bt;
 	
 	JButton butLineProfile;
+	JButton butSlice;
 	JButton butSettings;
 	JButton butMeasure;
 	JButton butMeasureAll;
@@ -94,6 +95,14 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		butLineProfile.setToolTipText("Plot Profile");
 		butLineProfile.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 
+		
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/slice_volume.png");
+		tabIcon = new ImageIcon(icon_path);
+		butSlice = new JButton(tabIcon);
+		butSlice.setToolTipText("Cut volume");
+		butSlice.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+
+		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
 		tabIcon = new ImageIcon(icon_path);
 		butSettings = new JButton(tabIcon);
@@ -101,6 +110,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		butSettings.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 
 		butLineProfile.addActionListener(this);
+		butSlice.addActionListener(this);
 		butSettings.addActionListener(this);
 
 		//this.setBorder(new PanelTitle(" Measurements "));
@@ -115,9 +125,10 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
 		panLineTools.add(sp,cr);
 		cr.gridx++;
-		//panTracing.add(roiSettings,ct);
+		panLineTools.add(butSlice,cr);
+		
 		//filler
-		//ct.gridx++;
+		cr.gridx++;
 		cr.weightx = 0.01;
 		panLineTools.add(new JLabel(), cr);
 		cr.gridx++;

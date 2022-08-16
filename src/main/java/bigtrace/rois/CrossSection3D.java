@@ -2,6 +2,9 @@ package bigtrace.rois;
 
 import java.awt.Color;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -125,6 +128,15 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		planeVis.draw(gl, pvm);
 		
 	}
+	
+	public void setVertices(ArrayList<RealPoint> vertices_)
+	{
+		vertices = new ArrayList<RealPoint>();
+		for(int i=0;i<vertices_.size();i++)
+			vertices.add(new RealPoint(vertices_.get(i)));		
+		updateRenderVertices();
+		
+	}
 
 
 	@Override
@@ -178,7 +190,45 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 
 	@Override
 	public void saveRoi(FileWriter writer) {
-		// TODO Auto-generated method stub
+		int i, iPoint;
+		float [] vert;
+		
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+		try {
+			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
+			writer.write("Name," + this.getName()+"\n");
+			writer.write("GroupInd," + Integer.toString(this.getGroupInd())+"\n");
+			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
+			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
+									  +	Integer.toString(pointColor.getGreen()) +","
+									  +	Integer.toString(pointColor.getBlue()) +","
+									  +	Integer.toString(pointColor.getAlpha()) +"\n");
+			writer.write("LineThickness," + df3.format(this.getLineThickness())+"\n");
+			writer.write("LineColor,"+ Integer.toString(lineColor.getRed()) +","
+									  +	Integer.toString(lineColor.getGreen()) +","
+									  +	Integer.toString(lineColor.getBlue()) +","
+									  +	Integer.toString(lineColor.getAlpha()) +"\n");
+			writer.write("RenderType,"+ Integer.toString(this.getRenderType())+"\n");
+			
+			writer.write("Vertices,"+Integer.toString(vertices.size())+"\n");
+			vert = new float[3];
+			for (iPoint = 0;iPoint<vertices.size();iPoint++)
+			{ 
+				vertices.get(iPoint).localize(vert);
+				for(i=0;i<3;i++)
+				{
+					writer.write(df3.format(vert[i])+",");
+				}
+				//time point
+				writer.write("0.0\n");
+			}
+		}
+		catch (IOException e) {	
+			System.err.print(e.getMessage());
+			
+		}
 		
 	}
 
@@ -203,7 +253,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		{
 			double [] intersectionPoint = new double[3];
 			//for now;
-			fittedPlane = new Plane3D(vertices.get(0),vertices.get(1),vertices.get(2));
+			//fittedPlane = new Plane3D(vertices.get(0),vertices.get(1),vertices.get(2));
 			fittedPlane = fitPlane(vertices);
 			ArrayList<ArrayList< RealPoint >> boxEdges = Box3D.getEdgesPairPoints(nDimBox);
 			
@@ -265,6 +315,8 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		RealPoint centroidRP = centroid(vertices);
 			
 		double [][] matrixD = new double [vertices.size()][3];
+		
+		//double [][] matrixU;
 		int d;
 		//subtract centroid
 		for(int i=0;i<vertices.size();i++)
@@ -274,11 +326,12 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 			}
 		Matrix A = new Matrix(matrixD);
 		SingularValueDecomposition svd = new SingularValueDecomposition(A);		
-		matrixD = svd.getV().getArray();
+		final double [][] matrixV = svd.getV().getArray();
+		//matrixU = svd.getU().getArray();
 		RealPoint normalRP = new RealPoint(3);
 		for(d=0;d<3;d++)
 		{
-			normalRP.setPosition(matrixD[d][2], d);
+			normalRP.setPosition(matrixV[d][2], d);
 		}
 		Plane3D out = new Plane3D();
 		
@@ -293,6 +346,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		if(vertices.size()<1)
 			return null;
 		final int nDim=vertices.get(0).numDimensions();
+		final double nPoints = (double)vertices.size();
 		int d;
 		double [] meanV = new double [nDim];
 		for(int i=0;i<vertices.size();i++)
@@ -304,7 +358,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		}
 		for(d=0;d<nDim;d++)
 		{
-			meanV[d]/=(double)nDim;
+			meanV[d]/=(double)nPoints;
 		
 		}
 		return new RealPoint(meanV);

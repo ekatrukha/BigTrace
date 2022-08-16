@@ -272,7 +272,15 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  }
 						  bt.roiManager.addRoi(roiLT);
 						  break;
+					  case Roi3D.PLANE:
+						  CrossSection3D roiCS = (CrossSection3D) bt.roiManager.makeRoi(nRoiType);
+						  roiCS.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
+						  roiCS.setGroupInd(nROIGroupInd);
+						  roiCS.setName(sName);
+						  roiCS.setVertices(vertices);
 
+						  bt.roiManager.addRoi(roiCS);
+						  break;
 					  }
 					  break;
 					  

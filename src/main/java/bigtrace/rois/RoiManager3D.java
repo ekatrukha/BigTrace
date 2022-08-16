@@ -112,8 +112,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 	 public RoiManager3D(BigTrace bt)
 	 {
-		 
-		 
+		 	 
 		 this.bt = bt;
 		 
 		 try {
