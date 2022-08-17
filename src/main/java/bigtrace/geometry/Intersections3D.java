@@ -170,31 +170,30 @@ public class Intersections3D {
 	/** generates long minmax box from pointArray **/
 	public static boolean makeBoundBox(final ArrayList<RealPoint> pointArray, final long [][] newMinMax)
 	{ 
-		//= new long [2][3];
-		float [][] newMinMaxF = new float [2][3];
-		int i, j;
-		float temp;
-
-		for (i=0;i<3;i++)
+		int i,d;
+		double [][] newMinMaxD = new double [2][3];
+		if(makeBoundBox(pointArray, newMinMaxD))
 		{
-			newMinMaxF[0][i]=Float.MAX_VALUE;
-			newMinMaxF[1][i]=(-1)*Float.MAX_VALUE;
+			for (i=0;i<2;i++)
+			{		
+				for (d=0;d<3;d++)
+				{
+					if(i==0)
+					{
+						newMinMax[i][d]=(long)Math.floor(newMinMaxD[i][d]);
+					}
+					else
+					{
+						newMinMax[i][d]=(long)Math.ceil(newMinMaxD[i][d]);
+					}
+				}
+			}
 		}
-		for (i=0;i<pointArray.size();i++)
 		{
-			
-			for (j=0;j<3;j++)
-			{
-				temp=pointArray.get(i).getFloatPosition(j);
-				if(temp>newMinMaxF[1][j])
-					newMinMaxF[1][j]=temp;
-				if(temp<newMinMaxF[0][j])
-					newMinMaxF[0][j]=temp;
-				
-			}			
+			return false;
 		}
+		
 
-		return true;
 
 	}
 	/** generates double minmax box from pointArray **/
@@ -202,7 +201,7 @@ public class Intersections3D {
 	{ 
 		
 		
-		int i, j;
+		int i, d;
 		double temp;
 
 		for (i=0;i<3;i++)
@@ -213,13 +212,13 @@ public class Intersections3D {
 		for (i=0;i<pointArray.size();i++)
 		{
 			
-			for (j=0;j<3;j++)
+			for (d=0;d<3;d++)
 			{
-				temp=pointArray.get(i).getDoublePosition(j);
-				if(temp>newMinMax[1][j])
-					newMinMax[1][j]=temp;
-				if(temp<newMinMax[0][j])
-					newMinMax[0][j]=temp;
+				temp=pointArray.get(i).getDoublePosition(d);
+				if(temp>newMinMax[1][d])
+					newMinMax[1][d]=temp;
+				if(temp<newMinMax[0][d])
+					newMinMax[0][d]=temp;
 				
 			}			
 		}

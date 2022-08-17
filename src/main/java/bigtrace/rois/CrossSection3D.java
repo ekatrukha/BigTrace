@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import javax.swing.JFrame;
-
 import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
@@ -19,18 +17,21 @@ import Jama.Matrix;
 import Jama.SingularValueDecomposition;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Plane3D;
-import bigtrace.gui.RangeSliderTF;
 import bigtrace.scene.VisPointsScaled;
-import bigtrace.scene.VisPolyLineScaled;
 import bigtrace.scene.VisPolygonFlat;
 import net.imglib2.RealPoint;
 import net.imglib2.util.LinAlgHelpers;
 
 public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	
+	/** vertices provided by user (plane is fitted to them) **/
 	public ArrayList<RealPoint> vertices;
+	/** visualization of user-provided vertices**/
 	public VisPointsScaled verticesVis;
+	/** cross-section visualization**/
 	public VisPolygonFlat planeVis;
+	/** coordinates of polygon **/
+	public ArrayList<RealPoint> polygonVert;
 	public float [][] nDimBox;
 	
 	public Plane3D fittedPlane = null;
@@ -156,8 +157,9 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 
 	@Override
 	public void reversePoints() {
-		// TODO Auto-generated method stub
-		
+		vertices = Roi3D.reverseArrayRP(vertices); 		
+		updateRenderVertices();
+		return;		
 	}
 
 
@@ -248,7 +250,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	public void updateRenderVertices() {
 		
 		verticesVis.setVertices(vertices);
-		ArrayList< RealPoint > outline = new ArrayList< RealPoint >();
+		polygonVert = null;
 		fittedPlane = null;
 		if(vertices.size()>2)
 		{
@@ -256,6 +258,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 			//for now;
 			//fittedPlane = new Plane3D(vertices.get(0),vertices.get(1),vertices.get(2));
 			fittedPlane = fitPlane(vertices);
+			polygonVert = new ArrayList< RealPoint >();
 			ArrayList<ArrayList< RealPoint >> boxEdges = Box3D.getEdgesPairPoints(nDimBox);
 			
 			for(int i = 0;i<boxEdges.size();i++)
@@ -263,14 +266,14 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		
 				if(Intersections3D.planeEdgeIntersect(fittedPlane,boxEdges.get(i).get(0),boxEdges.get(i).get(1),intersectionPoint))
 				{
-					outline.add(new RealPoint(intersectionPoint));
+					polygonVert.add(new RealPoint(intersectionPoint));
 				}
 			}
-			if(outline.size()>1)
+			if(polygonVert.size()>1)
 			{
-				sortPolygonVertices(outline,fittedPlane.n);
+				sortPolygonVertices(polygonVert,fittedPlane.n);
 				//outline.add(new RealPoint(outline.get(0)));
-				planeVis.setVertices(outline);
+				planeVis.setVertices(polygonVert);
 			}
 		}
 		else

@@ -31,6 +31,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import bdv.tools.brightness.ColorIcon;
+import bigtrace.BigTraceData;
 import bigtrace.gui.NumberField;
 import ij.Prefs;
 import ij.io.OpenDialog;
@@ -140,10 +141,6 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 		dialog.setVisible(true); 
 	}
 
-    private void hide()
-    { 
-    	dialog.setVisible(false); 
-    }
     
 	/** show Group Properties dialog**/
 	public boolean dialProperties(final Roi3DGroup preset, boolean bNameChangable)	
@@ -338,7 +335,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 		int nGroupN, nGroup;
 		
 		try {
-			writer.write("BigTrace_groups,version," + roiManager.bt.btdata.sVersion + "\n");
+			writer.write("BigTrace_groups,version," + BigTraceData.sVersion + "\n");
 			nGroupN=roiManager.groups.size();
 			writer.write("GroupsNumber,"+Integer.toString(nGroupN)+"\n");
 			for(nGroup=0;nGroup<nGroupN;nGroup++)
@@ -468,7 +465,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 						{
 							bFirstPartCheck++;
 						}
-						if(line_array[2].equals(roiManager.bt.btdata.sVersion))
+						if(line_array[2].equals(BigTraceData.sVersion))
 						{
 							bFirstPartCheck++; 
 						}					  
@@ -539,9 +536,6 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
-		
-		
-		// TODO Auto-generated method stub
         if (jlist.getSelectedIndex() == -1) 
         {
         //No selection
@@ -568,9 +562,9 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent ae) {
-		// TODO Auto-generated method stub
-
+	public void actionPerformed(ActionEvent ae) 
+	{
+		
 		int indList = jlist.getSelectedIndex();
 		
 		if(indList>-1)

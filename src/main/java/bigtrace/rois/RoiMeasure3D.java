@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -30,6 +31,7 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.volume.SplitVolumePlane;
 import bigtrace.volume.VolumeMisc;
 import ij.ImagePlus;
 import ij.Prefs;
@@ -39,6 +41,7 @@ import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessible;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.img.Img;
 import net.imglib2.interpolation.InterpolatorFactory;
@@ -74,9 +77,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	public static final int INT_NearestNeighbor=0, INT_NLinear=1, INT_Lanczos=2; // Intensity interpolation types
 	
 
-	private static int systemMeasurements = Prefs.getInt("BigTrace.Measurements",LENGTH+MEAN);
+	private static int systemMeasurements = (int)Prefs.get("BigTrace.Measurements",LENGTH+MEAN);
 	
-	private static int intensityInterpolation = Prefs.getInt("BigTrace.IntInterpolation",INT_NLinear);
+	private static int intensityInterpolation = (int)Prefs.get("BigTrace.IntInterpolation",INT_NLinear);
 
 	
 	private static ResultsTable systemRT = new ResultsTable();
@@ -705,67 +708,30 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	}
 	
 	/** given cross-section ROI, splits provided volume in two and shows them **/
-	public void sliceVolume(CrossSection3D crossSection)
+	public void sliceVolume(final CrossSection3D crossSection)
 	{
-		//check if there is aplane
-		if (crossSection.fittedPlane==null)
-			return;
-		boolean nCh;
-		if(bt.btdata.nTotalChannels==1)
-		{
-			nCh=false;
-		}
-		else
-		{
-			nCh=true;
-		}
+		int nSliceType = 0;
+		JPanel sliceSettings = new JPanel();
+		sliceSettings.setLayout(new BoxLayout(sliceSettings, BoxLayout.PAGE_AXIS));
 		
-		Img<T>out1 = bt.img_in.copy();
-		Img<T>out2 = bt.img_in.copy();
-		Cursor<T> cursor1 = out1.localizingCursor();
-		Cursor<T> cursor2 = out2.localizingCursor();
-		RealPoint rp = new RealPoint(3);
-		double [] position = new double [out1.numDimensions()];
-		double [] position3 = new double [3];
+		String[] sSliceType = { "As original", "Tight crop" };
+		JComboBox<String> sliceTypeList = new JComboBox<String>(sSliceType);
 		
-		while (cursor1.hasNext())
+		sliceSettings.add(new JLabel("Output volumes size: "));
+		sliceTypeList.setSelectedIndex((int)Prefs.get("BigTrace.nSliceType", 0));
+		sliceSettings.add(sliceTypeList);
+		
+		int reply = JOptionPane.showConfirmDialog(null, sliceSettings, "Split/slice volume crop", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (reply == JOptionPane.OK_OPTION) 
 		{
-			cursor1.fwd();
-			cursor2.fwd();
-			cursor1.localize(position);
-			if(!nCh)
-			{
-				rp.setPosition(position);
-			}
-			else
-			{
-				position3[0]=position[0];
-				position3[1]=position[1];
-				position3[2]=position[3];
-				rp.setPosition(position3);
-			}
-			
-			if(crossSection.fittedPlane.signedDistance(rp)>0.0)
-			{
-				cursor1.get().setZero();
-			}
-			else
-			{
-				cursor2.get().setZero();
-			}
+			nSliceType = sliceTypeList.getSelectedIndex();
+			Prefs.set("BigTrace.nSliceType", nSliceType);
+			//run in a separate thread
+			SplitVolumePlane<T> splitBG = new SplitVolumePlane<T>(crossSection, bt, nSliceType);		
+	        splitBG.addPropertyChangeListener(bt.btpanel);
+	        splitBG.execute();
 		}
-		Calibration cal = new Calibration();
-		cal.setUnit(bt.btdata.sVoxelUnit);
-		cal.pixelWidth= bt.btdata.globCal[0];
-		cal.pixelHeight= bt.btdata.globCal[1];
-		cal.pixelDepth= bt.btdata.globCal[2];
-		Path p = Paths.get(bt.btdata.sFileNameFullImg);
-		String fileName = p.getFileName().toString()+"_"+crossSection.getName();
-		
-		ImagePlus outIP1 = VolumeMisc.wrapImgImagePlusCal(out1,fileName+"_vol1", cal);
-		ImagePlus outIP2 = VolumeMisc.wrapImgImagePlusCal(out2,fileName+"_vol2", cal);
-		outIP1.show();
-		outIP2.show();
 
 	}
 	

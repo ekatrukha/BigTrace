@@ -59,8 +59,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
         globCal[2]= Double.NaN;
         String sUnits = "";
         
-        
-        Roi3D nextROI;
+       
         Roi3DGroupManager roiGM;
 	
         bt.bInputLock = true;

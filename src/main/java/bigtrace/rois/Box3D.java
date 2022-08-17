@@ -12,6 +12,8 @@ import com.jogamp.opengl.GL3;
 
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineSimple;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 
 public class Box3D extends AbstractRoi3D implements Roi3D {
@@ -223,6 +225,29 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 			out.add(point_coords);
 	
 		}	
+		return out;
+	}
+	/** returns vertices of box specified by provided interval in no particular order **/
+	public static ArrayList<RealPoint > getBoxVertices(final Interval interval)
+	{
+		int i,d;
+		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		RealPoint [] rpBounds = new RealPoint [2];
+		rpBounds[0]= interval.minAsRealPoint();
+		rpBounds[1]= interval.maxAsRealPoint();
+		for (i =0;i<8; i++)
+		{
+			
+		  String indexes = String.format("%3s", Integer.toBinaryString(i)).replaceAll(" ", "0");
+		  //System.out.println(indexes);
+		  RealPoint vert = new RealPoint(3);
+		  for(d=0;d<3;d++)
+		  {
+			  vert.setPosition(rpBounds[Character.getNumericValue(indexes.charAt(d))].getDoublePosition(d), d);
+		  }
+		  out.add(vert);
+		}
+		
 		return out;
 	}
 }

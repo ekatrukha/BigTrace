@@ -1,6 +1,7 @@
 package bigtrace.rois;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -35,12 +36,14 @@ import javax.swing.event.ListSelectionListener;
 
 import org.joml.Matrix4fc;
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.ShapeInterpolation;
+import bigtrace.gui.GuiMisc;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.scene.VisPolyLineScaled;
@@ -488,6 +491,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	       Color savePointColor= null;
 	       Color saveLineColor = null;
 	       int i;
+	       
 	       for (i=0;i<rois.size();i++) 
 	       {
 	    	   roi=rois.get(i);
@@ -691,7 +695,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 }
 	 public void setLockMode(boolean bLockMode)
 	 {
+		 
+		 
 		 	 boolean bState = !bLockMode;
+		 	 
+		 	 GuiMisc.setPanelStatusAllComponents(this, bState);
+		 	 GuiMisc.setPanelStatusAllComponents(roiMeasure, bState);
+		 	 /*
 			 roiPointMode.setEnabled(bState);
 			 roiPolyLineMode.setEnabled(bState);
 			 roiPolySemiAMode.setEnabled(bState);
@@ -708,9 +718,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 cbActiveGroup.setEnabled(bState);
 			 butApplyGroup.setEnabled(bState);
 			 butDisplayGroup.setEnabled(bState);
-			 
 			 listScroller.setEnabled(bState);			 
 			 jlist.setEnabled(bState);
+			 
+			 */
+			 
 			 
 
 	 }
@@ -773,37 +785,37 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		//TRACING TYPE
 		if(e.getSource() == roiPointMode)
 		{
-			if(this.mode != RoiManager3D.ADD_POINT)
+			if(RoiManager3D.mode != RoiManager3D.ADD_POINT)
 			{
-				this.mode = RoiManager3D.ADD_POINT;
-				Prefs.set("BigTrace.RoiManagerMode", this.mode);
+				RoiManager3D.mode = RoiManager3D.ADD_POINT;
+				Prefs.set("BigTrace.RoiManagerMode", RoiManager3D.mode);
 				unselect();
 			}
 		}
 		if(e.getSource() == roiPolyLineMode)
 		{
-			if(this.mode != RoiManager3D.ADD_POINT_LINE)
+			if(RoiManager3D.mode != RoiManager3D.ADD_POINT_LINE)
 			{
-				this.mode = RoiManager3D.ADD_POINT_LINE;
-				Prefs.set("BigTrace.RoiManagerMode", this.mode);
+				RoiManager3D.mode = RoiManager3D.ADD_POINT_LINE;
+				Prefs.set("BigTrace.RoiManagerMode", RoiManager3D.mode);
 				unselect();
 			}
 		}
 		if(e.getSource() == roiPolySemiAMode)
 		{
-			if(this.mode != RoiManager3D.ADD_POINT_SEMIAUTOLINE)
+			if(RoiManager3D.mode != RoiManager3D.ADD_POINT_SEMIAUTOLINE)
 			{
-				this.mode = RoiManager3D.ADD_POINT_SEMIAUTOLINE;
-				Prefs.set("BigTrace.RoiManagerMode", this.mode);
+				RoiManager3D.mode = RoiManager3D.ADD_POINT_SEMIAUTOLINE;
+				Prefs.set("BigTrace.RoiManagerMode", RoiManager3D.mode);
 				unselect();
 			}
 		}
 		if(e.getSource() == roiPlaneMode)
 		{
-			if(this.mode != RoiManager3D.ADD_POINT_PLANE)
+			if(RoiManager3D.mode != RoiManager3D.ADD_POINT_PLANE)
 			{
-				this.mode = RoiManager3D.ADD_POINT_PLANE;
-				Prefs.set("BigTrace.RoiManagerMode", this.mode);
+				RoiManager3D.mode = RoiManager3D.ADD_POINT_PLANE;
+				Prefs.set("BigTrace.RoiManagerMode", RoiManager3D.mode);
 				unselect();
 			}
 		}

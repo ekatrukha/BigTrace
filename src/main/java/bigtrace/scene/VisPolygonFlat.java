@@ -334,8 +334,9 @@ public class VisPolygonFlat {
 			prog.use( context );
 
 	
-			gl.glBindVertexArray( vao );
 			
+			gl.glBindVertexArray( vao );
+
 
 			if(renderType == Roi3D.OUTLINE)
 			{
