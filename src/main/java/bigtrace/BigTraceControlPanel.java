@@ -14,13 +14,14 @@ import java.beans.PropertyChangeListener;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
@@ -28,7 +29,7 @@ import javax.swing.SwingConstants;
 import bdv.util.Affine3DHelpers;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
 import bigtrace.gui.CropPanel;
-
+import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.gui.VoxelSizePanel;
 import bigtrace.rois.RoiManager3D;
@@ -38,6 +39,7 @@ import bvv.util.Bvv;
 import bvv.util.BvvFunctions;
 import bvv.util.BvvSource;
 import bvv.util.BvvStackSource;
+import ij.Prefs;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
@@ -55,7 +57,7 @@ public class BigTraceControlPanel extends JPanel
 	 */
 	private static final long serialVersionUID = -8992158095263652259L;
 	
-	BigTrace btrace;
+	BigTrace bt;
 	BigTraceData btdata;	
 	
 	public CropPanel cropPanel;	
@@ -70,6 +72,7 @@ public class BigTraceControlPanel extends JPanel
 	public JFrame bvv_frame;
 	public JFrame finFrame;
 	JProgressBar progressBar;
+	JButton butSettings;
 
 	
 	public BigTraceControlPanel(final BigTrace bt_,final BigTraceData btd_, final RoiManager3D roiManager_)//, int locx, int locy) 
@@ -78,9 +81,9 @@ public class BigTraceControlPanel extends JPanel
 		super(new GridBagLayout());
 
 		btdata=btd_;
-		btrace=bt_;		
+		bt=bt_;		
 		roiManager=roiManager_;
-		roiMeasure = new RoiMeasure3D(btrace);
+		roiMeasure = new RoiMeasure3D(bt);
 		roiManager.setRoiMeasure3D(roiMeasure);
 		
 		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
@@ -123,7 +126,7 @@ public class BigTraceControlPanel extends JPanel
 	    //progressBar.setIndeterminate(true);
 	    progressBar.setValue(0);
 	    progressBar.setStringPainted(true);
-	    progressBar.setString("BigTrace version "+btdata.sVersion);
+	    progressBar.setString("BigTrace version " + BigTraceData.sVersion);
 		
 
 	    GridBagConstraints cv = new GridBagConstraints();
@@ -133,10 +136,9 @@ public class BigTraceControlPanel extends JPanel
 	    cv.weighty=1.0;
 	    cv.anchor = GridBagConstraints.NORTHWEST;
 	    cv.gridwidth = GridBagConstraints.REMAINDER;
-	    //cv.gridheight = GridBagConstraints.REMAINDER;
 	    cv.fill = GridBagConstraints.HORIZONTAL;
 	    cv.fill = GridBagConstraints.BOTH;
-	    //finalPanel.add(tabPane,cv);
+
 	    this.add(tabPane,cv);
 	    cv.gridx=0;
 	    cv.gridy=1;	    
@@ -151,8 +153,8 @@ public class BigTraceControlPanel extends JPanel
 	    
 	    //install actions from BVV
 	    
-	    this.setActionMap(btrace.actions.getActionMap());
-	    this.setInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,btrace.actions.getInputMap());
+	    this.setActionMap(bt.actions.getActionMap());
+	    this.setInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,bt.actions.getInputMap());
 	    
 	}
 	
@@ -169,8 +171,8 @@ public class BigTraceControlPanel extends JPanel
 		
 		cropPanel.addCropPanelListener(new CropPanel.Listener() {
 			@Override
-			public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
-				bbChanged(bbx0, bby0, bbz0,  bbx1,  bby1,  bbz1);				
+			public void boundingBoxChanged(long [][] new_box) {
+				bbChanged(new_box);				
 				}
 		});
 		
@@ -237,32 +239,23 @@ public class BigTraceControlPanel extends JPanel
 	    c.gridx++;
 	    
 		panView.add(butVBox,c);
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/worldgrid.png");
+		
+		
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
 	    tabIcon = new ImageIcon(icon_path);
-	    JToggleButton butWorld = new JToggleButton(tabIcon);
-	    butWorld.setSelected(btdata.bShowWorldGrid);
-	    butWorld.setToolTipText("World Grid");
-	    butWorld.addItemListener(new ItemListener() {
-	
-	    @Override
-		public void itemStateChanged(ItemEvent e) {
-	    	      if(e.getStateChange()==ItemEvent.SELECTED){
-	    	    	  btdata.bShowWorldGrid=true;
-	    	    	  //render_pl();
-	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
-	    	        	btdata.bShowWorldGrid=false;
-	    	        	//render_pl();
-	    	        }
-			}
-	    	});
+	    butSettings = new JButton(tabIcon);
+	    //butWorld.setSelected(btdata.bShowWorldGrid);
+	    butSettings.setToolTipText("Settings");
+	    butSettings.addActionListener(this);
+	    
 	    c.gridx++;
-		panView.add(butWorld,c);
+		panView.add(butSettings,c);
 		
 		
 		
 		//Cropping Panel
 		JPanel panCrop=new JPanel(new GridBagLayout()); 
-		panCrop.setBorder(new PanelTitle(" Cropping "));
+		panCrop.setBorder(new PanelTitle(" Crop "));
 
 	    c.gridx=0;
 	    c.gridy=0;
@@ -291,13 +284,16 @@ public class BigTraceControlPanel extends JPanel
 	    c.anchor = GridBagConstraints.WEST;
 	    panNavigation.add(panView,c);
 	    
+	    //Voxel size
+	    c.gridy++;	
+	    panNavigation.add(panVoxel,c);
+	    
+	    
 	    //Crop
 	    c.gridy++;	
 	    panNavigation.add(panCrop,c);
 	    
-	    //Voxel size
-	    c.gridy++;	
-	    panNavigation.add(panVoxel,c);
+
 	    
         // Blank/filler component
 	    c.gridx++;
@@ -309,7 +305,90 @@ public class BigTraceControlPanel extends JPanel
 		return panNavigation;
 		
 	}
+	public void dialSettings()
+	{
+		JPanel pViewSettings = new JPanel(new GridLayout(0,2,0,0));
+		
+		GridBagConstraints cd = new GridBagConstraints();
 	
+		
+		NumberField nfClickArea = new NumberField(4);
+		nfClickArea.setIntegersOnly(true);
+		nfClickArea.setText(Integer.toString(bt.btdata.nHalfClickSizeWindow*2));
+		
+		NumberField nfAnimationDuration = new NumberField(5);
+		nfAnimationDuration.setIntegersOnly(true);
+		nfAnimationDuration.setText(Long.toString(bt.btdata.nAnimationDuration));
+		
+		JCheckBox cbZoomCrop = new JCheckBox();
+		cbZoomCrop.setSelected(bt.btdata.bZoomCrop);
+		
+		
+		NumberField nfZoomBoxSize = new NumberField(4);
+		nfZoomBoxSize.setIntegersOnly(true);
+		nfZoomBoxSize.setText(Integer.toString(bt.btdata.nZoomBoxSize));
+		nfZoomBoxSize.setMaximumSize(nfZoomBoxSize.getPreferredSize());
+
+		NumberField nfZoomBoxScreenFraction = new NumberField(4);
+		nfZoomBoxScreenFraction.setText(Double.toString(bt.btdata.dZoomBoxScreenFraction));
+		nfZoomBoxScreenFraction.setMaximumSize(nfZoomBoxScreenFraction.getPreferredSize());
+		
+		
+		cd.gridx=0;
+		cd.gridy=0;	
+		pViewSettings.add(new JLabel("Snap area size on click (screen px): "),cd);
+		cd.gridx++;
+		pViewSettings.add(nfClickArea,cd);
+	
+		cd.gridx=0;
+		cd.gridy++;
+		pViewSettings.add(new JLabel("Transform animation duration (ms): "),cd);
+		cd.gridx++;
+		pViewSettings.add(nfAnimationDuration,cd);
+
+		cd.gridx=0;
+		cd.gridy++;
+		pViewSettings.add(new JLabel("Crop volume on zoom? "),cd);
+		cd.gridx++;
+		pViewSettings.add(cbZoomCrop,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pViewSettings.add(new JLabel("Zoom volume size (px): "),cd);
+		cd.gridx++;
+		pViewSettings.add(nfZoomBoxSize,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pViewSettings.add(new JLabel("Zoom screen fraction (0-1): "),cd);
+		cd.gridx++;
+		pViewSettings.add(nfZoomBoxScreenFraction,cd);
+		
+		
+		int reply = JOptionPane.showConfirmDialog(null, pViewSettings, "View/Navigation Settings", 
+		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			
+			bt.btdata.nHalfClickSizeWindow = (int)(0.5*Integer.parseInt(nfClickArea.getText()));
+			Prefs.set("BigTrace.nHalfClickSizeWindow",bt.btdata.nHalfClickSizeWindow);
+
+			bt.btdata.nAnimationDuration = Integer.parseInt(nfAnimationDuration.getText());
+			Prefs.set("BigTrace.nAnimationDuration", bt.btdata.nAnimationDuration);
+
+			//ZOOM BOX
+			bt.btdata.bZoomCrop = cbZoomCrop.isSelected();
+			Prefs.set("BigTrace.bZoomCrop", bt.btdata.bZoomCrop );
+
+			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
+			Prefs.set("BigTrace.nZoomBoxSize", bt.btdata.nZoomBoxSize);
+			
+			bt.btdata.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
+			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
+		}
+	}
 
 	
 	public JPanel panelInformation()
@@ -328,8 +407,10 @@ public class BigTraceControlPanel extends JPanel
 					+"<center><b>View/Navigation</b></center><br>"
 					+"&nbsp;<b>1</b> - show centered XY view<br>"
 					+"&nbsp;<b>2</b> - show centered YZ view<br>"
+					+"&nbsp;<b>3</b> - show centered XZ view<br>"
 					+"&nbsp;<b>D</b> - zoom in to a point<br>"
-					+"&nbsp;<b>C</b> - zoom out <br>"
+					+"&nbsp;<b>C</b> - center the view (zoom out)<br>"
+					+"&nbsp;<b>X</b> - reset crop<br>"
 					+"&nbsp;<b>S</b> - brightness/color<br>"
 					+"&nbsp;<b>F6</b> - sources </html>";
 		JLabel jlInfo = new JLabel(shortCutInfo);
@@ -364,58 +445,93 @@ public class BigTraceControlPanel extends JPanel
 	        
 	}
 
-	synchronized <T> void bbChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1)
+	public synchronized <T> void bbChanged(long [][] box )
 	{
-		if(bbx0>=0 && bby0>=0 &&bbz0>=0 && bbx1<=(btdata.nDimIni[1][0]) && bby1<=(btdata.nDimIni[1][1]) && bbz1<=(btdata.nDimIni[1][2]))
+		int i;
+		
+		// not sure we really need to check it, but just in case...
+		boolean bWithinRange = true;
+		for(i=0;i<3;i++)
 		{
-
-				int i;
-				btdata.nDimCurr[0]=new long[] { bbx0, bby0, bbz0 };
-				btdata.nDimCurr[1]=new long[] { bbx1, bby1, bbz1 };
+			if(box[0][i]<btdata.nDimIni[0][i])
+			{
+				bWithinRange = false;
+				break;
+			}
+			if(box[1][i]>btdata.nDimIni[1][i])
+			{
+				bWithinRange = false;
+				break;
+			}
+				
+		}		
+		
+		boolean bNewOne = false;
+		for(i=0;i<3;i++)
+		{
+			for(int j=0;j<2;j++)
+			{
+				if(btdata.nDimCurr[j][i]!=box[j][i])
+				{
+					bNewOne = true;
+					break;
+				}
+			}
+			if(bNewOne)
+				break;
+		}
+		
+		if(bWithinRange && bNewOne)
+		{
+				for(i=0;i<3;i++)
+				{
+					btdata.nDimCurr[0][i]=box[0][i];
+					btdata.nDimCurr[1][i]=box[1][i];
+				}
 				
 				//save display range settings
 				
-				nDisplayMinMax = new double [btrace.btdata.nTotalChannels][2];
-				for(i=0;i<btrace.btdata.nTotalChannels;i++)
+				nDisplayMinMax = new double [bt.btdata.nTotalChannels][2];
+				for(i=0;i<bt.btdata.nTotalChannels;i++)
 				{
-					if(btrace.bvv_sources.get(i)!=null)
+					if(bt.bvv_sources.get(i)!=null)
 					{
-						nDisplayMinMax[i][0]=((BvvStackSource<T>) btrace.bvv_sources.get(i)).getConverterSetups().get(0).getDisplayRangeMin();
-						nDisplayMinMax[i][1]=((BvvStackSource<T>) btrace.bvv_sources.get(i)).getConverterSetups().get(0).getDisplayRangeMax();
+						nDisplayMinMax[i][0]=((BvvStackSource<T>) bt.bvv_sources.get(i)).getConverterSetups().get(0).getDisplayRangeMin();
+						nDisplayMinMax[i][1]=((BvvStackSource<T>) bt.bvv_sources.get(i)).getConverterSetups().get(0).getDisplayRangeMax();
 					}
 				}
 				//update sources
-				if(btrace.btdata.nTotalChannels==1)
+				if(bt.btdata.nTotalChannels==1)
 				{
-					btrace.sources.set(0,Views.interval(btrace.all_ch_RAI, btdata.nDimCurr[0], btdata.nDimCurr[1] ));
+					bt.sources.set(0,Views.interval(bt.all_ch_RAI, btdata.nDimCurr[0], btdata.nDimCurr[1] ));
 					
 				}
 				else
 				{
-					for(i=0;i<btrace.btdata.nTotalChannels;i++)
+					for(i=0;i<bt.btdata.nTotalChannels;i++)
 					{
-						btrace.sources.set(i,Views.interval(Views.hyperSlice(btrace.all_ch_RAI,3,i), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
+						bt.sources.set(i,Views.interval(Views.hyperSlice(bt.all_ch_RAI,3,i), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
 					}
 				}
 		
 				//update bvv sources
-				for(i=0;i<btrace.bvv_sources.size();i++)
+				for(i=0;i<bt.bvv_sources.size();i++)
 				{		
 
-					((BvvSource) btrace.bvv_sources.get(i)).removeFromBdv();
-					btrace.bvv_sources.set(i, BvvFunctions.show( (RandomAccessibleInterval<T>) btrace.sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(btrace.bvv_main)));
-					if(btrace.nBitDepth<=8)
+					((BvvSource) bt.bvv_sources.get(i)).removeFromBdv();
+					bt.bvv_sources.set(i, BvvFunctions.show( (RandomAccessibleInterval<T>) bt.sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bt.bvv_main)));
+					if(bt.nBitDepth<=8)
 					{
-						((BvvSource) btrace.bvv_sources.get(i)).setDisplayRangeBounds(0, 255);
+						((BvvSource) bt.bvv_sources.get(i)).setDisplayRangeBounds(0, 255);
 					}
 					else
 					{
-						((BvvSource) btrace.bvv_sources.get(i)).setDisplayRangeBounds(0, 65535);
+						((BvvSource) bt.bvv_sources.get(i)).setDisplayRangeBounds(0, 65535);
 					}
-					((BvvSource) btrace.bvv_sources.get(i)).setDisplayRange(nDisplayMinMax[i][0], nDisplayMinMax[i][1]);
-					((BvvSource) btrace.bvv_sources.get(i)).setColor( new ARGBType(btrace.colorsCh[i].getRGB() ));
-
-				}	
+					((BvvSource) bt.bvv_sources.get(i)).setDisplayRange(nDisplayMinMax[i][0], nDisplayMinMax[i][1]);
+					((BvvSource) bt.bvv_sources.get(i)).setColor( new ARGBType(bt.colorsCh[i].getRGB() ));
+					
+				}
 				/**/					
 
 				//just in case
@@ -433,7 +549,7 @@ public class BigTraceControlPanel extends JPanel
 		
 		
 		final AffineTransform3D newtransform = new AffineTransform3D();
-		btrace.panel.state().getViewerTransform(transform);
+		bt.panel.state().getViewerTransform(transform);
 
 		
 		double[] scaleChange = new double [3];
@@ -460,11 +576,16 @@ public class BigTraceControlPanel extends JPanel
 			m[ r ][ 3 ] = transform.get(r, 3);
 		}
 		newtransform.set(m);
-		btrace.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,newtransform,0,0,1000));
+		bt.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,newtransform,0,0,1000));
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
+
+		//SETTINGS
+		if(e.getSource() == butSettings)
+		{
+			dialSettings();
+		}
 		
 	}
 

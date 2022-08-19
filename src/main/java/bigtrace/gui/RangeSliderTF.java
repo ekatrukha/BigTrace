@@ -123,7 +123,8 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 			
 			// TODO Auto-generated method stub
 			try {
-				int nMinV=Integer.parseInt(minTF.getText());
+				//slider.getMaximum();
+				int nMinV=(int)Math.min(Integer.parseInt(minTF.getText()),slider.getMaximum());
 				int nMaxV=Integer.parseInt(maxTF.getText());
 			
 				slider.setLowValue(nMinV);

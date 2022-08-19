@@ -45,9 +45,9 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
+import mpicbg.spim.data.sequence.ViewDescription;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
-import net.imagej.ImgPlus;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
@@ -59,7 +59,6 @@ import net.imglib2.img.Img;
 
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.img.display.imagej.ImgPlusViews;
 import net.imglib2.realtransform.AffineTransform3D;
 
 import net.imglib2.type.numeric.ARGBType;
@@ -293,7 +292,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		panel.setRenderScene(this::renderScene);
 		actions = new Actions( new InputTriggerConfig() );
 		installActions(actions);
-		resetViewXY(true);
+		setInitialTransform();
+		addSources();
+		
+		//resetViewXY();
 	}
 	
 	
@@ -577,9 +579,28 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				{
 					
 					//FinalInterval zoomInterval = getZoomBoxCentered(btdata.nZoomBoxSize, target);
-					FinalInterval zoomInterval = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.nZoomBoxSize, target);
+					FinalInterval zoomInterval;// = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.nZoomBoxSize, target);
 					
-			
+					if(!btdata.bZoomCrop)
+					{
+						zoomInterval = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.nZoomBoxSize, target);
+							
+					}
+					else
+					{
+						//one channel
+						if (btdata.nTotalChannels==1)
+						{
+							zoomInterval = getTraceBoxCentered(Views.interval(all_ch_RAI,all_ch_RAI),btdata.nZoomBoxSize, target);
+						}
+						//multichannel
+						else
+						{
+							zoomInterval = getTraceBoxCentered(Views.hyperSlice(all_ch_RAI,3,0),btdata.nZoomBoxSize, target);																					
+						}
+						btpanel.cropPanel.setBoundingBox(zoomInterval);
+					}
+					//animate
 					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,btdata.dZoomBoxScreenFraction));
 				}
 			}
@@ -619,6 +640,19 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 		}
 	}
+	
+	public void actionResetCrop()
+	{
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
+		{
+			if(!bTraceMode)
+			{
+				btpanel.cropPanel.setBoundingBox(btdata.nDimIni);				
+			}
+		}
+	}
 	public void installActions(final Actions actions)
 	{
 		//final Actions actions = new Actions( new InputTriggerConfig() );
@@ -630,7 +664,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions.runnableAction(() -> actionAdvanceTraceBox(),       "advance trace box", "T" );
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
 		actions.runnableAction(() -> actionZoomToPoint(),			"zoom in to click", "D" );
-		actions.runnableAction(() -> actionZoomOut(),				"zoom out", "C" );
+		actions.runnableAction(() -> actionZoomOut(),				"center view (zoom out)", "C" );
+		actions.runnableAction(() -> actionResetCrop(),				"reset crop", "X" );
 				
 		
 		
@@ -638,7 +673,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				() -> {
 					Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
 					if(!(c instanceof JTextField))
-						resetViewXY(false);
+						resetViewXY();
 					
 				},
 				"reset view XY",
@@ -651,7 +686,14 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				},
 				"reset view YZ",
 				"2" );
-			
+			actions.runnableAction(
+					() -> {
+						Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+						if(!(c instanceof JTextField))
+							resetViewXZ();
+					},
+					"reset view XZ",
+					"3" );			
 
 		//actions.namedAction(action, defaultKeyStrokes);
 		actions.install( bvv_main.getBvvHandle().getKeybindings(), "BigTrace actions" );
@@ -853,8 +895,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		return finInt;
 									
 	}
-	
-	public AnisotropicTransformAnimator3D getCenteredViewAnim(final Interval inInterval, double zoomFraction)
+	/** given interval and zoomFraction, provides transform that puts volume 
+	 * in the center of BVV viewer**/
+	public AffineTransform3D getCenteredViewTransform(final Interval inInterval, double zoomFraction)
 	{
 		int i;
 		int nDim = inInterval.numDimensions();
@@ -889,15 +932,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		//scaled the volume
 		final AffineTransform3D transform_scale = new AffineTransform3D();
 		transform_scale.set(transform);
-		//transform_scale.set(scalefin, 0, 0);
-		//transform_scale.set(scalefin, 1, 1);
-		//transform_scale.set(scalefin, 2, 2);
+		
 		transform_scale.scale(scalefin);
 		
 		//now let's move it
-		
-
-		
+			
 		//coordinates in the current transform view
 		//transform.apply(centerCoord, centerCoord);
 		transform_scale.apply(centerCoord, centerCoord);
@@ -951,8 +990,21 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			dl[i]+= (newCent[i]-centerCoord[i]);
 		}
 		transform_scale.setTranslation(dl);
-
-		final AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(transform,transform_scale,0,0,1500);		
+		
+		FinalRealInterval boxAfterShift = transform_scale.estimateBounds(inInterval);
+		double[] newx = new double[3];
+		
+		transform_scale.apply(newx , newx );
+		
+		return transform_scale;
+	}
+	
+	public AnisotropicTransformAnimator3D getCenteredViewAnim(final Interval inInterval, double zoomFraction)
+	{
+		final AffineTransform3D transform = new AffineTransform3D();
+		panel.state().getViewerTransform(transform);
+		final AffineTransform3D transform_scale = getCenteredViewTransform(inInterval,zoomFraction);
+		final AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(transform,transform_scale,0,0,btdata.nAnimationDuration);		
 		//final SimilarityTransformAnimator anim = new SimilarityTransformAnimator(transform,transform,0,0,1500);		
 		
 		return anim;
@@ -1054,100 +1106,67 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				volumeBox.draw(gl, pvm, screen_size);
 			}
 		
-			//render world grid			
-			if(btdata.bShowWorldGrid)
-			{
-/*
-				int sW = bvv.getBvvHandle().getViewerPanel().getWidth();
-				int sH = bvv.getBvvHandle().getViewerPanel().getHeight();
-				Matrix4f  matPerspWorld = new Matrix4f();
-				MatrixMath.screenPerspective( dCam, dClipNear, dClipFar, sW, sH, 0, matPerspWorld );
-				ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
-				//for (int i =0; i<sW; i+=40)
-				float [] world_grid_color = new float[]{0.5f,0.5f,0.5f}; 
-				float world_grid_thickness = 1.0f;
-	
-				//bottom grid
-				float i;
-				//vertical
-				float j=(float)sH;
-				float di=3.0f*(float)sW/20.0f;
-				for (i =-sW; i<2*sW; i+=di)
-				{
-					point_coords.add(new RealPoint(i,j,(float)(-1.0*dClipNear)));
-					point_coords.add(new RealPoint(i,j,(float)(1.0*dClipFar)));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
-					lines.draw( gl, matPerspWorld);
-					point_coords.clear();
-				}
-				//horizontal
-				float k=0; 
-				float dk = (float)((dClipFar+dClipNear)/10.0);
-				for (k= (float)(dClipFar*0.99); k>=(-1.0*dClipNear); k-=dk)
-				{
-					point_coords.add(new RealPoint((float)(-sW),j,k));
-					point_coords.add(new RealPoint((float)2*sW,j,k));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
-					lines.draw( gl, matPerspWorld);
-					point_coords.clear();
-				}
-				//middle grid
-				// vertical
-				for (i =-sW; i<2*sW; i+=di)
-				{
-					point_coords.add(new RealPoint(i,0,(float)(dClipFar*0.99)));
-					point_coords.add(new RealPoint(i,sH,(float)(dClipFar*0.99)));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
-					lines.draw( gl, matPerspWorld);
-					point_coords.clear();
-				}	
-				//horizontal
-				float dj=(float)sH/10.0f;
-				for (j =0; j<=sH; j+=dj)
-				{
-					point_coords.add(new RealPoint((float)(-sW),j,(float)(dClipFar*0.99)));
-					point_coords.add(new RealPoint((float)2*sW,j,(float)(dClipFar*0.99)));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
-					lines.draw( gl, matPerspWorld);
-					point_coords.clear();
-				}	
-				
-				//top grid
-				//vertical
-				j=0.0f;
-				//di=3.0f*(float)sW/20.0f;
-				for (i =-sW; i<2*sW; i+=di)
-				{
-					point_coords.add(new RealPoint(i,j,(float)(-1.0*dClipNear)));
-					point_coords.add(new RealPoint(i,j,(float)(1.0*dClipFar)));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
-					lines.draw( gl, matPerspWorld);
-					point_coords.clear();
-				}
-				//horizontal			
-				for (k= (float)(dClipFar*0.99); k>=(-1.0*dClipNear); k-=dk)
-				{
-					point_coords.add(new RealPoint((float)(-sW),j,k));
-					point_coords.add(new RealPoint((float)2*sW,j,k));
-					VisPolyLineSimple lines = new VisPolyLineSimple(world_grid_color, point_coords, world_grid_thickness );
-					lines.draw( gl, matPerspWorld);
-					point_coords.clear();
-				}
-				*/
-			}
-			
-		//} );
-
 		panel.requestRepaint();
 
 	}
-	public void resetViewXY(boolean firstCall)
+	
+	public void addSources()
+	{
+		for(int i=0;i<sources.size();i++)
+		{
+			
+			bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
+			//bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), 
+			//		Bvv.options().addTo(bvv_main).sourceTransform(
+			//				btdata.globCal[0],
+			//				btdata.globCal[1],
+			//				btdata.globCal[2])));
+			bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
+			bvv_sources.get(i).setDisplayRange(channelRanges[0][i], channelRanges[1][i]);
+			if(nBitDepth<=8)
+			{
+				bvv_sources.get(i).setDisplayRangeBounds(0, 255);
+			}
+			else
+			{
+				bvv_sources.get(i).setDisplayRangeBounds(0, 65535);
+			}
+		}
+	}
+	
+	void setInitialTransform()
+	{
+		AffineTransform3D t = new AffineTransform3D();
+		t.identity();
+		t.rotate(0, Math.PI/2.0);
+		t.rotate(1, (-1)*Math.PI/6.0);
+		t.rotate(0, Math.PI/9.0);
+		panel.state().setViewerTransform(t);
+		t= getCenteredViewTransform(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]), 0.9);
+		panel.state().setViewerTransform(t);
+	}
+	
+	public void resetViewXY()
 	{
 		
 		double scale;
-		double nW= (double)btdata.nDimIni[1][0]*btdata.globCal[0];
-		double nH= (double)btdata.nDimIni[1][1]*btdata.globCal[1];
-		double nD= (double)btdata.nDimIni[1][2]*btdata.globCal[2];
+		long [][] nBox;
+		if(!bTraceMode)
+		{
+			nBox = btdata.nDimCurr;
+		}
+		else
+		{
+			nBox = new long [2][3];
+			nBox[0]= btdata.trace_weights.minAsLongArray();
+			nBox[1]= btdata.trace_weights.maxAsLongArray();
+		}
+		
+		double nW= (double)(nBox[1][0]-nBox[0][0])*btdata.globCal[0];
+		double nH= (double)(nBox[1][1]-nBox[0][1])*btdata.globCal[1];
+		double nWoff= (double)(2.0*nBox[0][0])*btdata.globCal[0];
+		double nHoff= (double)(2.0*nBox[0][1])*btdata.globCal[1];
+		double nDoff= (double)(2.0*nBox[0][2])*btdata.globCal[2];
 		
 		double sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
 		double sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
@@ -1164,97 +1183,34 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		AffineTransform3D t = new AffineTransform3D();
 		t.identity();
 
-		//t.set(scale, 0.0, 0.0, 0.5*(sW-scale*nW), 0.0, scale, 0.0, 0.5*(sH-scale*nH), 0.0, 0.0, scale,0.0);// (-0.5)*scale*(double)nD);
-		//t.set(scale, 0.0, 0.0, 0.5*(sW-scale*nW), 0.0, scale, 0.0, 0.5*(sH-scale*nH), 0.0, 0.0, scale, (-0.5)*scale*(double)nD);
-	
-		//t.scale(btdata.globCal[0], btdata.globCal[1], btdata.globCal[2]);
 		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
-		t.translate(0.5*(sW-scale*nW),0.5*(sH-scale*nH),(-0.5)*scale*(double)nD);
-		//tcenter.set(1.0, 0.0, 0.0, 0.5*(sW-scale*nW), 0.0, 1.0, 0.0, 0.5*(sH-scale*nH), 0.0, 0.0, 1.0, (-0.5)*scale*(double)nD);
-
-		//t.concatenate(tcenter);
-		//t.identity();
-		//t.set((double)0.5*sH,1,3);
-
-		if(!firstCall)
-		{
+		t.translate(0.5*(sW-scale*(nW+nWoff)),0.5*(sH-scale*(nH+nHoff)),(-0.5)*scale*(nDoff));
+		
+		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
+		panel.setTransformAnimator(anim);
 			
-			AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,400);
-			panel.setTransformAnimator(anim);
-			
-		}
-		else
-		{
-			panel.state().setViewerTransform(t);
-			for(int i=0;i<sources.size();i++)
-			{
-				
-				bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
-				//bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), 
-				//		Bvv.options().addTo(bvv_main).sourceTransform(
-				//				btdata.globCal[0],
-				//				btdata.globCal[1],
-				//				btdata.globCal[2])));
-				bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
-				bvv_sources.get(i).setDisplayRange(channelRanges[0][i], channelRanges[1][i]);
-				if(nBitDepth<=8)
-				{
-					bvv_sources.get(i).setDisplayRangeBounds(0, 255);
-				}
-				else
-				{
-					bvv_sources.get(i).setDisplayRangeBounds(0, 65535);
-				}
-			}
-
-		}
-
-//        RealRandomAccessible<UnsignedByteType> rra = new Procedural3DImageByte(
-//                p -> {
-//                	 
-//                	 int maxIterations= 50;
-//                	 double n=2;
-//                	 //double n=3;
-//                	 int i = 0;
-//                	 double x= 0;
-//                	 double y= 0;
-//                	 double z= 0;
-//                     double r, theta, phi;
-//                     double a = (p[0]/btdata.nDimIni[1][0])*2.47 - 2.0;
-//                     double b = (p[1]/btdata.nDimIni[1][1])*2.24-1.12;
-//                     double c = (p[2]/btdata.nDimIni[1][2]-0.5);
-//                     //double c = 2.0*(p[2]/btdata.nDimIni[1][2]-0.5);
-//
-//                     double dV = 0;
-//                     
-//                	 for ( ; i <= maxIterations; ++i )
-//                	 {
-//                		 r = Math.sqrt(x*x+y*y+z*z);
-//                		 theta = Math.atan2(z,Math.sqrt(x*x+y*y));
-//                		 phi = Math.atan2(y,x);
-//                		 x = Math.pow(r,n) * Math.cos(n*phi) * Math.cos(n*theta)+a;
-//                		 y = Math.pow(r,n) * Math.sin(n*phi) * Math.cos(n*theta)+b;
-//                		 z = Math.pow(r,n) *  Math.sin(n*theta)+c;
-//                		 dV=x*x +y*y+z*z;
-//                		 if ( dV>8 )
-//                             break;
-//                	 }
-//
-//
-//                    return (int)Math.round(255*i/maxIterations);
-//                }
-//        ).getRRA();
-//        RandomAccessibleOnRealRandomAccessible<UnsignedByteType> RAc = new RandomAccessibleOnRealRandomAccessible<UnsignedByteType>(rra);
-//        currentView = Views.interval( RAc, new long[] { 0, 0, 0 }, new long[]{ nW-1, nH-1, nD-1 } );	
-//        bvv2 = BvvFunctions.show( currentView, "cropreset", Bvv.options().addTo(bvv));
 	}
 	
 	public void resetViewYZ()
 	{
 		
 		double scale;
-		double nH= btdata.nDimIni[1][1]*btdata.globCal[1];
-		double nD= btdata.nDimIni[1][2]*btdata.globCal[2];
+		long [][] nBox;
+		if(!bTraceMode)
+		{
+			nBox = btdata.nDimCurr;
+		}
+		else
+		{
+			nBox = new long [2][3];
+			nBox[0]= btdata.trace_weights.minAsLongArray();
+			nBox[1]= btdata.trace_weights.maxAsLongArray();
+		}
+		double nH= (double)(nBox[1][1]-nBox[0][1])*btdata.globCal[1];
+		double nD= (double)(nBox[1][2]-nBox[0][2])*btdata.globCal[2];
+		double nWoff= (double)(2.0*nBox[0][0])*btdata.globCal[0];
+		double nHoff= (double)(2.0*nBox[0][1])*btdata.globCal[1];
+		double nDoff= (double)(2.0*nBox[0][2])*btdata.globCal[2];
 		double sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
 		double sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
 		
@@ -1268,26 +1224,68 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
-		//AffineTransform3D t2 = new AffineTransform3D();
 	
 		t.identity();
-		
 		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
 		t.rotate(1, (-1)*Math.PI/2.0);
-		//t.translate(0.5*(sW-scale*nD),0.0,-0.5*(sW+scale*nD));
-		t.translate(0.5*(sW+scale*nD),0.5*(sH-scale*nH),0.0);
-		//t2.set(scale, 0.0, 0.0, 0.0, 0.0, scale, 0.0,0.5*((double)sH-scale*(double)nH) , 0.0, 0.0, scale, -0.5*((double)sW+scale*(double)nD));
-		//t.concatenate(t2);
-
-		
+		t.translate(0.5*(sW+scale*(nD+nDoff)),0.5*(sH-scale*(nH+nHoff)),(-0.5)*scale*nWoff);
+		//t.translate(0.5*(sW+scale*(nD+nDoff)),0.0,0.0);
+	
 		panel=bvv_main.getBvvHandle().getViewerPanel();
 		
-		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,300);
+		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
 		
 		panel.setTransformAnimator(anim);
 
 	}
 	
+	public void resetViewXZ()
+	{
+		
+		double scale;
+		long [][] nBox;
+		if(!bTraceMode)
+		{
+			nBox = btdata.nDimCurr;
+		}
+		else
+		{
+			nBox = new long [2][3];
+			nBox[0]= btdata.trace_weights.minAsLongArray();
+			nBox[1]= btdata.trace_weights.maxAsLongArray();
+		}
+		double nW= (double)(nBox[1][0]-nBox[0][0])*btdata.globCal[0];
+		double nD= (double)(nBox[1][2]-nBox[0][2])*btdata.globCal[2];
+		double nWoff= (double)(2.0*nBox[0][0])*btdata.globCal[0];
+		double nHoff= (double)(2.0*nBox[0][1])*btdata.globCal[1];
+		double nDoff= (double)(2.0*nBox[0][2])*btdata.globCal[2];
+		double sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
+		double sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
+		
+		if(sW/nW<sH/nD)
+		{
+			scale=sW/nW;
+		}
+		else
+		{
+			scale=sH/nD;
+		}
+		scale = 0.9*scale;
+		AffineTransform3D t = new AffineTransform3D();
+	
+		t.identity();
+		
+		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
+		t.rotate(0, Math.PI/2.0);
+		t.translate(0.5*(sW-scale*(nW+nWoff)),0.5*(sH+scale*(nD+nDoff)),(-0.5)*scale*nHoff);
+	
+		panel=bvv_main.getBvvHandle().getViewerPanel();
+		
+		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
+		
+		panel.setTransformAnimator(anim);
+
+	}
 	public <X extends RealType< X >>boolean findPointLocationFromClick(final IntervalView< X > viewclick, final int nHalfWindowSize, final RealPoint target)
 	//public boolean findPointLocationFromClick(final IntervalView< UnsignedByteType > viewclick, final int nHalfWindowSize, final RealPoint target)
 	{
@@ -1561,12 +1559,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public static void main( String... args) throws Exception
 	{
 		
-		/*
-		Class<?> clazz = BigTrace.class;
-		java.net.URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
-		java.io.File file = new java.io.File(url.toURI());
-		System.setProperty("plugins.dir", file.getAbsolutePath());
-		*/
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		

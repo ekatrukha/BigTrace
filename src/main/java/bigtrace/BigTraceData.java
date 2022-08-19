@@ -37,9 +37,6 @@ public class BigTraceData {
 	/** whether or not display a box around volume/image **/
 	public boolean bVolumeBox = true;
 	
-	/** whether or not display a world grid **/
-	public boolean bShowWorldGrid = false;
-	
 	/** camera position for BVV **/
 	double dCam = 1100.;
 	
@@ -60,14 +57,21 @@ public class BigTraceData {
 	/////////////////////////////////clicking interface 
 	
 	/** half size of rectangle around click point (in screen pixels)
-	 * used to find maximim intensity **/
-	public int nHalfClickSizeWindow = 5;
+	 * used to find maximum intensity voxel **/
+	public int nHalfClickSizeWindow = (int)Prefs.get("BigTrace.nHalfClickSizeWindow",5.0);
+	
+	
+	/** whether to crop volume when zooming **/
+	public boolean bZoomCrop = Prefs.get("BigTrace.bZoomCrop", false);
 	
 	/** characteristic size of zoom in area (in pixels of original volume) **/
 	public int nZoomBoxSize = 150;
 	
 	/** fraction of screen occupied by zoom box **/
 	public double dZoomBoxScreenFraction = 1.0;
+	
+	/** animation speed, i.e. duration of transform **/
+	public long nAnimationDuration =  (int)Prefs.get("BigTrace.nAnimationDuration",1000);
 		
 	///////////////////////////// tracing box
 	
@@ -110,7 +114,7 @@ public class BigTraceData {
 	public static final int SHAPE_Voxel=0, SHAPE_Subvoxel=1; 
 	
 	/** current ROI shape interpolation **/
-	public static int shapeInterpolation = Prefs.getInt("BigTrace.ShapeInterpolation",SHAPE_Subvoxel);
+	public static int shapeInterpolation = (int) Prefs.get("BigTrace.ShapeInterpolation",SHAPE_Subvoxel);
 	
 	/** size of moving average window to smooth traces (in points) **/
 	public static int nSmoothWindow=(int) Prefs.get("BigTrace.nSmoothWindow", 5);

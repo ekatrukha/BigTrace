@@ -970,19 +970,31 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		GridBagConstraints cd = new GridBagConstraints();
 	
 		
-		////////////GERERAL COLORS/INTERFACE
-		JPanel pGeneral = new JPanel(new GridBagLayout());
+		////////////ROI RENDER OPTIONS
+		JPanel pROIrender = new JPanel(new GridBagLayout());
+		JButton butPointActiveColor = new JButton( new ColorIcon( activePointColor ) );	
+		butPointActiveColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active point color", activePointColor );
+			if (newColor!=null)
+			{
+				selectColors.setColor(newColor, 0);
+				//setNewPointColor(newColor);
+				butPointActiveColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
 		
+		JButton butLineActiveColor = new JButton( new ColorIcon( activeLineColor ) );	
+		butLineActiveColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active line color", activeLineColor );
+			if (newColor!=null)
+			{
+				selectColors.setColor(newColor, 1);
 
-
-
-		NumberField nfZoomBoxSize = new NumberField(4);
-		nfZoomBoxSize.setIntegersOnly(true);
-		nfZoomBoxSize.setText(Integer.toString(bt.btdata.nZoomBoxSize));
-
-		NumberField nfZoomBoxScreenFraction = new NumberField(4);
-		nfZoomBoxScreenFraction.setText(Double.toString(bt.btdata.dZoomBoxScreenFraction));
-		
+				butLineActiveColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
 		
 		String[] sShapeInterpolationType = { "Voxel", "Subvoxel"};
 		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
@@ -991,31 +1003,52 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		NumberField nfSmoothWindow = new NumberField(2);
 		nfSmoothWindow.setIntegersOnly(true);
 		nfSmoothWindow.setText(Integer.toString(BigTraceData.nSmoothWindow));
-			
+		
+		
+		NumberField nfSectorNLines = new NumberField(4);
+		nfSectorNLines.setIntegersOnly(true);
+		nfSectorNLines.setText(Integer.toString(BigTraceData.sectorN));
+		
+		NumberField nfCrossSectionGridStep = new NumberField(4);
+		nfCrossSectionGridStep.setIntegersOnly(true);
+		nfCrossSectionGridStep.setText(Integer.toString(BigTraceData.crossSectionGridStep));
 		
 		cd.gridx=0;
 		cd.gridy=0;
+		pROIrender.add(new JLabel("Selected ROI point color: "),cd);
+		cd.gridx++;
+		pROIrender.add(butPointActiveColor,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("Selected ROI line color: "),cd);
+		cd.gridx++;
+		pROIrender.add(butLineActiveColor,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("ROI Shape interpolation: "),cd);
+		cd.gridx++;
+		pROIrender.add(shapeInterpolationList,cd);	
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("Trace smoothing window (points): "),cd);
+		cd.gridx++;
+		pROIrender.add(nfSmoothWindow,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("# sectors line render: "),cd);
+		cd.gridx++;
+		pROIrender.add(nfSectorNLines,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("Cross-section grid step (px): "),cd);
+		cd.gridx++;
+		pROIrender.add(nfCrossSectionGridStep,cd);
 
-		pGeneral.add(new JLabel("Zoom volume size (px): "),cd);
-		cd.gridx++;
-		pGeneral.add(nfZoomBoxSize,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pGeneral.add(new JLabel("Zoom screen fraction (0-1): "),cd);
-		cd.gridx++;
-		pGeneral.add(nfZoomBoxScreenFraction,cd);		
-		cd.gridx=0;
-		cd.gridy++;
-		pGeneral.add(new JLabel("ROI Shape interpolation: "),cd);
-		cd.gridx++;
-		pGeneral.add(shapeInterpolationList,cd);	
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pGeneral.add(new JLabel("Trace smoothing window (points): "),cd);
-		cd.gridx++;
-		pGeneral.add(nfSmoothWindow,cd);	
+
 		
 		////////////TRACING OPTIONS
 		JPanel pTrace = new JPanel(new GridBagLayout());
@@ -1093,70 +1126,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		pTrace.add(new JLabel("Trace only cropped volume: "),cd);
 		cd.gridx++;
 		pTrace.add(cbTraceOnlyCrop,cd);
-		
-		
-		////////////ROI RENDER OPTIONS
-		JPanel pROIrender = new JPanel(new GridBagLayout());
-		JButton butPointActiveColor = new JButton( new ColorIcon( activePointColor ) );	
-		butPointActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active point color", activePointColor );
-			if (newColor!=null)
-			{
-				selectColors.setColor(newColor, 0);
-				//setNewPointColor(newColor);
-				butPointActiveColor.setIcon(new ColorIcon(newColor));
-			}
 			
-		});
 		
-		JButton butLineActiveColor = new JButton( new ColorIcon( activeLineColor ) );	
-		butLineActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active line color", activeLineColor );
-			if (newColor!=null)
-			{
-				selectColors.setColor(newColor, 1);
-
-				butLineActiveColor.setIcon(new ColorIcon(newColor));
-			}
-			
-		});
-		
-		NumberField nfSectorNLines = new NumberField(4);
-		nfSectorNLines.setIntegersOnly(true);
-		nfSectorNLines.setText(Integer.toString(BigTraceData.sectorN));
-		
-		NumberField nfCrossSectionGridStep = new NumberField(4);
-		nfCrossSectionGridStep.setIntegersOnly(true);
-		nfCrossSectionGridStep.setText(Integer.toString(BigTraceData.crossSectionGridStep));
-		
-		cd.gridx=0;
-		cd.gridy=0;
-		pROIrender.add(new JLabel("Selected ROI point color: "),cd);
-		cd.gridx++;
-		pROIrender.add(butPointActiveColor,cd);
-		cd.gridx=0;
-		cd.gridy++;
-		pROIrender.add(new JLabel("Selected ROI line color: "),cd);
-		cd.gridx++;
-		pROIrender.add(butLineActiveColor,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pROIrender.add(new JLabel("# sectors line render: "),cd);
-		cd.gridx++;
-		pROIrender.add(nfSectorNLines,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pROIrender.add(new JLabel("Cross-section grid step (px): "),cd);
-		cd.gridx++;
-		pROIrender.add(nfCrossSectionGridStep,cd);
-		
-		
-		tabPane.addTab("General",pGeneral);
-		tabPane.addTab("Tracing",pTrace);
 		tabPane.addTab("ROI render",pROIrender);
-		
+		tabPane.addTab("Tracing",pTrace);
 		
 
 		int reply = JOptionPane.showConfirmDialog(null, tabPane, "ROI Manager Settings", 
@@ -1165,20 +1138,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 		if (reply == JOptionPane.OK_OPTION) 
 		{
-			
-
-
-			
-			//ZOOM BOX
-
-			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
-			Prefs.set("BigTrace.nZoomBoxSize", bt.btdata.nZoomBoxSize);
-			
-			bt.btdata.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
-			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
+		
 			
 			//ROI appearance
-			
 			boolean bUpdateROIs = false;
 			
 			Color tempC;

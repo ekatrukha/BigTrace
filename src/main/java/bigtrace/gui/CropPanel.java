@@ -12,6 +12,8 @@ import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
 
+import net.imglib2.Interval;
+
 
 public class CropPanel extends JPanel {
 	
@@ -40,7 +42,7 @@ public class CropPanel extends JPanel {
 	private ArrayList<Listener> listeners =	new ArrayList<Listener>();
 	
 	public static interface Listener {
-		public void boundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1);
+		public void boundingBoxChanged(long [][] box);
 
 	}
 	
@@ -101,13 +103,14 @@ public class CropPanel extends JPanel {
 		RangeSliderTF.Listener bbListener = new RangeSliderTF.Listener() {
 			@Override
 			public void sliderChanged() {
-				fireBoundingBoxChanged(
-						bbX.getMin(),
-						bbY.getMin(),
-						bbZ.getMin(),
-						bbX.getMax(),
-						bbY.getMax(),
-						bbZ.getMax());
+				long [][] new_box = new long [2][3];
+				new_box [0][0]=bbX.getMin();
+				new_box [1][0]=bbX.getMax();
+				new_box [0][1]=bbY.getMin();
+				new_box [1][1]=bbY.getMax();
+				new_box [0][2]=bbZ.getMin();
+				new_box [1][2]=bbZ.getMax();
+				fireBoundingBoxChanged(new_box);
 			}
 		};
 		bbX.addSliderChangeListener(bbListener);
@@ -144,14 +147,28 @@ public class CropPanel extends JPanel {
 		bbY.setMinAndMax(bby0, bby1);
 		bbZ.setMinAndMax(bbz0, bbz1);
 	}
+	
+	public void setBoundingBox(long [][] box) {
+		bbX.setMinAndMax((int)box[0][0], (int)box[1][0]);
+		bbY.setMinAndMax((int)box[0][1], (int)box[1][1]);
+		bbZ.setMinAndMax((int)box[0][2], (int)box[1][2]);
+	}
+	public void setBoundingBox(Interval interval) {
+		long [][] box = new long[2][3];
+		box[0]=interval.minAsLongArray();
+		box[1]=interval.maxAsLongArray();
+		bbX.setMinAndMax((int)box[0][0], (int)box[1][0]);
+		bbY.setMinAndMax((int)box[0][1], (int)box[1][1]);
+		bbZ.setMinAndMax((int)box[0][2], (int)box[1][2]);
+	}
 
 	public void addCropPanelListener(Listener l) {
         listeners.add(l);
     }
 
-	private void fireBoundingBoxChanged(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
+	private void fireBoundingBoxChanged(long [][] box) {
 		for(Listener l : listeners)
-			l.boundingBoxChanged(bbx0, bby0, bbz0, bbx1, bby1, bbz1);
+			l.boundingBoxChanged(box);
 	}
 
 }

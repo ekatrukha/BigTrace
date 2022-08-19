@@ -44,8 +44,9 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 		for (i=0;i<3;i++)
 		{
 			vxAllSize[i]=dVoxelSize[i];
-			nfAllSize[i]=new NumberField(5);
+			nfAllSize[i]=new NumberField(4);
 			nfAllSize[i].setText(String.format("%.3f", dVoxelSize[i]));
+			nfAllSize[i].setMinimumSize(nfAllSize[i].getPreferredSize());
 			nfAllSize[i].addListener(this);
 			nfAllSize[i].addNumberFieldFocusListener(this);
 			
@@ -53,8 +54,9 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 
 		tfUnits = new JTextField(8);
 		tfUnits.setText(sUnits);	
-		tfUnits.setHorizontalAlignment(SwingConstants.LEFT);
+		//tfUnits.setHorizontalAlignment(SwingConstants.LEFT);
 		setLayout(gridbag);
+		/*
 		c.gridx=0;
 		c.gridy=0;
 		this.add(new JLabel("Voxel width"),c);
@@ -75,8 +77,34 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 		this.add(new JLabel("Units"),c);
 		c.gridx++;
 		this.add(tfUnits,c);
-				
-
+		*/	
+		
+		c.fill=GridBagConstraints.HORIZONTAL;
+		//c.weightx = 0.5;
+		c.gridx=0;
+		c.gridy=0;
+		this.add(new JLabel("X"),c);
+		c.gridx++;
+		this.add(nfAllSize[0],c);
+		//c.gridx=0;		
+		c.gridx++;
+		this.add(new JLabel("Y"),c);
+		c.gridx++;
+		this.add(nfAllSize[1],c);
+		//c.gridx=0;
+		c.gridx++;
+		this.add(new JLabel("Z"),c);
+		c.gridx++;
+		this.add(nfAllSize[2],c);
+		c.gridwidth=3;
+		c.gridx=0;
+		c.gridy++;
+		//c.weightx = 0.0;
+		JLabel jlUnits =new JLabel("Units");
+		jlUnits.setHorizontalAlignment(SwingConstants.RIGHT);
+		this.add(jlUnits,c);
+		c.gridx+=3;
+		this.add(tfUnits,c);
 	}
 
 	@Override
