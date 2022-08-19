@@ -701,6 +701,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 	 
 		 	 GuiMisc.setPanelStatusAllComponents(this, bState);
 		 	 GuiMisc.setPanelStatusAllComponents(roiMeasure, bState);
+		 	 
+		 	 //keep it on
+		 	 butShowAll.setEnabled(true);
 		 	 /*
 			 roiPointMode.setEnabled(bState);
 			 roiPolyLineMode.setEnabled(bState);

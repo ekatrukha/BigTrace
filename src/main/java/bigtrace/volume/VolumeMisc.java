@@ -404,17 +404,25 @@ public class VolumeMisc {
 	 * @param <T>**/
 	public static <T extends NumericType<T> > ImagePlus wrapImgImagePlusCal(RandomAccessibleInterval< T > img, String sTitle, Calibration cal)
 	{
-		ImagePlus outIP = ImageJFunctions.wrap(img,sTitle);
+		ImagePlus outIP;// = ImageJFunctions.wrap(img,sTitle);
 		
-		
+		//just a 3D volume
 		if(img.numDimensions()==3)
 		{
+			outIP = ImageJFunctions.wrap(img,sTitle);
 			outIP.setDimensions(1, (int)img.dimension(2), 1);		
 		}
+		//multichannel 3D volume
 		if(img.numDimensions()==4)
 		{
-			outIP.setDimensions((int)img.dimension(2), (int)img.dimension(3), 1);
+			outIP = ImageJFunctions.wrap(Views.permute(img,2,3), sTitle);
+			outIP.setDimensions((int)img.dimension(3), (int)img.dimension(2), 1);
 		}
+		else
+		{
+			return null;
+		}
+		
 		if(cal!=null)
 		{
 			outIP.setCalibration(cal);

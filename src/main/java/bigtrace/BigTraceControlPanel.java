@@ -387,14 +387,14 @@ public class BigTraceControlPanel extends JPanel
 				//update sources
 				if(btrace.btdata.nTotalChannels==1)
 				{
-					btrace.sources.set(0,Views.interval(btrace.img_in, btdata.nDimCurr[0], btdata.nDimCurr[1] ));
+					btrace.sources.set(0,Views.interval(btrace.all_ch_RAI, btdata.nDimCurr[0], btdata.nDimCurr[1] ));
 					
 				}
 				else
 				{
 					for(i=0;i<btrace.btdata.nTotalChannels;i++)
 					{
-						btrace.sources.set(i,Views.interval(Views.hyperSlice(btrace.img_in,2,i), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
+						btrace.sources.set(i,Views.interval(Views.hyperSlice(btrace.all_ch_RAI,3,i), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
 					}
 				}
 		

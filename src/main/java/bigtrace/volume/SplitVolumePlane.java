@@ -11,12 +11,15 @@ import bigtrace.BigTraceBGWorker;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.CrossSection3D;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.measure.Calibration;
+import net.imagej.util.Images;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.img.Img;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
@@ -52,7 +55,7 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 	@Override
 	protected Void doInBackground() throws Exception {
 		
-		int i;
+		int i,d;
 		//check if there is a fitted plane
 		if (crossSection.fittedPlane==null)
 			return null;
@@ -73,20 +76,29 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 		try {
 			  Thread.sleep(1);
 		  } catch (InterruptedException ignore) {}
-		 setProgress(0);
-		 setProgressState("allocating two new volumes..");
+		setProgress(1);
+		setProgressState("allocating two new volumes..");
 		  
-
 		
-		Img<T>out1 = bt.img_in.copy();
-		Img<T>out2 = bt.img_in.copy();
 		
-		final long [] nTotPixArr = bt.img_in.dimensionsAsLongArray();
+		//(for now)
+		//make two coplies
+		Img<T>out1 = bt.img_ImageJ.factory().create(bt.all_ch_RAI);
+		Img<T>out2 = bt.img_ImageJ.factory().create(bt.all_ch_RAI);
+			
+		Images.copy(bt.all_ch_RAI, out1);
+		Images.copy(bt.all_ch_RAI, out2);
+		
+		
+		final long [] nTotPixArr = bt.all_ch_RAI.dimensionsAsLongArray();
+		
+		// total number of pixels for the progress bar 
 		long nTotPixCount = nTotPixArr[0];
 		for (i=1;i<nTotPixArr.length; i++)
 		{
 			nTotPixCount *= nTotPixArr[i];
 		}
+		
 		long nCount = 0;
 		
 		Cursor<T> cursor1 = out1.localizingCursor();
@@ -106,9 +118,10 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 			}
 			else
 			{
-				position3[0]=position[0];
-				position3[1]=position[1];
-				position3[2]=position[3];
+				for(d=0;d<3;d++)
+				{
+					position3[d]=position[d];
+				}
 				rp.setPosition(position3);
 			}
 			
@@ -161,7 +174,7 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 			//many channels
 			else
 			{
-				boxVert = Box3D.getBoxVertices(Views.hyperSlice(out1, 2, 0));
+				boxVert = Box3D.getBoxVertices(Views.hyperSlice(out1, 3, 0));
 			}
 			
 			//split vertexes of the bounding box based
@@ -200,13 +213,13 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 				{
 					for(i=0;i<2;i++)
 					{
-						rangeCh[i][0]= newBoundBoxes[intervN][i][0];
-						rangeCh[i][1]= newBoundBoxes[intervN][i][1];
-						rangeCh[i][3]= newBoundBoxes[intervN][i][2];
-						
+						for(d=0;d<3;d++)
+						{
+							rangeCh[i][d]= newBoundBoxes[intervN][i][d];
+						}
 					}
-					rangeCh[0][2]=out1.min(2);
-					rangeCh[1][2]=out1.max(2);
+					rangeCh[0][3]=out1.min(3);
+					rangeCh[1][3]=out1.max(3);
 					newCrop[intervN]=new FinalInterval(rangeCh[0],rangeCh[1]);
 				}
 

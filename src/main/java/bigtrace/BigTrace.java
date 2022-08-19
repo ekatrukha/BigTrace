@@ -47,6 +47,7 @@ import ij.plugin.PlugIn;
 import ij.process.LUT;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
+import net.imagej.ImgPlus;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
@@ -58,6 +59,7 @@ import net.imglib2.img.Img;
 
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.img.display.imagej.ImgPlusViews;
 import net.imglib2.realtransform.AffineTransform3D;
 
 import net.imglib2.type.numeric.ARGBType;
@@ -91,7 +93,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	private boolean bTraceMode = false;
 	
-	public Img<T> img_in;
+	/** input from ImageJ reader**/
+	public Img<T> img_ImageJ= null;
+	
+	/** input data in XYZCT format**/
+	public RandomAccessibleInterval<T> all_ch_RAI;
 
 	/** Panel of BigVolumeViewer **/
 	VolumeViewerPanel panel;
@@ -158,18 +164,31 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		nBitDepth = imp.getBitDepth();
 		if(nBitDepth<=16)
 		{
-			img_in = ImageJFunctions.wrapReal(imp);
+			img_ImageJ = ImageJFunctions.wrapReal(imp);
 		}
 		else
 		{
-			img_in = (Img<T>) VolumeMisc.convertFloatToUnsignedShort(ImageJFunctions.wrapReal(imp));
+			img_ImageJ = (Img<T>) VolumeMisc.convertFloatToUnsignedShort(ImageJFunctions.wrapReal(imp));
 		}
 
 		
 		btdata.nTotalChannels=imp.getNChannels();
 		if(btdata.nTotalChannels==1)
 		{
-			sources.add(Views.interval(img_in,img_in));
+			all_ch_RAI = img_ImageJ;
+		}
+		else
+		{
+			//img_ImageJ = ImgPlusViews.permute(new ImgPlus<T>(img_ImageJ), 2, 3).getImg();
+			//all_ch_RAI = Views.interval(img_ImageJ, img_ImageJ);
+			//all_ch_RAI = Views.moveAxis(img_ImageJ, 2,3);
+			all_ch_RAI = Views.permute(img_ImageJ, 2,3);
+		}
+		
+		if(btdata.nTotalChannels==1)
+		{
+			
+			sources.add(Views.interval(all_ch_RAI,all_ch_RAI));
 			colorsCh = new Color[1];
 			colorsCh[0] = Color.WHITE;
 			channelRanges = new double [2][1];
@@ -183,7 +202,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 			for(int i=0;i<btdata.nTotalChannels;i++)
 			{
-				sources.add( Views.hyperSlice(img_in,2,i));
+				sources.add( Views.hyperSlice(all_ch_RAI,3,i));
 			}
 		}
 		
@@ -731,11 +750,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			if(btdata.nTotalChannels==1)
 			{
-				return Views.interval(img_in, img_in);
+				return Views.interval(all_ch_RAI, all_ch_RAI);
 			}
 			else
 			{
-				return Views.hyperSlice(img_in,2,btdata.nChAnalysis);
+				return Views.hyperSlice(all_ch_RAI,3,btdata.nChAnalysis);
 			}
 		}
 	}
