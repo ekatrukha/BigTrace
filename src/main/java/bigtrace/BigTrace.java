@@ -45,7 +45,6 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
-import mpicbg.spim.data.sequence.ViewDescription;
 import bvv.util.BvvFunctions;
 import bvv.util.Bvv;
 import net.imglib2.AbstractInterval;
@@ -991,7 +990,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		transform_scale.setTranslation(dl);
 		
-		FinalRealInterval boxAfterShift = transform_scale.estimateBounds(inInterval);
+		//FinalRealInterval boxAfterShift = transform_scale.estimateBounds(inInterval);
 		double[] newx = new double[3];
 		
 		transform_scale.apply(newx , newx );
