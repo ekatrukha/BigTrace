@@ -287,7 +287,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				renderWidth( 800).
 				renderHeight( 800 ).ditherWidth(2));	
 		bvv_main.setActive(true);
-		panel=bvv_main.getBvvHandle().getViewerPanel();
+		panel = bvv_main.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();
 		panel.setRenderScene(this::renderScene);
 		actions = new Actions( new InputTriggerConfig() );
@@ -304,7 +304,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		btpanel = new BigTraceControlPanel(this, btdata,roiManager);
 		btpanel.finFrame = new JFrame("BigTrace");
 
-		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(bvv_main.getBvvHandle().getViewerPanel());
+		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(panel);
 	 	
 	 	//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		//btpanel.frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -708,8 +708,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 					panel.state().setViewerTransform(transform);
 					
 					
-					int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
-					int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
+					int sW = panel.getWidth();
+					int sH = panel.getHeight();
 					int [] bothXY = new int [2];
 					bothXY[0]=sW;
 					bothXY[1]=sH;
@@ -912,8 +912,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		
 		//current window dimensions
-		final int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
-		final int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
+		final int sW = panel.getWidth();
+		final int sH = panel.getHeight();
 		
 		final AffineTransform3D transform = new AffineTransform3D();
 		panel.state().getViewerTransform(transform);
@@ -1168,8 +1168,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		double nHoff= (double)(2.0*nBox[0][1])*btdata.globCal[1];
 		double nDoff= (double)(2.0*nBox[0][2])*btdata.globCal[2];
 		
-		double sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
-		double sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
+		double sW = panel.getWidth();
+		double sH = panel.getHeight();
 		
 		if(sW/nW<sH/nH)
 		{
@@ -1211,8 +1211,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		double nWoff= (double)(2.0*nBox[0][0])*btdata.globCal[0];
 		double nHoff= (double)(2.0*nBox[0][1])*btdata.globCal[1];
 		double nDoff= (double)(2.0*nBox[0][2])*btdata.globCal[2];
-		double sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
-		double sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
+		double sW = panel.getWidth();
+		double sH = panel.getHeight();
 		
 		if(sW/nD<sH/nH)
 		{
@@ -1229,9 +1229,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
 		t.rotate(1, (-1)*Math.PI/2.0);
 		t.translate(0.5*(sW+scale*(nD+nDoff)),0.5*(sH-scale*(nH+nHoff)),(-0.5)*scale*nWoff);
-		//t.translate(0.5*(sW+scale*(nD+nDoff)),0.0,0.0);
-	
-		panel=bvv_main.getBvvHandle().getViewerPanel();
 		
 		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
 		
@@ -1259,8 +1256,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		double nWoff= (double)(2.0*nBox[0][0])*btdata.globCal[0];
 		double nHoff= (double)(2.0*nBox[0][1])*btdata.globCal[1];
 		double nDoff= (double)(2.0*nBox[0][2])*btdata.globCal[2];
-		double sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
-		double sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
+		double sW = panel.getWidth();
+		double sH = panel.getHeight();
 		
 		if(sW/nW<sH/nD)
 		{
@@ -1278,9 +1275,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
 		t.rotate(0, Math.PI/2.0);
 		t.translate(0.5*(sW-scale*(nW+nWoff)),0.5*(sH+scale*(nD+nDoff)),(-0.5)*scale*nHoff);
-	
-		panel=bvv_main.getBvvHandle().getViewerPanel();
-		
+			
 		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
 		
 		panel.setTransformAnimator(anim);
@@ -1291,7 +1286,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	{
 		int i,j;
 
-		java.awt.Point point_mouse  = bvv_main.getBvvHandle().getViewerPanel().getMousePosition();
+		java.awt.Point point_mouse  = panel.getMousePosition();
 		if(point_mouse ==null)
 		{
 			return false;
@@ -1305,8 +1300,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
 		panel.state().getViewerTransform(transform);
-		int sW = bvv_main.getBvvHandle().getViewerPanel().getWidth();
-		int sH = bvv_main.getBvvHandle().getViewerPanel().getHeight();
+		int sW = panel.getWidth();
+		int sH = panel.getHeight();
 		Matrix4f matPerspWorld = new Matrix4f();
 		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
 		
