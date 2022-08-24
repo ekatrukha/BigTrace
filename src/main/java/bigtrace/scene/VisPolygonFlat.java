@@ -22,11 +22,11 @@ import bigtrace.volume.VolumeMisc;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.LinAlgHelpers;
-import tpietzsch.backend.jogl.JoglGpuContext;
-import tpietzsch.shadergen.DefaultShader;
-import tpietzsch.shadergen.Shader;
-import tpietzsch.shadergen.generate.Segment;
-import tpietzsch.shadergen.generate.SegmentTemplate;
+import bvvbigtrace.backend.jogl.JoglGpuContext;
+import bvvbigtrace.shadergen.DefaultShader;
+import bvvbigtrace.shadergen.Shader;
+import bvvbigtrace.shadergen.generate.Segment;
+import bvvbigtrace.shadergen.generate.SegmentTemplate;
 
 public class VisPolygonFlat {
 

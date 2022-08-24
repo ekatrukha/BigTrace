@@ -35,11 +35,12 @@ import bigtrace.gui.VoxelSizePanel;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.rois.RoiMeasure3D;
 import bigtrace.BigTraceData;
-import bvv.util.Bvv;
-import bvv.util.BvvFunctions;
-import bvv.util.BvvSource;
-import bvv.util.BvvStackSource;
+import bt.bvv.util.Bvv;
+import bt.bvv.util.BvvFunctions;
+import bt.bvv.util.BvvSource;
+import bt.bvv.util.BvvStackSource;
 import ij.Prefs;
+import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
@@ -490,7 +491,7 @@ public class BigTraceControlPanel extends JPanel
 				}
 				
 				//save display range settings
-				
+				/*
 				nDisplayMinMax = new double [bt.btdata.nTotalChannels][2];
 				for(i=0;i<bt.btdata.nTotalChannels;i++)
 				{
@@ -500,7 +501,8 @@ public class BigTraceControlPanel extends JPanel
 						nDisplayMinMax[i][1]=((BvvStackSource<T>) bt.bvv_sources.get(i)).getConverterSetups().get(0).getDisplayRangeMax();
 					}
 				}
-				//update sources
+				*/
+				//update data sources
 				if(bt.btdata.nTotalChannels==1)
 				{
 					bt.sources.set(0,Views.interval(bt.all_ch_RAI, btdata.nDimCurr[0], btdata.nDimCurr[1] ));
@@ -515,6 +517,8 @@ public class BigTraceControlPanel extends JPanel
 				}
 		
 				//update bvv sources
+				bt.panel.setCropIterval(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]));
+				/*
 				for(i=0;i<bt.bvv_sources.size();i++)
 				{		
 
@@ -532,7 +536,7 @@ public class BigTraceControlPanel extends JPanel
 					((BvvSource) bt.bvv_sources.get(i)).setColor( new ARGBType(bt.colorsCh[i].getRGB() ));
 					
 				}
-				/**/					
+				*/					
 
 				//just in case
 				System.gc();

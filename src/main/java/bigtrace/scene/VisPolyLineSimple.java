@@ -40,11 +40,11 @@ import java.util.ArrayList;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
 
-import tpietzsch.backend.jogl.JoglGpuContext;
-import tpietzsch.shadergen.DefaultShader;
-import tpietzsch.shadergen.Shader;
-import tpietzsch.shadergen.generate.Segment;
-import tpietzsch.shadergen.generate.SegmentTemplate;
+import bvvbigtrace.backend.jogl.JoglGpuContext;
+import bvvbigtrace.shadergen.DefaultShader;
+import bvvbigtrace.shadergen.Shader;
+import bvvbigtrace.shadergen.generate.Segment;
+import bvvbigtrace.shadergen.generate.SegmentTemplate;
 
 
 import static com.jogamp.opengl.GL.GL_FLOAT;

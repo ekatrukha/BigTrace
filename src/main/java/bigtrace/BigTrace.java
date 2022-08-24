@@ -38,15 +38,15 @@ import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
 
-import bvv.util.BvvStackSource;
+import bt.bvv.util.BvvStackSource;
 import ij.CompositeImage;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
-import bvv.util.BvvFunctions;
-import bvv.util.Bvv;
+import bt.bvv.util.BvvFunctions;
+import bt.bvv.util.Bvv;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
@@ -67,9 +67,9 @@ import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-import tpietzsch.example2.RenderData;
-import tpietzsch.example2.VolumeViewerPanel;
-import tpietzsch.util.MatrixMath;
+import bvvbigtrace.example2.RenderData;
+import bvvbigtrace.example2.VolumeViewerPanel;
+import bvvbigtrace.util.MatrixMath;
 
 
 public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListener

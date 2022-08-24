@@ -133,13 +133,11 @@
 			<artifactId>imglib2-ij</artifactId>
 		</dependency>
 
-		<!-- Latest bigvolumeviewer -->
 		<dependency>
 			<groupId>sc.fiji</groupId>
-			<artifactId>bigvolumeviewer</artifactId>
-			<version>0.2.0</version>
+			<artifactId>bvvbigtrace</artifactId>
+			<version>0.0.2</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>ui-behaviour</artifactId>
