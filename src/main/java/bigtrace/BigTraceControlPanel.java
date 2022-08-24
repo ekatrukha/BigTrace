@@ -539,7 +539,7 @@ public class BigTraceControlPanel extends JPanel
 				*/					
 
 				//just in case
-				System.gc();
+				//System.gc();
 				
 			}
 	}
