@@ -12,6 +12,7 @@ import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -35,12 +36,13 @@ import bigtrace.gui.VoxelSizePanel;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.rois.RoiMeasure3D;
 import bigtrace.BigTraceData;
-import bt.bvv.util.Bvv;
-import bt.bvv.util.BvvFunctions;
-import bt.bvv.util.BvvSource;
-import bt.bvv.util.BvvStackSource;
+import btbvv.util.Bvv;
+import btbvv.util.BvvFunctions;
+import btbvv.util.BvvSource;
+import btbvv.util.BvvStackSource;
 import ij.Prefs;
 import net.imglib2.FinalInterval;
+import net.imglib2.FinalRealInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
@@ -516,30 +518,26 @@ public class BigTraceControlPanel extends JPanel
 					}
 				}
 		
-				//update bvv sources
-				bt.panel.setCropIterval(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]));
-				/*
+				//update bvv sources crop
+				double [][] doubleCrop = new double [2][3];
+				for (i=0;i<3;i++)
+					for(int j=0;j<2;j++)
+					    doubleCrop[j][i] = (double)btdata.nDimCurr[j][i];
+
+				final FinalRealInterval cropInt = new FinalRealInterval(doubleCrop[0],doubleCrop[1]);
 				for(i=0;i<bt.bvv_sources.size();i++)
-				{		
-
-					((BvvSource) bt.bvv_sources.get(i)).removeFromBdv();
-					bt.bvv_sources.set(i, BvvFunctions.show( (RandomAccessibleInterval<T>) bt.sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bt.bvv_main)));
-					if(bt.nBitDepth<=8)
-					{
-						((BvvSource) bt.bvv_sources.get(i)).setDisplayRangeBounds(0, 255);
-					}
-					else
-					{
-						((BvvSource) bt.bvv_sources.get(i)).setDisplayRangeBounds(0, 65535);
-					}
-					((BvvSource) bt.bvv_sources.get(i)).setDisplayRange(nDisplayMinMax[i][0], nDisplayMinMax[i][1]);
-					((BvvSource) bt.bvv_sources.get(i)).setColor( new ARGBType(bt.colorsCh[i].getRGB() ));
-					
+				{
+					((BvvStackSource)bt.bvv_sources.get(i)).setCropInterval(cropInt);
 				}
-				*/					
-
-				//just in case
-				//System.gc();
+				//bt.bvv_sources.get(0).
+				//ArrayList<FinalInterval> cropList =new ArrayList<FinalInterval>();
+				//dummy
+				//cropList.add(null);
+				//for(i=0;i<bt.btdata.nTotalChannels;i++)
+				//{
+					//cropList.add(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]));
+				//}
+				//bt.panel.setCropItervals(cropList);				
 				
 			}
 	}

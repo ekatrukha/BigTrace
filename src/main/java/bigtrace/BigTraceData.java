@@ -47,6 +47,7 @@ public class BigTraceData {
 	double dClipFar = 1000.;
 	
 	public double [] bBrightnessRange = new double [2];
+	public double [] bAlphaRange = new double [2];
 	
 	/**the number of current channel used for analysis/tracing **/
 	public int nChAnalysis=0;

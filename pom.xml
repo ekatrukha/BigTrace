@@ -135,7 +135,7 @@
 
 		<dependency>
 			<groupId>sc.fiji</groupId>
-			<artifactId>bvvbigtrace</artifactId>
+			<artifactId>bvv-playground</artifactId>
 			<version>0.0.2</version>
 		</dependency>
 		<dependency>

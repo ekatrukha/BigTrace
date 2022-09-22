@@ -38,15 +38,16 @@ import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
 
-import bt.bvv.util.BvvStackSource;
+import btbvv.util.BvvStackSource;
 import ij.CompositeImage;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
-import bt.bvv.util.BvvFunctions;
-import bt.bvv.util.Bvv;
+import btbvv.util.BvvFunctions;
+import btbvv.tools.RealARGBColorGammaConverterSetup;
+import btbvv.util.Bvv;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
@@ -74,7 +75,7 @@ import bvvbigtrace.util.MatrixMath;
 
 public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListener
 {
-	public  BvvStackSource< UnsignedByteType > bvv_main = null;
+	public  BvvStackSource< ? > bvv_main = null;
 	
 	/** BVV sources used for the volume visualization **/
 	public  ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<BvvStackSource< ? >>();
@@ -82,8 +83,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** saliency view (TraceBox) for semi-auto tracing **/
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 	
-	/** "dummy" interval used to keep BVV alive in the absence of sources**/
-	RandomAccessibleInterval< UnsignedByteType > empty_view;
+
 
 	public ArrayList<IntervalView< T >>  sources = new ArrayList<IntervalView< T >>();
 	public Color [] colorsCh;
@@ -273,6 +273,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		initOriginAndBox(origin_axis_length);
 
+		/** "dummy" interval to init BVV **/
+		RandomAccessibleInterval< UnsignedByteType > empty_view;
 		// init bigvolumeviewer
 		final Img< UnsignedByteType > imgx = ArrayImgs.unsignedBytes( new long[]{ 2, 2, 2 } );
 		empty_view =				 
@@ -1026,7 +1028,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				//bvv2.setActive(false);
 				btdata.bBrightnessRange[0]=bvv_sources.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMin();
 				btdata.bBrightnessRange[1]=bvv_sources.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMax();
+				
+				RealARGBColorGammaConverterSetup alpha = (RealARGBColorGammaConverterSetup)bvv_sources.get(btdata.nChAnalysis).getConverterSetups().get(0);
+				btdata.bAlphaRange[0]=alpha.getAlphaRangeMin();
+				btdata.bAlphaRange[1]=alpha.getAlphaRangeMax();
 				bvv_sources.get(btdata.nChAnalysis).setDisplayRange(0.0, 0.0);
+				bvv_sources.get(btdata.nChAnalysis).setAlphaRange(0.0, 0.0);
 				//bvv2.getConverterSetups().get(0).setDisplayRange(0.0, 0.0);
 			}
 			
@@ -1034,6 +1041,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		bvv_trace = BvvFunctions.show(weights, "weights", Bvv.options().addTo(bvv_main));
 		bvv_trace.setCurrent();
 		bvv_trace.setDisplayRange(0., 150.0);
+		bvv_trace.setAlphaRange(0., 150.0);
+		bvv_trace.setDisplayRangeBounds(0, 255);
+		bvv_trace.setAlphaRangeBounds(0, 255);
 		//handl.setDisplayMode(DisplayMode.SINGLE);
 	}
 	
@@ -1053,6 +1063,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 
 			bvv_sources.get(btdata.nChAnalysis).setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
+			bvv_sources.get(btdata.nChAnalysis).setAlphaRange(btdata.bAlphaRange[0],btdata.bAlphaRange[1]);
 		}
 	}	
 	
@@ -1113,24 +1124,26 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	{
 		for(int i=0;i<sources.size();i++)
 		{
-			
 			bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
-			//bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), 
-			//		Bvv.options().addTo(bvv_main).sourceTransform(
-			//				btdata.globCal[0],
-			//				btdata.globCal[1],
-			//				btdata.globCal[2])));
-			bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
-			bvv_sources.get(i).setDisplayRange(channelRanges[0][i], channelRanges[1][i]);
+						
 			if(nBitDepth<=8)
 			{
 				bvv_sources.get(i).setDisplayRangeBounds(0, 255);
+				bvv_sources.get(i).setAlphaRangeBounds(0, 255);
 			}
 			else
 			{
 				bvv_sources.get(i).setDisplayRangeBounds(0, 65535);
+				bvv_sources.get(i).setAlphaRangeBounds(0, 65535);
 			}
+			bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
+			bvv_sources.get(i).setDisplayRange(channelRanges[0][i], channelRanges[1][i]);
+			bvv_sources.get(i).setAlphaRange(channelRanges[0][i], channelRanges[1][i]);
+			
+
 		}
+		bvv_main.removeFromBdv();
+		bvv_main = bvv_sources.get(0);
 	}
 	
 	void setInitialTransform()
