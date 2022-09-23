@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 
 import java.net.URL;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 
 import javax.swing.ButtonGroup;
@@ -1239,8 +1240,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
 		nfPointSize.setText(Float.toString(currentROI.getPointSize()));
 		nfLineThickness.setText(Float.toString(currentROI.getLineThickness()));
-		DecimalFormat df = new DecimalFormat("0.00");
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
 		nfOpacity.setText(df.format(currentROI.getOpacity()));
+		
 		nfOpacity.setLimits(0.0, 1.0);
 		
 

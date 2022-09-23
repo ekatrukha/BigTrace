@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
@@ -161,7 +162,9 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 		
 		nfPointSize.setText(Float.toString(preset.getPointSize()));
 		nfLineThickness.setText(Float.toString(preset.getLineThickness()));
-		DecimalFormat df = new DecimalFormat("0.00");
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
 		nfOpacity.setText(df.format(preset.getOpacity()));
 		nfOpacity.setLimits(0.0, 1.0);
 		
