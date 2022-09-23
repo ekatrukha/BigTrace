@@ -1587,15 +1587,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		btpanel.bvv_frame.dispose();		
 		btpanel.finFrame.dispose();
 	}
-	/*
-	@SuppressWarnings( "rawtypes" )
-	private static  < T extends NativeType< T > > ImgPlus< T > convertInput(ImgPlus img_in, RealType type)
-	{
-		RandomAccessibleInterval< T > convertedRAI = RealTypeConverters.convert( img_in, type);
-		Img< T > convertedImg = ImgView.wrap( convertedRAI, new ArrayImgFactory<T>( convertedRAI.randomAccess().get().createVariable() ) );
-		return new ImgPlus<>( convertedImg, img_in );
-	}
-*/
+
 	
 	public static void main( String... args) throws Exception
 	{

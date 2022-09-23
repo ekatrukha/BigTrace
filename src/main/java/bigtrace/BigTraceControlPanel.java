@@ -429,6 +429,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 					+"&nbsp;<b>D</b> - zoom in to a point<br>"
 					+"&nbsp;<b>C</b> - center the view (zoom out)<br>"
 					+"&nbsp;<b>X</b> - reset crop<br>"
+					+"&nbsp;<b>P</b> - toggle render method<br>"
 					+"&nbsp;<b>S</b> - brightness/color<br>"
 					+"&nbsp;<b>F6</b> - sources </html>";
 		JLabel jlInfo = new JLabel(shortCutInfo);
