@@ -670,28 +670,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
 				{
 					
-					//FinalInterval zoomInterval = getZoomBoxCentered(btdata.nZoomBoxSize, target);
-					FinalInterval zoomInterval;// = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.nZoomBoxSize, target);
-					
-					if(!btdata.bZoomCrop)
+					final FinalInterval zoomInterval = getTraceBoxCentered(getTraceInterval(!btdata.bZoomCrop),btdata.nZoomBoxSize, target);
+					if(btdata.bZoomCrop)
 					{
-						zoomInterval = getTraceBoxCentered(sources.get(btdata.nChAnalysis),btdata.nZoomBoxSize, target);
-							
-					}
-					else
-					{
-						//one channel
-						if (btdata.nTotalChannels==1)
-						{
-							zoomInterval = getTraceBoxCentered(Views.interval(all_ch_RAI,all_ch_RAI),btdata.nZoomBoxSize, target);
-						}
-						//multichannel
-						else
-						{
-							zoomInterval = getTraceBoxCentered(Views.hyperSlice(all_ch_RAI,3,0),btdata.nZoomBoxSize, target);																					
-						}
 						btpanel.cropPanel.setBoundingBox(zoomInterval);
 					}
+	
 					//animate
 					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,btdata.dZoomBoxScreenFraction));
 				}
@@ -846,6 +830,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				"A" );
 
 	}
+	
 
 	public void calcShowTraceBox(final LineTrace3D trace)
 	{
@@ -1285,6 +1270,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			 //(( TransformedSource< ? > ) source.getSpimSource() ).setFixedTransform(identity );
 			 (( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transform);	 
 		}
+		panel.state().getSources().get(0).getSpimSource().getType();
 	}
 	
 	void setInitialTransform()
