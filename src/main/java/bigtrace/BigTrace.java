@@ -9,6 +9,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.IndexColorModel;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JTextField;
@@ -24,7 +25,10 @@ import org.scijava.ui.behaviour.util.Actions;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
-
+import bdv.spimdata.SpimDataMinimal;
+import bdv.spimdata.XmlIoSpimDataMinimal;
+import bdv.tools.transformation.TransformedSource;
+import bdv.viewer.SourceAndConverter;
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
@@ -45,6 +49,7 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
+import mpicbg.spim.data.SpimDataException;
 import btbvv.util.BvvFunctions;
 import btbvv.tools.RealARGBColorGammaConverterSetup;
 import btbvv.util.Bvv;
@@ -83,14 +88,24 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** saliency view (TraceBox) for semi-auto tracing **/
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 
-	public ArrayList<IntervalView< T >>  sources = new ArrayList<IntervalView< T >>();
+	public ArrayList<IntervalView< T >>  sources = null;//new ArrayList<IntervalView< T >>();
 	public Color [] colorsCh;
 	public double [][] channelRanges;
+	
+	/** if the source is BDV HDF file, it is true, otherwise we take it from ImageJ **/
+	public boolean bBDVsource = false;
 
+	/** whether or not TraceMode is active **/
 	private boolean bTraceMode = false;
+
+	
 	
 	/** input from ImageJ reader**/
 	public Img<T> img_ImageJ= null;
+	
+	/** input from XML/HDF5 **/
+	public SpimDataMinimal spimData = null;
+
 	
 	/** input data in XYZCT format**/
 	public RandomAccessibleInterval<T> all_ch_RAI;
@@ -137,8 +152,30 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(btdata.sFileNameFullImg==null)
 			return;
 		
-		if(!initSourcesImageJ())
+		if(btdata.sFileNameFullImg.endsWith(".tif"))
+		{
+			bBDVsource = false;
+			if(!initSourcesImageJ())
+				return;
+		}
+		
+		if(btdata.sFileNameFullImg.endsWith(".xml"))
+		{
+			bBDVsource = true;
+			try {
+				if(!initSourcesHDF5())
+					return;
+			} catch (SpimDataException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		if(sources == null)
+		{
+			IJ.showMessage("Currently BigTrace supports only TIF and BDV XML/HDF5 formats.");
 			return;
+		}
 
 
 
@@ -146,9 +183,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		//init(0.25*Math.min(btdata.nDimIni[1][0]*btdata.globCal[0], Math.min(btdata.nDimIni[1][1]*btdata.globCal[1],btdata.nDimIni[1][2]*btdata.globCal[2])));
 		init(0.25*Math.min(btdata.nDimIni[1][0], Math.min(btdata.nDimIni[1][1],btdata.nDimIni[1][2])));
 		
-		
-
-		//FlatIntelliJLaf.setup();
 	
 		
 		
@@ -170,6 +204,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	public boolean initSourcesImageJ()
 	{
+		
+		sources = new ArrayList<IntervalView< T >>();
+		
 		final ImagePlus imp = IJ.openImage( btdata.sFileNameFullImg );
 		
 		if (imp == null)
@@ -241,18 +278,50 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 			for(int i=0;i<btdata.nTotalChannels;i++)
 			{
-				sources.add( Views.hyperSlice(all_ch_RAI,3,i));
+				sources.add( Views.hyperSlice(all_ch_RAI,3,i) );
 			}
 		}
 		
-		
-		sources.get(0);
-		sources.get(0).min(btdata.nDimIni[0]);
-		sources.get(0).max(btdata.nDimIni[1]);
-		sources.get(0).min(btdata.nDimCurr[0]);
-		sources.get(0).max(btdata.nDimCurr[1]);
+
+		sources.get(0).min( btdata.nDimIni[0] );
+		sources.get(0).max( btdata.nDimIni[1] );
+		sources.get(0).min( btdata.nDimCurr[0] );
+		sources.get(0).max( btdata.nDimCurr[1] );
 		
 		return true;
+	}
+	
+	public boolean initSourcesHDF5() throws SpimDataException
+	{
+		
+		sources = new ArrayList<IntervalView< T >>();
+		
+		spimData = new XmlIoSpimDataMinimal().load(  btdata.sFileNameFullImg );
+		if(spimData.getSequenceDescription().getTimePoints().size()>1)
+		{
+			IJ.showMessage("Timelapse datasets are not supported yet, sorry.");
+			return false;
+		}
+		RandomAccessibleInterval<T> raitest= (RandomAccessibleInterval<T>) spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(0).getImage(0);
+		raitest.min(btdata.nDimIni[0]);
+		raitest.min( btdata.nDimIni[0] );
+		raitest.max( btdata.nDimIni[1] );
+		raitest.min( btdata.nDimCurr[0] );
+		raitest.max( btdata.nDimCurr[1] );
+		btdata.nTotalChannels = spimData.getSequenceDescription().getViewSetupsOrdered().size();
+		for (int setupN=0;setupN<spimData.getSequenceDescription().getViewSetupsOrdered().size();setupN++)
+		{
+			sources.add(Views.interval((RandomAccessibleInterval<T>) spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(setupN).getImage(0),raitest));
+		}
+		
+		//TODO FOR NOW, get it from the class
+		nBitDepth = 16;
+		colorsCh = new Color[btdata.nTotalChannels];
+		channelRanges = new double [2][btdata.nTotalChannels];
+		
+		
+		return true;
+		
 	}
 	
 	public void initOriginAndBox(double axis_length)
@@ -310,8 +379,14 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions = new Actions( new InputTriggerConfig() );
 		installActions(actions);
 		setInitialTransform();
-		addBVVSourcesImageJ();
-		
+		if(bBDVsource)
+		{
+			addBVVSourcesHDF5();
+		}
+		else
+		{
+			addBVVSourcesImageJ();
+		}
 		//resetViewXY();
 	}
 	
@@ -820,13 +895,21 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		else
 		{
-			if(btdata.nTotalChannels==1)
+			if(bBDVsource)
 			{
-				return Views.interval(all_ch_RAI, all_ch_RAI);
+				RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(0).getImage(0);
+				return Views.interval(full_int, full_int);
 			}
 			else
 			{
-				return Views.hyperSlice(all_ch_RAI,3,btdata.nChAnalysis);
+				if(btdata.nTotalChannels==1)
+				{
+					return Views.interval(all_ch_RAI, all_ch_RAI);
+				}
+				else
+				{
+					return Views.hyperSlice(all_ch_RAI,3,btdata.nChAnalysis);
+				}
 			}
 		}
 	}
@@ -1152,6 +1235,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	public void addBVVSourcesImageJ()
 	{
+		
 		for(int i=0;i<sources.size();i++)
 		{
 			bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
@@ -1174,6 +1258,33 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		bvv_main.removeFromBdv();
 		bvv_main = bvv_sources.get(0);
+	}
+	
+	public void addBVVSourcesHDF5()
+	{
+	
+		final List<BvvStackSource<?>> sourcesSPIM = BvvFunctions.show( spimData, Bvv.options().addTo(bvv_main) );
+		for(int i=0;i<sourcesSPIM.size();i++)
+		{
+			bvv_sources.add(sourcesSPIM.get(i));
+		}
+		bvv_main.removeFromBdv();
+		bvv_main = bvv_sources.get(0);
+		
+		for ( SourceAndConverter< ? > source : panel.state().getSources() )
+		{
+			AffineTransform3D transform = new AffineTransform3D();
+			(( TransformedSource< ? > ) source.getSpimSource() ).getSourceTransform(0, 0, transform);
+			//newone=transform.inverse();
+			for(int j=0;j<3;j++)
+			{
+				btdata.globCal[j]=transform.get(j, j);
+				transform.set(1.0/transform.get(j, j), j, j);
+			}
+			//transform.set(2.0*transform.get(2, 2)/3.0, 2, 2);
+			 //(( TransformedSource< ? > ) source.getSpimSource() ).setFixedTransform(identity );
+			 (( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transform);	 
+		}
 	}
 	
 	void setInitialTransform()

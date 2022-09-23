@@ -39,6 +39,7 @@ import bigtrace.BigTraceData;
 import btbvv.util.BvvStackSource;
 import ij.Prefs;
 import net.imglib2.FinalRealInterval;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
@@ -509,19 +510,27 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 				}
 				
 				//update data sources
-				if(bt.btdata.nTotalChannels==1)
-				{
-					bt.sources.set(0,Views.interval(bt.all_ch_RAI, btdata.nDimCurr[0], btdata.nDimCurr[1] ));
-					
-				}
-				else
+				if(bt.bBDVsource)
 				{
 					for(i=0;i<bt.btdata.nTotalChannels;i++)
 					{
-						bt.sources.set(i,Views.interval(Views.hyperSlice(bt.all_ch_RAI,3,i), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
+						bt.sources.add(Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(i).getImage(0), btdata.nDimCurr[0], btdata.nDimCurr[1]));
 					}
 				}
-		
+				else
+				{
+					if(bt.btdata.nTotalChannels==1)
+					{						
+						bt.sources.set(0,Views.interval(bt.all_ch_RAI, btdata.nDimCurr[0], btdata.nDimCurr[1] ));						
+					}
+					else
+					{
+						for(i=0;i<bt.btdata.nTotalChannels;i++)
+						{	
+								bt.sources.set(i,Views.interval(Views.hyperSlice(bt.all_ch_RAI,3,i), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
+						}
+					}
+				}
 				//update bvv sources crop
 				double [][] doubleCrop = new double [2][3];
 				for (i=0;i<3;i++)
