@@ -82,8 +82,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	/** saliency view (TraceBox) for semi-auto tracing **/
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
-	
-
 
 	public ArrayList<IntervalView< T >>  sources = new ArrayList<IntervalView< T >>();
 	public Color [] colorsCh;
@@ -139,12 +137,59 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(btdata.sFileNameFullImg==null)
 			return;
 		
+		if(!initSourcesImageJ())
+			return;
+
+
+
+		roiManager = new RoiManager3D(this);
+		//init(0.25*Math.min(btdata.nDimIni[1][0]*btdata.globCal[0], Math.min(btdata.nDimIni[1][1]*btdata.globCal[1],btdata.nDimIni[1][2]*btdata.globCal[2])));
+		init(0.25*Math.min(btdata.nDimIni[1][0], Math.min(btdata.nDimIni[1][1],btdata.nDimIni[1][2])));
+		
+		
+
+		//FlatIntelliJLaf.setup();
+	
+		
+		
+		try {
+		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
+		} catch( Exception ex ) {
+		    System.err.println( "Failed to initialize LaF" );
+		}
+		
+		//not sure we really need it, but anyway
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                createAndShowGUI();
+            }
+        });
+        
+
+	}
+	
+	public boolean initSourcesImageJ()
+	{
 		final ImagePlus imp = IJ.openImage( btdata.sFileNameFullImg );
 		
 		if (imp == null)
 		{
 			IJ.showMessage("BigTrace: cannot open selected TIF file. Plugin terminated.");
-			return;
+			return false;
+		}
+		
+		
+		if(imp.getType()!=ImagePlus.GRAY8 && imp.getType()!=ImagePlus.GRAY16 && imp.getType()!=ImagePlus.GRAY32)
+		{
+			IJ.showMessage("Only 8-, 16- and 32-bit images supported for now.");
+			return false;
+		}
+		
+		
+		if(imp.getNFrames()>1 && imp.getNSlices()>1)
+		{
+			IJ.showMessage("Timelapse datasets are not supported yet, sorry.");
+			return false;
 		}
 		
 		btdata.globCal[0] = imp.getCalibration().pixelWidth;
@@ -153,11 +198,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		btdata.sVoxelUnit = imp.getCalibration().getUnit();
 		
 		
-		if(imp.getType()!=ImagePlus.GRAY8 && imp.getType()!=ImagePlus.GRAY16 && imp.getType()!=ImagePlus.GRAY32)
-		{
-			IJ.showMessage("Only 8-, 16- and 32-bit images supported for now.");
-			return;
-		}
+
 				
 		nBitDepth = imp.getBitDepth();
 		if(nBitDepth<=16)
@@ -210,33 +251,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		sources.get(0).max(btdata.nDimIni[1]);
 		sources.get(0).min(btdata.nDimCurr[0]);
 		sources.get(0).max(btdata.nDimCurr[1]);
-
-
-
-		roiManager = new RoiManager3D(this);
-		//init(0.25*Math.min(btdata.nDimIni[1][0]*btdata.globCal[0], Math.min(btdata.nDimIni[1][1]*btdata.globCal[1],btdata.nDimIni[1][2]*btdata.globCal[2])));
-		init(0.25*Math.min(btdata.nDimIni[1][0], Math.min(btdata.nDimIni[1][1],btdata.nDimIni[1][2])));
 		
-		
-
-		//FlatIntelliJLaf.setup();
-	
-		
-		
-		try {
-		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
-		} catch( Exception ex ) {
-		    System.err.println( "Failed to initialize LaF" );
-		}
-		
-		//not sure we really need it, but anyway
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
-            }
-        });
-        
-
+		return true;
 	}
 	
 	public void initOriginAndBox(double axis_length)
@@ -294,7 +310,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions = new Actions( new InputTriggerConfig() );
 		installActions(actions);
 		setInitialTransform();
-		addSources();
+		addBVVSourcesImageJ();
 		
 		//resetViewXY();
 	}
@@ -654,6 +670,18 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			}
 		}
 	}
+	
+	public void actionToggleRender()
+	{
+		if(btdata.nRenderMethod==0)
+		{
+			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(1);
+		}
+		else
+		{
+			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(0);
+		}
+	}
 	public void installActions(final Actions actions)
 	{
 		//final Actions actions = new Actions( new InputTriggerConfig() );
@@ -667,6 +695,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions.runnableAction(() -> actionZoomToPoint(),			"zoom in to click", "D" );
 		actions.runnableAction(() -> actionZoomOut(),				"center view (zoom out)", "C" );
 		actions.runnableAction(() -> actionResetCrop(),				"reset crop", "X" );
+		actions.runnableAction(() -> actionToggleRender(),				"toggle render mode", "P" );
 				
 		
 		
@@ -1040,6 +1069,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		bvv_trace = BvvFunctions.show(weights, "weights", Bvv.options().addTo(bvv_main));
 		bvv_trace.setCurrent();
+		bvv_trace.setRenderType(btdata.nRenderMethod);
 		bvv_trace.setDisplayRange(0., 150.0);
 		bvv_trace.setAlphaRange(0., 150.0);
 		bvv_trace.setDisplayRangeBounds(0, 255);
@@ -1120,7 +1150,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	}
 	
-	public void addSources()
+	public void addBVVSourcesImageJ()
 	{
 		for(int i=0;i<sources.size();i++)
 		{
@@ -1157,6 +1187,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t= getCenteredViewTransform(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]), 0.9);
 		panel.state().setViewerTransform(t);
 	}
+	
+
 	
 	public void resetViewXY()
 	{
@@ -1293,8 +1325,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		panel.setTransformAnimator(anim);
 
 	}
+	
+	
 	public <X extends RealType< X >>boolean findPointLocationFromClick(final IntervalView< X > viewclick, final int nHalfWindowSize, final RealPoint target)
-	//public boolean findPointLocationFromClick(final IntervalView< UnsignedByteType > viewclick, final int nHalfWindowSize, final RealPoint target)
 	{
 		int i,j;
 
@@ -1303,6 +1336,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			return false;
 		}
+		
 		//check if mouse position it is inside bvv window
 		//java.awt.Rectangle windowBVVbounds = btpanel.bvv_frame.getContentPane().getBounds();
 		

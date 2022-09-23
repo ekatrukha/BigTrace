@@ -54,6 +54,11 @@ public class BigTraceData {
 	
 	/** total number of channels in the dataset**/
 	public int nTotalChannels=0;
+	
+	/** dataset rendering method 
+	 * 0 maximum intensity, 
+	 * 1 volumetric **/
+	public int nRenderMethod = (int)Prefs.get("BigTrace.nRenderMethod",0.0);
 		
 	/////////////////////////////////clicking interface 
 	

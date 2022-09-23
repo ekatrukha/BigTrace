@@ -54,30 +54,9 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 
 		tfUnits = new JTextField(8);
 		tfUnits.setText(sUnits);	
-		//tfUnits.setHorizontalAlignment(SwingConstants.LEFT);
+
 		setLayout(gridbag);
-		/*
-		c.gridx=0;
-		c.gridy=0;
-		this.add(new JLabel("Voxel width"),c);
-		c.gridx++;
-		this.add(nfAllSize[0],c);
-		c.gridx=0;
-		c.gridy++;
-		this.add(new JLabel("Voxel height"),c);
-		c.gridx++;
-		this.add(nfAllSize[1],c);
-		c.gridx=0;
-		c.gridy++;
-		this.add(new JLabel("Voxel depth"),c);
-		c.gridx++;
-		this.add(nfAllSize[2],c);
-		c.gridx=0;
-		c.gridy++;
-		this.add(new JLabel("Units"),c);
-		c.gridx++;
-		this.add(tfUnits,c);
-		*/	
+
 		
 		c.fill=GridBagConstraints.HORIZONTAL;
 		//c.weightx = 0.5;
@@ -109,9 +88,7 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 
 	@Override
 	public void valueChanged(double v) {
-		
-		
-		// TODO Auto-generated method stub
+	
 		if(updateVoxelSize())
 			fireVoxelSizeChanged(vxAllSize);
 	}
@@ -128,13 +105,11 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 	@Override
 	public void focusGained(FocusEvent arg0) {
 
-		// TODO Auto-generated method stub
 	
 	}
 
 	@Override
 	public void focusLost(FocusEvent arg0) {
-		// TODO Auto-generated method stub
 		if(updateVoxelSize())
 			fireVoxelSizeChanged(vxAllSize);
 	}

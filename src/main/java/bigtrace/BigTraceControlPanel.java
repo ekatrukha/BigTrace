@@ -12,7 +12,6 @@ import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
-import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -32,24 +31,20 @@ import bigtrace.gui.AnisotropicTransformAnimator3D;
 import bigtrace.gui.CropPanel;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.gui.RenderMethodPanel;
 import bigtrace.gui.VoxelSizePanel;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.rois.RoiMeasure3D;
 import bigtrace.BigTraceData;
-import btbvv.util.Bvv;
-import btbvv.util.BvvFunctions;
-import btbvv.util.BvvSource;
 import btbvv.util.BvvStackSource;
 import ij.Prefs;
-import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.Views;
 
-public class BigTraceControlPanel extends JPanel
+public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 //public class BigTraceControlPanel extends JFrame
 								implements ActionListener, 
 									PropertyChangeListener {
@@ -60,14 +55,15 @@ public class BigTraceControlPanel extends JPanel
 	 */
 	private static final long serialVersionUID = -8992158095263652259L;
 	
-	BigTrace bt;
+	BigTrace<T> bt;
 	BigTraceData btdata;	
 	
 	public CropPanel cropPanel;	
 	public VoxelSizePanel voxelSizePanel;
+	public RenderMethodPanel<T> renderMethodPanel;
 	
 	RoiManager3D roiManager;
-	RoiMeasure3D roiMeasure;
+	RoiMeasure3D<T> roiMeasure;
 	
 
 	double [][] nDisplayMinMax;
@@ -78,7 +74,7 @@ public class BigTraceControlPanel extends JPanel
 	JButton butSettings;
 
 	
-	public BigTraceControlPanel(final BigTrace bt_,final BigTraceData btd_, final RoiManager3D roiManager_)//, int locx, int locy) 
+	public BigTraceControlPanel(final BigTrace<T> bt_,final BigTraceData btd_, final RoiManager3D roiManager_)//, int locx, int locy) 
 	{
 		//finalPanel = new JPanel(new GridBagLayout());
 		super(new GridBagLayout());
@@ -86,7 +82,7 @@ public class BigTraceControlPanel extends JPanel
 		btdata=btd_;
 		bt=bt_;		
 		roiManager=roiManager_;
-		roiMeasure = new RoiMeasure3D(bt);
+		roiMeasure = new RoiMeasure3D<T>(bt);
 		roiManager.setRoiMeasure3D(roiMeasure);
 		
 		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
@@ -168,16 +164,10 @@ public class BigTraceControlPanel extends JPanel
 		JPanel panNavigation = new JPanel(new GridBagLayout());
 		//Interface
 		
-		//CropPanel
-		//cropPanel = new CropPanel( nW-1, nH-1, nD-1);
-		cropPanel = new CropPanel(btdata.nDimIni[1]);
+		//RENDER METHOD PANEL
 		
-		cropPanel.addCropPanelListener(new CropPanel.Listener() {
-			@Override
-			public void boundingBoxChanged(long [][] new_box) {
-				bbChanged(new_box);				
-				}
-		});
+		renderMethodPanel = new RenderMethodPanel<T>(bt);
+		
 		
 		//VOXEL SIZE PANEL		
 		voxelSizePanel = new VoxelSizePanel(btdata.globCal,btdata.sVoxelUnit);
@@ -189,15 +179,24 @@ public class BigTraceControlPanel extends JPanel
 				voxelChanged(newVoxelSize);
 			}
 		});
+		
+		//CROP PANEL
+		cropPanel = new CropPanel(btdata.nDimIni[1]);
+		
+		cropPanel.addCropPanelListener(new CropPanel.Listener() {
+			@Override
+			public void boundingBoxChanged(long [][] new_box) {
+				bbChanged(new_box);				
+				}
+		});
+		
+		
 		GridBagConstraints c = new GridBagConstraints();
 
 		
-		//View Panel
-	  
+		//VIEW PANEL
 		JPanel panView=new JPanel(new GridBagLayout()); 
-		panView.setBorder(new PanelTitle(" View "));
-		
-		
+		panView.setBorder(new PanelTitle(" View "));		
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/orig.png");
 	    ImageIcon tabIcon = new ImageIcon(icon_path);
 	    JToggleButton butOrigin = new JToggleButton(tabIcon);
@@ -205,7 +204,7 @@ public class BigTraceControlPanel extends JPanel
 	    butOrigin.setToolTipText("Show XYZ axes");
 	    butOrigin.addItemListener(new ItemListener() {
 	
-	    	@Override
+	    @Override
 		public void itemStateChanged(ItemEvent e) {
 	    	      if(e.getStateChange()==ItemEvent.SELECTED){
 	    	    	  btdata.bShowOrigin=true;
@@ -255,6 +254,26 @@ public class BigTraceControlPanel extends JPanel
 		panView.add(butSettings,c);
 		
 		
+		//Render method panel
+	    JPanel panRender=new JPanel(new GridBagLayout()); 
+	    panRender.setBorder(new PanelTitle(" Render method "));
+		
+	    c.gridx=0;
+	    c.gridy=0;
+	    c.weightx=1.0;
+	    c.fill=GridBagConstraints.HORIZONTAL;
+	    panRender.add(renderMethodPanel,c);
+		
+		//Voxel size panel
+	    JPanel panVoxel=new JPanel(new GridBagLayout()); 
+	    panVoxel.setBorder(new PanelTitle(" Voxel size "));
+		
+	    c.gridx=0;
+	    c.gridy=0;
+	    c.weightx=1.0;
+	    c.fill=GridBagConstraints.HORIZONTAL;
+	    panVoxel.add(voxelSizePanel,c);
+		
 		
 		//Cropping Panel
 		JPanel panCrop=new JPanel(new GridBagLayout()); 
@@ -267,15 +286,7 @@ public class BigTraceControlPanel extends JPanel
 	    panCrop.add(cropPanel,c);
 	    
 	    
-		//Voxel size panel
-	    JPanel panVoxel=new JPanel(new GridBagLayout()); 
-	    panVoxel.setBorder(new PanelTitle(" Voxel size "));
-		
-	    c.gridx=0;
-	    c.gridy=0;
-	    c.weightx=1.0;
-	    c.fill=GridBagConstraints.HORIZONTAL;
-	    panVoxel.add(voxelSizePanel,c);
+
 
 	    //add panels to Navigation
 	    c.insets=new Insets(4,4,2,2);
@@ -286,6 +297,10 @@ public class BigTraceControlPanel extends JPanel
 	    c.gridwidth=1;
 	    c.anchor = GridBagConstraints.WEST;
 	    panNavigation.add(panView,c);
+	    
+	    //Render method size
+	    c.gridy++;	
+	    panNavigation.add(panRender,c);
 	    
 	    //Voxel size
 	    c.gridy++;	
@@ -448,7 +463,7 @@ public class BigTraceControlPanel extends JPanel
 	        
 	}
 
-	public synchronized <T> void bbChanged(long [][] box )
+	public synchronized void bbChanged(long [][] box )
 	{
 		int i;
 		
@@ -492,18 +507,6 @@ public class BigTraceControlPanel extends JPanel
 					btdata.nDimCurr[1][i]=box[1][i];
 				}
 				
-				//save display range settings
-				/*
-				nDisplayMinMax = new double [bt.btdata.nTotalChannels][2];
-				for(i=0;i<bt.btdata.nTotalChannels;i++)
-				{
-					if(bt.bvv_sources.get(i)!=null)
-					{
-						nDisplayMinMax[i][0]=((BvvStackSource<T>) bt.bvv_sources.get(i)).getConverterSetups().get(0).getDisplayRangeMin();
-						nDisplayMinMax[i][1]=((BvvStackSource<T>) bt.bvv_sources.get(i)).getConverterSetups().get(0).getDisplayRangeMax();
-					}
-				}
-				*/
 				//update data sources
 				if(bt.btdata.nTotalChannels==1)
 				{
@@ -528,16 +531,7 @@ public class BigTraceControlPanel extends JPanel
 				for(i=0;i<bt.bvv_sources.size();i++)
 				{
 					((BvvStackSource)bt.bvv_sources.get(i)).setCropInterval(cropInt);
-				}
-				//bt.bvv_sources.get(0).
-				//ArrayList<FinalInterval> cropList =new ArrayList<FinalInterval>();
-				//dummy
-				//cropList.add(null);
-				//for(i=0;i<bt.btdata.nTotalChannels;i++)
-				//{
-					//cropList.add(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]));
-				//}
-				//bt.panel.setCropItervals(cropList);				
+				}			
 				
 			}
 	}
@@ -579,6 +573,20 @@ public class BigTraceControlPanel extends JPanel
 		}
 		newtransform.set(m);
 		bt.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,newtransform,0,0,1000));
+	}
+	
+	public void setRenderMethod(int nRenderType)
+	{
+		btdata.nRenderMethod = nRenderType;
+		Prefs.set("BigTrace.nRenderMethod",btdata.nRenderMethod);
+		for(int i=0;i<bt.bvv_sources.size();i++)
+		{
+			((BvvStackSource)bt.bvv_sources.get(i)).setRenderType(nRenderType);
+		}	
+		if(bt.bvv_trace!=null)
+			bt.bvv_trace.setRenderType(nRenderType);
+		
+		
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
