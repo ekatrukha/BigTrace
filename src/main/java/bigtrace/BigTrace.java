@@ -117,7 +117,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public int nBitDepth = 8;
 	
 	/** BigTrace Panel **/
-	public BigTraceControlPanel btpanel;
+	public BigTraceControlPanel<T> btpanel;
 	
 	/**ROI's manager + list tab **/
 	public RoiManager3D roiManager;
@@ -318,7 +318,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	private void createAndShowGUI() 
 	{
-		btpanel = new BigTraceControlPanel(this, btdata,roiManager);
+		btpanel = new BigTraceControlPanel<T>(this, btdata,roiManager);
 		btpanel.finFrame = new JFrame("BigTrace");
 
 		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(panel);
