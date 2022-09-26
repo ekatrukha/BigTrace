@@ -553,6 +553,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 break;
 
 		 }
+		 bt.repaintROIScene();
 		 
 	 }
 	 public void addPoint3D(RealPoint point_)
@@ -580,6 +581,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 {
 			 tracing = (LineTrace3D) rois.get(activeRoi);
 			 tracing.addPointAndSegment(point_,segments_);
+			 bt.repaintROIScene();
 		 }
 	 }
 	 public RealPoint getLastTracePoint()
@@ -594,6 +596,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 {
 		 LineTrace3D tracing;
 		 tracing = (LineTrace3D) rois.get(activeRoi);
+		 bt.repaintROIScene();
 		 return tracing.removeLastSegment();
 	 }
 
@@ -663,6 +666,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 if(activeRoi<0)
 			 return;
 		 final int nRoiType = rois.get(activeRoi).getType();
+		 
 		 //active ROI is not a line or none ROI selected
 		 if(nRoiType==Roi3D.POLYLINE || nRoiType==Roi3D.PLANE)
 		 {
@@ -692,6 +696,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 					 }
 				 }
 			 }
+			 bt.repaintROIScene();
 		 }
 	 }
 	 public void setLockMode(boolean bLockMode)
@@ -735,6 +740,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 activeRoi=-1;
 		 jlist.clearSelection();
 		 fireActiveRoiChanged(activeRoi);
+		 bt.repaintROIScene();
 	 }
 	 
 	 public void addRoiManager3DListener(Listener l) {
@@ -743,6 +749,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 
 	 private void fireActiveRoiChanged(int nRoi) 
 	 {
+		bt.repaintROIScene();
 		for(Listener l : listeners)
 			l.activeRoiChanged(nRoi);
 	}
@@ -753,7 +760,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		if (e.getValueIsAdjusting() == false) 
 		{
-			
+			bt.repaintROIScene();
 			roiMeasure.jlist.setSelectedIndex(jlist.getSelectedIndex());
             if (jlist.getSelectedIndex() == -1) 
             {
@@ -1530,5 +1537,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	public void setRoiMeasure3D( RoiMeasure3D roiMeasure_)
 	{
 		 this.roiMeasure=roiMeasure_;
+	}
+	public void repaintROIScene()
+	{
+		bt.repaintROIScene();
+	}
+	public void repaintBVV()
+	{
+		bt.repaintBVV();
 	}
 }

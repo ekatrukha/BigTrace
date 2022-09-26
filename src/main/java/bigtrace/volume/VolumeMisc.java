@@ -2,6 +2,12 @@ package bigtrace.volume;
 
 import java.util.ArrayList;
 
+import bdv.tools.brightness.ConverterSetup;
+import bdv.util.Bounds;
+import bdv.viewer.ConverterSetups;
+import bdv.viewer.Source;
+import bdv.viewer.SourceAndConverter;
+import bdv.viewer.ViewerState;
 import bigtrace.geometry.Cuboid3D;
 import ij.ImagePlus;
 import ij.measure.Calibration;
@@ -430,4 +436,5 @@ public class VolumeMisc {
 		return outIP;
 		//outIP.show();
 	}
+	
 }

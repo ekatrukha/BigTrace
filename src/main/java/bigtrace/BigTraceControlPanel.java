@@ -209,10 +209,10 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		public void itemStateChanged(ItemEvent e) {
 	    	      if(e.getStateChange()==ItemEvent.SELECTED){
 	    	    	  btdata.bShowOrigin=true;
-	    	    	  //render_pl();
+	    	    	  bt.repaintROIScene();
 	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
 	    	        	btdata.bShowOrigin=false;
-	    	        	//render_pl();
+	    	        	bt.repaintROIScene();
 	    	        }
 			}
 	    	});
@@ -232,10 +232,10 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		public void itemStateChanged(ItemEvent e) {
 	    	      if(e.getStateChange()==ItemEvent.SELECTED){
 	    	    	  btdata.bVolumeBox=true;
-	    	    	  //render_pl();
+	    	    	  bt.repaintROIScene();
 	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
 	    	        	btdata.bVolumeBox=false;
-	    	        	//render_pl();
+	    	        	bt.repaintROIScene();
 	    	        }
 			}
 	    	});
@@ -514,7 +514,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 				{
 					for(i=0;i<bt.btdata.nTotalChannels;i++)
 					{
-						bt.sources.add(Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(i).getImage(0), btdata.nDimCurr[0], btdata.nDimCurr[1]));
+						bt.sources.set(i,Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(i).getImage(0), btdata.nDimCurr[0], btdata.nDimCurr[1]));
 					}
 				}
 				else

@@ -75,6 +75,7 @@ public class Roi3DGroupVisibility implements  ActionListener {
 			if(ae.getSource() == groupCheckbox.get(i))
 			{
 				roiManager.groups.get(i).bVisible =groupCheckbox.get(i).isSelected(); 
+				roiManager.repaintBVV();
 			}
 		}
 	}
