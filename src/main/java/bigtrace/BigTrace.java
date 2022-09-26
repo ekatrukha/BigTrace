@@ -371,7 +371,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				dClipNear(btdata.dClipNear).
 				dClipFar(btdata.dClipFar).
 				renderWidth( 800).
-				renderHeight( 800 ).ditherWidth(2));	
+				renderHeight( 800 ).ditherWidth(1));	
 		bvv_main.setActive(true);
 		panel = bvv_main.getBvvHandle().getViewerPanel();
 		//polyLineRender = new VisPolyLineSimple();
