@@ -8,7 +8,8 @@ import java.awt.KeyboardFocusManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.IndexColorModel;
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,8 +27,6 @@ import org.scijava.ui.behaviour.util.Actions;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
-import bdv.ViewerImgLoader;
-import bdv.cache.CacheControl;
 import bdv.spimdata.SequenceDescriptionMinimal;
 import bdv.spimdata.SpimDataMinimal;
 import bdv.spimdata.XmlIoSpimDataMinimal;
@@ -58,7 +57,6 @@ import ij.process.LUT;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import btbvv.util.BvvFunctions;
-import btbvv.tools.BvvGamma;
 import btbvv.tools.GammaConverterSetup;
 import btbvv.tools.RealARGBColorGammaConverterSetup;
 import btbvv.util.Bvv;
@@ -82,12 +80,9 @@ import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-import bvvbigtrace.example2.BigVolumeViewerBT;
+
 import bvvbigtrace.example2.RenderData;
-import bvvbigtrace.example2.VolumeViewerFrame;
-import bvvbigtrace.example2.VolumeViewerOptions;
 import bvvbigtrace.example2.VolumeViewerPanel;
-import bvvbigtrace.example2.VolumeRenderer.RepaintType;
 import bvvbigtrace.util.MatrixMath;
 
 
@@ -120,7 +115,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public SpimDataMinimal spimData;
 
 	
-	/** input data in XYZCT format**/
+	/** input data in XYZC format**/
 	public RandomAccessibleInterval<T> all_ch_RAI;
 
 	/** Panel of BigVolumeViewer **/
@@ -327,6 +322,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		raitest.min( btdata.nDimCurr[0] );
 		raitest.max( btdata.nDimCurr[1] );
 		btdata.nTotalChannels = seq.getViewSetupsOrdered().size();
+		/*
 		int setupN=0;
 		for ( final BasicViewSetup setup : spimData.getSequenceDescription().getViewSetupsOrdered() )
 		{
@@ -334,14 +330,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			sources.add(Views.interval((RandomAccessibleInterval<T>)seq.getImgLoader().getSetupImgLoader(setup.getId()).getImage(0),raitest));
 			
 		}
-
+		 	*/
 		
-		/*
+		
 		for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
 		{
-			int nSetup = seq.getViewSetupsOrdered().get(setupN).getId();
 			sources.add(Views.interval((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0),raitest));
-		}*/
+		}
 		
 		//TODO FOR NOW, get it from the class
 		nBitDepth = 16;
@@ -967,6 +962,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	}
 	/** given interval and zoomFraction, provides transform that puts volume 
 	 * in the center of BVV viewer**/
+	/*
 	public AffineTransform3D getCenteredViewTransform(final Interval inInterval, double zoomFraction)
 	{
 		int i;
@@ -985,6 +981,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		final int sW = panel.getWidth();
 		final int sH = panel.getHeight();
 		
+		//current view transform
 		final AffineTransform3D transform = new AffineTransform3D();
 		panel.state().getViewerTransform(transform);
 		
@@ -1007,7 +1004,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		//now let's move it
 			
-		//coordinates in the current transform view
+		//coordinates of the center in the current transform view
 		//transform.apply(centerCoord, centerCoord);
 		transform_scale.apply(centerCoord, centerCoord);
 
@@ -1067,6 +1064,76 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		transform_scale.apply(newx , newx );
 		
 		return transform_scale;
+	}*/
+	
+	public AffineTransform3D getCenteredViewTransform(final Interval inInterval, double zoomFraction)
+	{
+		int i;
+		int nDim = inInterval.numDimensions();
+		final long [] minDim = inInterval.minAsLongArray();
+		final long [] maxDim = inInterval.maxAsLongArray();
+		float [] centerCoord = new float[nDim];
+		float [] centerCoordWorldOld = new float[nDim];
+		
+		
+		//center of the interval in the volume coordinates
+		for(i=0;i<nDim;i++)
+		{
+			centerCoord[i] = (float)Math.round(minDim[i]+ 0.5*(maxDim[i]-minDim[i]));
+		}
+		
+		//current window dimensions
+		final int sW = panel.getWidth();
+		final int sH = panel.getHeight();
+		
+		//current view transform
+		final AffineTransform3D transform = new AffineTransform3D();
+		panel.state().getViewerTransform(transform);
+		
+		//calculate scale factor
+		//current width/height
+		FinalRealInterval boxAfter = transform.estimateBounds(inInterval);
+		double dCurrW = boxAfter.realMax(0)-boxAfter.realMin(0);
+		double dCurrH = boxAfter.realMax(1)-boxAfter.realMin(1);
+		double scaleX = (zoomFraction)*sW/dCurrW;
+		double scaleY = (zoomFraction)*sH/dCurrH;
+		double scalefin=Math.min(scaleX, scaleY);
+		
+		transform.scale(scalefin);
+		
+		
+		//current coordinates of center in the current(old) transform
+		transform.apply(centerCoord, centerCoordWorldOld);
+
+		//center of the screen "volume" 		
+		Vector3f vcenter = new Vector3f();			
+		Matrix4f matPersp = new Matrix4f();
+		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPersp );
+		
+		matPersp.unproject(0.5f*sW,0.5f*sH,0.0f, //z=0 does not matter here
+				new int[] { 0, 0, sW, sH },vcenter);
+		float [] centerViewPoint = new float[3];
+		centerViewPoint[0]=vcenter.x;
+		centerViewPoint[1]=vcenter.y;
+		centerViewPoint[2]=0.0f; //center of the "screen" volume		
+		
+		//position center of the volume in the center of "screen" volume
+		double [] dl = transform.getTranslation();
+		
+		//translation after source transform to new position
+		for(i=0;i<3;i++)
+		{
+			dl[i]+= (centerViewPoint[i]-centerCoordWorldOld[i]);
+		}
+		transform.setTranslation(dl);
+
+		
+
+
+		
+	
+		
+		return transform;
 	}
 	
 	public AnisotropicTransformAnimator3D getCenteredViewAnim(final Interval inInterval, double zoomFraction)
@@ -1191,10 +1258,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	}
 	
-	public void repaintROIScene()
-	{
-		panel.requestRepaint(RepaintType.SCENE);
-	}
 	public void repaintBVV()
 	{
 		panel.requestRepaint();
@@ -1202,6 +1265,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	public void initBVVSourcesImageJ()
 	{
+		
+		Path p = Paths.get(btdata.sFileNameFullImg);
+		String filename = p.getFileName().toString();
+		
 		/// "dummy" interval to init BVV
 		RandomAccessibleInterval< UnsignedByteType > empty_view;
 		// init bigvolumeviewer
@@ -1215,7 +1282,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				dClipNear(btdata.dClipNear).
 				dClipFar(btdata.dClipFar).
 				renderWidth( 800).
-				renderHeight( 800 ).ditherWidth(1));	
+				renderHeight( 800 ).
+				ditherWidth(1).
+				frameTitle(filename)
+				);
+		
 		bvv_main.setActive(true);
 		
 		for(int i=0;i<sources.size();i++)
@@ -1235,6 +1306,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
 			bvv_sources.get(i).setDisplayRange(channelRanges[0][i], channelRanges[1][i]);
 			bvv_sources.get(i).setAlphaRange(channelRanges[0][i], channelRanges[1][i]);
+			bvv_sources.get(i).setRenderType(btdata.nRenderMethod);
 
 		}
 		bvv_main.removeFromBdv();
@@ -1245,20 +1317,25 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public void initBVVSourcesHDF5()
 	{
 
+		Path p = Paths.get(btdata.sFileNameFullImg);
+		String filename = p.getFileName().toString();
 		List<BvvStackSource<?>> sourcesSPIM = BvvFunctions.show( spimData,Bvv.options().
-				renderWidth( 800).
-				renderHeight( 800 ).
-				ditherWidth( 8 ).
-				numDitherSamples( 8).
+				renderWidth(800).
+				renderHeight(800).
+				ditherWidth(8).
+				numDitherSamples(8).
 				cacheBlockSize( 32 ).
 				maxCacheSizeInMB( 300 ).
-				dCam( 2000 ).
-				dClip( 1000 )
+				dCam( btdata.dCam ).
+				dClipNear( btdata.dClipNear ).
+				dClipFar( btdata.dClipFar ).
+				frameTitle(filename)
 				);		
 		
 		for(int i=0;i<sourcesSPIM.size();i++)
 		{
 			bvv_sources.add(sourcesSPIM.get(i));
+			bvv_sources.get(i).setRenderType(btdata.nRenderMethod);
 		}
 
 		bvv_main = bvv_sources.get(0);
@@ -1461,7 +1538,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		//java.awt.Rectangle windowBVVbounds = btpanel.bvv_frame.getContentPane().getBounds();
 		
 		
-		System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
+		//System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
 														
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
@@ -1515,18 +1592,21 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		if(intersectionPoints.size()==8)
 		{
-			/*
-			for(i =0;i<intersectionPoints.size();i+=2)
+			btpanel.progressBar.setString("click point found");
+	/*
+			for(i =0;i<intersectionPoints.size();i++)
 			{
-				traces.addNewLine();
-				traces.addPointToActive(intersectionPoints.get(i));
-				traces.addPointToActive(intersectionPoints.get(i+1));
+				Point3D point = new Point3D(roiManager.groups.get(0));
+				point.setVertex(intersectionPoints.get(i));
+				point.setGroupInd(0);
+				roiManager.addRoi(point);
 			}
 			*/
 		}		
 		else
 		{
-			System.out.println( "#intersection points " + intersectionPoints.size());
+			btpanel.progressBar.setString("cannot find clicked point");
+			//System.out.println( "#intersection points " + intersectionPoints.size());
 			return false;
 		}
 		long [][] nClickMinMax = new long[2][3];
@@ -1543,9 +1623,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			*/
 			
 			
+			
 			IntervalView< X > intRay = Views.interval(viewclick, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
 																								   nClickMinMax[1][0],nClickMinMax[1][1],nClickMinMax[1][2]));
-			
+			//BvvFunctions.show( intRay, "cropclick", Bvv.options().addTo(bvv_main));
+			//ImageJFunctions.show(intRay);
 			//double [][] singleCube  = new double [2][3];
 			//for(i=0;i<3;i++)
 			//	singleCube[1][i]=1.0;
@@ -1559,7 +1641,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			if(VolumeMisc.findMaxLocationCuboid(intRay,target_found,clickVolume))
 			{
 				//traces.addPointToActive(target);
-				panel.showMessage("point found");
+				//panel.showMessage("point found");
+				btpanel.progressBar.setString("click point found");
 				target.setPosition(target_found);
 				return true;
 				//roiManager.addPoint(target);
@@ -1567,7 +1650,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			}
 			else
 			{
-				panel.showMessage("not found :(");
+				btpanel.progressBar.setString("cannot find clicked point");
+				//panel.showMessage("not found :(");
 				return false;
 			}
 				
@@ -1577,9 +1661,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		else
 		{
 			return false;
-		}
-
-		//render_pl();		
+		}	
 		
 	}
 	/** creates and fills array colorsCh with channel colors,
@@ -1681,30 +1763,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	public void closeWindows()
 	{
-		/*if(bvv_trace!=null)
-		{
-			bvv_trace.removeFromBdv();
-			System.gc();
-		}*/
-		//is it necessary? not sure
-		/*
-		if(bvv_sources!=null)
-		{
-			for(int i=0;i<bvv_sources.size();i++)
-			{
-				bvv_sources.get(i).removeFromBdv();
-			}
-		}*/
-		/*if(bvv!=null)
-		{
-			bvv.removeFromBdv();
-		}*/
-		//panel.stop();
-		//btpanel.bvv_frame.dispatchEvent(new WindowEvent(btpanel.bvv_frame, WindowEvent.WINDOW_CLOSING));
-		//finFrame.dispatchEvent(new WindowEvent(finFrame, WindowEvent.WINDOW_CLOSING));
-		
-		//bvv_main.close();
-		//panel.stop();
+	
+		panel.stop();
 		btpanel.bvv_frame.dispose();		
 		btpanel.finFrame.dispose();
 	}

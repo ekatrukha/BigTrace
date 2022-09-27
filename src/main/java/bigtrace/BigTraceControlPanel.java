@@ -209,10 +209,10 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		public void itemStateChanged(ItemEvent e) {
 	    	      if(e.getStateChange()==ItemEvent.SELECTED){
 	    	    	  btdata.bShowOrigin=true;
-	    	    	  bt.repaintROIScene();
+	    	    	  bt.repaintBVV();
 	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
 	    	        	btdata.bShowOrigin=false;
-	    	        	bt.repaintROIScene();
+	    	        	bt.repaintBVV();
 	    	        }
 			}
 	    	});
@@ -232,10 +232,10 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		public void itemStateChanged(ItemEvent e) {
 	    	      if(e.getStateChange()==ItemEvent.SELECTED){
 	    	    	  btdata.bVolumeBox=true;
-	    	    	  bt.repaintROIScene();
+	    	    	  bt.repaintBVV();
 	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
 	    	        	btdata.bVolumeBox=false;
-	    	        	bt.repaintROIScene();
+	    	        	bt.repaintBVV();
 	    	        }
 			}
 	    	});

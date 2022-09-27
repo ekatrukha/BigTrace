@@ -296,7 +296,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 			{
 				preset.setRenderType(renderTypeList.getSelectedIndex());
 			}
-			roiManager.repaintROIScene();
+			roiManager.repaintBVV();
 			return true;
 			
 			

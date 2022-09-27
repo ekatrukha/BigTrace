@@ -418,15 +418,18 @@ public class VolumeMisc {
 			outIP = ImageJFunctions.wrap(img,sTitle);
 			outIP.setDimensions(1, (int)img.dimension(2), 1);		
 		}
-		//multichannel 3D volume
-		if(img.numDimensions()==4)
-		{
-			outIP = ImageJFunctions.wrap(Views.permute(img,2,3), sTitle);
-			outIP.setDimensions((int)img.dimension(3), (int)img.dimension(2), 1);
-		}
 		else
 		{
-			return null;
+			//multichannel 3D volume
+			if(img.numDimensions()==4)
+			{
+				outIP = ImageJFunctions.wrap(Views.permute(img,2,3), sTitle);
+				outIP.setDimensions((int)img.dimension(3), (int)img.dimension(2), 1);
+			}
+			else
+			{
+				return null;
+			}
 		}
 		
 		if(cal!=null)

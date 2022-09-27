@@ -38,7 +38,7 @@ public class BigTraceData {
 	public boolean bVolumeBox = true;
 	
 	/** camera position for BVV **/
-	double dCam = 1100.;
+	double dCam = 2000.;
 	
 	/** near clip plane position for BVV **/
 	double dClipNear = 1000.;

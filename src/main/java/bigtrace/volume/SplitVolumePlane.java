@@ -3,9 +3,11 @@ package bigtrace.volume;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.SwingWorker;
 
+import bdv.spimdata.SequenceDescriptionMinimal;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.geometry.Intersections3D;
@@ -17,10 +19,14 @@ import ij.measure.Calibration;
 import net.imagej.util.Images;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.loops.LoopBuilder;
+import net.imglib2.type.Type;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 
 public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker{
@@ -82,13 +88,28 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 		
 		
 		//(for now)
-		//make two coplies
-		Img<T>out1 = bt.img_ImageJ.factory().create(bt.all_ch_RAI);
-		Img<T>out2 = bt.img_ImageJ.factory().create(bt.all_ch_RAI);
+		//make two copies
+
+		if(bt.bBDVsource)
+		{
+			final SequenceDescriptionMinimal seq = bt.spimData.getSequenceDescription();
 			
-		Images.copy(bt.all_ch_RAI, out1);
-		Images.copy(bt.all_ch_RAI, out2);
-		
+			List<RandomAccessibleInterval<T>> hyperslices = new ArrayList<RandomAccessibleInterval<T>> ();
+			
+			
+			for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
+			{
+				hyperslices.add((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0));
+			}
+			//for()
+			bt.all_ch_RAI = Views.stack(hyperslices);
+		}
+
+	
+		Img<T> out1 =  Util.getSuitableImgFactory(bt.all_ch_RAI, Util.getTypeFromInterval(bt.all_ch_RAI)).create(bt.all_ch_RAI);
+		LoopBuilder.setImages(out1, bt.all_ch_RAI).forEachPixel(Type::set);
+		Img<T> out2 =  Util.getSuitableImgFactory(bt.all_ch_RAI, Util.getTypeFromInterval(bt.all_ch_RAI)).create(bt.all_ch_RAI);
+		LoopBuilder.setImages(out2, bt.all_ch_RAI).forEachPixel(Type::set);
 		
 		final long [] nTotPixArr = bt.all_ch_RAI.dimensionsAsLongArray();
 		

@@ -69,14 +69,16 @@ public class Roi3DGroupVisibility implements  ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent ae) {
-		// TODO Auto-generated method stub
+		//switch off visibility
 		for(int i=0;i< groupCheckbox.size();i++)
 		{
 			if(ae.getSource() == groupCheckbox.get(i))
 			{
+	
 				roiManager.groups.get(i).bVisible =groupCheckbox.get(i).isSelected(); 
 				roiManager.repaintBVV();
 			}
+
 		}
 	}
 	
