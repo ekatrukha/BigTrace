@@ -88,7 +88,7 @@
 		<repository>
     		<id>github</id>
     		<name>GitHub Packages</name>
-    		<url>https://maven.pkg.github.com/ekatrukha/bvv-playground</url>
+    		<url>https://maven.pkg.github.com/ekatrukha/bvv-playground/fiji/experimental/bvv-playground/</url>
 		</repository>
 	</repositories>
 
