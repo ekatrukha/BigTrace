@@ -30,4 +30,4 @@ jobs:
           MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
           OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
           SIGNING_ASC: ${{ secrets.SIGNING_ASC }}
-          GITHUB_TOKEN_REF: ${{ secrets.GH_INSTALL_PACKAGE }}
+          GITHUB_TOKEN: ${{ github.token }}
