@@ -19,6 +19,7 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
           cache: 'maven'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up CI environment
         run: .github/setup.sh
       - name: Execute the build
