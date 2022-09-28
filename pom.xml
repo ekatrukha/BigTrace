@@ -88,15 +88,15 @@
 		<repository>
     		<id>github</id>
     		<name>GitHub Packages</name>
-    		<url>https://maven.pkg.github.com/ekatrukha/bvv-playground/fiji/experimental/bvv-playground/</url>
+    		<url>https://maven.pkg.github.com/ekatrukha/bvv-playground</url>
 		</repository>
 	</repositories>
 
 	<dependencies>
 		<dependency>
-			<groupId>fiji.experimental</groupId>
-			<artifactId>bvv-playground</artifactId>
-			<version>0.0.3</version>
+		  <groupId>fiji.experimental</groupId>
+		  <artifactId>bvv-playground</artifactId>
+		  <version>0.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.formdev</groupId>
