@@ -15,8 +15,6 @@ Main topics:
 <li> <a href="https://github.com/ekatrukha/BigTrace/wiki/How-to-cite-plugin%3F">How to cite plugin?</a></li>
 </ul>
 <br />
-The plugin is usable, but under "alpha-stage" development, so there are frequent updates and changes.
-<br />
 
 <img src="https://katpyxa.info/software/BigTrace/bigtrace_example.gif" /> 
 

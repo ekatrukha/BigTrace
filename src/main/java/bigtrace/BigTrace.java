@@ -150,7 +150,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		if(arg.equals(""))
 		{
-			btdata.sFileNameFullImg=IJ.getFilePath("Open TIF file (3D, composite)...");
+			btdata.sFileNameFullImg=IJ.getFilePath("Open TIF/BDV file (3D, composite)...");
 		}
 		else
 		{
