@@ -19,7 +19,9 @@ The plugin is usable, but under "alpha-stage" development, so there are frequent
 <br />
 <br />
 
-<img src="https://katpyxa.info/software/BigTrace/bigtrace_example.gif" />
+<img src="https://katpyxa.info/software/BigTrace/bigtrace_example.gif" /> 
+
+----------
 
 Developed in <a href='http://cellbiology.science.uu.nl/'>Cell Biology group</a> of Utrecht University.  
 <a href="mailto:katpyxa@gmail.com">E-mail</a> for any questions.
