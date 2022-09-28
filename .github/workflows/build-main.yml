@@ -19,7 +19,6 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
           cache: 'maven'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up CI environment
         run: .github/setup.sh
       - name: Execute the build
@@ -31,3 +30,4 @@ jobs:
           MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
           OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
           SIGNING_ASC: ${{ secrets.SIGNING_ASC }}
+          GITHUB_TOKEN_REF: ${{ secrets.GH_INSTALL_PACKAGE }}
