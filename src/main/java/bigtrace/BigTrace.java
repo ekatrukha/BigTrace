@@ -321,6 +321,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		raitest.max( btdata.nDimIni[1] );
 		raitest.min( btdata.nDimCurr[0] );
 		raitest.max( btdata.nDimCurr[1] );
+		
+		btdata.sVoxelUnit=seq.getViewSetupsOrdered().get(0).getVoxelSize().unit();
+		
 		btdata.nTotalChannels = seq.getViewSetupsOrdered().size();
 		/*
 		int setupN=0;
@@ -1355,6 +1358,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			}
 			(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transform);	 
 		}
+		
 		InitializeViewerState.initBrightness( 0.001, 0.999, panel.state(), panel.getConverterSetups() );
 
 		//also adjust alpha channel
