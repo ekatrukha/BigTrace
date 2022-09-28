@@ -77,7 +77,7 @@
 
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
-		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
+		<!--  releaseProfiles>sign,deploy-to-scijava</releaseProfiles -->
 	</properties>
 
 	<repositories>
@@ -85,9 +85,19 @@
 			<id>scijava.public</id>
 			<url>https://maven.scijava.org/content/groups/public</url>
 		</repository>
+		<repository>
+    		<id>github</id>
+    		<name>GitHub Packages</name>
+    		<url>https://maven.pkg.github.com/ekatrukha/bvv-playground</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
+		<dependency>
+			<groupId>fiji.experimental</groupId>
+			<artifactId>bvv-playground</artifactId>
+			<version>0.0.3</version>
+		</dependency>
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
@@ -132,11 +142,7 @@
 			<artifactId>imglib2-ij</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>bvv-playground</artifactId>
-			<version>0.0.3</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>ui-behaviour</artifactId>
