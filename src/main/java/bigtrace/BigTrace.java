@@ -33,7 +33,11 @@ import bdv.spimdata.XmlIoSpimDataMinimal;
 import bdv.tools.InitializeViewerState;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
+import bdv.util.Bounds;
+import bdv.viewer.ConverterSetups;
+import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
+import bdv.viewer.ViewerState;
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
@@ -1359,22 +1363,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transform);	 
 		}
 		
-		InitializeViewerState.initBrightness( 0.001, 0.999, panel.state(), panel.getConverterSetups() );
+		double [] minmaxBrightness = initBrightnessBVV( 0.001, 0.999, panel.state() );
 
-		//also adjust alpha channel
-		for ( final ConverterSetup s : bvv_main.getConverterSetups() )
+		for(int i=0;i<bvv_sources.size();i++)
 		{
-			if (s instanceof GammaConverterSetup)
-			{
-				final GammaConverterSetup gconverter = ((GammaConverterSetup)s);
-				gconverter.setAlphaRange(gconverter.getDisplayRangeMin(), gconverter.getDisplayRangeMax());
-			}
-
+			bvv_sources.get(i).setDisplayRange(minmaxBrightness[0], minmaxBrightness[1]);
+			bvv_sources.get(i).setAlphaRange(minmaxBrightness[0], minmaxBrightness[1]);
 		}
-		
-		//final Object type = panel.state().getSources().get(0).getSpimSource().getType();
-		//String sName =type.getClass().getSimpleName();
-		//bvv_main = bvv_sources.get(0);
 	}
 	
 	void setInitialTransform()
@@ -1771,6 +1766,21 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		panel.stop();
 		btpanel.bvv_frame.dispose();		
 		btpanel.finFrame.dispose();
+	}
+	
+	public static double [] initBrightnessBVV( final double cumulativeMinCutoff, final double cumulativeMaxCutoff, final ViewerState state )
+	{
+		final SourceAndConverter< ? > current = state.getCurrentSource();
+		if ( current == null )
+			return null;
+		final Source< ? > source = current.getSpimSource();
+		final int timepoint = state.getCurrentTimepoint();
+		final Bounds bounds = InitializeViewerState.estimateSourceRange( source, timepoint, cumulativeMinCutoff, cumulativeMaxCutoff );
+		double [] out = new double [2];
+		out[0]=bounds.getMinBound();
+		out[1]=bounds.getMaxBound();
+		return out;
+
 	}
 
 	
