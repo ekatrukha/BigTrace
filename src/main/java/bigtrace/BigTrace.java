@@ -31,10 +31,8 @@ import bdv.spimdata.SequenceDescriptionMinimal;
 import bdv.spimdata.SpimDataMinimal;
 import bdv.spimdata.XmlIoSpimDataMinimal;
 import bdv.tools.InitializeViewerState;
-import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
 import bdv.util.Bounds;
-import bdv.viewer.ConverterSetups;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerState;
@@ -59,9 +57,7 @@ import ij.ImagePlus;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
 import mpicbg.spim.data.SpimDataException;
-import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import btbvv.util.BvvFunctions;
-import btbvv.tools.GammaConverterSetup;
 import btbvv.tools.RealARGBColorGammaConverterSetup;
 import btbvv.util.Bvv;
 import net.imglib2.AbstractInterval;
@@ -1376,6 +1372,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	{
 		AffineTransform3D t = new AffineTransform3D();
 		t.identity();
+		t.scale(btdata.globCal[0],btdata.globCal[1],btdata.globCal[2]);
 		t.rotate(0, Math.PI/2.0);
 		t.rotate(1, (-1)*Math.PI/6.0);
 		t.rotate(0, Math.PI/9.0);
