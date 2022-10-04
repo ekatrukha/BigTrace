@@ -12,7 +12,7 @@ import net.imglib2.view.IntervalView;
 public class BigTraceData {
 
 	
-	public static String sVersion = "0.1.2";
+	public static String sVersion = "0.1.3";
 	
 	/** path and full input filename **/
 	public String sFileNameFullImg;

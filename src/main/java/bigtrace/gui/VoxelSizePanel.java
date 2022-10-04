@@ -4,6 +4,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 
 import javax.swing.JLabel;
@@ -39,13 +41,16 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 		vxAllSize = new double [3];
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
 		
 		nfAllSize = new NumberField[3];
 		for (i=0;i<3;i++)
 		{
 			vxAllSize[i]=dVoxelSize[i];
 			nfAllSize[i]=new NumberField(4);
-			nfAllSize[i].setText(String.format("%.3f", dVoxelSize[i]));
+			nfAllSize[i].setText(df.format( dVoxelSize[i]));
 			nfAllSize[i].setMinimumSize(nfAllSize[i].getPreferredSize());
 			nfAllSize[i].addListener(this);
 			nfAllSize[i].addNumberFieldFocusListener(this);
