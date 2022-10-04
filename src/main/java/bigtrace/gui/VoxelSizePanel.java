@@ -121,9 +121,12 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 	public void setVoxelSize(double [] dVoxelSize, String sUnits)
 	{
 		tfUnits.setText(sUnits);
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
 		for (int i=0;i<3;i++)
 		{
-			nfAllSize[i].setText(String.format("%.3f", dVoxelSize[i]));
+			nfAllSize[i].setText(df.format( dVoxelSize[i]));
 			vxAllSize[i]= dVoxelSize[i];
 		}
 		fireVoxelSizeChanged(vxAllSize);
@@ -132,13 +135,16 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 	private boolean updateVoxelSize()
 	{
 		double diff = 0.0;
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
 		
 		for(int i=0;i<3;i++)
 		{
 			//just in case
 			if(Double.parseDouble(nfAllSize[i].getText())<=0)
 			{
-				nfAllSize[i].setText(String.format("%.3f", vxAllSize[i]));
+				nfAllSize[i].setText(df.format(vxAllSize[i]));
 			}
 			diff += Math.abs(vxAllSize[i]-Double.parseDouble(nfAllSize[i].getText()));
 			vxAllSize[i]=Double.parseDouble(nfAllSize[i].getText());
