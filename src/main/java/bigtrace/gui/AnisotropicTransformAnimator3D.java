@@ -94,8 +94,8 @@ public class AnisotropicTransformAnimator3D extends AbstractTransformAnimator
 		LinAlgHelpers.quaternionPower( qDiff, t, qDiffCurrent );
 		LinAlgHelpers.quaternionMultiply( qStart, qDiffCurrent, qCurrent );
 
-		double [] alpha = new double [3];
-		double [] scaleCurrent = new double [3];
+		final double [] alpha = new double [3];
+		final double [] scaleCurrent = new double [3];
 		
 		for (int d=0;d<3;d++)
 		{
@@ -110,7 +110,7 @@ public class AnisotropicTransformAnimator3D extends AbstractTransformAnimator
 		final double[] tCurrent = new double[ 3 ];
 		//final double f = Math.abs( scaleRate - 1.0 ) < 0.0001 ? -t : ( scaleEnd / alpha - scaleEnd ) / scaleDiff;
 		//LinAlgHelpers.scale( xg0Diff, f, xg0Current );
-		double [] f = new double [3];
+		final double [] f = new double [3];
 		for (int d=0;d<3;d++)
 		{
 			f[d] = Math.abs( scaleRate[d] - 1.0 ) < 0.0001 ? -t : ( scaleEnd[d] / alpha[d] - scaleEnd[d] ) / scaleDiff[d];

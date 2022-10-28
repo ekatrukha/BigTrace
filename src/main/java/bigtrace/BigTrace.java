@@ -58,7 +58,6 @@ import ij.plugin.PlugIn;
 import ij.process.LUT;
 import mpicbg.spim.data.SpimDataException;
 import btbvv.util.BvvFunctions;
-import btbvv.tools.RealARGBColorGammaConverterSetup;
 import btbvv.util.Bvv;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
@@ -545,16 +544,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 					btdata.nPointsInTraceBox--;
 					roiManager.removeActiveRoi();
 					roiManager.activeRoi=-1;
-					setTraceBoxMode(false);
-					//bTraceMode= false;
-					//roiManager.setLockMode(bTraceMode);							
+					setTraceBoxMode(false);						
 					removeTraceBox();
-					if(btdata.nTraceBoxView==1)
-					{
-						bvv_sources.get(btdata.nChAnalysis).setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
-						//bvv2.setActive(true);
-					}
-					
 					
 				}
 				//not the last point, see if we need to move trace box back
@@ -931,6 +922,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
 		return finInt;							
 	}
+	
 	//gets a box around "target" with half size of range
 	public FinalInterval getTraceBoxNext(final IntervalView< ? > viewclick, final long range, final float fFollowDegree, LineTrace3D trace)
 	{
@@ -963,111 +955,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		return finInt;
 									
 	}
-	/** given interval and zoomFraction, provides transform that puts volume 
-	 * in the center of BVV viewer**/
-	/*
-	public AffineTransform3D getCenteredViewTransform(final Interval inInterval, double zoomFraction)
-	{
-		int i;
-		int nDim = inInterval.numDimensions();
-		final long [] minDim = inInterval.minAsLongArray();
-		final long [] maxDim = inInterval.maxAsLongArray();
-		float [] centerCoord = new float[nDim];
-		
-		//center of the new subvolume (tracebox)
-		for(i=0;i<nDim;i++)
-		{
-			centerCoord[i] = (float)Math.round(minDim[i]+ 0.5*(maxDim[i]-minDim[i]));
-		}
-		
-		//current window dimensions
-		final int sW = panel.getWidth();
-		final int sH = panel.getHeight();
-		
-		//current view transform
-		final AffineTransform3D transform = new AffineTransform3D();
-		panel.state().getViewerTransform(transform);
-		
-		//bounding box after transformation
-		FinalRealInterval boxAfter = transform.estimateBounds(inInterval);
-		
-		//calculate scale factor
-		//current width/height
-		double dCurrW = boxAfter.realMax(0)-boxAfter.realMin(0);
-		double dCurrH = boxAfter.realMax(1)-boxAfter.realMin(1);
-		double scaleX = (zoomFraction)*sW/dCurrW;
-		double scaleY = (zoomFraction)*sH/dCurrH;
-		double scalefin=Math.min(scaleX, scaleY);
-		
-		//scaled the volume
-		final AffineTransform3D transform_scale = new AffineTransform3D();
-		transform_scale.set(transform);
-		
-		transform_scale.scale(scalefin);
-		
-		//now let's move it
-			
-		//coordinates of the center in the current transform view
-		//transform.apply(centerCoord, centerCoord);
-		transform_scale.apply(centerCoord, centerCoord);
 
-
-
-		Matrix4f matPerspWorld = new Matrix4f();
-		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform_scale, new Matrix4f() ) );
-				
-		//center of the screen in the transformed coordinates
-		//take coordinates in original data volume space
-		Vector3f v1 = new Vector3f();	
-		Vector3f v2 = new Vector3f();	
-		Matrix4f matWorld = new Matrix4f();
-		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matWorld );
-		
-		//two z-depth values to determine a line of view
-		//some z depth value 
-		matWorld.unproject(0.5f*sW,0.5f*sH,0.0f, //z=1 ->far from camera z=0 -> close to camera
-				new int[] { 0, 0, sW, sH },v1);
-		matWorld.unproject(0.5f*sW,0.5f*sH,1.0f, //z=1 ->far from camera z=0 -> close to camera
-				new int[] { 0, 0, sW, sH },v2);
-		float dZeroZ = v1.z/(v1.z-v2.z);
-		Vector3f tempp = new Vector3f();	
-		tempp.x = v1.x+(v2.x-v1.x)*dZeroZ;
-		tempp.y = v1.y+(v2.y-v1.y)*dZeroZ;
-		tempp.z = v1.z+(v2.z-v1.z)*dZeroZ;
-		Vector3f out =new Vector3f();
-		
-		matPerspWorld.project(tempp, new int[] { 0, 0, sW, sH }, out);
-		
-		Vector3f temp = new Vector3f();	
-		
-		matPerspWorld.unproject(0.5f*sW,0.5f*sH,0.96f, //z=1 ->far from camera z=0 -> close to camera
-				new int[] { 0, 0, sW, sH },temp);
-
-		//temp.set(out);
-		float [] newCent = new float[3];
-		for(i=0;i<3;i++)
-		{
-			newCent[i] = temp.get(i);
-		}
-		//center of the screen in the source transform coordinates
-		transform_scale.apply(newCent, newCent);
-		
-		double [] dl = transform_scale.getTranslation();
-		
-		//translation after source transform to new position
-		for(i=0;i<3;i++)
-		{
-			dl[i]+= (newCent[i]-centerCoord[i]);
-		}
-		transform_scale.setTranslation(dl);
-		
-		//FinalRealInterval boxAfterShift = transform_scale.estimateBounds(inInterval);
-		double[] newx = new double[3];
-		
-		transform_scale.apply(newx , newx );
-		
-		return transform_scale;
-	}*/
 	
 	public AffineTransform3D getCenteredViewTransform(final Interval inInterval, double zoomFraction)
 	{
@@ -1157,6 +1045,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		// there is a trace box already, let's remove it
 		if(bvv_trace!=null)
 		{
+			btdata.bcTraceBox.storeBC(bvv_trace);
 			bvv_trace.removeFromBdv();
 			System.gc();
 		}
@@ -1165,26 +1054,29 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			if(btdata.nTraceBoxView==1)
 			{
-				//bvv2.setActive(false);
-				btdata.bBrightnessRange[0]=bvv_sources.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMin();
-				btdata.bBrightnessRange[1]=bvv_sources.get(btdata.nChAnalysis).getConverterSetups().get(0).getDisplayRangeMax();
-				
-				RealARGBColorGammaConverterSetup alpha = (RealARGBColorGammaConverterSetup)bvv_sources.get(btdata.nChAnalysis).getConverterSetups().get(0);
-				btdata.bAlphaRange[0]=alpha.getAlphaRangeMin();
-				btdata.bAlphaRange[1]=alpha.getAlphaRangeMax();
+				btdata.bcTraceChannel.storeBC(bvv_sources.get(btdata.nChAnalysis));
 				bvv_sources.get(btdata.nChAnalysis).setDisplayRange(0.0, 0.0);
 				bvv_sources.get(btdata.nChAnalysis).setAlphaRange(0.0, 0.0);
-				//bvv2.getConverterSetups().get(0).setDisplayRange(0.0, 0.0);
 			}
 			
 		}
 		bvv_trace = BvvFunctions.show(weights, "weights", Bvv.options().addTo(bvv_main));
 		bvv_trace.setCurrent();
 		bvv_trace.setRenderType(btdata.nRenderMethod);
-		bvv_trace.setDisplayRange(0., 150.0);
-		bvv_trace.setAlphaRange(0., 150.0);
 		bvv_trace.setDisplayRangeBounds(0, 255);
 		bvv_trace.setAlphaRangeBounds(0, 255);
+		if(btdata.bcTraceBox.bInit)
+		{
+			btdata.bcTraceBox.setBC(bvv_trace);
+		}
+		else	
+		{
+			bvv_trace.setDisplayRangeBounds(0, 255);
+			bvv_trace.setAlphaRangeBounds(0, 255);
+			bvv_trace.setDisplayRange(0., 150.0);
+			bvv_trace.setAlphaRange(0., 150.0);
+
+		}
 		//handl.setDisplayMode(DisplayMode.SINGLE);
 	}
 	
@@ -1195,6 +1087,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 		if(bvv_trace!=null)
 		{
+			btdata.bcTraceBox.storeBC(bvv_trace);
 			bvv_trace.removeFromBdv();
 			System.gc();
 		}
@@ -1202,9 +1095,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		//handl.setDisplayMode(DisplayMode.SINGLE);
 		if(btdata.nTraceBoxView==1)
 		{
-
-			bvv_sources.get(btdata.nChAnalysis).setDisplayRange(btdata.bBrightnessRange[0],btdata.bBrightnessRange[1]);
-			bvv_sources.get(btdata.nChAnalysis).setAlphaRange(btdata.bAlphaRange[0],btdata.bAlphaRange[1]);
+			btdata.bcTraceChannel.setBC(bvv_sources.get(btdata.nChAnalysis));
 		}
 	}	
 	
@@ -1283,12 +1174,16 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		bvv_main = BvvFunctions.show( empty_view, "empty" ,Bvv.options().
 				dCam(btdata.dCam).
 				dClipNear(btdata.dClipNear).
-				dClipFar(btdata.dClipFar).
-				renderWidth( 800).
-				renderHeight( 800 ).
-				ditherWidth(1).
+				dClipFar(btdata.dClipFar).				
+				renderWidth( btdata.renderParams.nRenderW).
+				renderHeight( btdata.renderParams.nRenderH).
+				numDitherSamples( btdata.renderParams.numDitherSamples ).
+				cacheBlockSize( btdata.renderParams.cacheBlockSize ).
+				maxCacheSizeInMB( btdata.renderParams.maxCacheSizeInMB ).
+				ditherWidth(btdata.renderParams.ditherWidth).
 				frameTitle(filename)
 				);
+
 		
 		bvv_main.setActive(true);
 		
@@ -1323,12 +1218,15 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		Path p = Paths.get(btdata.sFileNameFullImg);
 		String filename = p.getFileName().toString();
 		List<BvvStackSource<?>> sourcesSPIM = BvvFunctions.show( spimData,Bvv.options().
-				renderWidth(800).
-				renderHeight(800).
-				ditherWidth(8).
-				numDitherSamples(8).
-				cacheBlockSize( 32 ).
-				maxCacheSizeInMB( 300 ).
+				dCam(btdata.dCam).
+				dClipNear(btdata.dClipNear).
+				dClipFar(btdata.dClipFar).				
+				renderWidth( btdata.renderParams.nRenderW).
+				renderHeight( btdata.renderParams.nRenderH).
+				numDitherSamples( btdata.renderParams.numDitherSamples ).
+				cacheBlockSize( btdata.renderParams.cacheBlockSize ).
+				maxCacheSizeInMB( btdata.renderParams.maxCacheSizeInMB ).
+				ditherWidth(btdata.renderParams.ditherWidth).
 				dCam( btdata.dCam ).
 				dClipNear( btdata.dClipNear ).
 				dClipFar( btdata.dClipFar ).

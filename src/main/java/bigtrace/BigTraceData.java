@@ -2,6 +2,8 @@ package bigtrace;
 
 import java.util.ArrayList;
 
+import bigtrace.gui.BCsettings;
+import bigtrace.gui.RenderSettings;
 import ij.Prefs;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -12,7 +14,7 @@ import net.imglib2.view.IntervalView;
 public class BigTraceData {
 
 	
-	public static String sVersion = "0.1.3";
+	public static String sVersion = "0.1.4";
 	
 	/** path and full input filename **/
 	public String sFileNameFullImg;
@@ -38,16 +40,23 @@ public class BigTraceData {
 	public boolean bVolumeBox = true;
 	
 	/** camera position for BVV **/
-	double dCam = 2000.;
+	double dCam = Prefs.get("BigTrace.dCam",2000.0);
 	
 	/** near clip plane position for BVV **/
-	double dClipNear = 1000.;
+	double dClipNear = Prefs.get("BigTrace.dClipNear",1000.0);
 	
 	/** far clip plane position for BVV  **/
-	double dClipFar = 1000.;
+	double dClipFar = Prefs.get("BigTrace.dClipFar",1000.0);
 	
-	public double [] bBrightnessRange = new double [2];
-	public double [] bAlphaRange = new double [2];
+	public RenderSettings renderParams = new RenderSettings();
+	
+	
+	
+	/** object to store brightness/alpha range of the channel during tracing**/
+	public BCsettings bcTraceChannel = new BCsettings();
+	
+	/** object to store brightness/alpha range of the tracebox **/
+	public BCsettings bcTraceBox = new BCsettings();
 	
 	/**the number of current channel used for analysis/tracing **/
 	public int nChAnalysis=0;
@@ -77,7 +86,7 @@ public class BigTraceData {
 	public double dZoomBoxScreenFraction = 1.0;
 	
 	/** animation speed, i.e. duration of transform **/
-	public long nAnimationDuration =  (int)Prefs.get("BigTrace.nAnimationDuration",1000);
+	public long nAnimationDuration =  (int)Prefs.get("BigTrace.nAnimationDuration",400);
 		
 	///////////////////////////// tracing box
 	

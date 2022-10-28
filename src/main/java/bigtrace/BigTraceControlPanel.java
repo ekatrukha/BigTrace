@@ -330,6 +330,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		
 		GridBagConstraints cd = new GridBagConstraints();
 	
+
 		
 		NumberField nfClickArea = new NumberField(4);
 		nfClickArea.setIntegersOnly(true);
@@ -352,7 +353,15 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		nfZoomBoxScreenFraction.setText(Double.toString(bt.btdata.dZoomBoxScreenFraction));
 		nfZoomBoxScreenFraction.setMaximumSize(nfZoomBoxScreenFraction.getPreferredSize());
 		
+		NumberField nfCamera = new NumberField(4);
+		nfCamera.setText(Double.toString(bt.btdata.dCam));
 		
+		NumberField nfClipNear = new NumberField(4);
+		nfClipNear.setText(Double.toString(bt.btdata.dClipNear));
+		
+		NumberField nfClipFar = new NumberField(4);
+		nfClipFar.setText(Double.toString(bt.btdata.dClipFar));
+	
 		cd.gridx=0;
 		cd.gridy=0;	
 		pViewSettings.add(new JLabel("Snap area size on click (screen px): "),cd);
@@ -365,23 +374,49 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		cd.gridx++;
 		pViewSettings.add(nfAnimationDuration,cd);
 
+		//cd.gridx=0;
+		//cd.gridy++;
+		//pViewSettings.add(new JLabel("Zoom settings: "),cd);
+
+		
 		cd.gridx=0;
 		cd.gridy++;
-		pViewSettings.add(new JLabel("Crop volume on zoom? "),cd);
+		pViewSettings.add(new JLabel("Crop volume when zooming in? "),cd);
 		cd.gridx++;
 		pViewSettings.add(cbZoomCrop,cd);
 		
 		cd.gridx=0;
 		cd.gridy++;
-		pViewSettings.add(new JLabel("Zoom volume size (px): "),cd);
+		pViewSettings.add(new JLabel("Zoom box volume size (px): "),cd);
 		cd.gridx++;
 		pViewSettings.add(nfZoomBoxSize,cd);
 		
 		cd.gridx=0;
 		cd.gridy++;
-		pViewSettings.add(new JLabel("Zoom screen fraction (0-1): "),cd);
+		pViewSettings.add(new JLabel("Zoom box screen fraction (0-1): "),cd);
 		cd.gridx++;
 		pViewSettings.add(nfZoomBoxScreenFraction,cd);
+		
+		//cd.gridx=0;
+		//cd.gridy++;
+		//pViewSettings.add(new JLabel("Render box: "),cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pViewSettings.add(new JLabel("Camera position: "),cd);
+		cd.gridx++;
+		pViewSettings.add(nfCamera,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pViewSettings.add(new JLabel("Near clipping plane position: "),cd);
+		cd.gridx++;
+		pViewSettings.add(nfClipNear,cd);
+		cd.gridx=0;
+		cd.gridy++;
+		pViewSettings.add(new JLabel("Far clipping plane position: "),cd);
+		cd.gridx++;
+		pViewSettings.add(nfClipFar,cd);
 		
 		
 		int reply = JOptionPane.showConfirmDialog(null, pViewSettings, "View/Navigation Settings", 
@@ -406,6 +441,20 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			
 			bt.btdata.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
 			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
+			
+			bt.btdata.dCam = Math.abs(Double.parseDouble(nfCamera.getText()));
+			bt.btdata.dClipNear = Math.abs(Double.parseDouble(nfClipNear.getText()));
+			bt.btdata.dClipFar = Math.abs(Double.parseDouble(nfClipFar.getText()));
+			if(bt.btdata.dCam<=bt.btdata.dClipNear)
+				bt.btdata.dCam = bt.btdata.dClipNear+1;
+			
+			Prefs.set("BigTrace.dCam", (double)(bt.btdata.dCam));
+			Prefs.set("BigTrace.dClipNear", (double)(bt.btdata.dClipNear));
+			Prefs.set("BigTrace.dClipFar", (double)(bt.btdata.dClipFar));
+
+			bt.panel.setCamParams(bt.btdata.dCam, bt.btdata.dClipNear, bt.btdata.dClipFar);
+
+			bt.repaintBVV();
 		}
 	}
 
@@ -565,6 +614,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			scaleChange[d] = Affine3DHelpers.extractScale( transform, d );
 			scaleChange[d] /= btdata.globCal[d];
 			btdata.globCal[d]=newVoxelSize[d];
+			//IJ.log("voxel "+Integer.toString(d)+" "+Double.toString(newVoxelSize[d]));
 			scaleChange[d]*=btdata.globCal[d];
 		}
 		
@@ -582,7 +632,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			m[ r ][ 3 ] = transform.get(r, 3);
 		}
 		newtransform.set(m);
-		bt.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,newtransform,0,0,1000));
+		bt.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,newtransform,0,0,btdata.nAnimationDuration));
 	}
 	
 	public void setRenderMethod(int nRenderType)
