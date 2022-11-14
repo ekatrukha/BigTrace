@@ -6,6 +6,7 @@ import net.imglib2.RealPoint;
 public class MeasureValues implements Measurements {
 	
 	public String roiName;
+	public String roiGroupName;
 	public int roiType;
 	public double length;
 	public double endsDistance;
@@ -20,9 +21,17 @@ public class MeasureValues implements Measurements {
 	{
 		this.roiName = new String(roiname_);	
 	}
+	void setRoiGroupName(String groupname_)
+	{
+		this.roiGroupName = new String(groupname_);	
+	}
 	String getRoiName()
 	{
 		return new String(roiName);
+	}
+	String getRoiGroupName()
+	{
+		return new String(roiGroupName);
 	}
 	public int getRoiType() {
 		

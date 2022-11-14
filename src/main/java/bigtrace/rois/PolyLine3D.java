@@ -396,20 +396,26 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		}
 			
 	}
-
+	/** returns double [i][j] array where for position i
+	 * 0 is length along the line (in scaled units)
+	 * 1 intensity
+	 * 2 x coordinate (in scaled units) 
+	 * 3 y coordinate (in scaled units) 
+	 * 4 z coordinate (in scaled units) **/
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
-		ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation, globCal);
+		final ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation, globCal);
 		
 		if(allPoints == null)
 			return null;
 		
-		double [][] out = new double [2][allPoints.size()];
+		double [][] out = new double [5][allPoints.size()];
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
 		RealRandomAccess<T> ra =   interpolate.realRandomAccess();
 		double [] pos1 = new double[3];
 		double [] pos2 = new double[3];
-		int i,j;
+		double [] xyz;
+		int i,d;
 		
 		//one or
 
@@ -419,20 +425,78 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		ra.setPosition(pos1);
 		//intensity
 		out[1][0]=ra.get().getRealDouble();
-		
+		xyz = Roi3D.scaleGlob(pos1, globCal);
+		for(d=0;d<3;d++)
+		{
+			out[2+d][0]=xyz[d];
+		}
 		for(i=1;i<allPoints.size();i++)
 		{
 			allPoints.get(i).localize(pos2);
+			xyz=Roi3D.scaleGlob(pos2, globCal);
 			ra.setPosition(pos2);
 			//intensity
 			out[1][i]=ra.get().getRealDouble();
-			out[0][i]=out[0][i-1]+LinAlgHelpers.distance(Roi3D.scaleGlob(pos1, globCal), Roi3D.scaleGlob(pos2, globCal));
-			for(j=0;j<3;j++)
+			out[0][i]=out[0][i-1]+LinAlgHelpers.distance(Roi3D.scaleGlob(pos1, globCal),xyz);
+			for(d=0;d<3;d++)
 			{
-				pos1[j]=pos2[j];
+				out[2+d][i]=xyz[d];
+				pos1[d]=pos2[d];
 			}
 		}
 		
+		return out;
+	}
+	/** returns cosine or an angle (from 0 to pi, determined by bCosine) 
+	 *  between dir_vector (assumed to have length of 1.0) and each segment of the line Roi. 
+	 *  The output is double [i][j] array where for position i
+	 * 0 is length along the line (in scaled units)
+	 * 1 orientation (cosine or angle in radians)
+	 * 2 x coordinate (in scaled units) 
+	 * 3 y coordinate (in scaled units) 
+	 * 4 z coordinate (in scaled units) **/
+	public double [][] getCoalignmentProfile(final double [] dir_vector, final double [] globCal, final int nShapeInterpolation, final boolean bCosine)
+	{
+		final ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation, globCal);
+		int i,d;
+		double [][] out = new double [5][allPoints.size()-1];
+		double [] pos1 = new double[3];
+		double [] pos2 = new double[3];
+		double [] segmDir = new double[3];
+		double segmLength;
+		double prevCumLength = 0.0;
+		if(allPoints == null)
+			return null;
+		
+		
+		allPoints.get(0).localize(pos1);
+		pos1 = Roi3D.scaleGlob(pos1, globCal);
+		for(i=1;i<allPoints.size();i++)
+		{
+			
+			allPoints.get(i).localize(pos2);			
+			pos2 = Roi3D.scaleGlob(pos2, globCal);
+			segmLength = LinAlgHelpers.distance(pos1,pos2);
+			out[0][i-1] = prevCumLength+segmLength*0.5;
+			prevCumLength+=segmLength*0.5;
+			LinAlgHelpers.subtract(pos2, pos1, segmDir);
+			for(d=0;d<3;d++)
+			{
+				//position of the middle of segment 
+				out[2+d][i]=pos1[d]+segmDir[d]*0.5;
+				pos1[d]=pos2[d];
+				//normalize segment's direction length
+				segmDir[d]=segmDir[d]/segmLength;
+			}
+			if(bCosine)
+			{
+				out[1][i-1] = LinAlgHelpers.dot(dir_vector, segmDir);
+			}
+			else
+			{
+				out[1][i-1] = Math.acos(LinAlgHelpers.dot(dir_vector, segmDir));
+			}
+		}
 		return out;
 	}
 	/** creates a sampled set of points along the polyline in VOXEL coordinates,

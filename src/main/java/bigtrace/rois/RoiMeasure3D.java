@@ -60,6 +60,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	BigTrace<T> bt;
 	
 	JButton butLineProfile;
+	JButton butLineAlignment;
 	JButton butSlice;
 	JButton butSettings;
 	JButton butMeasure;
@@ -101,8 +102,16 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/line_profile.png");
 		ImageIcon tabIcon = new ImageIcon(icon_path);
 		butLineProfile = new JButton(tabIcon);
-		butLineProfile.setToolTipText("Plot Profile");
+		butLineProfile.setToolTipText("Plot Intensity Profile");
 		butLineProfile.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
+
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/line_align.png");
+		tabIcon = new ImageIcon(icon_path);
+		butLineAlignment = new JButton(tabIcon);
+		butLineAlignment.setToolTipText("Line Coalignment");
+		butLineAlignment.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
+
+		
 
 		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/slice_volume.png");
@@ -119,6 +128,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		butSettings.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 
 		butLineProfile.addActionListener(this);
+		butLineAlignment.addActionListener(this);
 		butSlice.addActionListener(this);
 		butSettings.addActionListener(this);
 
@@ -129,6 +139,8 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		cr.gridx=0;
 		cr.gridy=0;
 		panLineTools.add(butLineProfile,cr);
+		cr.gridx++;
+		panLineTools.add(butLineAlignment,cr);
 		cr.gridx++;
 		JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
 		sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
@@ -345,6 +357,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		MeasureValues val = new MeasureValues();
 		val.setRoiName(roi.getName());
 		val.setRoiType(roi.getType());
+		val.setRoiGroupName(bt.roiManager.getGroupName(roi));
 		if(systemMeasurements>0)
 		{
 			if (roi!=null)//should not be, but just in case
@@ -402,6 +415,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		int row = rt.getCounter()-1;
 		rt.setValue("ROI_Name", row, val.getRoiName());
 		rt.setValue("ROI_Type", row, Roi3D.intTypeToString(val.getRoiType()));
+		rt.setValue("ROI_Group", row, val.getRoiGroupName());
 		if ((systemMeasurements&LENGTH)!=0)
 		{
 			rt.setValue("Length", row, val.length);
@@ -647,7 +661,42 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
 				if (li_profile!=null)
 				{
+					plotProfile = new Plot("Profile ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
+					plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
+					plotProfile.show();
+				}
+				break;
+				
+			case Roi3D.LINE_TRACE:				
+				
+				li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				if(li_profile!=null)
+				{
 					plotProfile = new Plot("Profile ROI "+roi.getName(),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
+					plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
+					plotProfile.show();
+				}
+				break;			
+		}
+	}
+	
+	void measureLineCoalignment(final Roi3D roi)
+	{
+		IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
+		double [][] li_profile;
+		Plot plotProfile;
+		switch (roi.getType())
+		{
+		
+			case Roi3D.POINT:
+				//val.direction = Roi3D.getNaNPoint();
+				break;
+			case Roi3D.POLYLINE:
+				
+				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				if (li_profile!=null)
+				{
+					plotProfile = new Plot("Profile ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
 					plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
 					plotProfile.show();
 				}
@@ -762,6 +811,16 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				measureLineProfile(bt.roiManager.rois.get(jlist.getSelectedIndex()));
 			}
 		}
+		
+		//Coalignment
+		if(e.getSource() == butLineAlignment)
+		{
+			if (jlist.getSelectedIndex()>-1)
+			{
+				measureLineCoalignment(bt.roiManager.rois.get(jlist.getSelectedIndex()));
+			}
+		}
+		
 		//Slice volume
 		if(e.getSource() == butSlice)
 		{

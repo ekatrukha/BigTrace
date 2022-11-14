@@ -1,7 +1,9 @@
 package bigtrace.rois;
 
+
+
 import java.awt.Color;
-import java.awt.Component;
+
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -382,7 +384,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 {		
 		 rois.add(newRoi);		 
 		 //listModel.addElement(newRoi.getName());
-		 listModel.addElement(getGroupRoiName(newRoi));
+		 listModel.addElement(getGroupPrefixRoiName(newRoi));
 		 jlist.setSelectedIndex(rois.size()-1);
 		 activeRoi = rois.size()-1;
 
@@ -417,8 +419,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 return newRoi;
 	 }
 	 
-	 /** returns name of roi with prefix of group name in squared brackets**/
-	 public String getGroupRoiName(Roi3D nRoi)
+	 /** returns ROI name with a short 3 letters group prefix  in squared brackets**/
+	 public String getGroupPrefixRoiName(final Roi3D nRoi)
 	 {
 		 String nFullName;
 		 final int nInd = nRoi.getGroupInd(); 
@@ -433,6 +435,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			 nFullName = "["+groups.get(nInd).getName().substring(0, nGNameLength)+"]"+ nRoi.getName();
 		 }
 		 return nFullName;
+	 }
+	 /** returns the full name of the group for the ROI**/
+	 public String getGroupName(final Roi3D nRoi)
+	 {
+		 final int nInd = nRoi.getGroupInd(); 
+		 if(nInd == 0 || (nInd> groups.size()-1))
+		 {
+			 return sUndefinedGroupName;
+		 }
+		 else
+		 {
+			 return groups.get(nInd).getName();
+		 }
 	 }
 	 
 
@@ -961,7 +976,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				Roi3D activeROI = rois.get(activeRoi);
 				activeROI.setGroup(groups.get(nActiveGroup));
 				activeROI.setGroupInd(nActiveGroup);
-				listModel.setElementAt(getGroupRoiName(activeROI), activeRoi);
+				listModel.setElementAt(getGroupPrefixRoiName(activeROI), activeRoi);
 			}	
 			
 
