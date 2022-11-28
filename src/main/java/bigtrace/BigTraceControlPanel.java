@@ -71,7 +71,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 
 	public JFrame bvv_frame;
 	public JFrame finFrame;
-	JProgressBar progressBar;
+	public JProgressBar progressBar;
 	JButton butSettings;
 
 	

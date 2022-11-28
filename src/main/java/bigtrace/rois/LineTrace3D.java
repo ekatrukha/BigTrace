@@ -456,7 +456,12 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		}
 		return out;
 	}
-	
+	/** returns double [i][j] array where for position i
+	 * 0 is length along the line (in scaled units)
+	 * 1 intensity
+	 * 2 x coordinate (in scaled units) 
+	 * 3 y coordinate (in scaled units) 
+	 * 4 z coordinate (in scaled units) **/
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
 		ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation);
@@ -468,35 +473,31 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 			allPoints = ShapeInterpolation.getSmoothVals(allPoints);
 		}
 		
-		double [][] out = new double [2][allPoints.size()];
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
-		RealRandomAccess<T> ra =   interpolate.realRandomAccess();
-		double [] pos1 = new double[3];
-		double [] pos2 = new double[3];
-		int i,j;
 		
-		//first point
-		out[0][0]=0.0;
-		allPoints.get(0).localize(pos1);
-		ra.setPosition(pos1);
-		//intensity
-		out[1][0]=ra.get().getRealDouble();
-		
-		for(i=1;i<allPoints.size();i++)
-		{
-			allPoints.get(i).localize(pos2);
-			ra.setPosition(pos2);
-			//intensity
-			out[1][i]=ra.get().getRealDouble();
-			out[0][i]=out[0][i-1]+LinAlgHelpers.distance(Roi3D.scaleGlob(pos1, globCal), Roi3D.scaleGlob(pos2, globCal));
-			for(j=0;j<3;j++)
-			{
-				pos1[j]=pos2[j];
-			}
-		}
-		
-		return out;
+		return getIntensityProfilePoints(allPoints,interpolate,globCal);
 	}
+	/** returns cosine or an angle (from 0 to pi, determined by bCosine) 
+	 *  between dir_vector (assumed to have length of 1.0) and each segment of the line Roi. 
+	 *  The output is double [i][j] array where for position i
+	 * 0 is length along the line (in scaled units)
+	 * 1 orientation (cosine or angle in radians)
+	 * 2 x coordinate (in scaled units) 
+	 * 3 y coordinate (in scaled units) 
+	 * 4 z coordinate (in scaled units) **/
+	public double [][] getCoalignmentProfile(final double [] dir_vector, final double [] globCal, final int nShapeInterpolation, final boolean bCosine)
+	{
+		ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation);
+		
+		if(allPoints==null)
+			return null;
+		if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
+		{
+			allPoints = ShapeInterpolation.getSmoothVals(allPoints);
+		}
+		return getCoalignmentProfilePoints(allPoints, dir_vector, globCal,  bCosine);
+	}
+	
 	@Override
 	public void updateRenderVertices() {
 		

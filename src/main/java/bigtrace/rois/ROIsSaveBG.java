@@ -3,11 +3,14 @@ package bigtrace.rois;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 
 import javax.swing.SwingWorker;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
+import ij.IJ;
 
 public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGWorker{
 
@@ -43,11 +46,15 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
 			setProgressState("saving Groups...");
 			roiGM.saveGroups(writer);
 			setProgressState("saving ROIs...");
+			DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+			symbols.setDecimalSeparator('.');
+			DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+			
 			writer.write("BigTrace_ROIs,version," + bt.btdata.sVersion + "\n");
 			writer.write("ImageUnits,"+bt.btdata.sVoxelUnit+"\n");
-			writer.write("ImageVoxelWidth," + bt.btdata.globCal[0] + "\n");
-			writer.write("ImageVoxelHeight," + bt.btdata.globCal[1] + "\n");
-			writer.write("ImageVoxelDepth," + bt.btdata.globCal[2] + "\n");
+			writer.write("ImageVoxelWidth," + df3.format(bt.btdata.globCal[0]) + "\n");
+			writer.write("ImageVoxelHeight," + df3.format(bt.btdata.globCal[1]) + "\n");
+			writer.write("ImageVoxelDepth," + df3.format(bt.btdata.globCal[2]) + "\n");
 			nRoiN=bt.roiManager.rois.size();
 			writer.write("ROIsNumber,"+Integer.toString(nRoiN)+"\n");
 			for(nRoi=0;nRoi<nRoiN;nRoi++)
@@ -65,7 +72,7 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
 			setProgress(100);
 			setProgressState("saving ROIs done.");
 		} catch (IOException e) {	
-			System.err.print(e.getMessage());
+			IJ.log(e.getMessage());
 			//e.printStackTrace();
 		}
 		return null;
@@ -79,5 +86,7 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
 		//unlock user interaction
     	bt.bInputLock = false;
     	bt.roiManager.setLockMode(false);
+		setProgress(100);
+		setProgressState("saving ROIs done.");
     }
 }

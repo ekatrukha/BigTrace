@@ -39,17 +39,14 @@ import javax.swing.event.ListSelectionListener;
 
 import org.joml.Matrix4fc;
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
-import bigtrace.geometry.ShapeInterpolation;
 import bigtrace.gui.GuiMisc;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
-import bigtrace.scene.VisPolyLineScaled;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
@@ -1419,7 +1416,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         if (path==null)
         	return;
         filename = path+sd.getFileName();
+        bt.roiManager.setLockMode(true);
         bt.bInputLock = true;
+        
         //this.setLockMode(true);
         ROIsSaveBG saveTask = new ROIsSaveBG();
         saveTask.sFilename=filename;
@@ -1442,8 +1441,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
         filename = path+openDial.getFileName();
         
-        bt.bInputLock = true;
-        
+
         
         String [] sRoiLoadOptions = new String [] {"Clean load ROIs and groups","Append ROIs as undefined group"};
 		

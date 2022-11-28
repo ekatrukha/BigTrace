@@ -328,6 +328,8 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 		//unlock user interaction
     	bt.bInputLock = false;
         bt.roiManager.setLockMode(false);
+        setProgress(100);
+        setProgressState("loading ROIs done (+voxel calibration).");
 
     }
 }

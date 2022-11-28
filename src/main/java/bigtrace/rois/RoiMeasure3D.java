@@ -7,9 +7,14 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 
 import javax.swing.BoxLayout;
@@ -23,6 +28,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -33,10 +39,12 @@ import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.volume.SplitVolumePlane;
 import bigtrace.volume.VolumeMisc;
+import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
 
 import ij.gui.Plot;
+import ij.io.SaveDialog;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import net.imglib2.Cursor;
@@ -49,6 +57,7 @@ import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 
 public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements ListSelectionListener, ActionListener, Measurements { 
@@ -61,6 +70,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	
 	JButton butLineProfile;
 	JButton butLineAlignment;
+	JToggleButton butMeasureFile;
 	JButton butSlice;
 	JButton butSettings;
 	JButton butMeasure;
@@ -82,6 +92,8 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	
 	private static int intensityInterpolation = (int)Prefs.get("BigTrace.IntInterpolation",INT_NLinear);
 
+	private double [] coalignVector;
+	private boolean bAlignCosine = Prefs.get("BigTrace.bAlignCosine", true);
 	
 	private static ResultsTable systemRT = new ResultsTable();
 	private ResultsTable rt;
@@ -89,9 +101,15 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	public RoiMeasure3D(BigTrace<T> bt)
 	{
 		this.bt = bt;
-
-
 		int nButtonSize = 40;
+			
+		coalignVector = new double [3];
+		
+		for(int d=0;d<2;d++)
+		{
+			coalignVector[d]  = Prefs.get("BigTrace.coalignVec"+Integer.toString(d),0.0);
+		}
+		coalignVector[2]  = Prefs.get("BigTrace.coalignVec2",1.0);
 		
 		rt = systemRT;
 		
@@ -111,6 +129,11 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		butLineAlignment.setToolTipText("Line Coalignment");
 		butLineAlignment.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/measure_file.png");
+		tabIcon = new ImageIcon(icon_path);
+		butMeasureFile = new JToggleButton(tabIcon);
+		butMeasureFile.setToolTipText("Measure all ROIs to file");
+		butMeasureFile.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		
 
 		
@@ -129,6 +152,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 
 		butLineProfile.addActionListener(this);
 		butLineAlignment.addActionListener(this);
+		butMeasureFile.addActionListener(this);
 		butSlice.addActionListener(this);
 		butSettings.addActionListener(this);
 
@@ -141,6 +165,8 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		panLineTools.add(butLineProfile,cr);
 		cr.gridx++;
 		panLineTools.add(butLineAlignment,cr);
+		cr.gridx++;
+		panLineTools.add(butMeasureFile,cr);
 		cr.gridx++;
 		JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
 		sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
@@ -351,6 +377,51 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	
 	}
 	
+	public void dialCoalignmentVector()
+	{
+		JPanel pCoalignVector = new JPanel(new GridLayout(0,2,6,0));
+		
+		ArrayList<NumberField> nfCoalignVector = new ArrayList<NumberField>();
+		int d;
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
+		for(d=0;d<3;d++)
+		{
+			nfCoalignVector.add( new NumberField(4));
+			nfCoalignVector.get(d).setText(df.format(coalignVector[d]));
+		}
+		pCoalignVector.add(new JLabel("X coord: "));
+		pCoalignVector.add(nfCoalignVector.get(0));
+		pCoalignVector.add(new JLabel("Y coord: "));
+		pCoalignVector.add(nfCoalignVector.get(1));
+		pCoalignVector.add(new JLabel("Z coord: "));
+		pCoalignVector.add(nfCoalignVector.get(2));
+		
+		int reply = JOptionPane.showConfirmDialog(null, pCoalignVector, "Coalignment vector coordinates", 
+		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			double [] inVector = new double[3];
+			for(d=0;d<3;d++)
+				inVector[d]=Double.parseDouble(nfCoalignVector.get(d).getText());
+			double len = LinAlgHelpers.length(inVector);
+			if(len<0.000001)
+			{
+				IJ.error("Vector length should be more than zero!");
+			}
+			else
+			{
+				LinAlgHelpers.normalize(inVector);
+				for(d=0;d<3;d++)
+				{
+					coalignVector[d] =inVector[d];
+					Prefs.set("BigTrace.coalignVec"+Integer.toString(d), coalignVector[d]);				
+				}
+			}
+		}
+		
+	}
 	MeasureValues measureRoi(final Roi3D roi)
 	{
 
@@ -402,13 +473,141 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	void measureAll()
 	{
 		ArrayList<MeasureValues> vals = new ArrayList<MeasureValues>();
-		for(int i = 0; i<bt.roiManager.rois.size();i++)
+		if(bt.roiManager.rois.size()>0)
 		{
-			vals.add(measureRoi(bt.roiManager.rois.get(i)));
+		
+			for(int i = 0; i<bt.roiManager.rois.size();i++)
+			{
+				vals.add(measureRoi(bt.roiManager.rois.get(i)));
+			}
+			resetTable(vals);
 		}
-		resetTable(vals);
 	}
 	
+	void measureAllProfiles()
+	{
+		String filename;
+		int j,k;
+		
+		filename = bt.btdata.sFileNameFullImg + "_int_profiles";
+		SaveDialog sd = new SaveDialog("Save ROI Plot Profiles ", filename, ".csv");
+        String path = sd.getDirectory();
+        if (path==null)
+        	return;
+        filename = path+sd.getFileName();
+        bt.roiManager.setLockMode(true);
+        bt.bInputLock = true;
+        try 
+        {
+			final File file = new File(filename);
+			
+			final FileWriter writer = new FileWriter(file);
+			double [][] profile;
+			String sPrefix;
+			String out;
+			Roi3D roi;
+			final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+			symbols.setDecimalSeparator('.');
+			final DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+			
+
+			writer.write("ROI_Name,ROI_Type,ROI_Group,Length,Intensity,X_coord,Y_coord,Z_coord\n");
+			for(int i = 0; i<bt.roiManager.rois.size();i++)
+			{
+				roi = bt.roiManager.rois.get(i);
+				sPrefix = roi.getName() + ","+Roi3D.intTypeToString(roi.getType())+","+bt.roiManager.getGroupName(roi);
+				profile=measureLineProfile(roi, false);
+				if(profile!=null)
+				{
+					for(j=0;j<profile[0].length;j++)
+					{
+						out="".concat(sPrefix);
+						
+						for(k=0;k<5;k++)
+						{
+							out = out.concat(","+df3.format(profile[k][j]));
+						}
+						out = out.concat("\n");
+						writer.write(out);
+					}
+				}
+			}
+			writer.close();
+    	
+        } catch (IOException e) {	
+			IJ.log(e.getMessage());
+			//e.printStackTrace();
+		}
+        bt.roiManager.setLockMode(false);
+        bt.bInputLock = false;
+        bt.btpanel.progressBar.setValue(100);
+        bt.btpanel.progressBar.setString("Measured and saved line profiles of "+Integer.toString(bt.roiManager.rois.size())+" ROIs");
+	}
+	void measureAllCoalignment()
+	{
+		String filename;
+		int j,k;
+		
+		filename = bt.btdata.sFileNameFullImg + "_coalign";
+		SaveDialog sd = new SaveDialog("Save ROI Plot Profiles ", filename, ".csv");
+        String path = sd.getDirectory();
+        if (path==null)
+        	return;
+        filename = path+sd.getFileName();
+        bt.roiManager.setLockMode(true);
+        bt.bInputLock = true;
+        try 
+        {
+			final File file = new File(filename);
+			
+			final FileWriter writer = new FileWriter(file);
+			double [][] profile;
+			String sPrefix;
+			String out;
+			Roi3D roi;
+			final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+			symbols.setDecimalSeparator('.');
+			final DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+			
+			if(bAlignCosine)
+			{
+				writer.write("ROI_Name,ROI_Type,ROI_Group,Length,Cos(Angle_with_"+df3.format(coalignVector[0])+"_"+df3.format(coalignVector[1])+"_"+df3.format(coalignVector[2])+"),X_coord,Y_coord,Z_coord\n");
+			}
+			else
+			{
+				writer.write("ROI_Name,ROI_Type,ROI_Group,Length,Angle_with_"+df3.format(coalignVector[0])+"_"+df3.format(coalignVector[1])+"_"+df3.format(coalignVector[2])+"(Rad),X_coord,Y_coord,Z_coord\n");
+			}
+			for(int i = 0; i<bt.roiManager.rois.size();i++)
+			{
+				roi = bt.roiManager.rois.get(i);
+				sPrefix = roi.getName() + ","+Roi3D.intTypeToString(roi.getType())+","+bt.roiManager.getGroupName(roi);
+				profile=measureLineCoalignment(roi, false);
+				if(profile!=null)
+				{
+					for(j=0;j<profile[0].length;j++)
+					{
+						out="".concat(sPrefix);
+						
+						for(k=0;k<5;k++)
+						{
+							out = out.concat(","+df3.format(profile[k][j]));
+						}
+						out = out.concat("\n");
+						writer.write(out);
+					}
+				}
+			}
+			writer.close();
+    	
+        } catch (IOException e) {	
+			IJ.log(e.getMessage());
+			//e.printStackTrace();
+		}
+        bt.roiManager.setLockMode(false);
+        bt.bInputLock = false;
+        bt.btpanel.progressBar.setValue(100);
+        bt.btpanel.progressBar.setString("Measured and saved coalignment angles of "+Integer.toString(bt.roiManager.rois.size())+" ROIs");
+	}
 	void updateTable(final MeasureValues val, final boolean bShow)
 	{
 		rt.incrementCounter();
@@ -645,10 +844,10 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		
 	}
 	
-	void measureLineProfile(final Roi3D roi)
+	double [][] measureLineProfile(final Roi3D roi, final boolean bMakePlot)
 	{
 		IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		double [][] li_profile;
+		double [][] li_profile = null;
 		Plot plotProfile;
 		switch (roi.getType())
 		{
@@ -659,32 +858,33 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			case Roi3D.POLYLINE:
 				
 				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				if (li_profile!=null)
-				{
-					plotProfile = new Plot("Profile ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
-					plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
-					plotProfile.show();
-				}
 				break;
 				
 			case Roi3D.LINE_TRACE:				
 				
 				li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				if(li_profile!=null)
-				{
-					plotProfile = new Plot("Profile ROI "+roi.getName(),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
-					plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
-					plotProfile.show();
-				}
 				break;			
 		}
+		if (li_profile!=null && bMakePlot)
+		{
+			plotProfile = new Plot("Profile ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
+			plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
+			plotProfile.show();
+		}
+		return li_profile;
 	}
 	
-	void measureLineCoalignment(final Roi3D roi)
+	double [][] measureLineCoalignment(final Roi3D roi, final boolean bMakePlot)
 	{
 		IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		double [][] li_profile;
+		double [][] li_profile = null;
 		Plot plotProfile;
+		String sUnit;
+		
+		if(bAlignCosine)
+			sUnit = "cosine of angle";
+		else
+			sUnit="Angle (rad)";
 		switch (roi.getType())
 		{
 		
@@ -693,26 +893,22 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				break;
 			case Roi3D.POLYLINE:
 				
-				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				if (li_profile!=null)
-				{
-					plotProfile = new Plot("Profile ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
-					plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
-					plotProfile.show();
-				}
+				li_profile = ((PolyLine3D)roi).getCoalignmentProfile(coalignVector, bt.btdata.globCal, BigTraceData.shapeInterpolation, bAlignCosine);
 				break;
 				
 			case Roi3D.LINE_TRACE:				
 				
-				li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				if(li_profile!=null)
-				{
-					plotProfile = new Plot("Profile ROI "+roi.getName(),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
-					plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
-					plotProfile.show();
-				}
+				li_profile = ((LineTrace3D)roi).getCoalignmentProfile(coalignVector, bt.btdata.globCal, BigTraceData.shapeInterpolation, bAlignCosine);
 				break;			
 		}
+		if (li_profile!=null && bMakePlot)
+		{
+
+			plotProfile = new Plot("Alignment angles ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btdata.sVoxelUnit+")",sUnit);
+			plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
+			plotProfile.show();
+		}
+		return li_profile;
 	}
 	
 	public void setInterpolationFactory()
@@ -804,20 +1000,36 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		}
 		
 		//LineProfile
-		if(e.getSource() == butLineProfile)
+		if(e.getSource() == butLineProfile && jlist.getModel().getSize()>0)
 		{
-			if (jlist.getSelectedIndex()>-1)
+			if(butMeasureFile.isSelected())
 			{
-				measureLineProfile(bt.roiManager.rois.get(jlist.getSelectedIndex()));
+				measureAllProfiles();
+			}
+			else
+			{
+				if (jlist.getSelectedIndex()>-1)
+				{
+					measureLineProfile(bt.roiManager.rois.get(jlist.getSelectedIndex()), true);
+				}
 			}
 		}
 		
 		//Coalignment
-		if(e.getSource() == butLineAlignment)
+		if(e.getSource() == butLineAlignment && jlist.getModel().getSize()>0)
 		{
-			if (jlist.getSelectedIndex()>-1)
+			if(butMeasureFile.isSelected())
 			{
-				measureLineCoalignment(bt.roiManager.rois.get(jlist.getSelectedIndex()));
+				dialCoalignmentVector();
+				measureAllCoalignment();
+			}
+			else
+			{
+				if (jlist.getSelectedIndex()>-1)
+				{
+					dialCoalignmentVector();
+					measureLineCoalignment(bt.roiManager.rois.get(jlist.getSelectedIndex()),true);
+				}
 			}
 		}
 		
