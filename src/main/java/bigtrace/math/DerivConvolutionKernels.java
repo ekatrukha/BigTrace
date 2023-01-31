@@ -2,6 +2,11 @@ package bigtrace.math;
 
 
 
+import ij.ImageJ;
+import ij.ImagePlus;
+import ij.process.FloatProcessor;
+
+
 public class DerivConvolutionKernels {
 
 	
@@ -262,7 +267,25 @@ public static double [][] convolve_derive_kernel(double [] sigma, int [] deriv_t
   return kernConv;
 }
 	
+public static void main(String[] args) {
 	
+	double[] maskx = compute_gauss_mask_1(3.0);
+	double[] masky = compute_gauss_mask_1(3.0);
+	
+	int nKernelLength=maskx.length;
+	float [][] kernel = new float[nKernelLength][nKernelLength];
+	for(int i=0;i<nKernelLength;i++)
+		for(int j=0;j<nKernelLength;j++)
+		{
+			kernel[i][j] = (float) (maskx[i]+ masky[j]);
+		}
+	
+	FloatProcessor imp = new FloatProcessor(kernel);
+	ImageJ ij = new ImageJ();
+
+	final ImagePlus ip = new ImagePlus("kernel",imp);
+	ip.show();
+}
 	
 
 

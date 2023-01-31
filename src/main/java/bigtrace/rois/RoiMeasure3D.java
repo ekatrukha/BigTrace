@@ -377,7 +377,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	
 	}
 	
-	public void dialCoalignmentVector()
+	public boolean dialCoalignmentVector()
 	{
 		JPanel pCoalignVector = new JPanel(new GridLayout(0,2,6,0));
 		
@@ -419,7 +419,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 					Prefs.set("BigTrace.coalignVec"+Integer.toString(d), coalignVector[d]);				
 				}
 			}
+			return true;
 		}
+		return false;
 		
 	}
 	MeasureValues measureRoi(final Roi3D roi)
@@ -1020,15 +1022,20 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		{
 			if(butMeasureFile.isSelected())
 			{
-				dialCoalignmentVector();
-				measureAllCoalignment();
+				if(dialCoalignmentVector())
+				{
+					measureAllCoalignment();
+				}
 			}
 			else
 			{
 				if (jlist.getSelectedIndex()>-1)
 				{
-					dialCoalignmentVector();
-					measureLineCoalignment(bt.roiManager.rois.get(jlist.getSelectedIndex()),true);
+					
+					if(dialCoalignmentVector())
+					{
+						measureLineCoalignment(bt.roiManager.rois.get(jlist.getSelectedIndex()),true);
+					}
 				}
 			}
 		}
