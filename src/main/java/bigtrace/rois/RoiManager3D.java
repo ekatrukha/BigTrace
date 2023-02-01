@@ -1211,7 +1211,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			
 			
 			if(bUpdateROIs)
-				{updateROIsDisplay();}
+			{
+					updateROIsDisplay();
+			}
 			
 			//TRACING OPTIONS
 			
@@ -1501,6 +1503,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				roi.updateRenderVertices();
 				//roi.setGroup(groups.get(roi.getGroupInd()));
 			}
+			bt.repaintBVV();
 	}
 	/** marks ROIs of specific group as undefined and updates ROI indexes**/
 	public void markROIsUndefined(int nGroupN)

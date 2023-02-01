@@ -11,8 +11,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -129,10 +127,10 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		butLineAlignment.setToolTipText("Line Coalignment");
 		butLineAlignment.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/measure_file.png");
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/make_plot.png");
 		tabIcon = new ImageIcon(icon_path);
 		butMeasureFile = new JToggleButton(tabIcon);
-		butMeasureFile.setToolTipText("Measure all ROIs to file");
+		butMeasureFile.setToolTipText("Make plot, press for file export");
 		butMeasureFile.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		
 
@@ -999,6 +997,25 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		{
 			bt.btdata.nChAnalysis=cbActiveChannel.getSelectedIndex();
 			bt.roiManager.cbActiveChannel.setSelectedIndex(bt.btdata.nChAnalysis);
+		}
+		
+		//measurement mode for line profile and coalignment
+		if(e.getSource() == butMeasureFile)
+		{
+			if(butMeasureFile.isSelected())
+			{
+				URL icon_path = bigtrace.BigTrace.class.getResource("/icons/file_export.png");
+				ImageIcon tabIcon = new ImageIcon(icon_path);
+				butMeasureFile.setIcon(tabIcon);
+				butMeasureFile.setToolTipText("Export to file, press for plot");
+			}
+			else
+			{
+				URL icon_path = bigtrace.BigTrace.class.getResource("/icons/make_plot.png");
+				ImageIcon tabIcon = new ImageIcon(icon_path);
+				butMeasureFile.setIcon(tabIcon);
+				butMeasureFile.setToolTipText("Make plot, press for file export");
+			}
 		}
 		
 		//LineProfile

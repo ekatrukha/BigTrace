@@ -39,7 +39,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> segments;
 	public VisPointsScaled verticesVis;
-	public ArrayList<VisPolyLineScaled> segmentsVis;
+	public VisPolyLineScaled segmentsVis;
 
 
 	public LineTrace3D(final Roi3DGroup preset_in)
@@ -59,7 +59,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
 		
-		segmentsVis = new ArrayList<VisPolyLineScaled>();
+		segmentsVis = new VisPolyLineScaled();
 		name = "trace"+Integer.toString(this.hashCode());
 
 	}
@@ -80,7 +80,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 			vertices.add(new RealPoint(in_));
 			verticesVis.setVertices(vertices);
 			segments.add(segments_);
-			segmentsVis.add(new VisPolyLineScaled(segments_,lineThickness, lineColor, renderType));
+			segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
 		}
 	}
 	
@@ -94,7 +94,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		if(vertices.size()>0)
 		{
 			segments.remove(segments.size()-1);
-			segmentsVis.remove(segmentsVis.size()-1);
+			segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
 			return true;
 		}
 		else
@@ -118,11 +118,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		
 
 		verticesVis.draw(gl, pvm, screen_size);
-
-		for (VisPolyLineScaled segment : segmentsVis)
-		{
-			segment.draw(gl, pvm);
-		}
+		segmentsVis.draw(gl, pvm);
 		
 		
 	}
@@ -138,11 +134,8 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	public void setLineColor(Color lineColor_) {
 		
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
+		segmentsVis.setColor(lineColor);
 		
-		for (VisPolyLineScaled segment : segmentsVis)
-		{
-			segment.setColor(lineColor);
-		}
 	}
 	
 	@Override
@@ -158,10 +151,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 
 
 		lineThickness=line_thickness;
-		for (int i=0;i<segmentsVis.size();i++)
-		{
-			segmentsVis.get(i).setThickness(lineThickness);
-		}
+		segmentsVis.setThickness(lineThickness);
 		updateRenderVertices();
 	}
 	
@@ -171,10 +161,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		
 		
 		renderType=nRenderType;
-		for (int i=0;i<segmentsVis.size();i++)
-		{
-			segmentsVis.get(i).setRenderType(renderType);
-		}
+		segmentsVis.setRenderType(renderType);
 		updateRenderVertices();
 
 	}	
@@ -502,9 +489,9 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	public void updateRenderVertices() {
 		
 		//update drawing component
-		for(int i=0;i< segments.size(); i++)
+		if(segments.size()>0)
 		{
-			segmentsVis.get(i).setVertices(segments.get(i));
+			segmentsVis.setVertices(makeJointSegment( BigTraceData.shapeInterpolation));
 		}
 		
 	}
