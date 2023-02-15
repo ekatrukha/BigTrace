@@ -137,6 +137,7 @@ public class VisPolyLineScaled
 	{
 		
 		ArrayList< RealPoint > points;
+		
 		//smoothing, if necessary
 		if(bSmooth && BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Subvoxel)
 		{
@@ -151,15 +152,20 @@ public class VisPolyLineScaled
 		{
 			setVerticesCenterLine(points);
 		}
-
-		if(renderType == Roi3D.WIRE)
+		else
 		{
-			setVerticesWire(points);
+			ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points, BigTraceData.sectorN, 0.5*fLineThickness);
+			if(renderType == Roi3D.WIRE)
+			{
+				setVerticesWire(point_contours);
+			}
+			else
+			//(renderType == Roi3D.SURFACE)
+			{
+				setVerticesSurface(point_contours);
+			}
 		}
-		if(renderType == Roi3D.SURFACE)
-		{
-			setVerticesSurface(points);
-		}
+		initialized=false;
 	}
 	
 	
@@ -180,18 +186,18 @@ public class VisPolyLineScaled
 				vertices[i*3+j]=points.get(i).getFloatPosition(j);
 			}			
 		}
-		initialized=false;
+		
 	}
 	
 	/** generates triangulated surface mesh of a pipe around provided points **/
-	public void setVerticesSurface(final ArrayList< RealPoint > points)
+	public void setVerticesSurface(final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 		int i,j, iPoint;
 		int vertShift;
 
-		ArrayList<ArrayList< RealPoint >> allContours = Pipe3D.getCountours(points, BigTraceData.sectorN, 0.5*fLineThickness);
+		//ArrayList<ArrayList< RealPoint >> allContours = Pipe3D.getCountours(points, BigTraceData.sectorN, 0.5*fLineThickness);
 		final int nSectorN = BigTraceData.sectorN;
-		nPointsN=points.size();
+		nPointsN = allContours.size();
 		if(nPointsN>1)
 		{
 			//all vertices
@@ -218,19 +224,19 @@ public class VisPolyLineScaled
 				}
 			}
 		}
-		initialized=false;
+
 	
 	}
 	
 	/** generates a wireframe mesh of a pipe around provided points **/
-	public void setVerticesWire( final ArrayList< RealPoint > points)
+	public void setVerticesWire( final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 		int i,j, iPoint;
 		int vertShift;
 
-		ArrayList<ArrayList< RealPoint >> allContours = Pipe3D.getCountours(points, BigTraceData.sectorN, 0.5*fLineThickness);
+		//ArrayList<ArrayList< RealPoint >> allContours = Pipe3D.getCountours(points, BigTraceData.sectorN, 0.5*fLineThickness);
 		final int nSectorN = BigTraceData.sectorN;
-		nPointsN=points.size();
+		nPointsN = allContours.size();
 		if(nPointsN>1)
 		{
 			//all vertices
@@ -249,7 +255,6 @@ public class VisPolyLineScaled
 			}
 			addLinesAlong();
 		}
-		initialized=false;
 	}
 	
 	/** for the WIRE mode, generates a set of lines running along the main path,
