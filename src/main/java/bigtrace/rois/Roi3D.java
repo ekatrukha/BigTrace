@@ -157,7 +157,7 @@ public interface Roi3D
 		}
 		return out;
 	}
-	/** calculates cumulative length between vert_in 3D points using globCal calibration **/
+	/** calculates cumulative length between vert_in 3D points (without calibration) using globCal calibration **/
 	public static double getSegmentLength(final ArrayList<RealPoint> vert_in, double [] globCal)
 	{
 		double length=0.0;

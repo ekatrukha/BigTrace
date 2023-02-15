@@ -430,8 +430,11 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		
 		return getCoalignmentProfilePoints(allPoints, dir_vector, globCal,  bCosine);
 	}
-	/** creates a sampled set of points along the polyline in VOXEL coordinates,
-	 * based on the shape interpolation value **/
+	
+	/**Creates a sampled set of points along the polyline in VOXEL coordinates,
+	 * based on the shape interpolation value.
+	 * It needs globCal only to sample linear segments with a smallest voxel size step,
+	 * the output is still in VOXEL coordinates **/
 	private ArrayList<RealPoint> makeJointSegment(int nShapeInterpolation, final double [] globCal) {
 		
 		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
@@ -457,6 +460,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 						segment = VolumeMisc.BresenhamWrap(vertices.get(i-1), vertices.get(i));
 						break;
 					case BigTraceData.SHAPE_Subvoxel:
+						//interpolation along the line (taking into account non-isotropic voxel size)
 						segment = subPixelLine(vertices.get(i-1), vertices.get(i),globCal);
 						break;
 					}
@@ -478,8 +482,10 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		}
 		return out;
 	}
-	/** samples polyline with the step which approximate length is equal to 
-	 *  the smallest size of the voxel in all dimensions (stored in globCal variable) **/
+	/** Function samples a line between two 3D points with the step which approximate length is equal to 
+	 *  the smallest size of the voxel in all dimensions (stored in globCal variable).
+	 *  Since voxel can have different size in any dimension, it takes that to account.
+	 *  Returns a set of points in VOXEL (not space) coordinates. **/
 	public static ArrayList<RealPoint> subPixelLine(final RealPoint RP1, final RealPoint RP2, final double [] globCal)
 	{
 		ArrayList<RealPoint> out = new ArrayList<RealPoint>();

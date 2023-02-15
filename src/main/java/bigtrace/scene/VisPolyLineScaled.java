@@ -136,8 +136,20 @@ public class VisPolyLineScaled
 		return renderType;
 		
 	}
-	public void setVertices( ArrayList< RealPoint > points)
+	public void setVertices( ArrayList< RealPoint > points_)
 	{
+		
+		ArrayList< RealPoint > points;
+		//smoothing, if necessary
+		if(bSmooth && BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Subvoxel)
+		{
+			points= ShapeInterpolation.getSmoothVals(points_);
+		}
+		else
+		{
+			points = points_;
+		}	
+		
 		if(renderType == Roi3D.OUTLINE)
 		{
 			setVerticesCenterLine(points);
@@ -153,22 +165,11 @@ public class VisPolyLineScaled
 		}
 	}
 	
-	public void setVerticesCenterLine( final ArrayList< RealPoint > points_)
+	/** simple polyline, not cylindrical **/
+	public void setVerticesCenterLine(final ArrayList< RealPoint > points)
 	{
 		
 		int i,j;
-
-		ArrayList< RealPoint > points;
-		
-		//smoothing, if necessary
-		if(bSmooth && BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Subvoxel)
-		{
-			points= ShapeInterpolation.getSmoothVals(points_);
-		}
-		else
-		{
-			points = points_;
-		}	
 		
 		nPointsN=points.size();
 		
@@ -184,12 +185,12 @@ public class VisPolyLineScaled
 		initialized=false;
 	}
 	
-	/** generates triangulated surface mesh of a pipe around provided points **/
-	public void setVerticesSurface(final ArrayList< RealPoint > points_)
+	/** given a set of points (polyline) generates "cylindrical contours/circles" 
+	 *  around each point with a thickness of fLineThickness (diameter).
+	 *  Each contour has BigTraceData.sectorN sectors**/
+	public ArrayList<ArrayList< RealPoint >> getCountours(final ArrayList< RealPoint > points)
 	{
-		
-		int i,j, iPoint;
-        int vertShift;
+		int i, iPoint;
 		double [][] path = new double [3][3];
 		double [] prev_segment = new double [3];
 		double [] next_segment = new double [3];
@@ -198,46 +199,46 @@ public class VisPolyLineScaled
 		Plane3D planeBetween =new Plane3D();
 		ArrayList<Line3D> extrudeLines;
 		Line3D contLine;
-		ArrayList< RealPoint > contour_curr;
-		ArrayList< RealPoint > contour_next;
-		ArrayList< RealPoint > points;
-		
-		//smoothing, if necessary		
-		if(bSmooth && BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Subvoxel)
-		{
-			points= ShapeInterpolation.getSmoothVals(points_);
-		}
-		else
-		{
-			points = points_;
-		}
-		
-		
+		int contour_curr;
+		int contour_next;
+		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<ArrayList<RealPoint>>();
+	
+
 		final int nSectorN = BigTraceData.sectorN;
 		nPointsN=points.size();
 		if(nPointsN>1)
 		{
-			vertices = new float [2*(nSectorN+1)*3*nPointsN];
 	
 			//first contour around first line
+			
+			//first two points
 			for (i=0;i<2;i++)
 			{
 				points.get(i).localize(path[i]);
 			}
-			
+			//vector between first two points 
 			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
 			LinAlgHelpers.normalize(prev_segment);
 			RealPoint iniVec = new RealPoint(prev_segment );			
 			RealPoint zVec = new RealPoint(0.0,0.0,1.0);
-			
+			//transform that rotates vector (0,0,1) to be aligned with the vector between first two points
 			AffineTransform3D ini_rot = Intersections3D.alignVectors( iniVec,zVec);
+			//also we want to move it to the beginning of the curve
 			ini_rot.translate(path[0]);
-			contour_curr = iniSectorContour();
+			//generate a "circle/contour" with given sectors N in XY plane
+			contour_curr = 0;
+			allCountours.add(iniSectorContour(0.5*fLineThickness));
+			
+			//not translate it to the position of the beginning
+			//and align it with the vector between first two point
 			for(i=0;i<nSectorN;i++)
 			{
-				ini_rot.apply(contour_curr.get(i), contour_curr.get(i));
+				ini_rot.apply(allCountours.get(contour_curr).get(i), allCountours.get(contour_curr).get(i));
 			}
-			ini_rot.apply(zVec, zVec);
+			
+			//just a verification, probably not needed
+			//ini_rot.apply(zVec, zVec);
+			
 			
 			//other contours, inbetween
 			for (iPoint=1;iPoint<(points.size()-1);iPoint++)
@@ -247,6 +248,7 @@ public class VisPolyLineScaled
 				points.get(iPoint+1).localize(path[2]);
 				LinAlgHelpers.subtract(path[2], path[1], next_segment);
 				LinAlgHelpers.normalize(next_segment);
+				
 				//2) average angle/vector between segments
 				LinAlgHelpers.add(prev_segment, next_segment, plane_norm);
 				LinAlgHelpers.scale(plane_norm, 0.5, plane_norm);
@@ -263,38 +265,24 @@ public class VisPolyLineScaled
 					for(i=0;i<nSectorN;i++)
 					{
 						contLine=new Line3D();
-						contour_curr.get(i).localize(cont_point);
+						allCountours.get(contour_curr).get(i).localize(cont_point);
 						contLine.setVectors(cont_point, prev_segment);
 						extrudeLines.add(contLine);
 					}
 					
 					//intersections
-					contour_next = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
+					allCountours.add(Intersections3D.planeLinesIntersect(planeBetween, extrudeLines));
+					contour_next =contour_curr+1;
+					//contour_next = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
 				}
 				else
 				{
+					allCountours.add(allCountours.get(contour_curr));
 					//reversed direction
-					contour_next=contour_curr;
+					contour_next=contour_curr+1;
 				}
 				
-				//add to drawing vertices triangles
-				vertShift = (iPoint-1)*(nSectorN+1)*2*3;
-				for (i=0;i<nSectorN; i++)
-				{
-					for (j=0;j<3; j++)
-					{
-						vertices[vertShift+i*6+j]=contour_curr.get(i).getFloatPosition(j);
-						vertices[vertShift+i*6+3+j]=contour_next.get(i).getFloatPosition(j);
 
-					}				
-				}
-				//last one closing circles
-				for (j=0;j<3; j++)
-				{
-					vertices[vertShift+i*6+j]=contour_curr.get(0).getFloatPosition(j);
-					vertices[vertShift+i*6+3+j]=contour_next.get(0).getFloatPosition(j);
-
-				}
 				//prepare to move forward
 				for(i=0;i<3;i++)
 				{
@@ -313,178 +301,86 @@ public class VisPolyLineScaled
 			for(i=0;i<nSectorN;i++)
 			{
 				contLine=new Line3D();
-				contour_curr.get(i).localize(cont_point);
+				allCountours.get(contour_curr).get(i).localize(cont_point);
 				contLine.setVectors(cont_point, plane_norm);
 				extrudeLines.add(contLine);
 			}
 			//intersections
-			contour_next = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
+			allCountours.add(Intersections3D.planeLinesIntersect(planeBetween, extrudeLines));
+			//contour_next = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
 			
-			//add to drawing vertices
-			vertShift=(nPointsN-2)*(nSectorN+1)*2*3;
-			//vertShift = (nPointsN-1)*nSectorN*3;
-			for (i=0;i<nSectorN; i++)
-			{
-				for (j=0;j<3; j++)
-				{
-					//vertices[vertShift+i*3+j]=contour.get(i).getFloatPosition(j);
-					vertices[vertShift+i*6+j]=contour_curr.get(i).getFloatPosition(j);
-					vertices[vertShift+i*6+3+j]=contour_next.get(i).getFloatPosition(j);
-				}				
-			}
-			//last one closing circles
-			for (j=0;j<3; j++)
-			{
-				vertices[vertShift+i*6+j]=contour_curr.get(0).getFloatPosition(j);
-				vertices[vertShift+i*6+3+j]=contour_next.get(0).getFloatPosition(j);
 
-			}
 		}
-		//addLinesAlong();
 		initialized=false;
+		return allCountours;
+		
 	}
-	
-	
-	/** generates a wireframe mesh of a pipe around provided points **/
-	public void setVerticesWire( final ArrayList< RealPoint > points_)
-	//public void setVerticesWire( ArrayList< RealPoint > points)
+	/** generates triangulated surface mesh of a pipe around provided points **/
+	public void setVerticesSurface(final ArrayList< RealPoint > points)
 	{
-		
 		int i,j, iPoint;
-        int vertShift;
-		double [][] path = new double [3][3];
-		double [] prev_segment = new double [3];
-		double [] next_segment = new double [3];
-		double [] plane_norm = new double[3];
-		double [] cont_point = new double [3];
-		Plane3D planeBetween =new Plane3D();
-		ArrayList<Line3D> extrudeLines;
-		Line3D contLine;
-		ArrayList< RealPoint > contour;
-		ArrayList< RealPoint > points;
-		
-		//smoothing, if necessary
-		if(bSmooth && BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Subvoxel)
-		{
-			points= ShapeInterpolation.getSmoothVals(points_);
-		}
-		else
-		{
-			points = points_;
-		}
-		
+		int vertShift;
+
+		ArrayList<ArrayList< RealPoint >> allContours = getCountours(points);
 		final int nSectorN = BigTraceData.sectorN;
 		nPointsN=points.size();
 		if(nPointsN>1)
 		{
-			vertices = new float [2*nSectorN*3*nPointsN];
-	
-			//first contour around first line
-			for (i=0;i<2;i++)
+			//all vertices
+			vertices = new float [2*(nSectorN+1)*3*nPointsN];
+			for (iPoint=1;iPoint<nPointsN;iPoint++)
 			{
-				points.get(i).localize(path[i]);
-			}
-			
-			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
-			LinAlgHelpers.normalize(prev_segment);
-			RealPoint iniVec = new RealPoint(prev_segment );
-			RealPoint zVec = new RealPoint(0.0,0.0,1.0);
-			
-			AffineTransform3D ini_rot = Intersections3D.alignVectors( iniVec,zVec);
-			ini_rot.translate(path[0]);
-			contour = iniSectorContour();
-			for(i=0;i<nSectorN;i++)
-			{
-				ini_rot.apply(contour.get(i), contour.get(i));
-			}
-			ini_rot.apply(zVec, zVec);
-			for (i=0;i<nSectorN; i++)
-			{
+				//add to drawing vertices triangles
+				vertShift = (iPoint-1)*(nSectorN+1)*2*3;
+				for (i=0;i<nSectorN; i++)
+				{
+					for (j=0;j<3; j++)
+					{
+						vertices[vertShift+i*6+j]=allContours.get(iPoint-1).get(i).getFloatPosition(j);
+						vertices[vertShift+i*6+3+j]=allContours.get(iPoint).get(i).getFloatPosition(j);
+
+					}				
+				}
+				//last one closing circles
 				for (j=0;j<3; j++)
 				{
-					vertices[i*3+j]=contour.get(i).getFloatPosition(j);
-				}			
-			}
-			
-			//other contours, inbetween
-			for (iPoint=1;iPoint<(points.size()-1);iPoint++)
-			{
-				//find a vector that is inbetween two next segments
-				//1) orientation of the segment
-				points.get(iPoint+1).localize(path[2]);
-				LinAlgHelpers.subtract(path[2], path[1], next_segment);
-				
-				LinAlgHelpers.normalize(next_segment);
-				//2) average angle/vector between segments
-				LinAlgHelpers.add(prev_segment, next_segment, plane_norm);
-				//calculate intersection
-				// also there is a special case: reverse, basically do nothing
-				//use the same contour
-				if(LinAlgHelpers.length(plane_norm)>0.0000001)
-				{					
-					//3) plane of segments cross-section
-					planeBetween.setVectors(path[1], plane_norm);
-					//4) make a set of lines emanating from the current contour
-					extrudeLines = new ArrayList<Line3D>();
-					for(i=0;i<nSectorN;i++)
-					{
-						contLine=new Line3D();
-						contour.get(i).localize(cont_point);
-						contLine.setVectors(cont_point, prev_segment);
-						extrudeLines.add(contLine);
-					}
-					
-					//intersections
-					contour = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
+					vertices[vertShift+i*6+j]=allContours.get(iPoint-1).get(0).getFloatPosition(j);
+					vertices[vertShift+i*6+3+j]=allContours.get(iPoint).get(0).getFloatPosition(j);
+
 				}
-				
-				//add to drawing vertices
+			}
+		}
+		initialized=false;
+	
+	}
+	
+	/** generates a wireframe mesh of a pipe around provided points **/
+	public void setVerticesWire( final ArrayList< RealPoint > points)
+	{
+		int i,j, iPoint;
+		int vertShift;
+
+		ArrayList<ArrayList< RealPoint >> allContours = getCountours(points);
+		final int nSectorN = BigTraceData.sectorN;
+		nPointsN=points.size();
+		if(nPointsN>1)
+		{
+			//all vertices
+			vertices = new float [2*nSectorN*3*nPointsN];
+			for (iPoint=0;iPoint<nPointsN;iPoint++)
+			{
+				//add to drawing vertices triangles
 				vertShift = iPoint*nSectorN*3;
 				for (i=0;i<nSectorN; i++)
 				{
 					for (j=0;j<3; j++)
 					{
-						vertices[vertShift+i*3+j]=contour.get(i).getFloatPosition(j);
+						vertices[vertShift+i*3+j]=allContours.get(iPoint).get(i).getFloatPosition(j);
 					}				
 				}
-				
-				//prepare to move forward
-				for(i=0;i<3;i++)
-				{
-					prev_segment[i]=next_segment[i];
-					path[1][i]=path[2][i];
-				}
-			
-			}
-			//last point
-			points.get(nPointsN-2).localize(path[0]);
-			points.get(nPointsN-1).localize(path[1]);
-			LinAlgHelpers.subtract(path[0],path[1],plane_norm);
-			planeBetween.setVectors(path[1], plane_norm);
-			
-			extrudeLines = new ArrayList<Line3D>();
-			for(i=0;i<nSectorN;i++)
-			{
-				contLine=new Line3D();
-				contour.get(i).localize(cont_point);
-				contLine.setVectors(cont_point, plane_norm);
-				extrudeLines.add(contLine);
-			}
-			//intersections
-			contour = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
-			
-			//add to drawing vertices
-			vertShift = (nPointsN-1)*nSectorN*3;
-			for (i=0;i<nSectorN; i++)
-			{
-				for (j=0;j<3; j++)
-				{
-					vertices[vertShift+i*3+j]=contour.get(i).getFloatPosition(j);
-				}				
 			}
 			addLinesAlong();
 		}
-		
 		initialized=false;
 	}
 	
@@ -504,7 +400,7 @@ public class VisPolyLineScaled
 		
 	}
 	/** generates initial (first point) contour around path in XY plane **/
-	private ArrayList< RealPoint > iniSectorContour()
+	private ArrayList< RealPoint > iniSectorContour(double dRadius)
 	{
 		 ArrayList< RealPoint > contourXY = new  ArrayList< RealPoint > ();
 		 
@@ -514,7 +410,7 @@ public class VisPolyLineScaled
 		 
 		 for (int i=0;i<nSectorN;i++)
 		 {
-			 contourXY.add(new RealPoint(fLineThickness*0.5*Math.cos(dAngle),fLineThickness*0.5*Math.sin(dAngle),0.0));
+			 contourXY.add(new RealPoint(dRadius*Math.cos(dAngle),dRadius*Math.sin(dAngle),0.0));
 			 dAngle+=dAngleInc;
 		 }
 		 

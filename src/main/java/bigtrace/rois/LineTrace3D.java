@@ -455,10 +455,10 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		
 		if(allPoints==null)
 			return null;
-		if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
-		{
-			allPoints = ShapeInterpolation.getSmoothVals(allPoints);
-		}
+		//if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
+		//{
+		//	allPoints = ShapeInterpolation.getSmoothVals(allPoints);
+		//}
 		
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
 		
@@ -478,10 +478,10 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		
 		if(allPoints==null)
 			return null;
-		if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
-		{
-			allPoints = ShapeInterpolation.getSmoothVals(allPoints);
-		}
+		//if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
+		//{
+		//	allPoints = ShapeInterpolation.getSmoothVals(allPoints);
+		//}
 		return getCoalignmentProfilePoints(allPoints, dir_vector, globCal,  bCosine);
 	}
 	
