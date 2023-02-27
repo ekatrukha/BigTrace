@@ -21,6 +21,9 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 	public BigTrace bt;
 	public String sFilename;
 	public int nLoadMode;
+	String sFinalOut = "";
+	double [] globCalNew;
+	String sUnits = "";
 	
 	@Override
 	public String getProgressState()
@@ -53,11 +56,12 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
         String sName = "";
         int nRoiType = Roi3D.POINT;
         int nRenderType = 0;
-        double [] globCal  = new double [3];
-        globCal[0]= Double.NaN;
-        globCal[1]= Double.NaN;
-        globCal[2]= Double.NaN;
-        String sUnits = "";
+    	String sUnits = "";
+    	double [] globCalNew  = new double [3];
+        globCalNew[0]= Double.NaN;
+        globCalNew[1]= Double.NaN;
+        globCalNew[2]= Double.NaN;
+        
         
        
         Roi3DGroupManager roiGM;
@@ -148,13 +152,13 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 					  sUnits=new String(line_array[1]);
 					  break;
 				  case "ImageVoxelWidth":
-					  globCal[0]=Double.parseDouble(line_array[1]);
+					  globCalNew[0]=Double.parseDouble(line_array[1]);
 					  break;
 				  case "ImageVoxelHeight":
-					  globCal[1]=Double.parseDouble(line_array[1]);
+					  globCalNew[1]=Double.parseDouble(line_array[1]);
 					  break;
 				  case "ImageVoxelDepth":
-					  globCal[2]=Double.parseDouble(line_array[1]);
+					  globCalNew[2]=Double.parseDouble(line_array[1]);
 					  break;
 					  
 				  case "BT_Roi":
@@ -290,15 +294,20 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 
 	        br.close();
 			setProgress(100);
-			setProgressState("loading ROIs done.");
+			sFinalOut="loading ROIs done.";
+			setProgressState(sFinalOut);
 			/** load voxel calibration **/
 			
-			if((!Double.isNaN(globCal[0]))&&(!Double.isNaN(globCal[1]))&&(!Double.isNaN(globCal[2]))&&(!sUnits.equals("")))
+			if((!Double.isNaN(globCalNew[0]))&&(!Double.isNaN(globCalNew[1]))&&(!Double.isNaN(globCalNew[2]))&&(!sUnits.equals("")))
 			{
+
 					bt.btdata.sVoxelUnit = new String(sUnits);
-					bt.btpanel.voxelSizePanel.setVoxelSize(globCal, sUnits);
+					bt.btpanel.voxelSizePanel.setVoxelSize(globCalNew, sUnits);
+					sFinalOut = "loading ROIs done (+voxel calibration).";
+					
+					setProgressState(sFinalOut);		
 			}
-			setProgressState("loading ROIs done (+voxel calibration).");
+			
 
 		}
 		//catching errors in file opening
@@ -329,7 +338,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
     	bt.bInputLock = false;
         bt.roiManager.setLockMode(false);
         setProgress(100);
-        setProgressState("loading ROIs done (+voxel calibration).");
+        setProgressState(sFinalOut);
 
     }
 }

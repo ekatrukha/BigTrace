@@ -39,6 +39,7 @@ import bigtrace.BigTraceData;
 import btbvv.util.BvvStackSource;
 import ij.Prefs;
 import net.imglib2.FinalRealInterval;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
@@ -632,7 +633,9 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			m[ r ][ 3 ] = transform.get(r, 3);
 		}
 		newtransform.set(m);
-		bt.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,newtransform,0,0,btdata.nAnimationDuration));
+		
+		AffineTransform3D final_transform = bt.getCenteredViewTransform(newtransform, bt.sources.get(btdata.nChAnalysis), 1.0);
+		bt.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,final_transform ,0,0,btdata.nAnimationDuration));
 	}
 	
 	public void setRenderMethod(int nRenderType)

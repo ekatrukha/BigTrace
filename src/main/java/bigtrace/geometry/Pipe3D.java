@@ -96,8 +96,10 @@ public class Pipe3D {
 					allCountours.add(Intersections3D.planeLinesIntersect(planeBetween, extrudeLines));
 					
 					//test
-					//allCountours.add(normalizeSector(Intersections3D.planeLinesIntersect(planeBetween, extrudeLines),points.get(iPoint),dRadius));
-					
+					//if (bNormalize)
+					//{
+					//	allCountours.add(normalizeSector(Intersections3D.planeLinesIntersect(planeBetween, extrudeLines),points.get(iPoint),dRadius));
+					//}
 					
 					
 					contour_next =contour_curr+1;
@@ -119,7 +121,8 @@ public class Pipe3D {
 				}
 				contour_curr=contour_next;
 			}
-			//last point
+			
+			//THE last point
 			points.get(nPointsNum-2).localize(path[0]);
 			points.get(nPointsNum-1).localize(path[1]);
 			LinAlgHelpers.subtract(path[0],path[1],plane_norm);
@@ -135,7 +138,12 @@ public class Pipe3D {
 			}
 			//intersections
 			allCountours.add(Intersections3D.planeLinesIntersect(planeBetween, extrudeLines));
-			//contour_next = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
+			
+			//test
+			//if (bNormalize)
+			//{
+			//	allCountours.add(normalizeSector(Intersections3D.planeLinesIntersect(planeBetween, extrudeLines),points.get(nPointsNum-1),dRadius));
+			//}
 			
 		}
 		return allCountours;
