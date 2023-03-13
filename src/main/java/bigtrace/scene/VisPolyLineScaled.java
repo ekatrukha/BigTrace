@@ -37,7 +37,6 @@ import bigtrace.geometry.ShapeInterpolation;
 import bigtrace.rois.Roi3D;
 import bigtrace.volume.VolumeMisc;
 import net.imglib2.RealPoint;
-import net.imglib2.util.LinAlgHelpers;
 
 import java.awt.Color;
 import java.nio.FloatBuffer;
@@ -154,7 +153,18 @@ public class VisPolyLineScaled
 		}
 		else
 		{
-			ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points, BigTraceData.sectorN, 0.5*fLineThickness);
+			//move to scaled space
+			points = Roi3D.scaleGlob(points, BigTraceData.globCal);
+			//min voxel dimension
+			double dMin = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
+			//build a pipe in scaled space
+			ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points, BigTraceData.sectorN, 0.5*fLineThickness*dMin);
+			//return to voxel space			
+			for(int i=0;i<point_contours.size();i++)
+			{
+				point_contours.set(i, Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
+			}
+				
 			if(renderType == Roi3D.WIRE)
 			{
 				setVerticesWire(point_contours);

@@ -1495,7 +1495,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	}
 	
 	/** updates all ROIs images**/
-	void updateROIsDisplay()
+	public void updateROIsDisplay()
 	{
 
 			for (Roi3D roi : rois)

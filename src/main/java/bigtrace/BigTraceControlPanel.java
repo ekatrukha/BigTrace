@@ -636,6 +636,8 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		
 		AffineTransform3D final_transform = bt.getCenteredViewTransform(newtransform, bt.sources.get(btdata.nChAnalysis), 1.0);
 		bt.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,final_transform ,0,0,btdata.nAnimationDuration));
+		//recalculate ROI shapes
+		bt.roiManager.updateROIsDisplay();
 	}
 	
 	public void setRenderMethod(int nRenderType)

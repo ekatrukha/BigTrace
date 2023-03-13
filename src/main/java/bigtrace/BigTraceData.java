@@ -28,7 +28,7 @@ public class BigTraceData {
 	public long [][] nDimCurr = new long [2][3];
 	
 	/** global voxel size (for now one for all)  **/
-	public double [] globCal = new double [3];
+	public static double [] globCal = new double [3];
 	
 	/** unit of voxel **/
 	public String sVoxelUnit = "pixel";
