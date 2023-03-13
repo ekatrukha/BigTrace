@@ -54,7 +54,7 @@ public class CubicSpline {
 	values of the second derivative at each of the data points
 	y2[0..n-1] for use in the evalSpline() function. 
 	Uses provided (start_deriv, end_deriv) values of first derivatives at ends.
-	If  start or end_deriv >0.99e30 , assumes corresponding second derivative is zero*/
+	If  start or end_deriv are larger than 0.99e30 , assumes corresponding second derivative is zero*/
 	public static double [] initSpline(final float[] x, final float[] y, final double start_deriv, final double end_deriv)
 	{
 		int j;
