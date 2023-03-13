@@ -435,7 +435,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	 * based on the shape interpolation value.
 	 * It needs globCal only to sample linear segments with a smallest voxel size step,
 	 * the output is still in VOXEL coordinates **/
-	private ArrayList<RealPoint> makeJointSegment(int nShapeInterpolation, final double [] globCal) {
+	public ArrayList<RealPoint> makeJointSegment(int nShapeInterpolation, final double [] globCal) {
 		
 		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
 		ArrayList<RealPoint> segment = new ArrayList<RealPoint>();

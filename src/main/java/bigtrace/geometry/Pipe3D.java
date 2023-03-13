@@ -17,7 +17,7 @@ public class Pipe3D {
 		int i, iPoint;
 		double [][] path = new double [3][3];
 		double [] prev_segment = new double [3];
-		double [] next_segment = new double [3];
+		//double [] next_segment = new double [3];
 		double [] plane_norm = new double[3];
 		double [] cont_point = new double [3];
 		Plane3D planeBetween =new Plane3D();
@@ -25,11 +25,15 @@ public class Pipe3D {
 		Line3D contLine;
 		int contour_curr;
 		int contour_next;
+		ArrayList<double []> tangents;
 		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<ArrayList<RealPoint>>();
 	
 		int nPointsNum=points.size();
 		if(nPointsNum>1)
 		{
+			
+			//calculate tangents at each point
+			tangents = getTangentsAverage(points);
 	
 			//first contour around first line
 			
@@ -38,9 +42,10 @@ public class Pipe3D {
 			{
 				points.get(i).localize(path[i]);
 			}
+			
 			//vector between first two points 
-			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
-			LinAlgHelpers.normalize(prev_segment);
+			//equal to initial tangent vector
+			prev_segment = tangents.get(0);
 			RealPoint iniVec = new RealPoint(prev_segment );			
 			RealPoint zVec = new RealPoint(0.0,0.0,1.0);
 			//transform that rotates vector (0,0,1) to be aligned with the vector between first two points
@@ -65,24 +70,16 @@ public class Pipe3D {
 			//other contours, inbetween
 			for (iPoint=1;iPoint<(points.size()-1);iPoint++)
 			{
-				//find a vector that is inbetween two next segments
-				//1) orientation of the segment
-				points.get(iPoint+1).localize(path[2]);
-				LinAlgHelpers.subtract(path[2], path[1], next_segment);
-				LinAlgHelpers.normalize(next_segment);
-				
-				//2) average angle/vector between segments
-				LinAlgHelpers.add(prev_segment, next_segment, plane_norm);
-				LinAlgHelpers.scale(plane_norm, 0.5, plane_norm);
-		
+				//tangent vector at this point between segments
+				plane_norm = tangents.get(iPoint);
 				//calculate intersection
 				// also there is a special case: reverse, basically do nothing
 				// use the same contour
 				if(LinAlgHelpers.length(plane_norm)>0.0000001)
 				{					
-					//3) plane of segments cross-section
+					// plane of segments cross-section
 					planeBetween.setVectors(path[1], plane_norm);
-					//4) make a set of lines emanating from the current contour
+					//make a set of lines emanating from the current contour
 					extrudeLines = new ArrayList<Line3D>();
 					for(i=0;i<nSectorN;i++)
 					{
@@ -100,10 +97,8 @@ public class Pipe3D {
 					//{
 					//	allCountours.add(normalizeSector(Intersections3D.planeLinesIntersect(planeBetween, extrudeLines),points.get(iPoint),dRadius));
 					//}
-					
-					
-					contour_next =contour_curr+1;
-					//contour_next = Intersections3D.planeLinesIntersect(planeBetween, extrudeLines);
+									
+					contour_next =contour_curr+1;					
 				}
 				else
 				{
@@ -112,11 +107,13 @@ public class Pipe3D {
 					contour_next=contour_curr+1;
 				}
 				
+				points.get(iPoint+1).localize(path[2]);
+				LinAlgHelpers.subtract(path[2], path[1], prev_segment);
+				LinAlgHelpers.normalize(prev_segment);
 
-				//prepare to move forward
+				//prepare to move forward, switch indexes
 				for(i=0;i<3;i++)
-				{
-					prev_segment[i]=next_segment[i];
+				{					
 					path[1][i]=path[2][i];
 				}
 				contour_curr=contour_next;
@@ -125,7 +122,9 @@ public class Pipe3D {
 			//THE last point
 			points.get(nPointsNum-2).localize(path[0]);
 			points.get(nPointsNum-1).localize(path[1]);
-			LinAlgHelpers.subtract(path[0],path[1],plane_norm);
+			//last segment is also just a last tangent (as with first)
+			plane_norm = tangents.get(nPointsNum-1);
+			
 			planeBetween.setVectors(path[1], plane_norm);
 			
 			extrudeLines = new ArrayList<Line3D>();
@@ -149,6 +148,59 @@ public class Pipe3D {
 		return allCountours;
 		
 	}
+	/** given a set of points defining polyline the function calculates 
+	 * tangent vector (not normalized) at each point as a average angle 
+	 * between two adjacent segments **/
+	public static ArrayList<double []> getTangentsAverage(final ArrayList< RealPoint > points)
+	{
+		int i,j;
+		ArrayList<double []> tangents = new ArrayList<double []>();
+		double [][] path = new double [3][3];
+		double [] prev_segment = new double [3];
+		double [] next_segment = new double [3];
+		double [] tanVector = new double [3];
+		int nPointsNum=points.size();
+		if(nPointsNum>1)
+		{
+			//first two points
+			for (i=0;i<2;i++)
+			{
+				points.get(i).localize(path[i]);
+			}
+			//vector between first two points 
+			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
+			LinAlgHelpers.normalize(prev_segment);
+			tangents.add(prev_segment.clone());
+			//the middle
+			for (i=1;i<(points.size()-1);i++)
+			{
+				//next segment
+				points.get(i+1).localize(path[2]);
+				LinAlgHelpers.subtract(path[2], path[1], next_segment);
+				LinAlgHelpers.normalize(next_segment);
+
+				//2) average angle/vector between segments
+				LinAlgHelpers.add(prev_segment, next_segment, tanVector);
+				LinAlgHelpers.scale(tanVector, 0.5, tanVector);
+				tangents.add(tanVector.clone());
+				
+				//prepare to move forward
+				for(j=0;j<3;j++)
+				{
+					prev_segment[j]=next_segment[j];
+					path[1][j]=path[2][j];
+				}
+
+			}
+			points.get(nPointsNum-2).localize(path[0]);
+			points.get(nPointsNum-1).localize(path[1]);
+			LinAlgHelpers.subtract(path[0],path[1],tanVector);
+			LinAlgHelpers.normalize(tanVector);
+			tangents.add(tanVector.clone());
+		}
+		return tangents;
+	}
+	
 	/** generates initial (first point) contour around path in XY plane **/
 	public static ArrayList< RealPoint > iniSectorContour(double dRadius, final int nSectorN)
 	{
@@ -166,7 +218,7 @@ public class Pipe3D {
 		 return contourXY;
 	}
 	
-	//normalize distances test
+	/** for each contour normalizes distances till center **/
 	public static ArrayList< RealPoint >  normalizeSector(final ArrayList< RealPoint > points, final RealPoint center, final double dRadius)
 	{
 		int i;

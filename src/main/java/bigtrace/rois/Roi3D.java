@@ -121,6 +121,20 @@ public interface Roi3D
 		}
 		return out;
 	}
+	
+	/**
+	 * transforms realpoint in pixel coordinates to space units (ArrayList version)
+	 * **/
+	public static ArrayList<RealPoint> scaleGlob(final ArrayList<RealPoint> in, final double [] globCal)
+	{
+		ArrayList<RealPoint> out = new ArrayList<RealPoint>(in.size());
+			
+		for (int i=0;i<in.size();i++)
+		{
+			out.add(scaleGlob(in.get(i),globCal));
+		}
+		return out;
+	}
 	/**
 	 * transforms realpoint in space units to pixels(voxels) coordinates 
 	 * **/
@@ -130,6 +144,20 @@ public interface Roi3D
 		for (int i=0;i<in.numDimensions();i++)
 		{
 			out.setPosition(out.getDoublePosition(i)/globCal[i],i);
+		}
+		return out;
+	}
+	
+	/**
+	 * transforms realpoint in space units to pixels(voxels) coordinates (ArrayList version)
+	 * **/
+	public static ArrayList<RealPoint> scaleGlobInv(final ArrayList<RealPoint> in, final double [] globCal)
+	{
+		ArrayList<RealPoint> out = new ArrayList<RealPoint>(in.size());
+		
+		for (int i=0;i<in.size();i++)
+		{
+			out.add(scaleGlobInv(in.get(i),globCal));
 		}
 		return out;
 	}
@@ -157,7 +185,7 @@ public interface Roi3D
 		}
 		return out;
 	}
-	/** calculates cumulative length between vert_in 3D points (without calibration) using globCal calibration **/
+	/** calculates cumulative length between vert_in 3D points using globCal calibration **/
 	public static double getSegmentLength(final ArrayList<RealPoint> vert_in, double [] globCal)
 	{
 		double length=0.0;
@@ -182,7 +210,7 @@ public interface Roi3D
 	}
 
 	/**
-	 * transforms realpoint in pixel coordinates to space units
+	 * returns a point with NaN coordinates
 	 * **/
 	public static RealPoint getNaNPoint()
 	{

@@ -36,6 +36,7 @@ import bigtrace.BigTraceData;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.volume.SplitVolumePlane;
+import bigtrace.volume.StraightenCurve;
 import bigtrace.volume.VolumeMisc;
 import ij.IJ;
 import ij.ImagePlus;
@@ -69,6 +70,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	JButton butLineProfile;
 	JButton butLineAlignment;
 	JToggleButton butMeasureFile;
+	JButton butStraighten;
 	JButton butSlice;
 	JButton butSettings;
 	JButton butMeasure;
@@ -134,12 +136,19 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		butMeasureFile.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		
 
-		
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/pipe.png");
+		tabIcon = new ImageIcon(icon_path);
+		butStraighten = new JButton(tabIcon);
+		butStraighten.setToolTipText("Straighten");
+		butStraighten.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/slice_volume.png");
 		tabIcon = new ImageIcon(icon_path);
 		butSlice = new JButton(tabIcon);
 		butSlice.setToolTipText("Cut volume");
 		butSlice.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		
+
 
 		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
@@ -151,6 +160,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		butLineProfile.addActionListener(this);
 		butLineAlignment.addActionListener(this);
 		butMeasureFile.addActionListener(this);
+		butStraighten.addActionListener(this);
 		butSlice.addActionListener(this);
 		butSettings.addActionListener(this);
 
@@ -169,6 +179,8 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
 		sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
 		panLineTools.add(sp,cr);
+		cr.gridx++;
+		panLineTools.add(butStraighten,cr);
 		cr.gridx++;
 		panLineTools.add(butSlice,cr);
 		
@@ -953,6 +965,62 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	}
 	
 	/** given cross-section ROI, splits provided volume in two and shows them **/
+	public void straightenCurve(final Roi3D curveLine)
+	{
+		
+		float fRadiusStraighted = 0.0f;
+		int nRadiusType = 0;
+		
+		NumberField nfRadius = new NumberField(4);
+		
+		
+		JPanel straightenSettings = new JPanel();
+		straightenSettings.setLayout(new GridBagLayout());
+		GridBagConstraints cd = new GridBagConstraints();
+		
+		String[] sStraightenType = { "Take from ROI settings", "Specified here" };
+		JComboBox<String> straightenRadiusList = new JComboBox<String>(sStraightenType);
+		cd.gridx=0;
+		cd.gridy=0;
+		straightenSettings.add(new JLabel("Curve thickness radius: "),cd);
+		straightenRadiusList.setSelectedIndex((int)Prefs.get("BigTrace.nRadiusType", 0));
+		cd.gridy++;
+		straightenSettings.add(straightenRadiusList,cd);
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
+		nfRadius.setText(df.format(Prefs.get("BigTrace.fRadiusStraighted", 5)));
+		cd.gridx++;
+		cd.gridy=0;
+		straightenSettings.add(new JLabel("Radius (px): "),cd);
+		cd.gridy++;
+		straightenSettings.add(nfRadius,cd);
+		
+		int reply = JOptionPane.showConfirmDialog(null, straightenSettings, "Straighten curve", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			nRadiusType = straightenRadiusList.getSelectedIndex();
+			Prefs.set("BigTrace.nRadiusType", nRadiusType);
+			if(nRadiusType==0)
+			{
+				fRadiusStraighted = curveLine.getLineThickness();
+			}
+			else
+			{
+				fRadiusStraighted = Float.parseFloat(nfRadius.getText());
+				Prefs.set("BigTrace.fRadiusStraighted", fRadiusStraighted);				
+			}
+			//run in a separate thread
+			StraightenCurve<T> straightBG = new StraightenCurve<T>(curveLine, bt, fRadiusStraighted);
+			straightBG.addPropertyChangeListener(bt.btpanel);
+			straightBG.execute();
+
+		}
+
+	}
+	
+	/** given cross-section ROI, splits provided volume in two and shows them **/
 	public void sliceVolume(final CrossSection3D crossSection)
 	{
 		int nSliceType = 0;
@@ -1057,6 +1125,17 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			}
 		}
 		
+		//Straignten
+		if(e.getSource() == butStraighten)
+		{
+			if (jlist.getSelectedIndex()>-1)
+			{
+					if(bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.LINE_TRACE||bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.POLYLINE)
+					{
+						straightenCurve(bt.roiManager.rois.get(jlist.getSelectedIndex()));
+					}
+			}
+		}
 		//Slice volume
 		if(e.getSource() == butSlice)
 		{
