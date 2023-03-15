@@ -23,7 +23,6 @@ import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-import net.imglib2.view.composite.Composite;
 import net.imglib2.view.composite.GenericComposite;
 
 

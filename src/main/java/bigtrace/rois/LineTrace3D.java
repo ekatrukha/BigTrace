@@ -14,13 +14,13 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTraceData;
+import bigtrace.geometry.LinInterp3D;
 import bigtrace.geometry.ShapeInterpolation;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.roi.Masks;
@@ -40,6 +40,11 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	public ArrayList<ArrayList<RealPoint>> segments;
 	public VisPointsScaled verticesVis;
 	public VisPolyLineScaled segmentsVis;
+	
+	/** linear intepolator **/
+	private LinInterp3D linInter = null;
+	/** last interpolation used. -1 means interpolators were not initialized or not up-to-date **/
+	private int lastInterpolation = -1;
 
 
 	public LineTrace3D(final Roi3DGroup preset_in)
@@ -359,9 +364,8 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	/** returns the length of LineTrace using globCal voxel size **/
 	public double getLength(final int nShapeInterpolation, final double [] globCal)
 	{
-		//double length = 0.0;
-		
-		return  Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation), globCal);
+		//get measured length
+		return  Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation),globCal);
 
 		
 	}
@@ -417,7 +421,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		}
 			
 	}
-	
+	/** returns joint segment of ROI in VOXEL coordinates **/
 	public ArrayList<RealPoint> makeJointSegment(final int nShapeInterpolation)
 	{
 		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
@@ -443,6 +447,46 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		}
 		return out;
 	}
+	/**Creates a sampled set of points along the LineTrace in SPACE coordinates,
+	 * based on the shape interpolation value.
+	 * Segments are sampled with a smallest voxel size step.
+	 * **/
+	public ArrayList<RealPoint> makeJointSegmentResample(final int nShapeInterpolation, final double [] globCal)
+	{
+		ArrayList<RealPoint> out = makeJointSegment(nShapeInterpolation);
+		
+		return sampleMinVoxelSize(Roi3D.scaleGlob(out, globCal),nShapeInterpolation,globCal);
+		//return out;
+	}
+	
+	public ArrayList<RealPoint> sampleMinVoxelSize(final ArrayList<RealPoint> points, final int nShapeInterpolation, final double [] globCal)
+	{
+		double dMinVoxSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
+		switch (nShapeInterpolation)
+		{
+		case BigTraceData.SHAPE_Voxel:
+
+			break;
+			
+		case BigTraceData.SHAPE_Subvoxel:					
+
+			break;
+		}
+		//if we didn't do this interpolation before
+		if(lastInterpolation!=nShapeInterpolation || linInter==null)
+		{
+			linInter = new LinInterp3D(points);
+			lastInterpolation = nShapeInterpolation;
+		}
+		double dLength = linInter.getMaxLength();
+		int nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
+		double [] xLSample = new double[nNewPoints];
+		for(int i = 0;i<nNewPoints;i++)
+		{
+			xLSample[i]=i*dMinVoxSize;
+		}
+		return linInter.interpolate(xLSample);
+	}
 	/** returns double [i][j] array where for position i
 	 * 0 is length along the line (in scaled units)
 	 * 1 intensity
@@ -451,7 +495,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	 * 4 z coordinate (in scaled units) **/
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
-		ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation);
+		ArrayList<RealPoint> allPoints = makeJointSegmentResample(nShapeInterpolation,globCal);
 		
 		if(allPoints==null)
 			return null;
@@ -474,15 +518,13 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	 * 4 z coordinate (in scaled units) **/
 	public double [][] getCoalignmentProfile(final double [] dir_vector, final double [] globCal, final int nShapeInterpolation, final boolean bCosine)
 	{
-		ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation);
+		ArrayList<RealPoint> allPoints = makeJointSegmentResample(nShapeInterpolation,globCal);
 		
 		if(allPoints==null)
 			return null;
-		//if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
-		//{
-		//	allPoints = ShapeInterpolation.getSmoothVals(allPoints);
-		//}
-		return getCoalignmentProfilePoints(allPoints, dir_vector, globCal,  bCosine);
+
+		return getCoalignmentProfilePoints(allPoints, dir_vector, bCosine);
+		//return getCoalignmentProfilePoints(allPoints, dir_vector, globCal,  bCosine);
 	}
 	
 	@Override
@@ -491,8 +533,10 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		//update drawing component
 		if(segments.size()>0)
 		{
-			segmentsVis.setVertices(makeJointSegment( BigTraceData.shapeInterpolation));
+			segmentsVis.setVertices(makeJointSegment(BigTraceData.shapeInterpolation));
 		}
+		//reset interpolators
+		lastInterpolation = -1;
 		
 	}
 }

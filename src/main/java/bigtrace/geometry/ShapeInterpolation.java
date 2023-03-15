@@ -13,7 +13,7 @@ public class ShapeInterpolation {
 	/**
 	 * returns smoothed coordinates along each axis
 	 * using running average with window defined by 
-	 * static variable of Smoothing class (one for everywhere for now, it is static);
+	 * static variable of Smoothing class (one for everywhere for now, it is static BigTraceData.nSmoothWindow);
 	 * 
 	 * Boundaries (ends) are handled in a special way:
 	 * 1) end points' positions are not averaged

@@ -185,7 +185,26 @@ public interface Roi3D
 		}
 		return out;
 	}
-	/** calculates cumulative length between vert_in 3D points using globCal calibration **/
+	/** calculates cumulative length between vert_in 3D points  **/
+	public static double getSegmentLength(final ArrayList<RealPoint> vert_in)
+	{
+		double length=0.0;
+		double [] pos1 = new double [3];
+		double [] pos2 = new double [3];
+		
+		if (vert_in==null)
+			{return 0.0;}
+		for (int i=0;i<vert_in.size()-1; i++)
+		{
+			vert_in.get(i).localize(pos1);
+			vert_in.get(i+1).localize(pos2);
+			length+=LinAlgHelpers.distance(pos1, pos2);
+		}
+		//System.out.print(length);
+		return length;
+	}
+	/** assumes vert_in are in VOXEL coordinates and calculates cumulative length between vert_in 3D points 
+	 * using globCal calibration. The returned value is in SPACE coordinates **/
 	public static double getSegmentLength(final ArrayList<RealPoint> vert_in, double [] globCal)
 	{
 		double length=0.0;
@@ -204,6 +223,51 @@ public interface Roi3D
 				pos2[j]*=globCal[j];
 			}
 			length+=LinAlgHelpers.distance(pos1, pos2);
+		}
+		//System.out.print(length);
+		return length;
+	}
+	
+	/** calculates cumulative length between vert_in 3D points using globCal calibration **/
+	public static double[] getSegmentTabLength(final ArrayList<RealPoint> vert_in, double [] globCal)
+	{
+		double[] length=new double [vert_in.size()];
+		double [] pos1 = new double [3];
+		double [] pos2 = new double [3];
+		
+		if (vert_in==null)
+			{return null;}
+		length[0]=0.0f;
+		for (int i=0;i<vert_in.size()-1; i++)
+		{
+			vert_in.get(i).localize(pos1);
+			vert_in.get(i+1).localize(pos2);
+			for (int j = 0; j<3; j++)
+			{
+				pos1[j]*=globCal[j];
+				pos2[j]*=globCal[j];
+			}
+			length[i+1]=length[i]+LinAlgHelpers.distance(pos1, pos2);
+		}
+		//System.out.print(length);
+		return length;
+	}
+	
+	/** calculates cumulative length between vert_in 3D points **/
+	public static double[] getSegmentTabLength(final ArrayList<RealPoint> vert_in)
+	{
+		double [] length=new double [vert_in.size()];
+		double [] pos1 = new double [3];
+		double [] pos2 = new double [3];
+		
+		if (vert_in==null)
+			{return null;}
+		length[0]=0.0f;
+		for (int i=0;i<vert_in.size()-1; i++)
+		{
+			vert_in.get(i).localize(pos1);
+			vert_in.get(i+1).localize(pos2);
+			length[i+1]=length[i]+LinAlgHelpers.distance(pos1, pos2);
 		}
 		//System.out.print(length);
 		return length;

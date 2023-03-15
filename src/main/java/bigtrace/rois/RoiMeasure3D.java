@@ -83,7 +83,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	private static final int[] list = { LENGTH,  DIST_ENDS, MEAN, STD_DEV, STRAIGHTNESS, ENDS_COORDS, ENDS_DIR};
 	private static final String[] colTemplates = { "Length", "Distance_between_ends", "Mean_intensity", "SD_intensity", "Straightness", "End_","Direction_"};
 
-	InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory;
+	public InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory;
 	
 	public static final int INT_NearestNeighbor=0, INT_NLinear=1, INT_Lanczos=2; // Intensity interpolation types
 	

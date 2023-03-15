@@ -153,6 +153,7 @@ public class VisPolyLineScaled
 		}
 		else
 		{
+			//not sure it is the best way, but it works now
 			//move to scaled space
 			points = Roi3D.scaleGlob(points, BigTraceData.globCal);
 			//min voxel dimension

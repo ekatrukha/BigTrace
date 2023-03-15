@@ -43,7 +43,7 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 		GridBagConstraints c = new GridBagConstraints();
 		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
 		decimalFormatSymbols.setDecimalSeparator('.');
-		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
+		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
 		
 		nfAllSize = new NumberField[3];
 		for (i=0;i<3;i++)
@@ -123,7 +123,7 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 		tfUnits.setText(sUnits);
 		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
 		decimalFormatSymbols.setDecimalSeparator('.');
-		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
+		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
 		for (int i=0;i<3;i++)
 		{
 			nfAllSize[i].setText(df.format( dVoxelSize[i]));

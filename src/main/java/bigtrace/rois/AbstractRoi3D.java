@@ -101,47 +101,66 @@ public abstract class AbstractRoi3D implements Roi3D {
 	{
 		return groupIndex;
 	}
-	
+	/** gets intensity values at allPoints position (provided in SPACE units) at 
+	 * the interpolate RRA 
+	 * it is assumes that allPoints are sampled with the same length step,
+	 * equal to dMinVoxelSize **/
 	public < T extends RealType< T > >  double [][] getIntensityProfilePoints(final ArrayList<RealPoint> allPoints, RealRandomAccessible<T> interpolate, final double [] globCal)
 	{
 		double [][] out = new double [5][allPoints.size()];
 		
 		final RealRandomAccess<T> ra =   interpolate.realRandomAccess();
-		double [] pos1 = new double[3];
-		double [] pos2 = new double[3];
+		double [] pos = new double[3];
 		double [] xyz;
+		final double dMinVoxelSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
+		
 		int i,d;
 		
 		//first point
 		out[0][0]=0.0;
-		allPoints.get(0).localize(pos1);
-		ra.setPosition(pos1);
+		allPoints.get(0).localize(pos);
+		xyz = pos.clone();
+		//in voxels
+		pos = Roi3D.scaleGlobInv(pos, globCal);
+		ra.setPosition(pos);
 		//intensity
 		out[1][0]=ra.get().getRealDouble();
-		xyz = Roi3D.scaleGlob(pos1, globCal);
+		//length
+		
+		//point location
 		for(d=0;d<3;d++)
 		{
 			out[2+d][0]=xyz[d];
 		}
 		for(i=1;i<allPoints.size();i++)
 		{
-			allPoints.get(i).localize(pos2);
-			xyz=Roi3D.scaleGlob(pos2, globCal);
-			ra.setPosition(pos2);
+			allPoints.get(i).localize(pos);
+			out[0][i] = dMinVoxelSize*i;
+			xyz= pos.clone();			
+			//in voxels
+			pos = Roi3D.scaleGlobInv(pos, globCal);
+			ra.setPosition(pos);
 			//intensity
 			out[1][i]=ra.get().getRealDouble();
-			out[0][i]=out[0][i-1]+LinAlgHelpers.distance(Roi3D.scaleGlob(pos1, globCal),xyz);
 			for(d=0;d<3;d++)
 			{
 				out[2+d][i]=xyz[d];
-				pos1[d]=pos2[d];
 			}
 		}
 
 		return out;
 	}
-	
-	public double [][] getCoalignmentProfilePoints(final ArrayList<RealPoint> allPoints, final double [] dir_vector, final double [] globCal, final boolean bCosine)
+	/** assumes that input allPoints are in SPACE coordinates.
+	 *  calculates angle between each segment and dir_vector.
+	 *  If bCosine = true returns cosine. Otherwise returns angle value (in radians).
+	 *  Returned array contains
+	 *  [0] - cumulative length values at the middle of each segment
+	 *  [1] - cosine or angle
+	 *  [2] - x coordinate of the middle of the segment (in SPACE scaled coordinates)
+	 *  [3] - y coordinate of the middle of the segment (in SPACE scaled coordinates)
+	 *  [4] - z coordinate of the middle of the segment (in SPACE scaled coordinates)
+	 *  of second dimension allPoints.size()-1 (number of segments) **/
+	public double [][] getCoalignmentProfilePoints(final ArrayList<RealPoint> allPoints, final double [] dir_vector, final boolean bCosine)
 	{
 		int i,d;
 		double [][] out = new double [5][allPoints.size()-1];
@@ -152,12 +171,12 @@ public abstract class AbstractRoi3D implements Roi3D {
 		double prevCumLength = 0.0;
 		
 		allPoints.get(0).localize(pos1);
-		pos1 = Roi3D.scaleGlob(pos1, globCal);
+		//pos1 = Roi3D.scaleGlob(pos1, globCal);
 		for(i=1;i<allPoints.size();i++)
 		{
 			
 			allPoints.get(i).localize(pos2);			
-			pos2 = Roi3D.scaleGlob(pos2, globCal);
+			//pos2 = Roi3D.scaleGlob(pos2, globCal);
 			segmLength = LinAlgHelpers.distance(pos1,pos2);
 			out[0][i-1] = prevCumLength+segmLength*0.5;
 			prevCumLength+=segmLength;
