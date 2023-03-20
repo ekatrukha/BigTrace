@@ -103,7 +103,7 @@ public class Pipe3D {
 	/** given a set of points and tangents vectors at their locations (in 3D),
 	 * calculates array of 2 vectors making rotation minimizing frame at each point.
 	 * See "Computation of Rotation Minimizing Frames" (Wenping Wang, Bert Jüttler, Dayue Zheng, and Yang Liu, 2008)**/
-	public static double [][][] rotationMinimizingFrame(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
+	public static double [][][] rotationMinimizingFrameExp(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
 	{
 		int i, nPointsN;
 		nPointsN = points.size();
@@ -164,6 +164,83 @@ public class Pipe3D {
 	
 				LinAlgHelpers.cross(ti_plus_one, out[0][i+1], out[1][i+1]);
 			}
+
+		}
+		
+		return out;
+	}
+	
+	/** given a set of points and tangents vectors at their locations (in 3D),
+	 * calculates array of 2 vectors making rotation minimizing frame at each point.
+	 * See "Computation of Rotation Minimizing Frames" (Wenping Wang, Bert Jüttler, Dayue Zheng, and Yang Liu, 2008)**/
+	public static double [][][] rotationMinimizingFrame(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
+	{
+		int i, nPointsN;
+		nPointsN = points.size();
+		double [][] path = new double [2][3];
+		double [][][] out = new double [2][nPointsN][3];
+		double [][] v = new double[2][3];
+		double [] rLi = new double[3];
+		double [] tLi = new double[3];
+		double [] ti;// = new double[3];
+		double [] ti_plus_one;// = new double[3];
+		double [] ri;
+		double c1,c2;
+		//calculate initial r0 (out[0])  and s0 (out[1])
+		RealPoint zVec = new RealPoint(0.0,0.0,1.0);
+		AffineTransform3D ini_rot = Intersections3D.alignVectors(new RealPoint(tangents.get(0)),zVec);
+		//out[0][0] = new double[] {1.0,0.0,0.0};
+		//out[1][0] = new double[] {0.0,1.0,0.0};
+		//so for straighted we have something in z plane aligned
+		out[0][0] = new double[] {Math.cos(Math.PI*0.25),Math.sin(Math.PI*0.25),0.0};
+		out[1][0] = new double[] {(-1)*Math.sin(Math.PI*0.25),Math.cos(Math.PI*0.25),0.0};
+
+		ini_rot.apply(out[0][0], out[0][0]);
+		ini_rot.apply(out[1][0], out[1][0]);
+
+		
+		for(i = 0;i<(nPointsN-1);i++)
+		{
+			
+			LinAlgHelpers.cross(tangents.get(i+1),out[0][i],out[1][i+1]);
+			LinAlgHelpers.normalize(out[1][i+1]);
+			LinAlgHelpers.cross(out[1][i+1],tangents.get(i+1),out[0][i+1]);
+			LinAlgHelpers.normalize(out[0][i+1]);
+			/*
+			points.get(i).localize(path[0]);
+			points.get(i+1).localize(path[1]);
+			LinAlgHelpers.subtract(path[1],path[0], v[0]);
+			c1 = LinAlgHelpers.dot(v[0], v[0]);
+			//special case, zero length
+			//did not verify validity yet
+			if(Math.abs(c1)<0.0000000000001)
+			{
+				out[0][i+1] = out[0][i];
+				out[1][i+1] = out[1][i];
+				
+			}
+			else
+			{
+
+				ri = out[0][i];			
+				ti = tangents.get(i);
+				ti_plus_one = tangents.get(i+1);
+				
+				LinAlgHelpers.scale(v[0], (2.0/c1)*LinAlgHelpers.dot(v[0],ri), rLi);
+				LinAlgHelpers.subtract(ri, rLi, rLi);
+				LinAlgHelpers.scale(v[0], (2.0/c1)*LinAlgHelpers.dot(v[0],ti), tLi);
+				LinAlgHelpers.subtract(ti, tLi, tLi);
+	
+				
+				LinAlgHelpers.subtract(ti_plus_one, tLi, v[1]);
+				c2 = LinAlgHelpers.dot(v[1],v[1]);
+				
+				LinAlgHelpers.scale(v[1],(2.0/c2)*LinAlgHelpers.dot(v[1],rLi),out[0][i+1]);
+				LinAlgHelpers.subtract(rLi,out[0][i+1],out[0][i+1]);
+	
+				LinAlgHelpers.cross(ti_plus_one, out[0][i+1], out[1][i+1]);
+			}
+			*/
 
 		}
 		
