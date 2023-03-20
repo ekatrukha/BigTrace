@@ -978,11 +978,11 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		straightenSettings.setLayout(new GridBagLayout());
 		GridBagConstraints cd = new GridBagConstraints();
 		
-		String[] sStraightenType = { "Take from ROI settings", "Specified here" };
+		String[] sStraightenType = { "Take from ROI settings", "Specify here" };
 		JComboBox<String> straightenRadiusList = new JComboBox<String>(sStraightenType);
 		cd.gridx=0;
 		cd.gridy=0;
-		straightenSettings.add(new JLabel("Curve thickness radius: "),cd);
+		straightenSettings.add(new JLabel("Curve thickness: "),cd);
 		straightenRadiusList.setSelectedIndex((int)Prefs.get("BigTrace.nRadiusType", 0));
 		cd.gridy++;
 		straightenSettings.add(straightenRadiusList,cd);
@@ -1004,7 +1004,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			Prefs.set("BigTrace.nRadiusType", nRadiusType);
 			if(nRadiusType==0)
 			{
-				fRadiusStraighted = curveLine.getLineThickness();
+				fRadiusStraighted = Math.round(0.5*curveLine.getLineThickness());
 			}
 			else
 			{
@@ -1013,6 +1013,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			}
 			//run in a separate thread
 			StraightenCurve<T> straightBG = new StraightenCurve<T>(curveLine, bt, fRadiusStraighted);
+			straightBG.sRoiName = bt.roiManager.getGroupPrefixRoiName(curveLine);
 			straightBG.addPropertyChangeListener(bt.btpanel);
 			straightBG.execute();
 

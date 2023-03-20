@@ -7,12 +7,197 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.LinAlgHelpers;
 
 public class Pipe3D {
+
+	
+	/** given a set of points, generates Pipe circular contours around each point (using rotation minimizing frame) 
+	 * with radius dRadius and nSectorN sectors**/
+	public static ArrayList<ArrayList< RealPoint >> getCountours(final ArrayList< RealPoint > points, final int nSectorN, final double dRadius)
+	{
+
+		ArrayList<double []> tangents;
+		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<ArrayList<RealPoint>>();
+		double [] center = new double[3];
+	
+		int nPointsNum=points.size();
+		if(nPointsNum>1)
+		{
+			
+			//calculate tangents at each point
+			tangents = getTangentsAverage(points);
+			double [][][] rsVect =  rotationMinimizingFrame(points, tangents);
+			for (int i=0;i<points.size();i++)			
+			{
+				points.get(i).localize(center);
+				allCountours.add(getContourInXY( dRadius,  nSectorN, rsVect[0][i],rsVect[1][i], center));
+			}
+	
+		}
+		return allCountours;
+		
+	}
+
+	
+	/** given a set of points defining polyline the function calculates 
+	 * tangent vector (normalized) at each point as a average angle 
+	 * between two adjacent segments **/
+	public static ArrayList<double []> getTangentsAverage(final ArrayList< RealPoint > points)
+	{
+		int i,j;
+		ArrayList<double []> tangents = new ArrayList<double []>();
+		double [][] path = new double [3][3];
+		double [] prev_segment = new double [3];
+		double [] next_segment = new double [3];
+		double [] tanVector = new double [3];
+		int nPointsNum=points.size();
+		if(nPointsNum>1)
+		{
+			//first two points
+			for (i=0;i<2;i++)
+			{
+				points.get(i).localize(path[i]);
+			}
+			//vector between first two points 
+			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
+			LinAlgHelpers.normalize(prev_segment);
+			tangents.add(prev_segment.clone());
+			//the middle
+			for (i=1;i<(points.size()-1);i++)
+			{
+				//next segment
+				points.get(i+1).localize(path[2]);
+				LinAlgHelpers.subtract(path[2], path[1], next_segment);
+				LinAlgHelpers.normalize(next_segment);
+
+				//2) average angle/vector between segments
+				LinAlgHelpers.add(prev_segment, next_segment, tanVector);
+				LinAlgHelpers.scale(tanVector, 0.5, tanVector);
+				//reversal, special case
+				if(Math.abs(LinAlgHelpers.length(tanVector))<0.0000000001)
+				{
+					tanVector= prev_segment.clone();
+				}
+					
+				LinAlgHelpers.normalize(tanVector);
+				tangents.add(tanVector.clone());
+				
+				//prepare to move forward
+				for(j=0;j<3;j++)
+				{
+					prev_segment[j]=next_segment[j];
+					path[1][j]=path[2][j];
+				}
+
+			}
+			points.get(nPointsNum-2).localize(path[0]);
+			points.get(nPointsNum-1).localize(path[1]);
+			LinAlgHelpers.subtract(path[1],path[0],tanVector);
+			LinAlgHelpers.normalize(tanVector);
+			tangents.add(tanVector.clone());
+		}
+		return tangents;
+	}
+	
+
+	
+		
+	/** given a set of points and tangents vectors at their locations (in 3D),
+	 * calculates array of 2 vectors making rotation minimizing frame at each point.
+	 * See "Computation of Rotation Minimizing Frames" (Wenping Wang, Bert Jüttler, Dayue Zheng, and Yang Liu, 2008)**/
+	public static double [][][] rotationMinimizingFrame(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
+	{
+		int i, nPointsN;
+		nPointsN = points.size();
+		double [][] path = new double [2][3];
+		double [][][] out = new double [2][nPointsN][3];
+		double [][] v = new double[2][3];
+		double [] rLi = new double[3];
+		double [] tLi = new double[3];
+		double [] ti;// = new double[3];
+		double [] ti_plus_one;// = new double[3];
+		double [] ri;
+		double c1,c2;
+		//calculate initial r0 (out[0])  and s0 (out[1])
+		RealPoint zVec = new RealPoint(0.0,0.0,1.0);
+		AffineTransform3D ini_rot = Intersections3D.alignVectors(new RealPoint(tangents.get(0)),zVec);
+		//out[0][0] = new double[] {1.0,0.0,0.0};
+		//out[1][0] = new double[] {0.0,1.0,0.0};
+		//so for straighted we have something in z plane aligned
+		out[0][0] = new double[] {Math.cos(Math.PI*0.25),Math.sin(Math.PI*0.25),0.0};
+		out[1][0] = new double[] {(-1)*Math.sin(Math.PI*0.25),Math.cos(Math.PI*0.25),0.0};
+
+		ini_rot.apply(out[0][0], out[0][0]);
+		ini_rot.apply(out[1][0], out[1][0]);
+
+		
+		for(i = 0;i<(nPointsN-1);i++)
+		{
+			points.get(i).localize(path[0]);
+			points.get(i+1).localize(path[1]);
+			LinAlgHelpers.subtract(path[1],path[0], v[0]);
+			c1 = LinAlgHelpers.dot(v[0], v[0]);
+			//special case, zero length
+			//did not verify validity yet
+			if(Math.abs(c1)<0.0000000000001)
+			{
+				out[0][i+1] = out[0][i];
+				out[1][i+1] = out[1][i];
+				
+			}
+			else
+			{
+
+				ri = out[0][i];			
+				ti = tangents.get(i);
+				ti_plus_one = tangents.get(i+1);
+				
+				LinAlgHelpers.scale(v[0], (2.0/c1)*LinAlgHelpers.dot(v[0],ri), rLi);
+				LinAlgHelpers.subtract(ri, rLi, rLi);
+				LinAlgHelpers.scale(v[0], (2.0/c1)*LinAlgHelpers.dot(v[0],ti), tLi);
+				LinAlgHelpers.subtract(ti, tLi, tLi);
+	
+				
+				LinAlgHelpers.subtract(ti_plus_one, tLi, v[1]);
+				c2 = LinAlgHelpers.dot(v[1],v[1]);
+				
+				LinAlgHelpers.scale(v[1],(2.0/c2)*LinAlgHelpers.dot(v[1],rLi),out[0][i+1]);
+				LinAlgHelpers.subtract(rLi,out[0][i+1],out[0][i+1]);
+	
+				LinAlgHelpers.cross(ti_plus_one, out[0][i+1], out[1][i+1]);
+			}
+
+		}
+		
+		return out;
+	}
+	
+	/** returns a contour in a plane defined by two perpendicular vectors X and Y and with center at c**/
+	public static ArrayList< RealPoint > getContourInXY(final double dRadius, final int nSectorN, final double [] x,final double [] y, final double [] c)
+	{
+		 ArrayList< RealPoint > contourXY = new  ArrayList< RealPoint > ();
+		 
+		 final double dAngleInc = 2.0*Math.PI/(nSectorN);
+
+		 double [] xp = new double[3];
+		 double [] yp = new double[3];
+		 
+		 for (int i=0;i<nSectorN;i++)
+		 {
+			 LinAlgHelpers.scale(x, dRadius*Math.cos(Math.PI*0.25+i*dAngleInc), xp);
+			 LinAlgHelpers.scale(y, dRadius*Math.sin(Math.PI*0.25+i*dAngleInc), yp);
+			 LinAlgHelpers.add(xp, yp,xp);
+			 LinAlgHelpers.add(xp, c,xp);
+			 contourXY.add(new RealPoint(xp));			 
+		 }
+		 
+		 return contourXY;
+		
+	}
 	
 	
 	/** given a set of points (polyline) generates "cylindrical contours/circles" 
 	 *  around each point with a thickness of fLineThickness (diameter).
 	 *  Each contour has BigTraceData.sectorN sectors**/
-	public static ArrayList<ArrayList< RealPoint >> getCountours(final ArrayList< RealPoint > points, final int nSectorN, final double dRadius)
+	public static ArrayList<ArrayList< RealPoint >> getCountoursOld(final ArrayList< RealPoint > points, final int nSectorN, final double dRadius)
 	{
 		int i, iPoint;
 		double [][] path = new double [3][3];
@@ -147,60 +332,7 @@ public class Pipe3D {
 		}
 		return allCountours;
 		
-	}
-	/** given a set of points defining polyline the function calculates 
-	 * tangent vector (not normalized) at each point as a average angle 
-	 * between two adjacent segments **/
-	public static ArrayList<double []> getTangentsAverage(final ArrayList< RealPoint > points)
-	{
-		int i,j;
-		ArrayList<double []> tangents = new ArrayList<double []>();
-		double [][] path = new double [3][3];
-		double [] prev_segment = new double [3];
-		double [] next_segment = new double [3];
-		double [] tanVector = new double [3];
-		int nPointsNum=points.size();
-		if(nPointsNum>1)
-		{
-			//first two points
-			for (i=0;i<2;i++)
-			{
-				points.get(i).localize(path[i]);
-			}
-			//vector between first two points 
-			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
-			LinAlgHelpers.normalize(prev_segment);
-			tangents.add(prev_segment.clone());
-			//the middle
-			for (i=1;i<(points.size()-1);i++)
-			{
-				//next segment
-				points.get(i+1).localize(path[2]);
-				LinAlgHelpers.subtract(path[2], path[1], next_segment);
-				LinAlgHelpers.normalize(next_segment);
-
-				//2) average angle/vector between segments
-				LinAlgHelpers.add(prev_segment, next_segment, tanVector);
-				LinAlgHelpers.scale(tanVector, 0.5, tanVector);
-				tangents.add(tanVector.clone());
-				
-				//prepare to move forward
-				for(j=0;j<3;j++)
-				{
-					prev_segment[j]=next_segment[j];
-					path[1][j]=path[2][j];
-				}
-
-			}
-			points.get(nPointsNum-2).localize(path[0]);
-			points.get(nPointsNum-1).localize(path[1]);
-			LinAlgHelpers.subtract(path[0],path[1],tanVector);
-			LinAlgHelpers.normalize(tanVector);
-			tangents.add(tanVector.clone());
-		}
-		return tangents;
-	}
-	
+	}	
 	/** generates initial (first point) contour around path in XY plane **/
 	public static ArrayList< RealPoint > iniSectorContour(double dRadius, final int nSectorN)
 	{
@@ -217,26 +349,5 @@ public class Pipe3D {
 		 
 		 return contourXY;
 	}
-	
-	/** for each contour normalizes distances till center **/
-	public static ArrayList< RealPoint >  normalizeSector(final ArrayList< RealPoint > points, final RealPoint center, final double dRadius)
-	{
-		int i;
-		double [] contPoint = new double [3];
-		double [] centPoint = new double [3];
-		ArrayList< RealPoint > out = new ArrayList<RealPoint>();
-		
-		center.localize(centPoint);
-		for(i=0;i<points.size();i++)
-		{
-			points.get(i).localize(contPoint);
-			LinAlgHelpers.subtract(contPoint,centPoint,contPoint);
-			LinAlgHelpers.normalize(contPoint);
-			LinAlgHelpers.scale(contPoint, dRadius, contPoint);
-			LinAlgHelpers.add(contPoint, centPoint, contPoint);
-			out.add(new RealPoint(contPoint));
-		}
-		return out;
-		
-	}
+
 }

@@ -9,13 +9,11 @@ import bdv.spimdata.SequenceDescriptionMinimal;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
-import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.rois.Roi3D;
 import ij.measure.Calibration;
 import bigtrace.rois.PolyLine3D;
 import bigtrace.rois.LineTrace3D;
-import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -25,6 +23,7 @@ import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 
@@ -34,6 +33,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 	public BigTrace<T> bt;
 	float nRadius;
 	Roi3D curveROI;
+	public String sRoiName="";
 	
 	public StraightenCurve(final Roi3D curveROI_, final BigTrace<T> bt_, final float nRadius_)
 	{
@@ -101,9 +101,6 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		}
 		
 		
-		//lenght in units??		
-		//double nLength = Roi3D.getSegmentLength(points,bt.btdata.globCal);
-		
 		//smallest voxel size
 		double dMinVoxSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
 		int dimXY = (int)(nRadius*2+1);
@@ -128,12 +125,13 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		
 		//get tangent vectors		
 		ArrayList<double []> tangents = Pipe3D.getTangentsAverage(points_space);
-		AffineTransform3D planeTransform;
+		//get a frame around line
+		double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(points_space, tangents);
+
 		
 		//plane perpendicular to the line
-		ArrayList< RealPoint > planeNorm = iniNormPlane((int)nRadius,dMinVoxSize);
-		//vector normale of initial plane
-		RealPoint zVec = new RealPoint(0.0,0.0,1.0);
+		ArrayList< RealPoint > planeNorm;
+
 		double [] current_point = new double [3];
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(bt.all_ch_RAI),bt.roiManager.roiMeasure.nInterpolatorFactory);
 		final RealRandomAccess<T> ra = interpolate.realRandomAccess();
@@ -145,18 +143,15 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		for (int nPoint = 0;nPoint<points_space.size();nPoint++)
 		{
 			
-			//align vectors
-			//transform that rotates vector (0,0,1) to be aligned with the vector between first two points
-			planeTransform = Intersections3D.alignVectors( new RealPoint(tangents.get(nPoint)),zVec);
 			points_space.get(nPoint).localize(current_point); 
-			planeTransform.translate(current_point);
+			planeNorm = getNormPlaneGridXY((int)nRadius, dMinVoxSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);
+			
 			for (int i=0;i<dimXY;i++)
 				for (int j=0;j<dimXY;j++)
 				{
 					//current XY point coordinates
 					curr_XY = new RealPoint( planeNorm.get(j+i*dimXY));
-					//move to position
-					planeTransform.apply(curr_XY, curr_XY);
+
 					//back to voxel units
 					curr_XY =Roi3D.scaleGlobInv(curr_XY, BigTraceData.globCal);
 					
@@ -192,7 +187,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		cal.pixelHeight= dMinVoxSize;
 		cal.pixelDepth= dMinVoxSize;
 		//switch Z and X for convenience
-		VolumeMisc.wrapImgImagePlusCal(out1, "test",cal).show();
+		VolumeMisc.wrapImgImagePlusCal(out1, sRoiName+"_straight",cal).show();
 		//VolumeMisc.wrapImgImagePlusCal(Views.permute(out1,0,2), "test",cal).show();
 		//double nLength = curveROI.getLength();
 		setProgressState("straighten ROI done.");
@@ -210,6 +205,28 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 			 for (int j=-nRadius;j<=nRadius;j++)
 			 {
 				 planeXY.add(new RealPoint(i*dPixSize,j*dPixSize,0.0));
+			 }
+		 }
+		 
+		 return planeXY;
+	}
+	/** generates XY plane sampling grid coordinates from -nRadius till nRadius values (in dPixSize units) in XY plane 
+	 * defined by two normalized perpendicular vectors X and Y and with center at c **/
+	public static ArrayList< RealPoint > getNormPlaneGridXY(final int nRadius,final double dPixSize,final double [] x,final double [] y, final double [] c)
+	{
+		 ArrayList< RealPoint > planeXY = new  ArrayList< RealPoint > ();
+		 double [] xp = new double[3];
+		 double [] yp = new double[3];
+		 
+		 for (int i=-nRadius;i<=nRadius;i++)
+		 {
+			 for (int j=-nRadius;j<=nRadius;j++)
+			 {
+				 LinAlgHelpers.scale(x, i*dPixSize, xp);
+				 LinAlgHelpers.scale(y, j*dPixSize, yp);
+				 LinAlgHelpers.add(xp, yp,xp);
+				 LinAlgHelpers.add(xp, c,xp);
+				 planeXY.add(new RealPoint(xp));
 			 }
 		 }
 		 
