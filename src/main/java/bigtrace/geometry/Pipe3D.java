@@ -35,10 +35,36 @@ public class Pipe3D {
 		return allCountours;
 		
 	}
+	
+	/** given a set of points and tangents at their location, 
+	 * generates Pipe circular contours around each point (using rotation minimizing frame) 
+	 * with radius dRadius and nSectorN sectors**/
+	public static ArrayList<ArrayList< RealPoint >> getCountours(final ArrayList< RealPoint > points, final ArrayList<double []> tangents, final int nSectorN, final double dRadius)
+	{
+
+	
+		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<ArrayList<RealPoint>>();
+		double [] center = new double[3];
+	
+		int nPointsNum=points.size();
+		if(nPointsNum>1)
+		{
+			
+			double [][][] rsVect =  rotationMinimizingFrame(points, tangents);
+			for (int i=0;i<points.size();i++)			
+			{
+				points.get(i).localize(center);
+				allCountours.add(getContourInXY( dRadius,  nSectorN, rsVect[0][i],rsVect[1][i], center));
+			}
+	
+		}
+		return allCountours;
+		
+	}
 
 	
 	/** given a set of points defining polyline the function calculates 
-	 * tangent vector (normalized) at each point as a average angle 
+	 * tangent vector (normalized) at each point location as a average angle 
 	 * between two adjacent segments **/
 	public static ArrayList<double []> getTangentsAverage(final ArrayList< RealPoint > points)
 	{
@@ -97,13 +123,12 @@ public class Pipe3D {
 		return tangents;
 	}
 	
-
-	
 		
 	/** given a set of points and tangents vectors at their locations (in 3D),
 	 * calculates array of 2 vectors making rotation minimizing frame at each point.
-	 * See "Computation of Rotation Minimizing Frames" (Wenping Wang, Bert Jüttler, Dayue Zheng, and Yang Liu, 2008)**/
-	public static double [][][] rotationMinimizingFrameExp(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
+	 * See "Computation of Rotation Minimizing Frames" (Wenping Wang, Bert Jüttler, Dayue Zheng, and Yang Liu, 2008),
+	 * this code uses double reflection method**/
+	public static double [][][] rotationMinimizingFrameWang(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
 	{
 		int i, nPointsN;
 		nPointsN = points.size();
@@ -172,7 +197,9 @@ public class Pipe3D {
 	
 	/** given a set of points and tangents vectors at their locations (in 3D),
 	 * calculates array of 2 vectors making rotation minimizing frame at each point.
-	 * See "Computation of Rotation Minimizing Frames" (Wenping Wang, Bert Jüttler, Dayue Zheng, and Yang Liu, 2008)**/
+	 * using simple cross-product, as suggested in this post
+	 * Herman Tulleken (https://math.stackexchange.com/users/67933/herman-tulleken), 
+	 * Getting consistent normals along a 3D (Bezier) curve, URL (version: 2020-12-01): https://math.stackexchange.com/q/3929639**/
 	public static double [][][] rotationMinimizingFrame(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
 	{
 		int i, nPointsN;
@@ -197,10 +224,19 @@ public class Pipe3D {
 		{
 			
 			LinAlgHelpers.cross(tangents.get(i+1),out[0][i],out[1][i+1]);
-			LinAlgHelpers.normalize(out[1][i+1]);
-			LinAlgHelpers.cross(out[1][i+1],tangents.get(i+1),out[0][i+1]);
-			LinAlgHelpers.normalize(out[0][i+1]);
-
+			if(Math.abs(LinAlgHelpers.length(out[1][i+1]))<0.0000000000001)
+			{
+				LinAlgHelpers.cross(out[1][i],tangents.get(i+1),out[0][i+1]);
+				LinAlgHelpers.normalize(out[0][i+1]);
+				LinAlgHelpers.cross(tangents.get(i+1),out[0][i+1],out[1][i+1]);
+				LinAlgHelpers.normalize(out[1][i+1]);
+			}	
+			else
+			{
+				LinAlgHelpers.normalize(out[1][i+1]);
+				LinAlgHelpers.cross(out[1][i+1],tangents.get(i+1),out[0][i+1]);
+				LinAlgHelpers.normalize(out[0][i+1]);
+			}
 
 		}
 		

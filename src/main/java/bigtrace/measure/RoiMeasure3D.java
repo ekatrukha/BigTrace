@@ -1,4 +1,4 @@
-package bigtrace.rois;
+package bigtrace.measure;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -35,6 +35,11 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.rois.CrossSection3D;
+import bigtrace.rois.LineTrace3D;
+import bigtrace.rois.Point3D;
+import bigtrace.rois.PolyLine3D;
+import bigtrace.rois.Roi3D;
 import bigtrace.volume.SplitVolumePlane;
 import bigtrace.volume.StraightenCurve;
 import bigtrace.volume.VolumeMisc;
@@ -75,7 +80,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	JButton butSettings;
 	JButton butMeasure;
 	JButton butMeasureAll;
-	JList<String> jlist ;
+	public JList<String> jlist ;
 	JScrollPane listScroller;
 	
 	public JComboBox<String> cbActiveChannel;

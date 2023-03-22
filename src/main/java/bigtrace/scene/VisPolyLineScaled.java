@@ -33,7 +33,6 @@ import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Pipe3D;
-import bigtrace.geometry.ShapeInterpolation;
 import bigtrace.rois.Roi3D;
 import bigtrace.volume.VolumeMisc;
 import net.imglib2.RealPoint;
@@ -78,9 +77,6 @@ public class VisPolyLineScaled
 
 	private boolean initialized;
 	
-	/** whether or not use smoothing in the render **/
-	public boolean bSmooth = true;
-
 
 	public VisPolyLineScaled()
 	{
@@ -91,7 +87,12 @@ public class VisPolyLineScaled
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 	}
 	
-	
+	/**
+	 * Does some thing in old style.
+	 *
+	 * @deprecated use {@link #new()} instead.  
+	 */
+	@Deprecated
 	public VisPolyLineScaled(final ArrayList< RealPoint > points, final float fLineThickness_, final Color color_in, final int nRenderType)
 	{
 		this();
@@ -100,6 +101,16 @@ public class VisPolyLineScaled
 		l_color = new Vector4f(color_in.getComponents(null));		
 		renderType = nRenderType;
 		setVertices(points);
+		
+	}
+	public VisPolyLineScaled(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final Color color_in, final int nRenderType)
+	{
+		this();
+		
+		fLineThickness= fLineThickness_;	
+		l_color = new Vector4f(color_in.getComponents(null));		
+		renderType = nRenderType;
+		setVertices(points, tangents);
 		
 	}
 	
@@ -113,13 +124,25 @@ public class VisPolyLineScaled
 		l_color = new Vector4f(color_in.getComponents(null));
 	}
 
-
+	/**
+	 * Does some thing in old style.
+	 *
+	 * @deprecated use {@link #new()} instead.  
+	 */
+	@Deprecated
 	public void setParams(final ArrayList< RealPoint > points, final float fLineThickness_, final int nSectorN_, final Color color_in)
 	{
 		
 		fLineThickness= fLineThickness_;		
 		l_color = new Vector4f(color_in.getComponents(null));		
 		setVertices(points);
+	}
+	public void setParams(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final int nSectorN_, final Color color_in)
+	{
+		
+		fLineThickness= fLineThickness_;		
+		l_color = new Vector4f(color_in.getComponents(null));		
+		setVertices(points, tangents);
 	}
 	
 	public void setRenderType(int nRenderType_)
@@ -132,30 +155,75 @@ public class VisPolyLineScaled
 		return renderType;
 		
 	}
-	public void setVertices( ArrayList< RealPoint > points_)
+	
+	public void setVertices( final ArrayList< RealPoint > points_, final ArrayList<double[]> tangents)
 	{
 		
 		ArrayList< RealPoint > points;
 		
-		//smoothing, if necessary
-		if(bSmooth && BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Subvoxel)
-		{
-			points= ShapeInterpolation.getSmoothVals(points_);
-		}
-		else
-		{
-			points = points_;
-		}	
 		
 		if(renderType == Roi3D.OUTLINE)
 		{
-			setVerticesCenterLine(points);
+			setVerticesCenterLine(points_);
 		}
 		else
 		{
 			//not sure it is the best way, but it works now
 			//move to scaled space
-			points = Roi3D.scaleGlob(points, BigTraceData.globCal);
+			points = Roi3D.scaleGlob(points_, BigTraceData.globCal);
+			//min voxel dimension
+			double dMin = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
+			//build a pipe in scaled space
+			//ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points, BigTraceData.sectorN, 0.5*fLineThickness*dMin);
+			ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points, tangents, BigTraceData.sectorN, 0.5*fLineThickness*dMin);
+			//return to voxel space			
+			for(int i=0;i<point_contours.size();i++)
+			{
+				point_contours.set(i, Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
+			}
+				
+			if(renderType == Roi3D.WIRE)
+			{
+				setVerticesWire(point_contours);
+			}
+			else
+			//(renderType == Roi3D.SURFACE)
+			{
+				setVerticesSurface(point_contours);
+			}
+		}
+		initialized=false;
+	}
+	/**
+	 * Does some thing in old style.
+	 *
+	 * @deprecated use {@link #new()} instead.  
+	 */
+	@Deprecated
+	public void setVertices( final ArrayList< RealPoint > points_)
+	{
+		
+		ArrayList< RealPoint > points;
+		
+		//smoothing, if necessary
+		//if(BigTraceData.shapeInterpolation==BigTraceData.SHAPE_Smooth)
+		//{
+		//	points= ShapeInterpolation.getSmoothVals(points_);
+		//}
+		//else
+		//{
+			//points = points_;
+		//}	
+		
+		if(renderType == Roi3D.OUTLINE)
+		{
+			setVerticesCenterLine(points_);
+		}
+		else
+		{
+			//not sure it is the best way, but it works now
+			//move to scaled space
+			points = Roi3D.scaleGlob(points_, BigTraceData.globCal);
 			//min voxel dimension
 			double dMin = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
 			//build a pipe in scaled space

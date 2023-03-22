@@ -5,16 +5,14 @@ import java.util.ArrayList;
 import bigtrace.rois.Roi3D;
 import net.imglib2.RealPoint;
 
-public class LinInterp3D {
-
-	LinearInterpolation [] interpXYZ = new LinearInterpolation[3];
+public class SplineCurve3D {
+	CubicSpline [] interpXYZ = new CubicSpline[3];
 	public boolean bInit = false;
 	double [] xnodes;
-	public LinInterp3D(ArrayList<RealPoint> points)
+	public SplineCurve3D(ArrayList<RealPoint> points)
 	{
 		init(points);
 	}
-
 	public void init(ArrayList<RealPoint> points)
 	{
 		double [][] coords = new double[3][points.size()];
@@ -31,7 +29,7 @@ public class LinInterp3D {
 		}
 		for (d=0;d<3;d++)
 		{
-			interpXYZ[d] = new LinearInterpolation(xnodes, coords[d]);
+			interpXYZ[d] = new CubicSpline(xnodes, coords[d]);
 		}
 		
 		bInit = true;
@@ -41,6 +39,7 @@ public class LinInterp3D {
 	{
 		bInit = false;
 	}
+	/** interpolates vectors at xp positions **/
 	public ArrayList<RealPoint> interpolate(double [] xp)
 	{
 		
@@ -54,7 +53,28 @@ public class LinInterp3D {
 		{
 			for (int d=0;d<3;d++)
 			{
-				curr_point[d]=interpXYZ[d].evalLinearInterp(xp[i]);				
+				curr_point[d]=interpXYZ[d].evalSpline(xp[i]);				
+			}
+			out.add(new RealPoint(curr_point));
+			
+		}
+		return out;
+	}
+	/** interpolates slopes at xp positions **/
+	public ArrayList<RealPoint> interpolateSlopes(double [] xp)
+	{
+		
+		int nP = xp.length;
+		double [] curr_point = new double[3]; 
+		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		//just in case
+		if (!bInit)
+			return null;
+		for (int i=0;i<nP;i++)
+		{
+			for (int d=0;d<3;d++)
+			{
+				curr_point[d]=interpXYZ[d].evalSlope(xp[i]);				
 			}
 			out.add(new RealPoint(curr_point));
 			
@@ -74,5 +94,4 @@ public class LinInterp3D {
 		}
 		
 	}
-	
 }

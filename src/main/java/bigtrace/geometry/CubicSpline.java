@@ -23,18 +23,18 @@ public class CubicSpline {
 	/** second derivatives **/	
 	private double[] ypp;
 	/** knots **/
-	private float[] xpoints = null;
+	private double[] xpoints = null;
 	/** function values **/
-	private float[] ypoints = null;
+	private double[] ypoints = null;
 	
 	/** default constructor, assumes zero second derivatives at end points**/
-	public CubicSpline(final float[] x, final float[] y) {
+	public CubicSpline(final double[] x, final double[] y) {
 		ypp = initSpline(x, y, Double.MAX_VALUE, Double.MAX_VALUE);
 		xpoints = x.clone();
 		ypoints = y.clone();
 	}
 	/** spline constructor, uses provided values of derivatives at end points**/
-	public CubicSpline(final float[] x, final float[] y, final double start_deriv, final double end_deriv) {
+	public CubicSpline(final double[] x, final double[] y, final double start_deriv, final double end_deriv) {
 		ypp = initSpline(x, y, start_deriv,  end_deriv);
 		xpoints = x.clone();
 		ypoints = y.clone();
@@ -42,7 +42,7 @@ public class CubicSpline {
 	}	
 	/** spline constructor, estimates first derivatives at each end point
 	 * using first (last) n_est points (with finite difference) **/
-	public CubicSpline(final float[] x, final float[] y, final int n_est) {
+	public CubicSpline(final double[] x, final double[] y, final int n_est) {
 		double [] firstDerivs = estimateEndsFirstDerivatives(x,y,n_est);
 		ypp = initSpline(x, y, firstDerivs[0],  firstDerivs[1]);
 		xpoints = x.clone();
@@ -55,7 +55,7 @@ public class CubicSpline {
 	y2[0..n-1] for use in the evalSpline() function. 
 	Uses provided (start_deriv, end_deriv) values of first derivatives at ends.
 	If  start or end_deriv are larger than 0.99e30 , assumes corresponding second derivative is zero*/
-	public static double [] initSpline(final float[] x, final float[] y, final double start_deriv, final double end_deriv)
+	public static double [] initSpline(final double[] x, final double[] y, final double start_deriv, final double end_deriv)
 	{
 		int j;
 		double new_x,new_y,old_x,old_y,new_dj, old_dj;
@@ -144,7 +144,7 @@ public class CubicSpline {
 	}
 	
 	/** provides interpolated function value at position xp**/
-	public static double evalSpline(final float[] x, final float[] y, final double [] y2, final double xp)
+	public static double evalSpline(final double[] x, final double[] y, final double [] y2, final double xp)
 	{
 		int ls,rs,m;
 		double ba,ba2,xa,bx, lower, C, D;
@@ -171,7 +171,7 @@ public class CubicSpline {
 	}
 	
 	/** provides interpolated function values at positions xp **/
-	public static double [] evalSpline(final float[] x, final float[] y, final double [] y2, final double [] xp)
+	public static double [] evalSpline(final double[] x, final double[] y, final double [] y2, final double [] xp)
 	{
 		int k = xp.length;
 		double [] out = new double[k];
@@ -193,13 +193,13 @@ public class CubicSpline {
 	/** function estimates first derivatives at two ends of 
 	 * provided function y (tabulated at x values) 
 	 * using first (or last) n_est points */
-	public static double [] estimateEndsFirstDerivatives(final float [] x, final float [] y, int n_est)
+	public static double [] estimateEndsFirstDerivatives(final double [] x, final double [] y, int n_est)
 	{
 		int n = x.length;
 		int i;
 		double [] out = new double [2];
 		double [] coeff;
-		float [] alpha = new float[n_est];
+		double [] alpha = new double[n_est];
 		//left side (start)
 		for (i=0;i<n_est;i++)
 		{
@@ -233,7 +233,7 @@ public class CubicSpline {
 	 * at point x0 (for the first derivative).
 	 * The x values in alpha not necessary should be equally spaced,
 	 * but must be distinct from each other. */
-	public static double [] finitDiffCoeffFirstDeriv(float [] alpha, float x0)
+	public static double [] finitDiffCoeffFirstDeriv(double [] alpha, double x0)
 	{
 		int N = alpha.length;
 		int n,v;
@@ -265,7 +265,7 @@ public class CubicSpline {
 	}
 	
 	/** function calculates derivative (slope) of interpolated spline at the point xp */
-	public static double evalSlope(final float[] x, final float[] y, final double [] y2, final double xp)
+	public static double evalSlope(final double[] x, final double[] y, final double [] y2, final double xp)
 	{
 		int ls,rs,m;
 		double ba,ba2,xa,bx, lower, C, D;
@@ -292,7 +292,7 @@ public class CubicSpline {
 	}
 	
 	/** function calculates derivatives (slopes) of interpolated spline at points xp */
-	public static double [] evalSlope(final float[] x, final float[] y, final double [] y2, final double [] xp)
+	public static double [] evalSlope(final double[] x, final double[] y, final double [] y2, final double [] xp)
 	{
 		int k = xp.length;
 		double [] out = new double[k];
@@ -313,21 +313,21 @@ public class CubicSpline {
 	}
 	
 	/** convenience function for "run once" evaluation (natural spline) */
-	public static double [] interpSpline(final float[] x, final float[] y, final double [] xp)
+	public static double [] interpSpline(final double[] x, final double[] y, final double [] xp)
 	{
 		final double [] ypp = initSpline(x, y, Double.MAX_VALUE, Double.MAX_VALUE);
 		return evalSpline(x,y,ypp,xp);
 	}
 
 	/** convenience function for "run once" evaluation (first derivatives at ends provided) */
-	public static double [] interpSpline(final float[] x, final float[] y, final double start_deriv, final double end_deriv, final double [] xp)
+	public static double [] interpSpline(final double[] x, final double[] y, final double start_deriv, final double end_deriv, final double [] xp)
 	{
 		final double [] ypp = initSpline(x, y, start_deriv, end_deriv);
 		return evalSpline(x,y,ypp,xp);
 	}
 	
 	/** convenience function for "run once" evaluation (first derivatives at ends estimated using n_est points) */
-	public static double [] interpSpline(final float[] x, final float[] y, final int n_est, final double [] xp)
+	public static double [] interpSpline(final double[] x, final double[] y, final int n_est, final double [] xp)
 	{
 		final double [] firstDerivs = estimateEndsFirstDerivatives(x,y,n_est);
 		final double [] ypp = initSpline(x, y, firstDerivs[0],  firstDerivs[1]);
@@ -335,21 +335,21 @@ public class CubicSpline {
 	}
 	
 	/** convenience function for "run once" derivatives calculation (natural spline) */
-	public static double [] interpSlope(final float[] x, final float[] y, final double [] xp)
+	public static double [] interpSlope(final double[] x, final double[] y, final double [] xp)
 	{
 		final double [] ypp = initSpline(x, y, Double.MAX_VALUE, Double.MAX_VALUE);
 		return evalSlope(x,y,ypp,xp);
 	}
 	
 	/** convenience function for "run once" derivatives calculation (first derivatives at ends provided) */
-	public static double [] interpSlope(final float[] x, final float[] y, final double start_deriv, final double end_deriv, final double [] xp)
+	public static double [] interpSlope(final double[] x, final double[] y, final double start_deriv, final double end_deriv, final double [] xp)
 	{
 		final double [] ypp = initSpline(x, y, start_deriv, end_deriv);
 		return evalSlope(x,y,ypp,xp);
 	}
 	
 	/** convenience function for "run once" derivatives calculation (first derivatives at ends estimated using n_est points) */
-	public static double [] interpSlope(final float[] x, final float[] y, final int n_est, final double [] xp)
+	public static double [] interpSlope(final double[] x, final double[] y, final int n_est, final double [] xp)
 	{
 		final double [] firstDerivs = estimateEndsFirstDerivatives(x,y,n_est);
 		final double [] ypp = initSpline(x, y, firstDerivs[0],  firstDerivs[1]);

@@ -10,6 +10,7 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
+import bigtrace.measure.MeasureValues;
 import bigtrace.scene.VisPointsScaled;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealPoint;

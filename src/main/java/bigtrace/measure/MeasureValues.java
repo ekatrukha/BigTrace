@@ -1,4 +1,4 @@
-package bigtrace.rois;
+package bigtrace.measure;
 
 import ij.measure.Measurements;
 import net.imglib2.RealPoint;

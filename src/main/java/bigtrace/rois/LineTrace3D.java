@@ -14,8 +14,10 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTraceData;
-import bigtrace.geometry.LinInterp3D;
+import bigtrace.geometry.LerpCurve3D;
 import bigtrace.geometry.ShapeInterpolation;
+import bigtrace.geometry.SplineCurve3D;
+import bigtrace.measure.MeasureValues;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
 import net.imglib2.RandomAccessible;
@@ -42,7 +44,9 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	public VisPolyLineScaled segmentsVis;
 	
 	/** linear intepolator **/
-	private LinInterp3D linInter = null;
+	private LerpCurve3D linInter = null;
+	/** spline intepolator **/
+	private SplineCurve3D splineInter = null;
 	/** last interpolation used. -1 means interpolators were not initialized or not up-to-date **/
 	private int lastInterpolation = -1;
 
@@ -436,7 +440,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 					out.add(segments.get(i).get(j));
 				}
 			}
-			if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
+			if(nShapeInterpolation == BigTraceData.SHAPE_Smooth)
 			{
 				out = ShapeInterpolation.getSmoothVals(out);
 			}
@@ -447,6 +451,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		}
 		return out;
 	}
+	
 	/**Creates a sampled set of points along the LineTrace in SPACE coordinates,
 	 * based on the shape interpolation value.
 	 * Segments are sampled with a smallest voxel size step.
@@ -461,31 +466,48 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	
 	public ArrayList<RealPoint> sampleMinVoxelSize(final ArrayList<RealPoint> points, final int nShapeInterpolation, final double [] globCal)
 	{
-		double dMinVoxSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
-		switch (nShapeInterpolation)
+		final double dMinVoxSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
+		double dLength;
+		int nNewPoints;
+		double [] xLSample;
+		int i;
+		if(nShapeInterpolation ==BigTraceData.SHAPE_Spline)
 		{
-		case BigTraceData.SHAPE_Voxel:
-
-			break;
+				//if we didn't do this interpolation before
+				if(lastInterpolation!=nShapeInterpolation || splineInter==null)
+				{
+					splineInter = new SplineCurve3D(points);
+					lastInterpolation = nShapeInterpolation;
+				}
+				dLength = splineInter.getMaxLength();
+				nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
+				xLSample = new double[nNewPoints];
+				for(i = 0;i<nNewPoints;i++)
+				{
+					xLSample[i]=i*dMinVoxSize;
+				}
+				return splineInter.interpolate(xLSample);
+		}
+		//linear interpolation in case of BigTraceData.SHAPE_Voxel and BigTraceData.SHAPE_Smooth 
+		else
+		{	
+			//if we didn't do this interpolation before
+			if(lastInterpolation!=nShapeInterpolation || linInter==null)
+			{
+				linInter = new LerpCurve3D(points);
+				lastInterpolation = nShapeInterpolation;
+			}
+			dLength = linInter.getMaxLength();
+			nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
+			xLSample = new double[nNewPoints];
+			for(i = 0;i<nNewPoints;i++)
+			{
+				xLSample[i]=i*dMinVoxSize;
+			}
+			return linInter.interpolate(xLSample);
 			
-		case BigTraceData.SHAPE_Subvoxel:					
+		}
 
-			break;
-		}
-		//if we didn't do this interpolation before
-		if(lastInterpolation!=nShapeInterpolation || linInter==null)
-		{
-			linInter = new LinInterp3D(points);
-			lastInterpolation = nShapeInterpolation;
-		}
-		double dLength = linInter.getMaxLength();
-		int nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
-		double [] xLSample = new double[nNewPoints];
-		for(int i = 0;i<nNewPoints;i++)
-		{
-			xLSample[i]=i*dMinVoxSize;
-		}
-		return linInter.interpolate(xLSample);
 	}
 	/** returns double [i][j] array where for position i
 	 * 0 is length along the line (in scaled units)

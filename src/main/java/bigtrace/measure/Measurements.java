@@ -1,4 +1,4 @@
-package bigtrace.rois;
+package bigtrace.measure;
 
 public interface Measurements {
 	public static final int LENGTH=1, DIST_ENDS=2, MEAN=4, STD_DEV=8, STRAIGHTNESS=16, 

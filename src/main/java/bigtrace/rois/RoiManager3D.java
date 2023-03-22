@@ -47,6 +47,7 @@ import bigtrace.BigTraceData;
 import bigtrace.gui.GuiMisc;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.measure.RoiMeasure3D;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;

@@ -14,7 +14,9 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTraceData;
-import bigtrace.geometry.LinInterp3D;
+import bigtrace.geometry.LerpCurve3D;
+import bigtrace.geometry.SplineCurve3D;
+import bigtrace.measure.MeasureValues;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
 import bigtrace.volume.VolumeMisc;
@@ -41,7 +43,9 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	public VisPointsScaled verticesVis;
 	public VisPolyLineScaled edgesVis;
 	/** linear intepolator **/
-	private LinInterp3D linInter = null;
+	private LerpCurve3D linInter = null;
+	/** spline intepolator **/
+	private SplineCurve3D splineInter = null;
 	/** last interpolation used. -1 means interpolators were not initialized or not up-to-date **/
 	private int lastInterpolation = -1;
 
@@ -64,7 +68,6 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		verticesVis.setSize(pointSize);
 		edgesVis = new VisPolyLineScaled();
 	
-		edgesVis.bSmooth = false;
 		edgesVis.setColor(lineColor);
 		edgesVis.setThickness(lineThickness);
 		edgesVis.setRenderType(renderType);
@@ -122,7 +125,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 				edgesVis.setVerticesBresenham(vertices);	
 				break;
 
-			case BigTraceData.SHAPE_Subvoxel:
+			case BigTraceData.SHAPE_Smooth:
 				edgesVis.setVertices(vertices);	
 				break;
 		}
@@ -473,7 +476,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 						}
 						break;
 						//interpolation along each line segment	
-					case BigTraceData.SHAPE_Subvoxel:					
+					case BigTraceData.SHAPE_Smooth:					
 						//segment = subPixelLine(vertices.get(i-1), vertices.get(i),globCal);
 						out.add(Roi3D.scaleGlob(vertices.get(i),globCal));
 						break;
@@ -517,14 +520,14 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 
 			break;
 			
-		case BigTraceData.SHAPE_Subvoxel:					
+		case BigTraceData.SHAPE_Smooth:					
 
 			break;
 		}
 		//if we didn't do this interpolation before
 		if(lastInterpolation!=nShapeInterpolation || linInter==null)
 		{
-			linInter = new LinInterp3D(points);
+			linInter = new LerpCurve3D(points);
 			lastInterpolation = nShapeInterpolation;
 		}
 		double dLength = linInter.getMaxLength();
