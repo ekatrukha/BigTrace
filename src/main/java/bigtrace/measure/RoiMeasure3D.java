@@ -318,7 +318,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		intensityInterpolationList.setSelectedIndex(intensityInterpolation);
 		pMeasureSettings.add(intensityInterpolationList);
 		
-		String[] sShapeInterpolationType = { "Voxel", "Subvoxel"};
+		String[] sShapeInterpolationType = { "Voxel", "Smooth", "Spline"};
 		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
 		shapeInterpolationList.setSelectedIndex(BigTraceData.shapeInterpolation);
 		pMeasureSettings.add(new JLabel("ROI Shape interpolation: "));

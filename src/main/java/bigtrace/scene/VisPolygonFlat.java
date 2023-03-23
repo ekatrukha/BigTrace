@@ -16,7 +16,7 @@ import bigtrace.BigTraceData;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
-import bigtrace.geometry.ShapeInterpolation;
+import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.rois.Roi3D;
 import bigtrace.volume.VolumeMisc;
 import net.imglib2.RealPoint;

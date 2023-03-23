@@ -15,7 +15,7 @@ import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTraceData;
 import bigtrace.geometry.LerpCurve3D;
-import bigtrace.geometry.ShapeInterpolation;
+import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.SplineCurve3D;
 import bigtrace.measure.MeasureValues;
 import bigtrace.scene.VisPointsScaled;
@@ -43,13 +43,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	public VisPointsScaled verticesVis;
 	public VisPolyLineScaled segmentsVis;
 	
-	/** linear intepolator **/
-	private LerpCurve3D linInter = null;
-	/** spline intepolator **/
-	private SplineCurve3D splineInter = null;
-	/** last interpolation used. -1 means interpolators were not initialized or not up-to-date **/
-	private int lastInterpolation = -1;
-
+	CurveShapeInterpolation interpolator = null;
 
 	public LineTrace3D(final Roi3DGroup preset_in)
 	{
@@ -67,8 +61,11 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
-		
+		interpolator = new CurveShapeInterpolation(type);
 		segmentsVis = new VisPolyLineScaled();
+		segmentsVis.setColor(lineColor);
+		segmentsVis.setThickness(lineThickness);
+		segmentsVis.setRenderType(renderType);
 		name = "trace"+Integer.toString(this.hashCode());
 
 	}
@@ -87,9 +84,10 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		if(LinAlgHelpers.length(dist)>0.000001)
 		{
 			vertices.add(new RealPoint(in_));
-			verticesVis.setVertices(vertices);
+			//verticesVis.setVertices(vertices);
 			segments.add(segments_);
-			segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
+			//segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
+			updateRenderVertices();
 		}
 	}
 	
@@ -99,11 +97,12 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	{
 		
 		vertices.remove(vertices.size()-1);
-		verticesVis.setVertices(vertices);
+		//verticesVis.setVertices(vertices);
 		if(vertices.size()>0)
 		{
 			segments.remove(segments.size()-1);
-			segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
+			updateRenderVertices();
+			//segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
 			return true;
 		}
 		else
@@ -369,7 +368,8 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	public double getLength(final int nShapeInterpolation, final double [] globCal)
 	{
 		//get measured length
-		return  Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation),globCal);
+		//return  Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation),globCal);
+		return Roi3D.getSegmentLength(interpolator.getVerticesVisual());
 
 		
 	}
@@ -426,23 +426,20 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 			
 	}
 	/** returns joint segment of ROI in VOXEL coordinates **/
-	public ArrayList<RealPoint> makeJointSegment(final int nShapeInterpolation)
+	public ArrayList<RealPoint> makeJointSegment()
 	{
 		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
 		if(vertices.size()>1)
 		{
 			//first vertex
 			out.add(vertices.get(0));
+			//the rest
 			for(int i=0;i<segments.size(); i++)
 			{
 				for(int j = 1; j<segments.get(i).size();j++)
 				{
 					out.add(segments.get(i).get(j));
 				}
-			}
-			if(nShapeInterpolation == BigTraceData.SHAPE_Smooth)
-			{
-				out = ShapeInterpolation.getSmoothVals(out);
 			}
 		}
 		else 
@@ -452,63 +449,20 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		return out;
 	}
 	
-	/**Creates a sampled set of points along the LineTrace in SPACE coordinates,
-	 * based on the shape interpolation value.
-	 * Segments are sampled with a smallest voxel size step.
-	 * **/
-	public ArrayList<RealPoint> makeJointSegmentResample(final int nShapeInterpolation, final double [] globCal)
-	{
-		ArrayList<RealPoint> out = makeJointSegment(nShapeInterpolation);
-		
-		return sampleMinVoxelSize(Roi3D.scaleGlob(out, globCal),nShapeInterpolation,globCal);
-		//return out;
-	}
 	
-	public ArrayList<RealPoint> sampleMinVoxelSize(final ArrayList<RealPoint> points, final int nShapeInterpolation, final double [] globCal)
+	/** Returns points sampled along the reference curve with a smallest voxel size step.
+	 * **/
+	public ArrayList<RealPoint> getJointSegmentResampled()
 	{
-		final double dMinVoxSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
-		double dLength;
-		int nNewPoints;
-		double [] xLSample;
-		int i;
-		if(nShapeInterpolation ==BigTraceData.SHAPE_Spline)
-		{
-				//if we didn't do this interpolation before
-				if(lastInterpolation!=nShapeInterpolation || splineInter==null)
-				{
-					splineInter = new SplineCurve3D(points);
-					lastInterpolation = nShapeInterpolation;
-				}
-				dLength = splineInter.getMaxLength();
-				nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
-				xLSample = new double[nNewPoints];
-				for(i = 0;i<nNewPoints;i++)
-				{
-					xLSample[i]=i*dMinVoxSize;
-				}
-				return splineInter.interpolate(xLSample);
-		}
-		//linear interpolation in case of BigTraceData.SHAPE_Voxel and BigTraceData.SHAPE_Smooth 
-		else
-		{	
-			//if we didn't do this interpolation before
-			if(lastInterpolation!=nShapeInterpolation || linInter==null)
-			{
-				linInter = new LerpCurve3D(points);
-				lastInterpolation = nShapeInterpolation;
-			}
-			dLength = linInter.getMaxLength();
-			nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
-			xLSample = new double[nNewPoints];
-			for(i = 0;i<nNewPoints;i++)
-			{
-				xLSample[i]=i*dMinVoxSize;
-			}
-			return linInter.interpolate(xLSample);
-			
-		}
+		return interpolator.getVerticesResample();
 
 	}
+	/** Returns tangents at points sampled along the reference curve with a smallest voxel size step.*/
+	public ArrayList<double[]> getJointSegmentTangentsResampled()
+	{
+		return interpolator.getTangentsResample();
+	}
+
 	/** returns double [i][j] array where for position i
 	 * 0 is length along the line (in scaled units)
 	 * 1 intensity
@@ -517,14 +471,11 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	 * 4 z coordinate (in scaled units) **/
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
-		ArrayList<RealPoint> allPoints = makeJointSegmentResample(nShapeInterpolation,globCal);
-		
+	
+		ArrayList<RealPoint> allPoints = getJointSegmentResampled();
 		if(allPoints==null)
 			return null;
-		//if(nShapeInterpolation == BigTraceData.SHAPE_Subvoxel)
-		//{
-		//	allPoints = ShapeInterpolation.getSmoothVals(allPoints);
-		//}
+
 		
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
 		
@@ -540,25 +491,24 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	 * 4 z coordinate (in scaled units) **/
 	public double [][] getCoalignmentProfile(final double [] dir_vector, final double [] globCal, final int nShapeInterpolation, final boolean bCosine)
 	{
-		ArrayList<RealPoint> allPoints = makeJointSegmentResample(nShapeInterpolation,globCal);
+		ArrayList<RealPoint> allPoints = getJointSegmentResampled();
 		
 		if(allPoints==null)
 			return null;
 
 		return getCoalignmentProfilePoints(allPoints, dir_vector, bCosine);
-		//return getCoalignmentProfilePoints(allPoints, dir_vector, globCal,  bCosine);
 	}
 	
 	@Override
 	public void updateRenderVertices() {
 		
-		//update drawing component
-		if(segments.size()>0)
+		verticesVis.setVertices(vertices);
+		if(vertices.size()>1)
 		{
-			segmentsVis.setVertices(makeJointSegment(BigTraceData.shapeInterpolation));
+			interpolator.init(makeJointSegment(), BigTraceData.shapeInterpolation);
+			segmentsVis.setVertices(interpolator.getVerticesVisual(),interpolator.getTangentsVisual());
 		}
-		//reset interpolators
-		lastInterpolation = -1;
+
 		
 	}
 }

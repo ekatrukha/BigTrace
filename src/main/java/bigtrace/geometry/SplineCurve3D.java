@@ -4,16 +4,25 @@ import java.util.ArrayList;
 
 import bigtrace.rois.Roi3D;
 import net.imglib2.RealPoint;
-
+/** cubic spline interpolation wrapper for each 3D coordinates of points set **/
 public class SplineCurve3D {
+	/** interpolation components for each coordinate**/
 	CubicSpline [] interpXYZ = new CubicSpline[3];
-	public boolean bInit = false;
-	double [] xnodes;
+	/** nodes (usually parametrized as length)**/
+	double [] xnodes=null;
+	/** do natural cubic spline interpolation **/
 	public SplineCurve3D(ArrayList<RealPoint> points)
 	{
-		init(points);
+		init(points,0);
 	}
-	public void init(ArrayList<RealPoint> points)
+	/** do cubic spline interpolation with end derivatives estimated 
+	 * from nDeriveEst points from each end **/
+	public SplineCurve3D(ArrayList<RealPoint> points, final int nDeriveEst)
+	{
+		init(points, nDeriveEst);
+	}
+	
+	public void init(ArrayList<RealPoint> points, final int nDeriveEst)
 	{
 		double [][] coords = new double[3][points.size()];
 		double [] curr_point = new double[3]; 
@@ -29,16 +38,19 @@ public class SplineCurve3D {
 		}
 		for (d=0;d<3;d++)
 		{
-			interpXYZ[d] = new CubicSpline(xnodes, coords[d]);
+			if(nDeriveEst==0)
+			{
+				interpXYZ[d] = new CubicSpline(xnodes, coords[d]);
+			}
+			else
+			{
+				interpXYZ[d] = new CubicSpline(xnodes, coords[d], nDeriveEst);
+			}
 		}
-		
-		bInit = true;
-		
+				
 	}
-	public void notInit()
-	{
-		bInit = false;
-	}
+	
+
 	/** interpolates vectors at xp positions **/
 	public ArrayList<RealPoint> interpolate(double [] xp)
 	{
@@ -47,7 +59,7 @@ public class SplineCurve3D {
 		double [] curr_point = new double[3]; 
 		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
 		//just in case
-		if (!bInit)
+		if (xnodes == null)
 			return null;
 		for (int i=0;i<nP;i++)
 		{
@@ -60,23 +72,21 @@ public class SplineCurve3D {
 		}
 		return out;
 	}
+	
 	/** interpolates slopes at xp positions **/
-	public ArrayList<RealPoint> interpolateSlopes(double [] xp)
+	public ArrayList<double []> interpolateSlopes(double [] xp)
 	{
 		
 		int nP = xp.length;
 		double [] curr_point = new double[3]; 
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
-		//just in case
-		if (!bInit)
-			return null;
+		ArrayList<double []> out = new ArrayList<double []>();
 		for (int i=0;i<nP;i++)
 		{
 			for (int d=0;d<3;d++)
 			{
 				curr_point[d]=interpXYZ[d].evalSlope(xp[i]);				
 			}
-			out.add(new RealPoint(curr_point));
+			out.add(curr_point.clone());
 			
 		}
 		return out;
@@ -84,13 +94,13 @@ public class SplineCurve3D {
 	//Lenght of the polyline
 	public double getMaxLength()
 	{
-		if(bInit)
+		if(xnodes == null)
 		{
-			return xnodes[xnodes.length-1];
+			return Double.NaN;
 		}
 		else
 		{
-			return Double.NaN;
+			return xnodes[xnodes.length-1];
 		}
 		
 	}

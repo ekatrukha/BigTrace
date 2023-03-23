@@ -1017,7 +1017,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			
 		});
 		
-		String[] sShapeInterpolationType = { "Voxel", "Subvoxel"};
+		String[] sShapeInterpolationType = { "Voxel", "Smooth", "Spline"};
 		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
 		shapeInterpolationList.setSelectedIndex(BigTraceData.shapeInterpolation);
 		

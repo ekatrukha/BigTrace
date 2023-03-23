@@ -14,7 +14,9 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTraceData;
+import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.LerpCurve3D;
+import bigtrace.geometry.Pipe3D;
 import bigtrace.geometry.SplineCurve3D;
 import bigtrace.measure.MeasureValues;
 import bigtrace.scene.VisPointsScaled;
@@ -42,12 +44,8 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	public ArrayList<RealPoint> vertices;
 	public VisPointsScaled verticesVis;
 	public VisPolyLineScaled edgesVis;
-	/** linear intepolator **/
-	private LerpCurve3D linInter = null;
-	/** spline intepolator **/
-	private SplineCurve3D splineInter = null;
-	/** last interpolation used. -1 means interpolators were not initialized or not up-to-date **/
-	private int lastInterpolation = -1;
+	
+	CurveShapeInterpolation interpolator = null;
 
 
 	public PolyLine3D(final Roi3DGroup preset_in)
@@ -71,6 +69,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		edgesVis.setColor(lineColor);
 		edgesVis.setThickness(lineThickness);
 		edgesVis.setRenderType(renderType);
+		interpolator = new CurveShapeInterpolation(type);
 		name = "polyl"+Integer.toString(this.hashCode());
 
 	}
@@ -118,21 +117,11 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	{
 
 		verticesVis.setVertices(vertices);
-
-		switch (BigTraceData.shapeInterpolation)
+		if(vertices.size()>1)
 		{
-			case BigTraceData.SHAPE_Voxel:
-				edgesVis.setVerticesBresenham(vertices);	
-				break;
-
-			case BigTraceData.SHAPE_Smooth:
-				edgesVis.setVertices(vertices);	
-				break;
+			interpolator.init(vertices, BigTraceData.shapeInterpolation);
+			edgesVis.setVertices(interpolator.getVerticesVisual(),interpolator.getTangentsVisual());
 		}
-		
-		//reset interpolators used for measurements
-		lastInterpolation = -1;
-
 
 		
 	}
@@ -351,8 +340,8 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	public double getLength(int nShapeInterpolation, final double [] globCal)
 	{
 
-		return Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation, globCal));
-		//return Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation, globCal), globCal);
+		//return Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation, globCal));
+		return Roi3D.getSegmentLength(interpolator.getVerticesVisual());
 		
 	}
 	public double getEndsDistance(final double [] globCal)
@@ -416,7 +405,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	 * 4 z coordinate (in scaled units) **/
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
-		final ArrayList<RealPoint> allPoints = makeJointSegmentResample(nShapeInterpolation, globCal);
+		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
 		
 		if(allPoints == null)
 			return null;
@@ -436,140 +425,26 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	 * 4 z coordinate (in scaled units) **/
 	public double [][] getCoalignmentProfile(final double [] dir_vector, final double [] globCal, final int nShapeInterpolation, final boolean bCosine)
 	{
-		//final ArrayList<RealPoint> allPoints = makeJointSegment(nShapeInterpolation, globCal);
-		final ArrayList<RealPoint> allPoints = makeJointSegmentResample(nShapeInterpolation, globCal);
+
+		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
 		if(allPoints == null)
 			return null;
 		
 		return getCoalignmentProfilePoints(allPoints, dir_vector, bCosine);
 	}
 
-	/** makes joint segment from the polyline in SPACE coordinates,
-	 * based on the shape interpolation value.
+	/** Returns points sampled along the reference curve with a smallest voxel size step.
 	 * **/
-	public ArrayList<RealPoint> makeJointSegment(final int nShapeInterpolation, final double [] globCal) 
+	public ArrayList<RealPoint> getJointSegmentResampled()
 	{
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
-		ArrayList<RealPoint> segment = new ArrayList<RealPoint>();
-		double [] pos1 = new double [3];
-		double [] pos2 = new double [3];
+		return interpolator.getVerticesResample();
 
-		if(vertices.size()>1)
-		{
-
-			//first vertex
-			out.add(Roi3D.scaleGlob( vertices.get(0),globCal));
-			for(int i=1;i<vertices.size(); i++)
-			{
-				vertices.get(i-1).localize(pos1);
-				vertices.get(i).localize(pos2);
-				if(LinAlgHelpers.distance(pos1, pos2)>0.0)
-				{
-					switch (nShapeInterpolation)
-					{
-					case BigTraceData.SHAPE_Voxel:
-						//bresenham voxel by voxel shape interpolation
-						segment = VolumeMisc.BresenhamWrap(vertices.get(i-1), vertices.get(i));
-						for(int j = 1; j<segment.size();j++)
-						{
-							out.add(Roi3D.scaleGlob(segment.get(j),globCal));
-						}
-						break;
-						//interpolation along each line segment	
-					case BigTraceData.SHAPE_Smooth:					
-						//segment = subPixelLine(vertices.get(i-1), vertices.get(i),globCal);
-						out.add(Roi3D.scaleGlob(vertices.get(i),globCal));
-						break;
-					}
-
-				}
-				//double dLength = Roi3D.getSegmentLength(vert_in, globCal) 
-			}
-			//in case vertices are at the same locations
-			if(out.size()<=1)
-			{
-				return null;				
-			}
-			
-		}
-		else 
-		{
-			return null;
-		}
-
-		return out;
-			
 	}
-	/**Creates a sampled set of points along the polyline in SPACE coordinates,
-	 * based on the shape interpolation value.
-	 * Linear segments are sampled with a smallest voxel size step.
-	 * **/
-	
-	public ArrayList<RealPoint> makeJointSegmentResample(final int nShapeInterpolation, final double [] globCal) 
-	{		
-		return sampleMinVoxelSize(makeJointSegment( nShapeInterpolation, globCal), nShapeInterpolation, globCal);		
-	}
-
-	/** resamples set of points with a smallest voxel size step **/
-	public ArrayList<RealPoint> sampleMinVoxelSize(final ArrayList<RealPoint> points, final int nShapeInterpolation, final double [] globCal)
+	/** Returns tangents at points sampled along the reference curve with a smallest voxel size step.*/
+	public ArrayList<double[]> getJointSegmentTangentsResampled()
 	{
-		double dMinVoxSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
-		switch (nShapeInterpolation)
-		{
-		case BigTraceData.SHAPE_Voxel:
-
-			break;
-			
-		case BigTraceData.SHAPE_Smooth:					
-
-			break;
-		}
-		//if we didn't do this interpolation before
-		if(lastInterpolation!=nShapeInterpolation || linInter==null)
-		{
-			linInter = new LerpCurve3D(points);
-			lastInterpolation = nShapeInterpolation;
-		}
-		double dLength = linInter.getMaxLength();
-		int nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
-		double [] xLSample = new double[nNewPoints];
-		for(int i = 0;i<nNewPoints;i++)
-		{
-			xLSample[i]=i*dMinVoxSize;
-		}
-		return linInter.interpolate(xLSample);
+		return interpolator.getTangentsResample();
 	}
-	/** Function samples a line between two 3D points with the step which approximate length is equal to 
-	 *  the smallest size of the voxel in all dimensions (stored in globCal variable).
-	 *  Since voxel can have different size in any dimension, it takes that to account.
-	 *  Returns a set of points in VOXEL (not space) coordinates. **/
-	/*public static ArrayList<RealPoint> subPixelLine(final RealPoint RP1, final RealPoint RP2, final double [] globCal)
-	{
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
-		//smallest size of the voxel in all dimensions
-		double minPixSize = Math.min(globCal[0], Math.min(globCal[1], globCal[2]));
-		double [][] pos = new double [3][3];
-		double length =0.0;
-		int nPoints;
-		double dStepSize;
-		//distance between points in space units
-		Roi3D.scaleGlob(RP1, globCal).localize(pos[0]);
-		Roi3D.scaleGlob(RP2, globCal).localize(pos[1]);
-		length = LinAlgHelpers.distance(pos[0], pos[1]);
-		nPoints = (int) Math.round(length/minPixSize);
-		dStepSize = length/nPoints;
-		out.add(RP1);
-		//direction of the vector between points
-		LinAlgHelpers.subtract(pos[1], pos[0], pos[2]);
-		LinAlgHelpers.normalize(pos[2]);
-		for(int i=1;i<=nPoints;i++)
-		{
-			LinAlgHelpers.scale(pos[2], i*dStepSize, pos[1]);
-			LinAlgHelpers.add( pos[1], pos[0], pos[1]);
-			out.add(new RealPoint(Roi3D.scaleGlobInv(pos[1], globCal)));
-		}
-		return out;
-	}*/
 	
 
 }

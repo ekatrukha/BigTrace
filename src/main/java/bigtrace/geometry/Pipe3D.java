@@ -23,7 +23,7 @@ public class Pipe3D {
 		{
 			
 			//calculate tangents at each point
-			tangents = getTangentsAverage(points);
+			tangents = CurveShapeInterpolation.getTangentsAverage(points);
 			double [][][] rsVect =  rotationMinimizingFrame(points, tangents);
 			for (int i=0;i<points.size();i++)			
 			{
@@ -63,65 +63,7 @@ public class Pipe3D {
 	}
 
 	
-	/** given a set of points defining polyline the function calculates 
-	 * tangent vector (normalized) at each point location as a average angle 
-	 * between two adjacent segments **/
-	public static ArrayList<double []> getTangentsAverage(final ArrayList< RealPoint > points)
-	{
-		int i,j;
-		ArrayList<double []> tangents = new ArrayList<double []>();
-		double [][] path = new double [3][3];
-		double [] prev_segment = new double [3];
-		double [] next_segment = new double [3];
-		double [] tanVector = new double [3];
-		int nPointsNum=points.size();
-		if(nPointsNum>1)
-		{
-			//first two points
-			for (i=0;i<2;i++)
-			{
-				points.get(i).localize(path[i]);
-			}
-			//vector between first two points 
-			LinAlgHelpers.subtract(path[1], path[0], prev_segment );
-			LinAlgHelpers.normalize(prev_segment);
-			tangents.add(prev_segment.clone());
-			//the middle
-			for (i=1;i<(points.size()-1);i++)
-			{
-				//next segment
-				points.get(i+1).localize(path[2]);
-				LinAlgHelpers.subtract(path[2], path[1], next_segment);
-				LinAlgHelpers.normalize(next_segment);
 
-				//2) average angle/vector between segments
-				LinAlgHelpers.add(prev_segment, next_segment, tanVector);
-				LinAlgHelpers.scale(tanVector, 0.5, tanVector);
-				//reversal, special case
-				if(Math.abs(LinAlgHelpers.length(tanVector))<0.0000000001)
-				{
-					tanVector= prev_segment.clone();
-				}
-					
-				LinAlgHelpers.normalize(tanVector);
-				tangents.add(tanVector.clone());
-				
-				//prepare to move forward
-				for(j=0;j<3;j++)
-				{
-					prev_segment[j]=next_segment[j];
-					path[1][j]=path[2][j];
-				}
-
-			}
-			points.get(nPointsNum-2).localize(path[0]);
-			points.get(nPointsNum-1).localize(path[1]);
-			LinAlgHelpers.subtract(path[1],path[0],tanVector);
-			LinAlgHelpers.normalize(tanVector);
-			tangents.add(tanVector.clone());
-		}
-		return tangents;
-	}
 	
 		
 	/** given a set of points and tangents vectors at their locations (in 3D),
@@ -291,7 +233,7 @@ public class Pipe3D {
 		{
 			
 			//calculate tangents at each point
-			tangents = getTangentsAverage(points);
+			tangents = CurveShapeInterpolation.getTangentsAverage(points);
 	
 			//first contour around first line
 			

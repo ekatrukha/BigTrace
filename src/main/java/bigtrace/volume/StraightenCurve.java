@@ -9,6 +9,7 @@ import bdv.spimdata.SequenceDescriptionMinimal;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
+import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.rois.Roi3D;
 import ij.measure.Calibration;
@@ -87,17 +88,21 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		}
 		
 		
-		//get the curve
+		//get the curve and tangent vectors
 		ArrayList<RealPoint> points_space;
+		//get tangent vectors		
+		ArrayList<double []> tangents;
 		//curve points in SPACE units
 		//sampled with dMin step
 		if(curveROI.getType()==Roi3D.POLYLINE)
 		{
-			points_space = ((PolyLine3D)curveROI).makeJointSegmentResample(BigTraceData.shapeInterpolation,BigTraceData.globCal);
+			points_space = ((PolyLine3D)curveROI).getJointSegmentResampled();
+			tangents = ((PolyLine3D)curveROI).getJointSegmentTangentsResampled();
 		}
 		else
 		{
-			points_space = ((LineTrace3D)curveROI).makeJointSegmentResample(BigTraceData.shapeInterpolation,BigTraceData.globCal);
+			points_space = ((LineTrace3D)curveROI).getJointSegmentResampled();
+			tangents = ((LineTrace3D)curveROI).getJointSegmentTangentsResampled();
 		}
 		
 		
@@ -123,8 +128,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		//this is where we store straightened volume
 		Img<T> out1 = Util.getSuitableImgFactory(bt.all_ch_RAI, Util.getTypeFromInterval(bt.all_ch_RAI)).create(new FinalInterval(dimS));
 		
-		//get tangent vectors		
-		ArrayList<double []> tangents = Pipe3D.getTangentsAverage(points_space);
+		
 		//get a frame around line
 		double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(points_space, tangents);
 

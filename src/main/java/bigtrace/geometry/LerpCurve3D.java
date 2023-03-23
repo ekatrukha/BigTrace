@@ -4,12 +4,12 @@ import java.util.ArrayList;
 
 import bigtrace.rois.Roi3D;
 import net.imglib2.RealPoint;
-
+/** linear interpolation wrapper for each 3D coordinates of points set **/
 public class LerpCurve3D {
 
 	LinearInterpolation [] interpXYZ = new LinearInterpolation[3];
-	public boolean bInit = false;
-	double [] xnodes;
+
+	double [] xnodes = null;
 	public LerpCurve3D(ArrayList<RealPoint> points)
 	{
 		init(points);
@@ -34,13 +34,9 @@ public class LerpCurve3D {
 			interpXYZ[d] = new LinearInterpolation(xnodes, coords[d]);
 		}
 		
-		bInit = true;
 		
 	}
-	public void notInit()
-	{
-		bInit = false;
-	}
+
 	public ArrayList<RealPoint> interpolate(double [] xp)
 	{
 		
@@ -48,7 +44,7 @@ public class LerpCurve3D {
 		double [] curr_point = new double[3]; 
 		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
 		//just in case
-		if (!bInit)
+		if (xnodes == null)
 			return null;
 		for (int i=0;i<nP;i++)
 		{
@@ -61,16 +57,35 @@ public class LerpCurve3D {
 		}
 		return out;
 	}
+	/** interpolates slopes at xp positions **/
+	public ArrayList<double []> interpolateSlopes(double [] xp)
+	{
+		
+		int nP = xp.length;
+		double [] curr_point = new double[3]; 
+		ArrayList<double []> out = new ArrayList<double []>();
+		for (int i=0;i<nP;i++)
+		{
+			for (int d=0;d<3;d++)
+			{
+				curr_point[d]=interpXYZ[d].evalSlopeLinearInterp(xp[i]);				
+			}
+			out.add(curr_point.clone());
+			
+		}
+		return out;
+	}
 	//Lenght of the polyline
 	public double getMaxLength()
 	{
-		if(bInit)
+		if(xnodes == null)
 		{
-			return xnodes[xnodes.length-1];
+			return Double.NaN;
+			
 		}
 		else
 		{
-			return Double.NaN;
+			return xnodes[xnodes.length-1];
 		}
 		
 	}
