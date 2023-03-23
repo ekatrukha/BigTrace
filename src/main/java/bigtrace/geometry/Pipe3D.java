@@ -2,6 +2,7 @@ package bigtrace.geometry;
 
 import java.util.ArrayList;
 
+import bigtrace.BigTraceData;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.LinAlgHelpers;
@@ -62,7 +63,17 @@ public class Pipe3D {
 		
 	}
 
-	
+	public static double [][][] rotationMinimizingFrame(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
+	{
+		if(BigTraceData.rotationMinFrame==0)
+		{
+			return rotationMinimizingFrameWang(points,tangents);
+		}
+		else
+		{
+			return rotationMinimizingFrameExp(points,tangents);
+		}
+	}
 
 	
 		
@@ -142,7 +153,7 @@ public class Pipe3D {
 	 * using simple cross-product, as suggested in this post
 	 * Herman Tulleken (https://math.stackexchange.com/users/67933/herman-tulleken), 
 	 * Getting consistent normals along a 3D (Bezier) curve, URL (version: 2020-12-01): https://math.stackexchange.com/q/3929639**/
-	public static double [][][] rotationMinimizingFrame(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
+	public static double [][][] rotationMinimizingFrameExp(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents)
 	{
 		int i, nPointsN;
 		nPointsN = points.size();

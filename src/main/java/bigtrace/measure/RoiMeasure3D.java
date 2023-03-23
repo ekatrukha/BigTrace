@@ -327,8 +327,14 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		NumberField nfSmoothWindow = new NumberField(2);
 		nfSmoothWindow.setIntegersOnly(true);
 		nfSmoothWindow.setText(Integer.toString(BigTraceData.nSmoothWindow));
-		pMeasureSettings.add(new JLabel("Trace smoothing window (points): "));
+		pMeasureSettings.add(new JLabel("Smoothing window/spline points (points): "));
 		pMeasureSettings.add(nfSmoothWindow);	
+		
+		String[] sRotationFrame = { "Wang et al 2008", "Experimental"};
+		JComboBox<String> rotationFrameList = new JComboBox<String>(sRotationFrame);
+		rotationFrameList.setSelectedIndex(BigTraceData.rotationMinFrame);
+		pMeasureSettings.add(new JLabel("Rotation minimizing frame: "));
+		pMeasureSettings.add(rotationFrameList);
 		
 		int reply = JOptionPane.showConfirmDialog(null, pMeasureSettings, "Set Measurements", 
 		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -352,12 +358,16 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			setInterpolationFactory();
 			
 			
-			if(BigTraceData.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText())||BigTraceData.shapeInterpolation!= shapeInterpolationList.getSelectedIndex())
+			if(BigTraceData.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText())||
+					BigTraceData.shapeInterpolation!= shapeInterpolationList.getSelectedIndex()||
+							BigTraceData.rotationMinFrame!=rotationFrameList.getSelectedIndex())
 			{
 				BigTraceData.nSmoothWindow = Integer.parseInt(nfSmoothWindow.getText());
 				Prefs.set("BigTrace.nSmoothWindow", BigTraceData.nSmoothWindow);
 				BigTraceData.shapeInterpolation= shapeInterpolationList.getSelectedIndex();
 				Prefs.set("BigTrace.ShapeInterpolation",BigTraceData.shapeInterpolation);
+				BigTraceData.rotationMinFrame= rotationFrameList.getSelectedIndex();
+				Prefs.set("BigTrace.RotationMinFrame",BigTraceData.rotationMinFrame);
 				bt.roiManager.updateROIsDisplay();
 			}
 			

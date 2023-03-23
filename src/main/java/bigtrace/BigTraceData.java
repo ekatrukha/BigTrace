@@ -129,7 +129,10 @@ public class BigTraceData {
 	public static final int SHAPE_Voxel=0, SHAPE_Smooth=1, SHAPE_Spline=2; 
 	
 	/** current ROI shape interpolation **/
-	public static int shapeInterpolation = (int) Prefs.get("BigTrace.ShapeInterpolation",SHAPE_Smooth);
+	public static int shapeInterpolation = (int) Prefs.get("BigTrace.ShapeInterpolation",SHAPE_Spline);
+	
+	/** current ROI shape interpolation **/
+	public static int rotationMinFrame = (int) Prefs.get("BigTrace.RotationMinFrame",1);
 	
 	/** size of moving average window to smooth traces (in points) **/
 	public static int nSmoothWindow=(int) Prefs.get("BigTrace.nSmoothWindow", 5);
