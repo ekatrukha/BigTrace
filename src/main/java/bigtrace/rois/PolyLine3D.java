@@ -341,7 +341,8 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	{
 
 		//return Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation, globCal));
-		return Roi3D.getSegmentLength(interpolator.getVerticesVisual());
+		//return Roi3D.getSegmentLength(interpolator.getVerticesVisual());
+		return interpolator.getLength();
 		
 	}
 	public double getEndsDistance(final double [] globCal)

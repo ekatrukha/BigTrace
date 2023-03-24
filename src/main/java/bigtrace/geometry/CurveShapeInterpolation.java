@@ -356,7 +356,7 @@ public class CurveShapeInterpolation {
 		int nNewPoints;
 		double [] xLSample;
 		int i;
-		dLength = splineInter.getMaxLength();
+		dLength = splineInter.getMaxArcLength();
 		nNewPoints =(int) Math.floor(dLength/dMin);
 		xLSample = new double[nNewPoints+1];
 		double dStep = dLength/nNewPoints;
@@ -373,7 +373,7 @@ public class CurveShapeInterpolation {
 		int nNewPoints;
 		double [] xLSample;
 		int i;
-		dLength = splineInter.getMaxLength();
+		dLength = splineInter.getMaxArcLength();
 		nNewPoints =(int) Math.floor(dLength/dMin);
 		xLSample = new double[nNewPoints+1];
 		double dStep = dLength/nNewPoints;
@@ -397,7 +397,7 @@ public class CurveShapeInterpolation {
 		}
 		else
 		{
-			dLength = splineInter.getMaxLength();
+			dLength = splineInter.getMaxArcLength();
 		}
 		nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
 		xLSample = new double[nNewPoints];
@@ -427,7 +427,7 @@ public class CurveShapeInterpolation {
 		}
 		else
 		{
-			dLength = splineInter.getMaxLength();
+			dLength = splineInter.getMaxArcLength();
 		}
 		nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
 		xLSample = new double[nNewPoints];
@@ -442,6 +442,18 @@ public class CurveShapeInterpolation {
 		else
 		{
 			return splineInter.interpolateSlopes(xLSample);
+		}
+	}
+	/** returns the length of the reference "generating" curve **/
+	public double getLength()
+	{
+		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
+		{
+			return linInter.getMaxLength();
+		}
+		else
+		{
+			return splineInter.getMaxArcLength();
 		}
 	}
 }
