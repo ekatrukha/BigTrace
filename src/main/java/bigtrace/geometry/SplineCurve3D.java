@@ -123,6 +123,7 @@ public class SplineCurve3D {
 		}
 		else
 		{
+			//arclength integration verification
 			//double len1= verifyIntegration();
 			//double len2 = arclength[arclength.length-1];
 			//double diff =Math.abs(len1-len2);
@@ -135,8 +136,7 @@ public class SplineCurve3D {
 	 * interpolation to this value
 	 ***/
 	public void initArcLength()
-	{
-		
+	{		
 
 		final double dMin = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
 		final double approxL = xnodes[xnodes.length-1];
@@ -152,7 +152,7 @@ public class SplineCurve3D {
 			xLSample[i]=i*dStep;
 		}
 		arclength=getTabulatedArcLength(xLSample);
-		//reparametrize arclenth to arbitrary
+		//reparametrize arclenth to initial arbitrary (polyline length) parametrization
 		arcToNodes = new CubicSpline(arclength, xLSample,2);
 	
 	}
