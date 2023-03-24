@@ -90,6 +90,20 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 			updateRenderVertices();
 		}
 	}
+	public void addPointAndSegmentNoUpdate(final RealPoint in_, final ArrayList<RealPoint> segments_)
+	{
+		//check if the new point is at the same place that previous or not
+		double [] dist = new double [3];
+		LinAlgHelpers.subtract(vertices.get(vertices.size()-1).positionAsDoubleArray(), in_.positionAsDoubleArray(), dist);
+		if(LinAlgHelpers.length(dist)>0.000001)
+		{
+			vertices.add(new RealPoint(in_));
+			//verticesVis.setVertices(vertices);
+			segments.add(segments_);
+			//segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
+			//updateRenderVertices();
+		}
+	}
 	
 	/** removes last segment of the tracing.
 	 * if there was just one spot, returns false**/

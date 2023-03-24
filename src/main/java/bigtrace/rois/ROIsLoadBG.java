@@ -272,7 +272,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 										  Float.parseFloat(line_array[1]),
 										  Float.parseFloat(line_array[2])));
 							  }
-							  roiLT.addPointAndSegment(vertices.get(i+1),segment); 
+							  roiLT.addPointAndSegmentNoUpdate(vertices.get(i+1),segment); 
 						  }
 						  bt.roiManager.addRoi(roiLT);
 						  break;
@@ -294,6 +294,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 
 	        br.close();
 			setProgress(100);
+			
 			sFinalOut="loading ROIs done.";
 			setProgressState(sFinalOut);
 			/** load voxel calibration **/
@@ -306,6 +307,10 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 					sFinalOut = "loading ROIs done (+voxel calibration).";
 					
 					setProgressState(sFinalOut);		
+			}
+			else
+			{
+				bt.roiManager.updateROIsDisplay();
 			}
 			
 

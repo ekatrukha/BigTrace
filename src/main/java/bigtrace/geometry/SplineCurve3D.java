@@ -2,6 +2,7 @@ package bigtrace.geometry;
 
 import java.util.ArrayList;
 
+import bigtrace.BigTraceData;
 import bigtrace.rois.Roi3D;
 import net.imglib2.RealPoint;
 /** cubic spline interpolation wrapper for each 3D coordinates of points set **/
@@ -59,11 +60,11 @@ public class SplineCurve3D {
 				interpXYZ[d] = new CubicSpline(xnodes, coords[d], nDeriveEst);
 			}
 		}
-		//calculate arclength
-		arclength=getTabulatedArcLength();
-		//reparametrize arclenth to arbitrary
-		arcToNodes = new CubicSpline(arclength, xnodes,2);
-				
+		
+		//init arclenght reparametrization
+		initArcLength();
+
+		
 	}
 	
 
@@ -122,31 +123,80 @@ public class SplineCurve3D {
 		}
 		else
 		{
-			return arclength[xnodes.length-1];
+			//double len1= verifyIntegration();
+			//double len2 = arclength[arclength.length-1];
+			//double diff =Math.abs(len1-len2);
+			return arclength[arclength.length-1];
 		}
 		
 	}
 	
+	/** function calculates arclength and reparametrizes 
+	 * interpolation to this value
+	 ***/
+	public void initArcLength()
+	{
+		
+
+		final double dMin = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
+		final double approxL = xnodes[xnodes.length-1];
+
+		//for the polyline (sparse nodes) integration is not precise,
+		//so let's resample it		
+		final int nNewPoints =(int) Math.floor(approxL/dMin);
+		double [] xLSample = new double[nNewPoints+1];
+		final double dStep = approxL/nNewPoints;
+		int i;
+		for(i = 0;i<=nNewPoints;i++)
+		{
+			xLSample[i]=i*dStep;
+		}
+		arclength=getTabulatedArcLength(xLSample);
+		//reparametrize arclenth to arbitrary
+		arcToNodes = new CubicSpline(arclength, xLSample,2);
+	
+	}
+	
 	/** arc lenght of 3D spline-fitted curve calculated using Gaussian quadrature at two points
 	 * at the each interval**/
-	public double [] getTabulatedArcLength()
+	public double [] getTabulatedArcLength(final double [] nodes)
 	{
 		//just is case 
-		if(xnodes == null)
+		if(nodes == null)
 		{
 			return null;
 		}
-		final int nNodesN = xnodes.length;
+		final int nNodesN = nodes.length;
 		double [] out = new double [nNodesN];
 		double diff,aver,curr;
-		final double evalGauss = 1.0/Math.sqrt(3);// 1/sqrt(3)
+		
+		//integration using Simpson's  rule	
+		/*
 		out[0]=0.0;
 		//integrate spline length
 		for (int i=1;i<nNodesN; i++)
 		{
 			curr=0.0;
-			diff= 0.5*(xnodes[i]-xnodes[i-1]);
-			aver = 0.5*(xnodes[i]+xnodes[i-1]);
+			diff= (nodes[i]-nodes[i-1])/6.0;
+			aver = 0.5*(nodes[i]+nodes[i-1]);
+
+			curr+=getIntegrFunction(nodes[i]);
+			curr+=getIntegrFunction(nodes[i-1]);
+			curr+=4*getIntegrFunction(aver);
+			curr*=diff;
+			out[i]=out[i-1]+curr;
+		}
+		*/
+		//Gaussian 2nd order
+		/**/
+		final double evalGauss = 1.0/Math.sqrt(3.0);
+		out[0]=0.0;
+		//integrate spline length
+		for (int i=1;i<nNodesN; i++)
+		{
+			curr=0.0;
+			diff= 0.5*(nodes[i]-nodes[i-1]);
+			aver = 0.5*(nodes[i]+nodes[i-1]);
 
 			curr+=getIntegrFunction(diff*evalGauss+aver);
 			curr+=getIntegrFunction(aver-diff*evalGauss);
@@ -154,6 +204,27 @@ public class SplineCurve3D {
 			out[i]=out[i-1]+curr;
 		}
 		
+		
+		/**/
+		/*
+		//Gaussian 3d order
+		final double evalGauss = Math.sqrt(3.0/5.0);// 1/sqrt(3)
+		out[0]=0.0;
+		//integrate spline length
+		for (int i=1;i<nNodesN; i++)
+		{
+			curr=0.0;
+			diff= 0.5*(nodes[i]-nodes[i-1]);
+			aver = 0.5*(nodes[i]+nodes[i-1]);
+
+			curr+=(5.0/9.0)*getIntegrFunction(diff*evalGauss+aver);
+			curr+=(5.0/9.0)*getIntegrFunction(aver-diff*evalGauss);
+			curr+=(8.0/9.0)*getIntegrFunction(aver);
+
+			curr*=diff;
+			out[i]=out[i-1]+curr;
+		}	
+		*/	
 		return out;
 		
 	}
@@ -171,4 +242,32 @@ public class SplineCurve3D {
 		return out;
 		
 	}
+	/** compare arclength integration vs small step polyline measurements 
+	 * it is a test function used for verification**/
+	/*
+	private double verifyIntegration()
+	{
+		int nPointsN = 100000;
+		double maxL = xnodes[xnodes.length-1];
+		double nStep = maxL/ (nPointsN-1);
+		double [] sampleNodes = new double [nPointsN];
+		double [] curr_point = new double[3];
+		for (int i = 0; i<nPointsN;i++)
+		{
+			sampleNodes[i]=i*nStep;
+		}
+		ArrayList<RealPoint> points = new ArrayList<RealPoint>();
+		for (int i=0;i<nPointsN;i++)
+		{
+			for (int d=0;d<3;d++)
+			{
+				
+				curr_point[d]=interpXYZ[d].evalSpline(sampleNodes[i]);				
+			}
+			points.add(new RealPoint(curr_point));
+			
+		}
+		return Roi3D.getSegmentLength(points);
+	}
+	*/
 }
