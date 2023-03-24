@@ -81,6 +81,7 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 import bvvbigtrace.example2.RenderData;
+import bvvbigtrace.example2.VolumeRenderer.RepaintType;
 import bvvbigtrace.example2.VolumeViewerPanel;
 import bvvbigtrace.util.MatrixMath;
 
@@ -614,7 +615,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 						calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
 						btdata.nPointsInTraceBox=1;
 					}
-				}							
+				}
+				repaintScene();
 			}
 
 		}
@@ -1218,6 +1220,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public void repaintBVV()
 	{
 		panel.requestRepaint();
+	}
+	public void repaintScene()
+	{
+		panel.requestRepaint(RepaintType.SCENE);
 	}
 	
 	public void initBVVSourcesImageJ()

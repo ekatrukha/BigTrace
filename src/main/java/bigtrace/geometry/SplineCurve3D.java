@@ -8,9 +8,10 @@ import net.imglib2.RealPoint;
 public class SplineCurve3D {
 	
 	
-	/** interpolation components for each coordinate**/
+	/** interpolation components for each coordinate **/
 	CubicSpline [] interpXYZ = new CubicSpline[3];
-	/** nodes (arbitrary parametrization, usually as a length of polyline)**/
+	
+	/** nodes (arbitrary parametrization, usually as a length of the input polyline)**/
 	double [] xnodes=null;
 	
 	/** arclength of spline through the nodes **/
@@ -25,6 +26,7 @@ public class SplineCurve3D {
 	{
 		init(points,0);
 	}
+	
 	/** do cubic spline interpolation with end derivatives estimated 
 	 * from nDeriveEst points from each end **/
 	public SplineCurve3D(ArrayList<RealPoint> points, final int nDeriveEst)
@@ -59,6 +61,7 @@ public class SplineCurve3D {
 		}
 		//calculate arclength
 		arclength=getTabulatedArcLength();
+		//reparametrize arclenth to arbitrary
 		arcToNodes = new CubicSpline(arclength, xnodes,2);
 				
 	}
@@ -109,7 +112,8 @@ public class SplineCurve3D {
 		}
 		return out;
 	}
-	//arc lenght of spline
+	
+	/** arc lenght of the spline-fitted curve  **/
 	public double getMaxArcLength()
 	{
 		if(arclength == null)
@@ -123,7 +127,8 @@ public class SplineCurve3D {
 		
 	}
 	
-	/** arc lenght of spline calculated using Gaussian quadrature at two points**/
+	/** arc lenght of 3D spline-fitted curve calculated using Gaussian quadrature at two points
+	 * at the each interval**/
 	public double [] getTabulatedArcLength()
 	{
 		//just is case 
@@ -153,7 +158,7 @@ public class SplineCurve3D {
 		
 	}
 	/** helper function for the calculation of arclength **/
-	private double getIntegrFunction (double x)
+	private double getIntegrFunction(double x)
 	{
 		double out = 0.0;
 		double v;

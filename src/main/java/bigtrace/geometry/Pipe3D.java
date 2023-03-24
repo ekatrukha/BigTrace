@@ -9,7 +9,8 @@ import net.imglib2.util.LinAlgHelpers;
 
 public class Pipe3D {
 
-	
+	/** double precision for geometry calculations **/
+	public static double doublePrecision = 0.0000000000001;
 	/** given a set of points, generates Pipe circular contours around each point (using rotation minimizing frame) 
 	 * with radius dRadius and nSectorN sectors**/
 	public static ArrayList<ArrayList< RealPoint >> getCountours(final ArrayList< RealPoint > points, final int nSectorN, final double dRadius)
@@ -94,18 +95,11 @@ public class Pipe3D {
 		double [] ti_plus_one;// = new double[3];
 		double [] ri;
 		double c1,c2;
-		//calculate initial r0 (out[0])  and s0 (out[1])
-		RealPoint zVec = new RealPoint(0.0,0.0,1.0);
-		AffineTransform3D ini_rot = Intersections3D.alignVectors(new RealPoint(tangents.get(0)),zVec);
-		//out[0][0] = new double[] {1.0,0.0,0.0};
-		//out[1][0] = new double[] {0.0,1.0,0.0};
-		//so for straighted we have something in z plane aligned
-		out[0][0] = new double[] {Math.cos(Math.PI*0.25),Math.sin(Math.PI*0.25),0.0};
-		out[1][0] = new double[] {(-1)*Math.sin(Math.PI*0.25),Math.cos(Math.PI*0.25),0.0};
 
-		ini_rot.apply(out[0][0], out[0][0]);
-		ini_rot.apply(out[1][0], out[1][0]);
-
+		//calculate initial frame
+		final double [][] initFrame = getInitialFrame(tangents.get(0));
+		out[0][0] = initFrame[0].clone();
+		out[1][0] = initFrame[1].clone();
 		
 		for(i = 0;i<(nPointsN-1);i++)
 		{
@@ -115,7 +109,7 @@ public class Pipe3D {
 			c1 = LinAlgHelpers.dot(v[0], v[0]);
 			//special case, zero length
 			//did not verify validity yet
-			if(Math.abs(c1)<0.0000000000001)
+			if(Math.abs(c1)<doublePrecision)
 			{
 				out[0][i+1] = out[0][i];
 				out[1][i+1] = out[1][i];
@@ -160,24 +154,17 @@ public class Pipe3D {
 
 		double [][][] out = new double [2][nPointsN][3];
 
-		//calculate initial r0 (out[0])  and s0 (out[1])
-		RealPoint zVec = new RealPoint(0.0,0.0,1.0);
-		AffineTransform3D ini_rot = Intersections3D.alignVectors(new RealPoint(tangents.get(0)),zVec);
-		//out[0][0] = new double[] {1.0,0.0,0.0};
-		//out[1][0] = new double[] {0.0,1.0,0.0};
-		//so for straighted we have something in z plane aligned
-		out[0][0] = new double[] {Math.cos(Math.PI*0.25),Math.sin(Math.PI*0.25),0.0};
-		out[1][0] = new double[] {(-1)*Math.sin(Math.PI*0.25),Math.cos(Math.PI*0.25),0.0};
-
-		ini_rot.apply(out[0][0], out[0][0]);
-		ini_rot.apply(out[1][0], out[1][0]);
+		//calculate initial frame
+		final double [][] initFrame = getInitialFrame(tangents.get(0));
+		out[0][0] = initFrame[0].clone();
+		out[1][0] = initFrame[1].clone();
 
 		
 		for(i = 0;i<(nPointsN-1);i++)
 		{
 			
 			LinAlgHelpers.cross(tangents.get(i+1),out[0][i],out[1][i+1]);
-			if(Math.abs(LinAlgHelpers.length(out[1][i+1]))<0.0000000000001)
+			if(Math.abs(LinAlgHelpers.length(out[1][i+1]))<doublePrecision)
 			{
 				LinAlgHelpers.cross(out[1][i],tangents.get(i+1),out[0][i+1]);
 				LinAlgHelpers.normalize(out[0][i+1]);
@@ -218,6 +205,32 @@ public class Pipe3D {
 		 return contourXY;
 		
 	}
+	
+	/** given initial tangent vector, builds another two of the frame,
+	 * trying to align them in the XYZ direction **/
+	public static double [][] getInitialFrame(double [] ini_tangent)
+	{
+		double [][] out  = new double [2][3];
+
+		//try to orient initial frame to XYZ
+		LinAlgHelpers.cross(ini_tangent, new double[] {0.0,0.0,1.0}, out[1]);
+		if(Math.abs(LinAlgHelpers.length(out[1]))<doublePrecision)
+		{
+			LinAlgHelpers.cross(new double[] {0.0,1.0,0.0}, ini_tangent, out[0]);
+			LinAlgHelpers.normalize(out[0]);
+			LinAlgHelpers.cross(out[0],ini_tangent, out[1]);
+			LinAlgHelpers.normalize(out[1]);
+		}
+		else
+		{
+			LinAlgHelpers.normalize(out[1]);
+			LinAlgHelpers.cross(out[1], ini_tangent, out[0]);
+			LinAlgHelpers.normalize(out[0]);
+		}
+
+		return out;
+	}
+	
 	
 	
 	/** given a set of points (polyline) generates "cylindrical contours/circles" 

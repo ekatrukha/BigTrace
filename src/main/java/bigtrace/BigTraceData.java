@@ -14,7 +14,7 @@ import net.imglib2.view.IntervalView;
 public class BigTraceData {
 
 	
-	public static String sVersion = "0.1.5";
+	public static String sVersion = "0.2.0";
 	
 	/** path and full input filename **/
 	public String sFileNameFullImg;
@@ -132,7 +132,7 @@ public class BigTraceData {
 	public static int shapeInterpolation = (int) Prefs.get("BigTrace.ShapeInterpolation",SHAPE_Spline);
 	
 	/** current ROI shape interpolation **/
-	public static int rotationMinFrame = (int) Prefs.get("BigTrace.RotationMinFrame",1);
+	public static int rotationMinFrame = (int) Prefs.get("BigTrace.RotationMinFrame",0);
 	
 	/** size of moving average window to smooth traces (in points) **/
 	public static int nSmoothWindow=(int) Prefs.get("BigTrace.nSmoothWindow", 5);
@@ -146,6 +146,8 @@ public class BigTraceData {
 	public static int crossSectionGridStep = (int) Prefs.get("BigTrace.crossSectionGridStep", 20);
 	
 	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
+	
+
 	
 	public BigTraceData()
 	{
