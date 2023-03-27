@@ -16,6 +16,7 @@ import com.jogamp.opengl.GL3;
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
 import bigtrace.geometry.Intersections3D;
+import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolygonFlat;
@@ -367,6 +368,38 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		}
 		return new RealPoint(meanV);
 	}
+	
+	@Override
+	public double getMinDist(Line3D line) {
+		
+		double [] intersectionPoint = new double[3];
+		double dMinDist = (-1.0)*Double.MAX_VALUE;
+		double currDist = 0.0;
+		if(fittedPlane==null)
+		{
+			for (int i=0;i<vertices.size();i++)
+			{
+				currDist= Line3D.distancePointLine(vertices.get(i), line);
+			
+				if(currDist <dMinDist)
+				{
+					dMinDist = currDist;
+				}
+			}
+			return dMinDist;
+		}
+		if(Intersections3D.planeLineIntersect(fittedPlane,line,  intersectionPoint))
+		{
+			//see if the point inside the polygon
+			if(Intersections3D.pointInsideConvexPolygon(polygonVert, intersectionPoint,fittedPlane.n))
+				return 0.0;
+			else
+				return Double.MAX_VALUE;
+		}
+		else
+			{return Double.MAX_VALUE;}
+	
+	}
 	/*
 	public static void main(String[] args) 
 	{
@@ -385,5 +418,6 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		i++;
 	}
 	*/
+
 
 }

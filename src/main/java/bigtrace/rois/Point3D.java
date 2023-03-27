@@ -10,6 +10,7 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
+import bigtrace.geometry.Line3D;
 import bigtrace.measure.MeasureValues;
 import bigtrace.scene.VisPointsScaled;
 import net.imglib2.RandomAccessible;
@@ -161,5 +162,10 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 		
 		lineThickness=line_thickness;
 		return;
+	}
+	@Override
+	public double getMinDist(Line3D line) {
+		// TODO Auto-generated method stub
+		return Line3D.distancePointLine(vertex, line);
 	}
 }

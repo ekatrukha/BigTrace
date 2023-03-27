@@ -502,6 +502,24 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 	}
 	
+	/** selects ROI upon user click **/
+	public void actionSelectRoi()
+	{
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bInputLock && !(c instanceof JTextField))
+		{
+			if(!bTraceMode)
+			{
+				Line3D clickLine = findClickLine();
+				if(clickLine!=null)
+					roiManager.selectClosestToLineRoi(findClickLine());
+				
+			}
+		}
+		
+	}
+	
 	/** works only in trace mode, deselects current tracing
 	 * and starts a new one in the trace mode**/
 	public void actionNewRoiTraceMode()
@@ -759,6 +777,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions.runnableAction(() -> actionZoomOut(),				"center view (zoom out)", "C" );
 		actions.runnableAction(() -> actionResetCrop(),				"reset crop", "X" );
 		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "P" );
+		actions.runnableAction(() -> actionSelectRoi(),	            "select ROI", "E" );
 				
 		
 		
@@ -1455,11 +1474,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			nBox[0]= btdata.trace_weights.minAsLongArray();
 			nBox[1]= btdata.trace_weights.maxAsLongArray();
 		}
-		double nW= (double)(nBox[1][0]-nBox[0][0])*btdata.globCal[0];
-		double nD= (double)(nBox[1][2]-nBox[0][2])*btdata.globCal[2];
-		double nWoff= (double)(2.0*nBox[0][0])*btdata.globCal[0];
-		double nHoff= (double)(2.0*nBox[0][1])*btdata.globCal[1];
-		double nDoff= (double)(2.0*nBox[0][2])*btdata.globCal[2];
+		double nW= (double)(nBox[1][0]-nBox[0][0])*BigTraceData.globCal[0];
+		double nD= (double)(nBox[1][2]-nBox[0][2])*BigTraceData.globCal[2];
+		double nWoff= (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
+		double nHoff= (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
+		double nDoff= (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
 		double sW = panel.getWidth();
 		double sH = panel.getHeight();
 		
@@ -1476,7 +1495,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 		t.identity();
 		
-		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
+		t.scale(BigTraceData.globCal[0]*scale, BigTraceData.globCal[1]*scale, BigTraceData.globCal[2]*scale);
 		t.rotate(0, Math.PI/2.0);
 		t.translate(0.5*(sW-scale*(nW+nWoff)),0.5*(sH+scale*(nD+nDoff)),(-0.5)*scale*nHoff);
 			
@@ -1486,7 +1505,45 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	}
 	
+	public Line3D findClickLine()
+	{
+
+
+		java.awt.Point point_mouse  = panel.getMousePosition();
+		if(point_mouse ==null)
+		{
+			return null;
+		}
+														
+		//get perspective matrix:
+		AffineTransform3D transform = new AffineTransform3D();
+		panel.state().getViewerTransform(transform);
+		int sW = panel.getWidth();
+		int sH = panel.getHeight();
+		Matrix4f matPerspWorld = new Matrix4f();
+		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
+		
+
+		Vector3f temp = new Vector3f(); 
+		
+		//Main click Line 
+		RealPoint [] mainLinePoints = new RealPoint[2];
+		for (int z =0 ; z<2; z++)
+		{
+			//take coordinates in original data volume space
+			matPerspWorld.unproject((float)point_mouse.x,sH-(float)point_mouse.y,(float)z, //z=1 ->far from camera z=0 -> close to camera
+					new int[] { 0, 0, sW, sH },temp);
+
+			mainLinePoints[z]=new RealPoint(temp.x,temp.y,temp.z);			
+		}
+
+		Line3D clickLine=new Line3D(mainLinePoints[0],mainLinePoints[1]);
+
+		return clickLine;
+	}
 	
+	/** function that locates user mouse click (in RealPoint target) inside viewclick IntervalView
+	 * using frustum of nHalfWindowSize **/
 	public <X extends RealType< X >>boolean findPointLocationFromClick(final IntervalView< X > viewclick, final int nHalfWindowSize, final RealPoint target)
 	{
 		int i,j;

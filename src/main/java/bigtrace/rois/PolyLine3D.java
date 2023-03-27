@@ -16,6 +16,7 @@ import com.jogamp.opengl.GL3;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.LerpCurve3D;
+import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.geometry.SplineCurve3D;
 import bigtrace.measure.MeasureValues;
@@ -445,6 +446,26 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	public ArrayList<double[]> getJointSegmentTangentsResampled()
 	{
 		return interpolator.getTangentsResample();
+	}
+
+	@Override
+	public double getMinDist(Line3D line) 
+	{
+		//in VOXEL coordinates
+		final ArrayList<RealPoint> allvertices = Roi3D.scaleGlobInv(interpolator.getVerticesVisual(), BigTraceData.globCal);
+		double dMinDist = Double.MAX_VALUE;
+		double currDist = 0.0;
+		for(int i=0;i<allvertices.size();i++)
+		{
+			currDist= Line3D.distancePointLine(allvertices.get(i), line);
+			
+			if(currDist <dMinDist)
+			{
+				dMinDist = currDist;
+			}
+				
+		}
+		return dMinDist;
 	}
 	
 

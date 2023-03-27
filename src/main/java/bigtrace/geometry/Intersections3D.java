@@ -118,6 +118,46 @@ public class Intersections3D {
 		return int_points;
 		
 	}
+	
+	/** determines if a point is inside a polygon 
+	 * (assumes both are in the same plane with normale n) **/
+	public static boolean pointInsideConvexPolygon(final ArrayList<RealPoint> polygon_, final double [] point,final double [] n)
+	{
+		double [][] path = new double [4][3];
+		double [] cross = new double [3];
+		double dSign=0.0;
+		int i;
+		boolean bInside = true;
+		ArrayList<RealPoint> polygon = new ArrayList<RealPoint>();
+		for( i=0;i<polygon_.size();i++)
+		{
+			polygon.add(polygon_.get(i));
+		}
+		polygon.add(polygon_.get(0));
+		
+		for( i=0;i<polygon.size()-1 && bInside;i++)
+		{
+			polygon.get(i).localize(path[0]);
+			polygon.get(i+1).localize(path[1]);
+			LinAlgHelpers.subtract(path[1], path[0], path[2]);
+			LinAlgHelpers.subtract(point, path[0], path[3]);
+			LinAlgHelpers.cross(path[2], path[3], cross);
+			if(i==0)
+			{
+				dSign = Math.signum(LinAlgHelpers.dot(cross, n));
+			}
+			else
+			{
+				if (Math.abs(dSign-Math.signum(LinAlgHelpers.dot(cross, n)))>0.5)
+				{
+					bInside = false;
+				}
+			}
+			
+		}
+		return bInside;
+		
+	}
 	/**  function calculates transform allowing to align two vectors 
 	 * @param align_direction - immobile vector
 	 * @param moving - vector that aligned with align_direction

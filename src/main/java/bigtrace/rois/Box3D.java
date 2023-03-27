@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
+import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineSimple;
 import net.imglib2.FinalInterval;
@@ -249,5 +250,10 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 		}
 		
 		return out;
+	}
+	@Override
+	public double getMinDist(Line3D line) {
+		// TODO chenge to proper calculation
+		return Double.MAX_VALUE;
 	}
 }

@@ -8,6 +8,7 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
+import bigtrace.geometry.Line3D;
 import net.imglib2.RealPoint;
 import net.imglib2.util.LinAlgHelpers;
 
@@ -57,6 +58,8 @@ public interface Roi3D
 	public void setGroupInd(final int nGIndex);
 	public int getGroupInd();
 	public void updateRenderVertices();
+	
+	public double getMinDist(final Line3D line);
 	
 
 	

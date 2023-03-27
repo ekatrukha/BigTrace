@@ -39,17 +39,21 @@ public class Line3D {
 		LinAlgHelpers.normalize(linev[1]);
 		
 	}
+
 	
 	/** from two vectors on the line (from RealPoint) **/
 	public Line3D(final RealPoint v1, final RealPoint v2)
 	{
-
+		initFromTwoPoints(v1,v2);
+	}	
+	public void initFromTwoPoints(final RealPoint v1, final RealPoint v2)
+	{
 		linev= new double [2][3];
 		v2.localize(linev[1]);
 		v1.localize(linev[0]);
 		LinAlgHelpers.subtract(linev[1], linev[0], linev[1]);
 		LinAlgHelpers.normalize(linev[1]);
-	}	
+	}
 	/** from two vectors on the line (for Vector3f) **/
 	public Line3D(final Vector3f v1, final Vector3f v2)
 	{
@@ -96,5 +100,14 @@ public class Line3D {
 		out[2]=linev[0][2]+linev[1][2]*d;
 	}
 		
-
+	/** distance between line and point in 3D **/
+	public static double distancePointLine(RealPoint point_, Line3D line)
+	{
+		double [] point = new double [3];
+		double [] dist = new double [3];
+		point_.localize(point);
+		LinAlgHelpers.subtract(point, line.linev[0], point);
+		LinAlgHelpers.cross(point, line.linev[1], dist);
+		return LinAlgHelpers.length(dist);
+	}
 }

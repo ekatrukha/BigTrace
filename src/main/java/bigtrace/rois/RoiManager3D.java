@@ -44,6 +44,7 @@ import com.jogamp.opengl.GL3;
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
+import bigtrace.geometry.Line3D;
 import bigtrace.gui.GuiMisc;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
@@ -1505,6 +1506,31 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				//roi.setGroup(groups.get(roi.getGroupInd()));
 			}
 			bt.repaintBVV();
+	}
+	
+	/** updates all ROIs images**/
+	public void selectClosestToLineRoi(Line3D clickLine)
+	{
+		double dDistMin = Double.MAX_VALUE; 
+		int dInd = -1;
+		double dCurrDist = 0.0;
+			for (int i=0;i<rois.size();i++)
+			{
+				dCurrDist= rois.get(i).getMinDist(clickLine);
+				if(dCurrDist<dDistMin)
+				{
+					dDistMin = dCurrDist;
+					dInd=i;
+				}
+				//roi.updateRenderVertices();
+				//roi.setGroup(groups.get(roi.getGroupInd()));
+			}
+			if(Math.abs(dDistMin-Double.MAX_VALUE)>0.1)
+			{
+				jlist.setSelectedIndex(dInd);
+				fireActiveRoiChanged(jlist.getSelectedIndex()); 
+			}
+			//bt.repaintScene();
 	}
 	/** marks ROIs of specific group as undefined and updates ROI indexes**/
 	public void markROIsUndefined(int nGroupN)
