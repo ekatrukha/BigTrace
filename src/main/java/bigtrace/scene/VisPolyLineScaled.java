@@ -34,7 +34,6 @@ import com.jogamp.opengl.GL3;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.rois.Roi3D;
-import bigtrace.volume.VolumeMisc;
 import net.imglib2.RealPoint;
 
 import java.awt.Color;
@@ -234,7 +233,6 @@ public class VisPolyLineScaled
 		int i,j, iPoint;
 		int vertShift;
 
-		//ArrayList<ArrayList< RealPoint >> allContours = Pipe3D.getCountours(points, BigTraceData.sectorN, 0.5*fLineThickness);
 		final int nSectorN = BigTraceData.sectorN;
 		nPointsN = allContours.size();
 		if(nPointsN>1)
@@ -243,7 +241,7 @@ public class VisPolyLineScaled
 			vertices = new float [2*nSectorN*3*nPointsN];
 			for (iPoint=0;iPoint<nPointsN;iPoint++)
 			{
-				//add to drawing vertices triangles
+				//drawing contours around each point
 				vertShift = iPoint*nSectorN*3;
 				for (i=0;i<nSectorN; i++)
 				{
@@ -253,6 +251,7 @@ public class VisPolyLineScaled
 					}				
 				}
 			}
+			//lines along the pipe
 			addLinesAlong();
 		}
 	}
@@ -331,11 +330,18 @@ public class VisPolyLineScaled
 			if(renderType == Roi3D.WIRE)
 			{
 				gl.glLineWidth(1.0f);
-				for(nPointIt=0;nPointIt<nPointsN;nPointIt+=1)
+				//countours
+				for(nPointIt=0;nPointIt<nPointsN;nPointIt+=BigTraceData.wireCountourStep)
 				{
 					gl.glDrawArrays( GL.GL_LINE_LOOP, nPointIt*nSectorN, nSectorN);
 					//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
 				}
+				//the last contour
+				if((nPointIt-BigTraceData.wireCountourStep)!=(nPointsN-1))
+				{
+					gl.glDrawArrays( GL.GL_LINE_LOOP, (nPointsN-1)*nSectorN, nSectorN);
+				}
+				//lines along the pipe
 				int nShift = nSectorN*nPointsN;
 				for(nPointIt=0;nPointIt<nSectorN;nPointIt+=1)
 				{

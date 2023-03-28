@@ -142,6 +142,10 @@ public class BigTraceData {
 	 *  The more the number, more smooth is surface **/
 	public static int sectorN = (int) Prefs.get("BigTrace.nSectorN", 16);
 	
+	/** approximate distance between contrours along the pipe visualizing a curve
+	 *  in minimum voxel size units **/
+	public static int wireCountourStep = (int) Prefs.get("BigTrace.wireCountourStep",1);
+	
 	/** step of gridline displaying cross-section ROI in wired mode (in voxels)**/
 	public static int crossSectionGridStep = (int) Prefs.get("BigTrace.crossSectionGridStep", 20);
 	

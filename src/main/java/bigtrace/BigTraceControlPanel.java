@@ -39,7 +39,6 @@ import bigtrace.BigTraceData;
 import btbvv.util.BvvStackSource;
 import ij.Prefs;
 import net.imglib2.FinalRealInterval;
-import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
@@ -471,18 +470,18 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 					+"&nbsp;<b>T</b> - advance tracebox<br>"
 					+"&nbsp;<b>Y</b> - reverse active trace end<br>"
 					+"&nbsp;<b>R</b> - straight line (in trace mode)<br>"
-					+"&nbsp;<b>E</b> - select ROI in BVV<br>"
+					+"&nbsp;<b>V</b> - new trace (in trace mode)<br>"
 					 +"<br>"
 					+"<center><b>View/Navigation</b></center><br>"
-					+"&nbsp;<b>V</b> - new trace (in trace mode)<br>"
-					+"&nbsp;<b>1</b> - show centered XY view<br>"
-					+"&nbsp;<b>2</b> - show centered YZ view<br>"
-					+"&nbsp;<b>3</b> - show centered XZ view<br>"
+					+"&nbsp;<b>E</b> - select ROI in BVV<br>"
 					+"&nbsp;<b>D</b> - zoom in to a point<br>"
 					+"&nbsp;<b>C</b> - center the view (zoom out)<br>"
 					+"&nbsp;<b>X</b> - reset crop<br>"
 					+"&nbsp;<b>P</b> - toggle render method<br>"
 					+"&nbsp;<b>S</b> - brightness/color<br>"
+					+"&nbsp;<b>1</b> - show centered XY view<br>"
+					+"&nbsp;<b>2</b> - show centered YZ view<br>"
+					+"&nbsp;<b>3</b> - show centered XZ view<br>"
 					+"&nbsp;<b>F6</b> - sources </html>";
 		JLabel jlInfo = new JLabel(shortCutInfo);
 		jlInfo.setVerticalAlignment(SwingConstants.CENTER);

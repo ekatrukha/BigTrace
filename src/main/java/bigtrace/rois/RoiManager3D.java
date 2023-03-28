@@ -1031,6 +1031,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		nfSectorNLines.setIntegersOnly(true);
 		nfSectorNLines.setText(Integer.toString(BigTraceData.sectorN));
 		
+		NumberField nfWireContourStep = new NumberField(4);
+		nfWireContourStep.setIntegersOnly(true);
+		nfWireContourStep.setText(Integer.toString(BigTraceData.wireCountourStep));
+		
 		NumberField nfCrossSectionGridStep = new NumberField(4);
 		nfCrossSectionGridStep.setIntegersOnly(true);
 		nfCrossSectionGridStep.setText(Integer.toString(BigTraceData.crossSectionGridStep));
@@ -1063,6 +1067,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		pROIrender.add(new JLabel("# sectors line render: "),cd);
 		cd.gridx++;
 		pROIrender.add(nfSectorNLines,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("Wireframe contour distance (px): "),cd);
+		cd.gridx++;
+		pROIrender.add(nfWireContourStep,cd);
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -1190,6 +1200,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			{
 				BigTraceData.sectorN= Integer.parseInt(nfSectorNLines.getText());
 				Prefs.set("BigTrace.nSectorN", BigTraceData.sectorN);
+				bUpdateROIs  = true;
+			}
+			if(BigTraceData.wireCountourStep!= Integer.parseInt(nfWireContourStep.getText()))
+			{
+				BigTraceData.wireCountourStep= Integer.parseInt(nfWireContourStep.getText());
+				Prefs.set("BigTrace.wireCountourStep", BigTraceData.wireCountourStep);
 				bUpdateROIs  = true;
 			}
 			
