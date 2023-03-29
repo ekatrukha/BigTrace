@@ -417,6 +417,25 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		
 		return getIntensityProfilePoints(allPoints,interpolate,globCal);
 	}
+	/** returns double [i][j] array where for position i
+	 * 0 is length along the line (in scaled units)
+	 * 1 intensity
+	 * 2 x coordinate (in scaled units) 
+	 * 3 y coordinate (in scaled units) 
+	 * 4 z coordinate (in scaled units) **/
+	public < T extends RealType< T > >  double [][] getIntensityProfileThick(final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
+	{
+		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
+		
+		if(allPoints == null)
+			return null;
+		final ArrayList<double []> allTangents = getJointSegmentTangentsResampled();
+		
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
+		
+		
+		return getIntensityProfilePointsThick(allPoints,allTangents, nRadius, interpolate,globCal);
+	}
 	/** returns cosine or an angle (from 0 to pi, determined by bCosine) 
 	 *  between dir_vector (assumed to have length of 1.0) and each segment of the line Roi. 
 	 *  The output is double [i][j] array where for position i

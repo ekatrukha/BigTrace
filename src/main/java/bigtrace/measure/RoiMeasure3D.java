@@ -102,6 +102,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	
 	private static ResultsTable systemRT = new ResultsTable();
 	private ResultsTable rt;
+	
 
 	public RoiMeasure3D(BigTrace<T> bt)
 	{
@@ -884,12 +885,14 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				break;
 			case Roi3D.POLYLINE:
 				
-				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((PolyLine3D)roi).getIntensityProfileThick(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				//li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
 				break;
 				
 			case Roi3D.LINE_TRACE:				
 				
-				li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				//li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((LineTrace3D)roi).getIntensityProfileThick(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
 				break;			
 		}
 		if (li_profile!=null && bMakePlot)

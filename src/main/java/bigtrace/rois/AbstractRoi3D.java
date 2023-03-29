@@ -3,6 +3,9 @@ package bigtrace.rois;
 import java.awt.Color;
 import java.util.ArrayList;
 
+import bigtrace.BigTraceData;
+import bigtrace.geometry.Pipe3D;
+import bigtrace.measure.Circle2DMeasure;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
@@ -149,6 +152,74 @@ public abstract class AbstractRoi3D implements Roi3D {
 		}
 
 		return out;
+	}
+	
+	/** gets intensity values at allPoints position (provided in SPACE units) at 
+	 * the interpolate RRA 
+	 * it is assumes that allPoints are sampled with the same length step,
+	 * equal to dMinVoxelSize **/
+	public < T extends RealType< T > >  double [][] getIntensityProfilePointsThick(final ArrayList<RealPoint> points, final ArrayList<double[]> tangents, final int nRadius, RealRandomAccessible<T> interpolate, final double [] globCal)
+	{
+		double [][] out = new double [5][points.size()];
+		
+		final RealRandomAccess<T> ra =   interpolate.realRandomAccess();
+		double [] current_pixel = new double[3];
+		double dInt;
+		int nPixN;
+		final double dMinVoxelSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
+		
+		//get a frame around line
+		double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(points, tangents);
+		int d;
+		double [] current_point = new double [3];
+		Circle2DMeasure measureCircle = new Circle2DMeasure();
+		
+		measureCircle.setRadius(nRadius);
+		for (int nPoint = 0;nPoint<points.size();nPoint++)
+		{
+			//length
+			out[0][nPoint] = dMinVoxelSize*nPoint;
+			
+			//log point location
+			points.get(nPoint).localize(current_point); 
+			for(d=0;d<3;d++)
+			{
+				out[2+d][nPoint]=current_point[d];
+			}
+			//reset cursor
+			measureCircle.cursorCircle.reset();
+			
+			//get intensities in perpendicular plane
+			//iterate over voxels of circle
+			nPixN =0;
+			dInt =0.0;
+			while (measureCircle.cursorCircle.hasNext())
+			{
+				measureCircle.cursorCircle.fwd();
+				measureCircle.cursorCircle.localize(current_pixel);
+				LinAlgHelpers.scale(current_pixel, dMinVoxelSize, current_pixel);
+				getVoxelInPlane(rsVect[0][nPoint],rsVect[1][nPoint], current_point,current_pixel);
+				//back to voxel units
+				current_pixel =Roi3D.scaleGlobInv(current_pixel, globCal);
+				ra.setPosition(current_pixel);
+				//intensity
+				dInt+=ra.get().getRealDouble();
+				nPixN++;
+			}
+			out[1][nPoint] = dInt/nPixN;
+		}
+
+		return out;
+	}
+	
+	private static void getVoxelInPlane(final double [] x,final double [] y, final double [] c, final double [] voxel)
+	{
+		 double [] xp = new double[3];
+		 double [] yp = new double[3];
+		 LinAlgHelpers.scale(x, voxel[0], xp);
+		 LinAlgHelpers.scale(y, voxel[1], yp);
+		 LinAlgHelpers.add(xp, yp,xp);
+		 LinAlgHelpers.add(xp, c,voxel);
 	}
 	/** assumes that input allPoints are in SPACE coordinates.
 	 *  calculates angle between each segment and dir_vector.
