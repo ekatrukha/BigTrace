@@ -13,6 +13,7 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
+import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.CurveShapeInterpolation;
@@ -476,12 +477,13 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		return interpolator.getTangentsResample();
 	}
 
-	/** returns double [i][j] array where for position i
-	 * 0 is length along the line (in scaled units)
-	 * 1 intensity
-	 * 2 x coordinate (in scaled units) 
-	 * 3 y coordinate (in scaled units) 
-	 * 4 z coordinate (in scaled units) **/
+
+	/**
+	 *  OBSOLETE, works only with 1 pix tickness
+	 *
+	 * @deprecated use {@link #getIntensityProfilePipe()} instead.  
+	 */
+	@Deprecated
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
 	
@@ -500,7 +502,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	 * 2 x coordinate (in scaled units) 
 	 * 3 y coordinate (in scaled units) 
 	 * 4 z coordinate (in scaled units) **/
-	public < T extends RealType< T > >  double [][] getIntensityProfileThick(final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
+	public < T extends RealType< T > >  double [][] getIntensityProfilePipe(final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
 	
 		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
@@ -512,7 +514,23 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
 		
 		
-		return getIntensityProfilePointsThick(allPoints,allTangents, nRadius, interpolate,globCal);
+		return getIntensityProfilePointsPipe(allPoints,allTangents, nRadius, interpolate,globCal);
+	}
+	
+	/** TEST voxel placement**/
+	public < T extends RealType< T > >  double [][] getIntensityProfilePipeTEST(final BigTrace<T> bt, final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
+	{
+	
+		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
+		
+		if(allPoints == null)
+			return null;
+		final ArrayList<double []> allTangents = getJointSegmentTangentsResampled();
+		
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
+		
+		
+		return getIntensityProfilePointsPipeTEST(bt, allPoints,allTangents, nRadius, interpolate,globCal);
 	}
 	/** returns cosine or an angle (from 0 to pi, determined by bCosine) 
 	 *  between dir_vector (assumed to have length of 1.0) and each segment of the line Roi. 

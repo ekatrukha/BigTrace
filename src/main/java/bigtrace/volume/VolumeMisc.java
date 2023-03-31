@@ -2,12 +2,7 @@ package bigtrace.volume;
 
 import java.util.ArrayList;
 
-import bdv.tools.brightness.ConverterSetup;
-import bdv.util.Bounds;
-import bdv.viewer.ConverterSetups;
-import bdv.viewer.Source;
-import bdv.viewer.SourceAndConverter;
-import bdv.viewer.ViewerState;
+
 import bigtrace.geometry.Cuboid3D;
 import ij.ImagePlus;
 import ij.measure.Calibration;
@@ -219,8 +214,8 @@ public class VolumeMisc {
 	
 	public static Img<UnsignedShortType> convertFloatToUnsignedShort(Img<FloatType> input)
 	{
-		float minVal = Float.MAX_VALUE;
-		float maxVal = -Float.MAX_VALUE;
+		double minVal = Float.MAX_VALUE;
+		double maxVal = -Float.MAX_VALUE;
 		for ( final FloatType h : input )
 		{
 			final float dd = h.get();

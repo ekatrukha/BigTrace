@@ -42,21 +42,16 @@ import bigtrace.rois.PolyLine3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.volume.SplitVolumePlane;
 import bigtrace.volume.StraightenCurve;
-import bigtrace.volume.VolumeMisc;
 import ij.IJ;
-import ij.ImagePlus;
 import ij.Prefs;
 
 import ij.gui.Plot;
 import ij.io.SaveDialog;
-import ij.measure.Calibration;
 import ij.measure.ResultsTable;
-import net.imglib2.Cursor;
 import net.imglib2.RandomAccessible;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.img.Img;
 import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.interpolation.randomaccess.ClampingNLinearInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
@@ -885,14 +880,13 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				break;
 			case Roi3D.POLYLINE:
 				
-				li_profile = ((PolyLine3D)roi).getIntensityProfileThick(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				//li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((PolyLine3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
 				break;
 				
 			case Roi3D.LINE_TRACE:				
 				
-				//li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				li_profile = ((LineTrace3D)roi).getIntensityProfileThick(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((LineTrace3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				//li_profile = ((LineTrace3D)roi).getIntensityProfilePipeTEST(bt,source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
 				break;			
 		}
 		if (li_profile!=null && bMakePlot)
@@ -949,12 +943,13 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				nInterpolatorFactory = new NearestNeighborInterpolatorFactory<T>();
 				break;
 			case INT_NLinear:
-				nInterpolatorFactory = new NLinearInterpolatorFactory<T>();
+				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<T>();
 				break;
 			case INT_Lanczos:
+				nInterpolatorFactory = new LanczosInterpolatorFactory<T>();
 				break;
 			default:
-				nInterpolatorFactory = new LanczosInterpolatorFactory<T>();
+				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<T>();
 				break;
 				
 		}

@@ -15,18 +15,13 @@ import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTraceData;
 import bigtrace.geometry.CurveShapeInterpolation;
-import bigtrace.geometry.LerpCurve3D;
 import bigtrace.geometry.Line3D;
-import bigtrace.geometry.Pipe3D;
-import bigtrace.geometry.SplineCurve3D;
 import bigtrace.measure.MeasureValues;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
-import bigtrace.volume.VolumeMisc;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.roi.Masks;
@@ -399,12 +394,12 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		}
 			
 	}
-	/** returns double [i][j] array where for position i
-	 * 0 is length along the line (in scaled units)
-	 * 1 intensity
-	 * 2 x coordinate (in scaled units) 
-	 * 3 y coordinate (in scaled units) 
-	 * 4 z coordinate (in scaled units) **/
+	/**
+	 *  OBSOLETE, works only with 1 pix tickness
+	 *
+	 * @deprecated use {@link #getIntensityProfilePipe()} instead.  
+	 */
+	@Deprecated
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
 		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
@@ -423,7 +418,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	 * 2 x coordinate (in scaled units) 
 	 * 3 y coordinate (in scaled units) 
 	 * 4 z coordinate (in scaled units) **/
-	public < T extends RealType< T > >  double [][] getIntensityProfileThick(final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
+	public < T extends RealType< T > >  double [][] getIntensityProfilePipe(final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
 		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
 		
@@ -434,7 +429,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
 		
 		
-		return getIntensityProfilePointsThick(allPoints,allTangents, nRadius, interpolate,globCal);
+		return getIntensityProfilePointsPipe(allPoints,allTangents, nRadius, interpolate,globCal);
 	}
 	/** returns cosine or an angle (from 0 to pi, determined by bCosine) 
 	 *  between dir_vector (assumed to have length of 1.0) and each segment of the line Roi. 

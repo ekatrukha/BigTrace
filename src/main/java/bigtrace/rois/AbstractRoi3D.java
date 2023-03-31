@@ -3,6 +3,7 @@ package bigtrace.rois;
 import java.awt.Color;
 import java.util.ArrayList;
 
+import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.measure.Circle2DMeasure;
@@ -158,7 +159,7 @@ public abstract class AbstractRoi3D implements Roi3D {
 	 * the interpolate RRA 
 	 * it is assumes that allPoints are sampled with the same length step,
 	 * equal to dMinVoxelSize **/
-	public < T extends RealType< T > >  double [][] getIntensityProfilePointsThick(final ArrayList<RealPoint> points, final ArrayList<double[]> tangents, final int nRadius, RealRandomAccessible<T> interpolate, final double [] globCal)
+	public < T extends RealType< T > >  double [][] getIntensityProfilePointsPipe(final ArrayList<RealPoint> points, final ArrayList<double[]> tangents, final int nRadius, RealRandomAccessible<T> interpolate, final double [] globCal)
 	{
 		double [][] out = new double [5][points.size()];
 		
@@ -201,6 +202,65 @@ public abstract class AbstractRoi3D implements Roi3D {
 				getVoxelInPlane(rsVect[0][nPoint],rsVect[1][nPoint], current_point,current_pixel);
 				//back to voxel units
 				current_pixel =Roi3D.scaleGlobInv(current_pixel, globCal);
+				ra.setPosition(current_pixel);
+				//intensity
+				dInt+=ra.get().getRealDouble();
+				nPixN++;
+			}
+			out[1][nPoint] = dInt/nPixN;
+		}
+
+		return out;
+	}
+	
+	/** TEST voxel placement **/
+	public < T extends RealType< T > >  double [][] getIntensityProfilePointsPipeTEST(final BigTrace<T> bt, final ArrayList<RealPoint> points, final ArrayList<double[]> tangents, final int nRadius, RealRandomAccessible<T> interpolate, final double [] globCal)
+	{
+		double [][] out = new double [5][points.size()];
+		
+		final RealRandomAccess<T> ra =   interpolate.realRandomAccess();
+		double [] current_pixel = new double[3];
+		double dInt;
+		int nPixN;
+		final double dMinVoxelSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
+		
+		//get a frame around line
+		double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(points, tangents);
+		int d;
+		double [] current_point = new double [3];
+		Circle2DMeasure measureCircle = new Circle2DMeasure();
+		
+		measureCircle.setRadius(nRadius);
+		for (int nPoint = 0;nPoint<points.size();nPoint++)
+		{
+			//length
+			out[0][nPoint] = dMinVoxelSize*nPoint;
+			
+			//log point location
+			points.get(nPoint).localize(current_point); 
+			for(d=0;d<3;d++)
+			{
+				out[2+d][nPoint]=current_point[d];
+			}
+			//reset cursor
+			measureCircle.cursorCircle.reset();
+			
+			//get intensities in perpendicular plane
+			//iterate over voxels of circle
+			nPixN =0;
+			dInt =0.0;
+			while (measureCircle.cursorCircle.hasNext())
+			{
+				measureCircle.cursorCircle.fwd();
+				measureCircle.cursorCircle.localize(current_pixel);
+				LinAlgHelpers.scale(current_pixel, dMinVoxelSize, current_pixel);
+				getVoxelInPlane(rsVect[0][nPoint],rsVect[1][nPoint], current_point,current_pixel);
+				//back to voxel units
+				current_pixel =Roi3D.scaleGlobInv(current_pixel, globCal);
+				if(nPoint<10 && nPoint%2==0)
+				{
+					bt.roiManager.addPoint(new RealPoint(current_pixel));
+				}
 				ra.setPosition(current_pixel);
 				//intensity
 				dInt+=ra.get().getRealDouble();
