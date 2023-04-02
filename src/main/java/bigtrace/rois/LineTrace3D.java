@@ -481,7 +481,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 	/**
 	 *  OBSOLETE, works only with 1 pix tickness
 	 *
-	 * @deprecated use {@link #getIntensityProfilePipe()} instead.  
+	 * @deprecated use {@link #getIntensityProfilePipe(IntervalView, double [], int, InterpolatorFactory, int)} instead.  
 	 */
 	@Deprecated
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
