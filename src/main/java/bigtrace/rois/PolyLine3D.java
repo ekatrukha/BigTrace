@@ -397,7 +397,7 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 	/**
 	 *  OBSOLETE, works only with 1 pix tickness
 	 *
-	 * @deprecated use {@link #getIntensityProfilePipe()} instead.  
+	 * @deprecated use {@link #getIntensityProfilePipe(IntervalView, double [], int, InterpolatorFactory, int)} instead.  
 	 */
 	@Deprecated
 	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
@@ -412,7 +412,13 @@ public class PolyLine3D extends AbstractRoi3D implements Roi3D, WritablePolyline
 		
 		return getIntensityProfilePoints(allPoints,interpolate,globCal);
 	}
-	/** returns double [i][j] array where for position i
+	/** Measures intensity profile along the ROI;
+	 * @param	source	IntervalView of measurement
+	 * @param	globCal voxel size
+	 * @param	nRadius	Radius of pipe around line
+	 * @param	nInterpolatorFactory intensity Interpolation method (factory)
+	 * @param	nShapeInterpolation curve shape interpolation
+	 * @return double [i][j] array where for position i
 	 * 0 is length along the line (in scaled units)
 	 * 1 intensity
 	 * 2 x coordinate (in scaled units) 
