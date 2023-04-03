@@ -13,37 +13,29 @@ import org.joml.Matrix4fc;
 
 import com.jogamp.opengl.GL3;
 
-import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.CurveShapeInterpolation;
-import bigtrace.measure.MeasureValues;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
-import net.imglib2.RandomAccessible;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.RealRandomAccessible;
-import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.roi.Masks;
 import net.imglib2.roi.RealMask;
 import net.imglib2.roi.RealMaskRealInterval;
 import net.imglib2.roi.geom.real.WritablePolyline;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;
-import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
-import net.imglib2.view.IntervalView;
-import net.imglib2.view.Views;
 
-public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolyline
+
+public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyline
 {
 	
-	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> segments;
 	public VisPointsScaled verticesVis;
 	public VisPolyLineScaled segmentsVis;
 	
-	CurveShapeInterpolation interpolator = null;
+	
 
 	public LineTrace3D(final Roi3DGroup preset_in)
 	{
@@ -366,79 +358,7 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		return;
 		
 	}
-	@Override
-	public void setGroup(final Roi3DGroup preset_in) {
-		
-		setPointColor(preset_in.pointColor);
-		setLineColor(preset_in.lineColor);
 
-		setRenderType(preset_in.renderType);
-		setPointSize(preset_in.pointSize);
-		setLineThickness(preset_in.lineThickness);
-	}
-
-
-	/** returns the length of LineTrace using globCal voxel size **/
-	public double getLength(final int nShapeInterpolation, final double [] globCal)
-	{
-		//get measured length
-		//return  Roi3D.getSegmentLength(makeJointSegment(nShapeInterpolation),globCal);
-		//return Roi3D.getSegmentLength(interpolator.getVerticesVisual());
-		return interpolator.getLength();
-		
-	}
-	public double getEndsDistance(final double [] globCal)
-	{
-		if(vertices.size()>1)
-		{
-			double [] posB = new double [3];
-			double [] posE = new double [3];
-			Roi3D.scaleGlob(vertices.get(0),globCal).localize(posB);
-			Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal).localize(posE);
-			return LinAlgHelpers.distance(posB, posE);
-		}
-		else
-		{
-			
-			return Double.NaN;
-		}
-			
-	}
-	public void getEnds(final MeasureValues val, final double [] globCal)
-	{
-		val.ends = new RealPoint [2];
-		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertices.get(0),globCal));
-		if(vertices.size()>1)
-		{
-			val.ends[1]= new RealPoint(Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal));
-		}
-		else
-		{
-			val.ends[1] =Roi3D.getNaNPoint();
-		}
-		return;
-	}
-
-	/** returns direction of the vector from one to another end**/
-	public void getEndsDirection(final MeasureValues val, final double [] globCal)
-	{
-		if(vertices.size()>1)
-		{
-			double [] posB = new double [3];
-			double [] posE = new double [3];
-			Roi3D.scaleGlob(vertices.get(0),globCal).localize(posB);
-			Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal).localize(posE);
-			LinAlgHelpers.subtract(posE, posB, posE);
-			LinAlgHelpers.normalize(posE);
-			val.direction=new RealPoint(posE);
-		}
-		else
-		{
-			
-			val.direction = Roi3D.getNaNPoint();
-		}
-			
-	}
 	/** returns joint segment of ROI in VOXEL coordinates **/
 	public ArrayList<RealPoint> makeJointSegment()
 	{
@@ -463,92 +383,6 @@ public class LineTrace3D extends AbstractRoi3D implements Roi3D, WritablePolylin
 		return out;
 	}
 	
-	
-	/** Returns points sampled along the reference curve with a smallest voxel size step.
-	 * **/
-	public ArrayList<RealPoint> getJointSegmentResampled()
-	{
-		return interpolator.getVerticesResample();
-
-	}
-	/** Returns tangents at points sampled along the reference curve with a smallest voxel size step.*/
-	public ArrayList<double[]> getJointSegmentTangentsResampled()
-	{
-		return interpolator.getTangentsResample();
-	}
-
-
-	/**
-	 *  OBSOLETE, works only with 1 pix tickness
-	 *
-	 * @deprecated use {@link #getIntensityProfilePipe(IntervalView, double [], int, InterpolatorFactory, int)} instead.  
-	 */
-	@Deprecated
-	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
-	{
-	
-		ArrayList<RealPoint> allPoints = getJointSegmentResampled();
-		if(allPoints==null)
-			return null;
-
-		
-		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
-		
-		return getIntensityProfilePoints(allPoints,interpolate,globCal);
-	}
-	/** returns double [i][j] array where for position i
-	 * 0 is length along the line (in scaled units)
-	 * 1 intensity
-	 * 2 x coordinate (in scaled units) 
-	 * 3 y coordinate (in scaled units) 
-	 * 4 z coordinate (in scaled units) **/
-	public < T extends RealType< T > >  double [][] getIntensityProfilePipe(final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
-	{
-	
-		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
-		
-		if(allPoints == null)
-			return null;
-		final ArrayList<double []> allTangents = getJointSegmentTangentsResampled();
-		
-		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
-		
-		
-		return getIntensityProfilePointsPipe(allPoints,allTangents, nRadius, interpolate,globCal);
-	}
-	
-	/** TEST voxel placement**/
-	public < T extends RealType< T > >  double [][] getIntensityProfilePipeTEST(final BigTrace<T> bt, final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
-	{
-	
-		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
-		
-		if(allPoints == null)
-			return null;
-		final ArrayList<double []> allTangents = getJointSegmentTangentsResampled();
-		
-		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
-		
-		
-		return getIntensityProfilePointsPipeTEST(bt, allPoints,allTangents, nRadius, interpolate,globCal);
-	}
-	/** returns cosine or an angle (from 0 to pi, determined by bCosine) 
-	 *  between dir_vector (assumed to have length of 1.0) and each segment of the line Roi. 
-	 *  The output is double [i][j] array where for position i
-	 * 0 is length along the line (in scaled units)
-	 * 1 orientation (cosine or angle in radians)
-	 * 2 x coordinate (in scaled units) 
-	 * 3 y coordinate (in scaled units) 
-	 * 4 z coordinate (in scaled units) **/
-	public double [][] getCoalignmentProfile(final double [] dir_vector, final double [] globCal, final int nShapeInterpolation, final boolean bCosine)
-	{
-		ArrayList<RealPoint> allPoints = getJointSegmentResampled();
-		
-		if(allPoints==null)
-			return null;
-
-		return getCoalignmentProfilePoints(allPoints, dir_vector, bCosine);
-	}
 	
 	@Override
 	public void updateRenderVertices() {

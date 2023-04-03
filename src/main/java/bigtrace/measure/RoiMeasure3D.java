@@ -35,10 +35,9 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.CrossSection3D;
-import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Point3D;
-import bigtrace.rois.PolyLine3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.volume.SplitVolumePlane;
 import bigtrace.volume.StraightenCurve;
@@ -53,7 +52,6 @@ import net.imglib2.RealPoint;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.ClampingNLinearInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
-import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
@@ -700,11 +698,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.length=0.0;
 				break;
 			case Roi3D.POLYLINE:
-				val.length = ((PolyLine3D)roi).getLength(BigTraceData.shapeInterpolation, bt.btdata.globCal);
-				break;
 			case Roi3D.LINE_TRACE:
-				val.length = ((LineTrace3D)roi).getLength(BigTraceData.shapeInterpolation, bt.btdata.globCal);
-				break;			
+				val.length = ((AbstractCurve3D)roi).getLength(BigTraceData.shapeInterpolation, BigTraceData.globCal);
+				break;		
 			default:
 				val.length = Double.NaN;
 		}
@@ -718,11 +714,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			case Roi3D.POINT:
 				val.endsDistance = Double.NaN;
 				break;
-		case Roi3D.POLYLINE:
-				val.endsDistance = ((PolyLine3D)roi).getEndsDistance(bt.btdata.globCal);
-				break;
+			case Roi3D.POLYLINE:
 			case Roi3D.LINE_TRACE:
-				val.endsDistance = ((LineTrace3D)roi).getEndsDistance( bt.btdata.globCal);
+				val.endsDistance = ((AbstractCurve3D)roi).getEndsDistance(BigTraceData.globCal);
 				break;			
 			default:
 				val.endsDistance = Double.NaN;
@@ -741,22 +735,15 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.mean = ((Point3D)roi).getMeanIntensity(source, nInterpolatorFactory);
 				break;
 			case Roi3D.POLYLINE:
+			case Roi3D.LINE_TRACE:
 				
-				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((AbstractCurve3D)roi).getIntensityProfile(source, BigTraceData.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
 				if (li_profile!=null)
 				{
 					val.mean= getMeanDoubleArray(li_profile[1]);
 				}
-				break;
 				
-			case Roi3D.LINE_TRACE:				
-				
-				li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				if(li_profile!=null)
-				{
-					val.mean= getMeanDoubleArray(li_profile[1]);
-				}
-				break;		
+				break;	
 			default:
 				val.mean = Double.NaN;
 		}
@@ -774,8 +761,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.stdDev = 0.0;
 				break;
 			case Roi3D.POLYLINE:
+			case Roi3D.LINE_TRACE:
 				
-				li_profile = ((PolyLine3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((AbstractCurve3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
 				if (li_profile!=null)
 				{
 					if((systemMeasurements&MEAN)!=0) 
@@ -789,21 +777,6 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				}
 				break;
 				
-			case Roi3D.LINE_TRACE:				
-				
-				li_profile = ((LineTrace3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				if (li_profile!=null)
-				{
-					if((systemMeasurements&MEAN)!=0) 
-					{
-						val.stdDev= getSDDoubleArray(val.mean,li_profile[1]);
-					}
-					else
-					{
-						val.stdDev= getSDDoubleArray(getMeanDoubleArray(li_profile[1]),li_profile[1]);
-					}
-				}
-				break;	
 			default:
 				val.stdDev = Double.NaN;
 				
@@ -817,10 +790,8 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.straightness = Double.NaN;
 				break;
 			case Roi3D.POLYLINE:
-				val.straightness = ((PolyLine3D)roi).getEndsDistance(bt.btdata.globCal)/((PolyLine3D)roi).getLength(BigTraceData.shapeInterpolation,bt.btdata.globCal);
-				break;
 			case Roi3D.LINE_TRACE:
-				val.straightness = ((LineTrace3D)roi).getEndsDistance( bt.btdata.globCal)/((LineTrace3D)roi).getLength(BigTraceData.shapeInterpolation,bt.btdata.globCal);
+				val.straightness = ((AbstractCurve3D)roi).getEndsDistance( BigTraceData.globCal)/((AbstractCurve3D)roi).getLength(BigTraceData.shapeInterpolation,BigTraceData.globCal);
 				break;			
 			default:
 				val.straightness = Double.NaN;
@@ -831,13 +802,11 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		switch (roi.getType())
 		{
 			case Roi3D.POINT:
-				((Point3D)roi).getEnds(val, bt.btdata.globCal);
+				((Point3D)roi).getEnds(val, BigTraceData.globCal);
 				break;
 			case Roi3D.POLYLINE:
-				((PolyLine3D)roi).getEnds(val, bt.btdata.globCal);
-				break;
 			case Roi3D.LINE_TRACE:
-				((LineTrace3D)roi).getEnds(val, bt.btdata.globCal);
+				((AbstractCurve3D)roi).getEnds(val, BigTraceData.globCal);
 				break;	
 			default:
 				val.ends = new RealPoint [2];
@@ -855,10 +824,8 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				val.direction = Roi3D.getNaNPoint();
 				break;
 			case Roi3D.POLYLINE:
-				((PolyLine3D)roi).getEndsDirection(val, bt.btdata.globCal);
-				break;
 			case Roi3D.LINE_TRACE:
-				((LineTrace3D)roi).getEndsDirection(val, bt.btdata.globCal);
+				((AbstractCurve3D)roi).getEndsDirection(val, BigTraceData.globCal);
 				break;	
 			default:
 				val.direction = Roi3D.getNaNPoint();
@@ -879,14 +846,10 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				//val.direction = Roi3D.getNaNPoint();
 				break;
 			case Roi3D.POLYLINE:
-				
-				li_profile = ((PolyLine3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				break;
-				
 			case Roi3D.LINE_TRACE:				
 				
-				li_profile = ((LineTrace3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				//li_profile = ((LineTrace3D)roi).getIntensityProfilePipeTEST(bt,source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				
 				break;			
 		}
 		if (li_profile!=null && bMakePlot)
@@ -900,7 +863,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	
 	double [][] measureLineCoalignment(final Roi3D roi, final boolean bMakePlot)
 	{
-		IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
+		
 		double [][] li_profile = null;
 		Plot plotProfile;
 		String sUnit;
@@ -916,13 +879,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				//val.direction = Roi3D.getNaNPoint();
 				break;
 			case Roi3D.POLYLINE:
-				
-				li_profile = ((PolyLine3D)roi).getCoalignmentProfile(coalignVector, bt.btdata.globCal, BigTraceData.shapeInterpolation, bAlignCosine);
-				break;
-				
 			case Roi3D.LINE_TRACE:				
 				
-				li_profile = ((LineTrace3D)roi).getCoalignmentProfile(coalignVector, bt.btdata.globCal, BigTraceData.shapeInterpolation, bAlignCosine);
+				li_profile = ((AbstractCurve3D)roi).getCoalignmentProfile(coalignVector, BigTraceData.globCal, BigTraceData.shapeInterpolation, bAlignCosine);
 				break;			
 		}
 		if (li_profile!=null && bMakePlot)
@@ -978,7 +937,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	}
 	
 	/** given cross-section ROI, splits provided volume in two and shows them **/
-	public void straightenCurve(final Roi3D curveLine)
+	public void straightenCurve(final AbstractCurve3D curveLine)
 	{
 		
 		float fRadiusStraighted = 0.0f;
@@ -1146,7 +1105,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			{
 					if(bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.LINE_TRACE||bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.POLYLINE)
 					{
-						straightenCurve(bt.roiManager.rois.get(jlist.getSelectedIndex()));
+						straightenCurve((AbstractCurve3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					}
 			}
 		}

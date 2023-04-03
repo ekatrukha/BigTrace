@@ -10,19 +10,16 @@ import javax.swing.SwingWorker;
 import bdv.spimdata.SequenceDescriptionMinimal;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
+import bigtrace.BigTraceData;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.CrossSection3D;
-import ij.ImageJ;
-import ij.ImagePlus;
 import ij.measure.Calibration;
-import net.imagej.util.Images;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.img.Img;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.RealType;
@@ -58,6 +55,7 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	protected Void doInBackground() throws Exception {
 		
@@ -159,9 +157,9 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 		}
 		Calibration cal = new Calibration();
 		cal.setUnit(bt.btdata.sVoxelUnit);
-		cal.pixelWidth= bt.btdata.globCal[0];
-		cal.pixelHeight= bt.btdata.globCal[1];
-		cal.pixelDepth= bt.btdata.globCal[2];
+		cal.pixelWidth= BigTraceData.globCal[0];
+		cal.pixelHeight= BigTraceData.globCal[1];
+		cal.pixelDepth= BigTraceData.globCal[2];
 		Path p = Paths.get(bt.btdata.sFileNameFullImg);
 		String fileName = p.getFileName().toString()+"_"+crossSection.getName();
 		

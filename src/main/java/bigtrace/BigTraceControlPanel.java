@@ -171,7 +171,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		
 		
 		//VOXEL SIZE PANEL		
-		voxelSizePanel = new VoxelSizePanel(btdata.globCal,btdata.sVoxelUnit);
+		voxelSizePanel = new VoxelSizePanel(BigTraceData.globCal,btdata.sVoxelUnit);
 		voxelSizePanel.addVoxelSizePanelListener(new VoxelSizePanel.Listener() {
 			
 			@Override
@@ -515,6 +515,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	        
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public synchronized void bbChanged(long [][] box )
 	{
 		int i;
@@ -613,10 +614,10 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		for (int d = 0;d<3; d++)
 		{
 			scaleChange[d] = Affine3DHelpers.extractScale( transform, d );
-			scaleChange[d] /= btdata.globCal[d];
-			btdata.globCal[d]=newVoxelSize[d];
+			scaleChange[d] /= BigTraceData.globCal[d];
+			BigTraceData.globCal[d]=newVoxelSize[d];
 			//IJ.log("voxel "+Integer.toString(d)+" "+Double.toString(newVoxelSize[d]));
-			scaleChange[d]*=btdata.globCal[d];
+			scaleChange[d]*=BigTraceData.globCal[d];
 		}
 		
 		final double[][] Rcurrent = new double[ 3 ][ 3 ];
@@ -640,6 +641,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		bt.roiManager.updateROIsDisplay();
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public void setRenderMethod(int nRenderType)
 	{
 		btdata.nRenderMethod = nRenderType;

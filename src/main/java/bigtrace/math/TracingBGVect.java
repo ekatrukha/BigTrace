@@ -12,28 +12,25 @@ import net.imglib2.RealPoint;
 public class TracingBGVect extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
 	
-	public BigTrace bt;
+	public BigTrace<?> bt;
 	private String progressState;
 	public ArrayList<RealPoint> trace;
 	public RealPoint target;
 
 	@Override
 	public String getProgressState() {
-		// TODO Auto-generated method stub
 		return progressState;
 	}
 
 	@Override
 	public void setProgressState(String state_) {
-		// TODO Auto-generated method stub
 		progressState=state_;
 	}
 
 	@Override
 	protected Void doInBackground() throws Exception {
-		// TODO Auto-generated method stub
-						
-		
+
+	
 		long start1, end1;
 		boolean found_path_end;
 		final DijkstraFHRestrictVector dijkRVBegin;

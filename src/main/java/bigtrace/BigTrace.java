@@ -210,6 +210,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	}
 	
+	@SuppressWarnings("unchecked")
 	public boolean initDataSourcesImageJ()
 	{
 		
@@ -237,9 +238,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			return false;
 		}
 		
-		btdata.globCal[0] = imp.getCalibration().pixelWidth;
-		btdata.globCal[1] = imp.getCalibration().pixelHeight;
-		btdata.globCal[2] = imp.getCalibration().pixelDepth;
+		BigTraceData.globCal[0] = imp.getCalibration().pixelWidth;
+		BigTraceData.globCal[1] = imp.getCalibration().pixelHeight;
+		BigTraceData.globCal[2] = imp.getCalibration().pixelDepth;
 		btdata.sVoxelUnit = imp.getCalibration().getUnit();
 		
 		
@@ -299,6 +300,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		return true;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public boolean initDataSourcesHDF5() throws SpimDataException
 	{
 		
@@ -1339,7 +1341,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 			for(int j=0;j<3;j++)
 			{
-				btdata.globCal[j]=transform.get(j, j);
+				BigTraceData.globCal[j]=transform.get(j, j);
 				transform.set(1.0/transform.get(j, j), j, j);
 			}
 			(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transform);	 
@@ -1358,7 +1360,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	{
 		AffineTransform3D t = new AffineTransform3D();
 		t.identity();
-		t.scale(btdata.globCal[0],btdata.globCal[1],btdata.globCal[2]);
+		t.scale(BigTraceData.globCal[0],BigTraceData.globCal[1],BigTraceData.globCal[2]);
 		t.rotate(0, Math.PI/2.0);
 		t.rotate(1, (-1)*Math.PI/6.0);
 		t.rotate(0, Math.PI/9.0);
@@ -1385,11 +1387,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			nBox[1]= btdata.trace_weights.maxAsLongArray();
 		}
 		
-		double nW= (double)(nBox[1][0]-nBox[0][0])*btdata.globCal[0];
-		double nH= (double)(nBox[1][1]-nBox[0][1])*btdata.globCal[1];
-		double nWoff= (double)(2.0*nBox[0][0])*btdata.globCal[0];
-		double nHoff= (double)(2.0*nBox[0][1])*btdata.globCal[1];
-		double nDoff= (double)(2.0*nBox[0][2])*btdata.globCal[2];
+		double nW= (double)(nBox[1][0]-nBox[0][0])*BigTraceData.globCal[0];
+		double nH= (double)(nBox[1][1]-nBox[0][1])*BigTraceData.globCal[1];
+		double nWoff= (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
+		double nHoff= (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
+		double nDoff= (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
 		
 		double sW = panel.getWidth();
 		double sH = panel.getHeight();
@@ -1406,7 +1408,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		AffineTransform3D t = new AffineTransform3D();
 		t.identity();
 
-		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
+		t.scale(BigTraceData.globCal[0]*scale, BigTraceData.globCal[1]*scale, BigTraceData.globCal[2]*scale);
 		t.translate(0.5*(sW-scale*(nW+nWoff)),0.5*(sH-scale*(nH+nHoff)),(-0.5)*scale*(nDoff));
 		
 		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
@@ -1429,11 +1431,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			nBox[0]= btdata.trace_weights.minAsLongArray();
 			nBox[1]= btdata.trace_weights.maxAsLongArray();
 		}
-		double nH= (double)(nBox[1][1]-nBox[0][1])*btdata.globCal[1];
-		double nD= (double)(nBox[1][2]-nBox[0][2])*btdata.globCal[2];
-		double nWoff= (double)(2.0*nBox[0][0])*btdata.globCal[0];
-		double nHoff= (double)(2.0*nBox[0][1])*btdata.globCal[1];
-		double nDoff= (double)(2.0*nBox[0][2])*btdata.globCal[2];
+		double nH= (double)(nBox[1][1]-nBox[0][1])*BigTraceData.globCal[1];
+		double nD= (double)(nBox[1][2]-nBox[0][2])*BigTraceData.globCal[2];
+		double nWoff= (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
+		double nHoff= (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
+		double nDoff= (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
 		double sW = panel.getWidth();
 		double sH = panel.getHeight();
 		
@@ -1449,7 +1451,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		AffineTransform3D t = new AffineTransform3D();
 	
 		t.identity();
-		t.scale(btdata.globCal[0]*scale, btdata.globCal[1]*scale, btdata.globCal[2]*scale);
+		t.scale(BigTraceData.globCal[0]*scale, BigTraceData.globCal[1]*scale, BigTraceData.globCal[2]*scale);
 		t.rotate(1, (-1)*Math.PI/2.0);
 		t.translate(0.5*(sW+scale*(nD+nDoff)),0.5*(sH-scale*(nH+nHoff)),(-0.5)*scale*nWoff);
 		

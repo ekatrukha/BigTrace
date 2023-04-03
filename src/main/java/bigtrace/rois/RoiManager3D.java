@@ -55,7 +55,6 @@ import ij.io.SaveDialog;
 import net.imglib2.RealPoint;
 
 
-
 public class RoiManager3D extends JPanel implements ListSelectionListener, ActionListener {
 	
 
@@ -115,7 +114,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 private ArrayList<Listener> listeners = new ArrayList<Listener>();
 
 		
-	 public RoiManager3D(BigTrace bt)
+	 public RoiManager3D(BigTrace<?> bt)
 	 {
 		 	 
 		 this.bt = bt;
@@ -1593,7 +1592,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 nActiveGroup = 0;
 
 	}
-	public void setRoiMeasure3D( RoiMeasure3D roiMeasure_)
+	public void setRoiMeasure3D( RoiMeasure3D<?> roiMeasure_)
 	{
 		 this.roiMeasure=roiMeasure_;
 	}

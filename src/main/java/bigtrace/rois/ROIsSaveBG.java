@@ -10,12 +10,13 @@ import javax.swing.SwingWorker;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
+import bigtrace.BigTraceData;
 import ij.IJ;
 
 public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGWorker{
 
 	private String progressState;
-	public BigTrace bt;
+	public BigTrace<?> bt;
 	public String sFilename;
 	
 	@Override
@@ -50,11 +51,11 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
 			symbols.setDecimalSeparator('.');
 			DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
 			
-			writer.write("BigTrace_ROIs,version," + bt.btdata.sVersion + "\n");
+			writer.write("BigTrace_ROIs,version," + BigTraceData.sVersion + "\n");
 			writer.write("ImageUnits,"+bt.btdata.sVoxelUnit+"\n");
-			writer.write("ImageVoxelWidth," + df3.format(bt.btdata.globCal[0]) + "\n");
-			writer.write("ImageVoxelHeight," + df3.format(bt.btdata.globCal[1]) + "\n");
-			writer.write("ImageVoxelDepth," + df3.format(bt.btdata.globCal[2]) + "\n");
+			writer.write("ImageVoxelWidth," + df3.format(BigTraceData.globCal[0]) + "\n");
+			writer.write("ImageVoxelHeight," + df3.format(BigTraceData.globCal[1]) + "\n");
+			writer.write("ImageVoxelDepth," + df3.format(BigTraceData.globCal[2]) + "\n");
 			nRoiN=bt.roiManager.rois.size();
 			writer.write("ROIsNumber,"+Integer.toString(nRoiN)+"\n");
 			for(nRoi=0;nRoi<nRoiN;nRoi++)

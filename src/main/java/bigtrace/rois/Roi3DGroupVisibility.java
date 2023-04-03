@@ -61,11 +61,6 @@ public class Roi3DGroupVisibility implements  ActionListener {
 		dialog.setVisible(true); 
 	}
 
-    private void hide()
-    { 
-    	dialog.setVisible(false); 
-    }
-    
 
 	@Override
 	public void actionPerformed(ActionEvent ae) {

@@ -9,12 +9,10 @@ import bdv.spimdata.SequenceDescriptionMinimal;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
-import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.rois.Roi3D;
 import ij.measure.Calibration;
-import bigtrace.rois.PolyLine3D;
-import bigtrace.rois.LineTrace3D;
+import bigtrace.rois.AbstractCurve3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -22,7 +20,6 @@ import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
-import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Util;
@@ -33,10 +30,10 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 	private String progressState;
 	public BigTrace<T> bt;
 	float nRadius;
-	Roi3D curveROI;
+	AbstractCurve3D curveROI;
 	public String sRoiName="";
 	
-	public StraightenCurve(final Roi3D curveROI_, final BigTrace<T> bt_, final float nRadius_)
+	public StraightenCurve(final AbstractCurve3D curveROI_, final BigTrace<T> bt_, final float nRadius_)
 	{
 		super();
 		curveROI = curveROI_;
@@ -58,6 +55,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	protected Void doInBackground() throws Exception {
 
@@ -94,18 +92,10 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		ArrayList<double []> tangents;
 		//curve points in SPACE units
 		//sampled with dMin step
-		if(curveROI.getType()==Roi3D.POLYLINE)
-		{
-			points_space = ((PolyLine3D)curveROI).getJointSegmentResampled();
-			tangents = ((PolyLine3D)curveROI).getJointSegmentTangentsResampled();
-		}
-		else
-		{
-			points_space = ((LineTrace3D)curveROI).getJointSegmentResampled();
-			tangents = ((LineTrace3D)curveROI).getJointSegmentTangentsResampled();
-		}
-		
-		
+
+		points_space = curveROI.getJointSegmentResampled();
+		tangents = curveROI.getJointSegmentTangentsResampled();
+	
 		//smallest voxel size
 		double dMinVoxSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
 		int dimXY = (int)(nRadius*2+1);
@@ -137,7 +127,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		ArrayList< RealPoint > planeNorm;
 
 		double [] current_point = new double [3];
-		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(bt.all_ch_RAI),bt.roiManager.roiMeasure.nInterpolatorFactory);
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(bt.all_ch_RAI), bt.roiManager.roiMeasure.nInterpolatorFactory);
 		final RealRandomAccess<T> ra = interpolate.realRandomAccess();
 		final RandomAccess<T> ra_out = out1.randomAccess();
 	

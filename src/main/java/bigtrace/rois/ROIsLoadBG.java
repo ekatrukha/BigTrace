@@ -18,7 +18,7 @@ import net.imglib2.RealPoint;
 public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGWorker{
 
 	private String progressState;
-	public BigTrace bt;
+	public BigTrace<?> bt;
 	public String sFilename;
 	public int nLoadMode;
 	String sFinalOut = "";

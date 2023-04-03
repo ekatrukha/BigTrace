@@ -135,6 +135,8 @@ public class Pipe3D {
 				LinAlgHelpers.subtract(rLi,out[0][i+1],out[0][i+1]);
 	
 				LinAlgHelpers.cross(ti_plus_one, out[0][i+1], out[1][i+1]);
+				LinAlgHelpers.normalize(out[0][i+1]);
+				LinAlgHelpers.normalize(out[1][i+1]);
 			}
 
 		}

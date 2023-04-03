@@ -234,12 +234,15 @@ public interface Roi3D
 	/** calculates cumulative length between vert_in 3D points using globCal calibration **/
 	public static double[] getSegmentTabLength(final ArrayList<RealPoint> vert_in, double [] globCal)
 	{
+		
+		if (vert_in==null)
+		{return null;}
+		
 		double[] length=new double [vert_in.size()];
 		double [] pos1 = new double [3];
 		double [] pos2 = new double [3];
 		
-		if (vert_in==null)
-			{return null;}
+
 		length[0]=0.0f;
 		for (int i=0;i<vert_in.size()-1; i++)
 		{
@@ -259,12 +262,14 @@ public interface Roi3D
 	/** calculates cumulative length between vert_in 3D points **/
 	public static double[] getSegmentTabLength(final ArrayList<RealPoint> vert_in)
 	{
+		if (vert_in==null)
+		{return null;}
+		
 		double [] length=new double [vert_in.size()];
 		double [] pos1 = new double [3];
 		double [] pos2 = new double [3];
 		
-		if (vert_in==null)
-			{return null;}
+
 		length[0]=0.0f;
 		for (int i=0;i<vert_in.size()-1; i++)
 		{
