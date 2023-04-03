@@ -491,24 +491,25 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		return val;
 		
 	}
-	void measureAll()
+	void measureROIs(final ArrayList<Roi3D> rois, final boolean resetTable)
 	{
-		ArrayList<MeasureValues> vals = new ArrayList<MeasureValues>();
-		if(bt.roiManager.rois.size()>0)
+	
+		if(rois.size()>0)
 		{
-		
-			for(int i = 0; i<bt.roiManager.rois.size();i++)
-			{
-				vals.add(measureRoi(bt.roiManager.rois.get(i)));
-			}
-			resetTable(vals);
+
+			ROIsMeasureBG measureBG = new ROIsMeasureBG();		
+			measureBG.rois = rois;
+			measureBG.bt=bt;
+			measureBG.resetTable = resetTable;
+			measureBG.addPropertyChangeListener(bt.btpanel);
+			measureBG.execute();
+			
 		}
 	}
 	
 	void measureAllProfiles()
 	{
 		String filename;
-		int j,k;
 		
 		filename = bt.btdata.sFileNameFullImg + "_int_profiles";
 		SaveDialog sd = new SaveDialog("Save ROI Plot Profiles ", filename, ".csv");
@@ -516,54 +517,14 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
         if (path==null)
         	return;
         filename = path+sd.getFileName();
-        bt.roiManager.setLockMode(true);
-        bt.bInputLock = true;
-        try 
-        {
-			final File file = new File(filename);
-			
-			final FileWriter writer = new FileWriter(file);
-			double [][] profile;
-			String sPrefix;
-			String out;
-			Roi3D roi;
-			final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
-			symbols.setDecimalSeparator('.');
-			final DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
-			
-
-			writer.write("ROI_Name,ROI_Type,ROI_Group,Length,Intensity,X_coord,Y_coord,Z_coord\n");
-			for(int i = 0; i<bt.roiManager.rois.size();i++)
-			{
-				roi = bt.roiManager.rois.get(i);
-				sPrefix = roi.getName() + ","+Roi3D.intTypeToString(roi.getType())+","+bt.roiManager.getGroupName(roi);
-				profile=measureLineProfile(roi, false);
-				if(profile!=null)
-				{
-					for(j=0;j<profile[0].length;j++)
-					{
-						out="".concat(sPrefix);
-						
-						for(k=0;k<5;k++)
-						{
-							out = out.concat(","+df3.format(profile[k][j]));
-						}
-						out = out.concat("\n");
-						writer.write(out);
-					}
-				}
-			}
-			writer.close();
-    	
-        } catch (IOException e) {	
-			IJ.log(e.getMessage());
-			//e.printStackTrace();
-		}
-        bt.roiManager.setLockMode(false);
-        bt.bInputLock = false;
-        bt.btpanel.progressBar.setValue(100);
-        bt.btpanel.progressBar.setString("Measured and saved line profiles of "+Integer.toString(bt.roiManager.rois.size())+" ROIs");
+        LineProfileBG profileBG = new LineProfileBG();
+        profileBG.bt = bt;
+        profileBG.sFilename = filename;
+        profileBG.addPropertyChangeListener(bt.btpanel);
+        profileBG.execute();
+        
 	}
+	
 	void measureAllCoalignment()
 	{
 		String filename;
@@ -737,10 +698,13 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			case Roi3D.POLYLINE:
 			case Roi3D.LINE_TRACE:
 				
-				li_profile = ((AbstractCurve3D)roi).getIntensityProfile(source, BigTraceData.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				//li_profile = ((AbstractCurve3D)roi).getIntensityProfile(source, BigTraceData.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+
 				if (li_profile!=null)
 				{
 					val.mean= getMeanDoubleArray(li_profile[1]);
+					val.li_profile = li_profile;
 				}
 				
 				break;	
@@ -762,8 +726,15 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				break;
 			case Roi3D.POLYLINE:
 			case Roi3D.LINE_TRACE:
-				
-				li_profile = ((AbstractCurve3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				if(val.li_profile!=null)
+				{
+				//li_profile = ((AbstractCurve3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
+					li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				}
+				else
+				{
+					li_profile = val.li_profile;
+				}
 				if (li_profile!=null)
 				{
 					if((systemMeasurements&MEAN)!=0) 
@@ -936,7 +907,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		return out;
 	}
 	
-	/** given cross-section ROI, splits provided volume in two and shows them **/
+	/** dialog for the Straighten procedure **/
 	public void straightenCurve(final AbstractCurve3D curveLine)
 	{
 		
@@ -993,7 +964,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 
 	}
 	
-	/** given cross-section ROI, splits provided volume in two and shows them **/
+	/** given cross-section ROI, splits provided volume in two and shows them (dialog) **/
 	public void sliceVolume(final CrossSection3D crossSection)
 	{
 		int nSliceType = 0;
@@ -1127,14 +1098,16 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			{
 				if(systemMeasurements>0)
 				{
-					updateTable(measureRoi(bt.roiManager.rois.get(jlist.getSelectedIndex())), true);
+					ArrayList<Roi3D> temp = new ArrayList<Roi3D>();
+					temp.add(bt.roiManager.rois.get(jlist.getSelectedIndex()));
+					measureROIs(temp, false);
 				}
 			}
 		}
 		//Measure all
 		if(e.getSource() == butMeasureAll)
 		{
-			measureAll();
+			measureROIs(bt.roiManager.rois, true);
 		}
 		//SETTINGS
 		if(e.getSource() == butSettings)

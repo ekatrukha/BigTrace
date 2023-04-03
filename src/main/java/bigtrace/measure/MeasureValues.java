@@ -16,6 +16,8 @@ public class MeasureValues implements Measurements {
 	public RealPoint [] ends;
 	public RealPoint direction = null;
 	
+	public double [][] li_profile = null;
+	
 
 	void setRoiName(String roiname_)
 	{

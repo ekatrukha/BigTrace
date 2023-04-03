@@ -174,7 +174,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				if(!initDataSourcesHDF5())
 					return;
 			} catch (SpimDataException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -344,6 +343,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		
 		//TODO FOR NOW, get it from the class
+		//not really needed later, but anyway
 		nBitDepth = 16;
 		colorsCh = new Color[btdata.nTotalChannels];
 		channelRanges = new double [2][btdata.nTotalChannels];
@@ -816,6 +816,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	}
 	
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void calcShowTraceBox(final LineTrace3D trace)
 	{
 		FinalInterval rangeTraceBox;
@@ -856,6 +857,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	/** returns current Interval for the tracing. If bCroppedInterval is true,
 	 * returns cropped area, otherwise returns full original volume. **/
+	@SuppressWarnings("unchecked")
 	IntervalView<?> getTraceInterval(boolean bCroppedInterval)
 	{
 		if(bCroppedInterval)
@@ -1557,9 +1559,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		
 		//check if mouse position it is inside bvv window
-		//java.awt.Rectangle windowBVVbounds = btpanel.bvv_frame.getContentPane().getBounds();
-		
-		
+		//java.awt.Rectangle windowBVVbounds = btpanel.bvv_frame.getContentPane().getBounds();		
 		//System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
 														
 		//get perspective matrix:
@@ -1635,45 +1635,23 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		if(VolumeMisc.newBoundBox(viewclick, intersectionPoints, nClickMinMax))
 		{
-			/*
-			//show volume that was cut-off
-			bvv2.removeFromBdv();
-			System.gc();
-			view2=Views.interval( img, nClickMinMax[0], nClickMinMax[1]);	
-		
-			bvv2 = BvvFunctions.show( view2, "cropclick", Bvv.options().addTo(bvv));
-			*/
-			
-			
-			
+
+					
 			IntervalView< X > intRay = Views.interval(viewclick, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
 																								   nClickMinMax[1][0],nClickMinMax[1][1],nClickMinMax[1][2]));
-			//BvvFunctions.show( intRay, "cropclick", Bvv.options().addTo(bvv_main));
-			//ImageJFunctions.show(intRay);
-			//double [][] singleCube  = new double [2][3];
-			//for(i=0;i<3;i++)
-			//	singleCube[1][i]=1.0;
-			//Cuboid3D clicktest = new Cuboid3D(singleCube);
-			//Cuboid3D clickVolume = new Cuboid3D(intersectionPoints);
 			Cuboid3D clickVolume = new Cuboid3D(clickFrustum);
 			clickVolume.iniFaces();
 			RealPoint target_found = new RealPoint( 3 );
-			//RealPoint locationMax = new RealPoint( 3 );
 			
 			if(VolumeMisc.findMaxLocationCuboid(intRay,target_found,clickVolume))
 			{
-				//traces.addPointToActive(target);
-				//panel.showMessage("point found");
 				btpanel.progressBar.setString("click point found");
 				target.setPosition(target_found);
 				return true;
-				//roiManager.addPoint(target);
-				//roiManager.addPointToLine(target);
 			}
 			else
 			{
 				btpanel.progressBar.setString("cannot find clicked point");
-				//panel.showMessage("not found :(");
 				return false;
 			}
 				
@@ -1723,17 +1701,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 					compositeImage.setC( c + 1 );
 					channelRanges[0][c]=(int)imp.getDisplayRangeMin();
 					channelRanges[1][c]=(int)imp.getDisplayRangeMax();
-					//channelRanges.add( "" +  + " " +  imp.getDisplayRangeMax() );
 	            }
 	            else
 	            {
 	            	colorsCh[c] = Color.WHITE;
 	    			channelRanges[0][c]=(int)imp.getDisplayRangeMin();
 					channelRanges[1][c]=(int)imp.getDisplayRangeMax();
-	            	//channelRanges.add( "" + imp.getDisplayRangeMin() + " " +  imp.getDisplayRangeMax() );
-	                //channelColors.add( ImarisUtils.DEFAULT_COLOR );
-	                //channelRanges.add( "" + imp.getDisplayRangeMin() + " " +  imp.getDisplayRangeMax() );
-	                //channelNames.add( "channel_" + c );
 	            }
 	        }
 	}
