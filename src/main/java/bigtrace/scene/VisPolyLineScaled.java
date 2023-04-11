@@ -135,7 +135,7 @@ public class VisPolyLineScaled
 		
 		if(renderType == Roi3D.OUTLINE)
 		{
-			setVerticesCenterLine(points_);
+			setVerticesCenterLine(Roi3D.scaleGlobInv(points_, BigTraceData.globCal));
 		}
 		else
 		{
