@@ -125,7 +125,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/line_align.png");
 		tabIcon = new ImageIcon(icon_path);
 		butLineAlignment = new JButton(tabIcon);
-		butLineAlignment.setToolTipText("Line Coalignment");
+		butLineAlignment.setToolTipText("Curve Coalignment");
 		butLineAlignment.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/make_plot.png");
@@ -144,7 +144,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/slice_volume.png");
 		tabIcon = new ImageIcon(icon_path);
 		butSlice = new JButton(tabIcon);
-		butSlice.setToolTipText("Cut volume");
+		butSlice.setToolTipText("Split volume");
 		butSlice.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 		
 
