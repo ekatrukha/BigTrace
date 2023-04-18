@@ -52,5 +52,5 @@ void main()
     dScale = min(dScale,1.0);   
     //square it, since we will be using it squared later
     dScale = dScale*dScale;
-  
+  	//dScale = pointSizeReal;
 }

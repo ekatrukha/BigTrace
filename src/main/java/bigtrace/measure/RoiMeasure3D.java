@@ -693,7 +693,12 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		{
 		
 			case Roi3D.POINT:
-				val.mean = ((Point3D)roi).getMeanIntensity(source, nInterpolatorFactory);
+				val.intensity_values = ((Point3D)roi).getIntensityValues(source, nInterpolatorFactory);
+				//val.intensity_values = ((Point3D)roi).getIntensityValuesTEST(bt,source, nInterpolatorFactory);
+				if(val.intensity_values != null)
+				{
+					val.mean = getMeanDoubleArray(val.intensity_values);
+				}
 				break;
 			case Roi3D.POLYLINE:
 			case Roi3D.LINE_TRACE:
@@ -704,7 +709,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				if (li_profile!=null)
 				{
 					val.mean= getMeanDoubleArray(li_profile[1]);
-					val.li_profile = li_profile;
+					val.intensity_values = li_profile[1].clone();
 				}
 				
 				break;	
@@ -722,28 +727,42 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		{
 		
 			case Roi3D.POINT:
-				val.stdDev = 0.0;
-				break;
-			case Roi3D.POLYLINE:
-			case Roi3D.LINE_TRACE:
-				if(val.li_profile!=null)
+				if(val.intensity_values == null)
 				{
-				//li_profile = ((AbstractCurve3D)roi).getIntensityProfile(source, bt.btdata.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-					li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+					val.intensity_values = ((Point3D)roi).getIntensityValues(source, nInterpolatorFactory);
+					
+				}
+				if((systemMeasurements&MEAN)!=0) 
+				{
+					val.stdDev = getSDDoubleArray(val.mean,val.intensity_values);
 				}
 				else
 				{
-					li_profile = val.li_profile;
+					val.stdDev= getSDDoubleArray(getMeanDoubleArray(val.intensity_values),val.intensity_values);
 				}
-				if (li_profile!=null)
+
+				break;
+			case Roi3D.POLYLINE:
+			case Roi3D.LINE_TRACE:
+				if(val.intensity_values==null)
+				{
+					li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+					if(li_profile!=null)
+					{
+						val.intensity_values = li_profile[1].clone();
+					}
+					
+				}
+
+				if (val.intensity_values!=null)
 				{
 					if((systemMeasurements&MEAN)!=0) 
 					{
-						val.stdDev= getSDDoubleArray(val.mean,li_profile[1]);
+						val.stdDev= getSDDoubleArray(val.mean,val.intensity_values);
 					}
 					else
 					{
-						val.stdDev= getSDDoubleArray(getMeanDoubleArray(li_profile[1]),li_profile[1]);
+						val.stdDev= getSDDoubleArray(getMeanDoubleArray(val.intensity_values),val.intensity_values);
 					}
 				}
 				break;

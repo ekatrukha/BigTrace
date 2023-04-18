@@ -1215,10 +1215,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		int [] screen_size = new int [] {(int)data.getScreenWidth(), (int) data.getScreenHeight()};
 		//handl.setRenderScene( ( gl, data ) -> {
-		Matrix4f pvm=new Matrix4f( data.getPv() );
+		
+		final Matrix4f pvm=new Matrix4f( data.getPv() );
+		
 		synchronized (roiManager)
 		{
-			roiManager.draw(gl, pvm, screen_size);
+			roiManager.draw(gl, pvm,  screen_size);
 		}	
 		
 			//render the origin of coordinates

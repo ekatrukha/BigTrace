@@ -88,7 +88,7 @@ public class VisPointsScaled
 		l_color = new Vector4f(color_in.getComponents(null));
 		
 		nPointsN=1;
-		vertices = new float [nPointsN*3];//assime 3D
+		vertices = new float [nPointsN*3];//assume 3D
 		
 
 		for (j=0;j<3; j++)

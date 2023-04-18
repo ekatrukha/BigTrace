@@ -499,7 +499,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 }
 	 
 	 /** Draw all ROIS **/
-	 public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size)
+	 public void draw(GL3 gl, Matrix4fc pvm,  int[] screen_size)
 	 {
 	       Roi3D roi;
 	       Color savePointColor= null;

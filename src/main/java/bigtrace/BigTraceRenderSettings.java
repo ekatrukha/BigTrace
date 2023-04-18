@@ -7,7 +7,7 @@ import org.scijava.plugin.Plugin;
 import ij.Prefs;
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>BigTrace 0.2.0>Render Settings")
+@Plugin(type = Command.class, menuPath = "Plugins>BigTrace 0.2.1>Render Settings")
 public class BigTraceRenderSettings implements Command {
 
 	@Parameter( label = "Render width" )
