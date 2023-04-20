@@ -1,36 +1,10 @@
 package bigtrace.scene;
-/*-
- * #%L
- * Volume rendering of bdv datasets
- * %%
- * Copyright (C) 2018 - 2021 Tobias Pietzsch
- * %%
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- * 
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- * #L%
- */
+
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 
+import bigtrace.BigTraceData;
 import net.imglib2.RealPoint;
 
 import java.awt.Color;
@@ -39,6 +13,7 @@ import java.util.ArrayList;
 
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import bvvbigtrace.backend.jogl.JoglGpuContext;
@@ -53,8 +28,7 @@ import static com.jogamp.opengl.GL.GL_FLOAT;
 
 public class VisPointsScaled
 {
-	//private final String imageFilename;
-	private static final float fMaxRenderSpotSize = 600.0f;
+
 	private final Shader prog;
 
 	private int vao;
@@ -71,8 +45,8 @@ public class VisPointsScaled
 
 	public VisPointsScaled()
 	{
-		final Segment pointVp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point_color.fp" ).instantiate();
+		final Segment pointVp = new SegmentTemplate( VisPointsScaled.class, "/scene/point_color.vp" ).instantiate();
+		final Segment pointFp = new SegmentTemplate( VisPointsScaled.class, "/scene/point_color.fp" ).instantiate();
 	
 		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
@@ -179,27 +153,86 @@ public class VisPointsScaled
 	{
 		if ( !initialized )
 			init( gl );
-		Vector2f screen_sizef;
+		//Vector2f screen_sizef;
 
 		JoglGpuContext context = JoglGpuContext.get( gl );
 		
-		//scale disk with viewport transform
-		screen_sizef =  new Vector2f ((float)(screen_size[0]), (float)(screen_size[1]));
-
-		prog.getUniform1f( "pointSizeReal" ).set( fPointSize );
-		prog.getUniform1f( "pointSizeMaxRender" ).set( fMaxRenderSpotSize);
+		//for disk scaling with viewport aspect ratio
+		//screen_sizef =  new Vector2f ((float)(screen_size[0]), (float)(screen_size[1]));
+		//screen_sizef =  new Vector2f ((float)(1.0/screen_size[0]), (float)(1.0/screen_size[1]));
+		//screen_sizef.mul((float)Math.min(screen_size[0], screen_size[1]));
+		//screen_sizef.x=screen_sizef.x*screen_sizef.x;
+		//screen_sizef.y=screen_sizef.y*screen_sizef.y;
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-		//prog.getUniformMatrix4f( "projection" ).set( projection );
+
 		prog.getUniform4f("colorin").set(l_color);
-		prog.getUniform2f("screenSize").set(screen_sizef);
+		//prog.getUniform2f("screenSize").set(screen_sizef);
 
 		prog.setUniforms( context );
 		prog.use( context );
-
-
+		final int [] viewport  = new int[] { 0, 0, screen_size[0], screen_size[1] };
+		//gl.glGetIntegerv( GL.GL_VIEWPORT, viewport, 0 );
+		
+		//voxel calibration
+		Vector3f globCalForw = new Vector3f((float)BigTraceData.globCal[0], (float)BigTraceData.globCal[1], (float)BigTraceData.globCal[2]);
+		Vector3f globCalInv = new Vector3f((float)(1.0/BigTraceData.globCal[0]), (float)(1.0/BigTraceData.globCal[1]), (float)(1.0/BigTraceData.globCal[2]));
+		double dMin = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
+		
+		int i,j;
+		
+		gl.glEnable(GL3.GL_PROGRAM_POINT_SIZE);
+		
 		gl.glBindVertexArray( vao );
-		gl.glPointSize(fMaxRenderSpotSize);
-		gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN);
+		
+		Vector3f curr_RAI =new  Vector3f();
+		//current point in screen coordinates
+		Vector3f curr = new Vector3f(); 
+		Vector3f shift = new Vector3f(); 
+		Vector3f curr_scale = new Vector3f();
+		for (i=0;i<nPointsN; i++)
+		{
+	
+			//current point in VOXEL space
+			curr_RAI = new Vector3f(vertices[i*3],vertices[i*3+1],vertices[i*3+2]);
+			
+			//current point in screen coordinates
+			//calculate it
+			pvm.project(curr_RAI, viewport, curr);
+			//let's shift it in a plane perpendicular to the view 
+			shift = new Vector3f(curr);
+			shift.x+=100.0f;
+			
+	
+			//Vector3f shift_RAI = new Vector3f();
+			//project it back to VOXEL space
+			//pvm.unproject(shift, new int[] { 0, 0, screen_size[0], screen_size[1] }, shift_RAI);
+			pvm.unproject(shift, viewport, shift);
+			
+			//move to SPACE units
+			
+			//Vector3f shift_scale = new Vector3f(); 
+			shift.mul( globCalForw, shift);		
+			curr_RAI.mul( globCalForw, curr_scale);
+			//correct the length to specified size
+			shift.sub(curr_scale);
+			shift.normalize();
+			shift.mul((float)(dMin*fPointSize));
+			shift.add(curr_scale);
+			//go back to VOXEL units
+			shift.mul( globCalInv, shift);
+			//project on the screen to get dimensions in pixels
+			pvm.project(shift, viewport, shift);
+			
+			//gl.glEnable(0x8861);
+			//just in case it is too small
+			float dPointSize = (float)Math.max(Math.abs(curr.x-shift.x),1.0);
+			dPointSize *= Math.max(screen_size[0], screen_size[1])/Math.min(screen_size[0], screen_size[1]); 
+			gl.glPointSize(dPointSize);				
+			//gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN);
+			gl.glDrawArrays( GL.GL_POINTS, i, i+1);
+		}
+		
+		
 		gl.glBindVertexArray( 0 );
 	}
 

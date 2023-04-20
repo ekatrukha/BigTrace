@@ -40,13 +40,13 @@ public class BigTraceData {
 	public boolean bVolumeBox = true;
 	
 	/** camera position for BVV **/
-	double dCam = Prefs.get("BigTrace.dCam",2000.0);
+	public static double dCam = Prefs.get("BigTrace.dCam",2000.0);
 	
 	/** near clip plane position for BVV **/
-	double dClipNear = Prefs.get("BigTrace.dClipNear",1000.0);
+	public static double dClipNear = Prefs.get("BigTrace.dClipNear",1000.0);
 	
 	/** far clip plane position for BVV  **/
-	double dClipFar = Prefs.get("BigTrace.dClipFar",1000.0);
+	public static double dClipFar = Prefs.get("BigTrace.dClipFar",1000.0);
 	
 	public RenderSettings renderParams = new RenderSettings();
 	
