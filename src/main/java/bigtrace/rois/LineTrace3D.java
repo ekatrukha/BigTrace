@@ -393,6 +393,14 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 			interpolator.init(makeJointSegment(), BigTraceData.shapeInterpolation);
 			segmentsVis.setVertices(interpolator.getVerticesVisual(),interpolator.getTangentsVisual());
 		}
+		else
+		{
+			if(vertices.size()==1)
+			{
+				segmentsVis.nPointsN=0;	
+			}
+		}
+	
 
 		
 	}

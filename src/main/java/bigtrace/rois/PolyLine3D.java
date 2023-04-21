@@ -110,6 +110,13 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 			interpolator.init(vertices, BigTraceData.shapeInterpolation);
 			edgesVis.setVertices(interpolator.getVerticesVisual(),interpolator.getTangentsVisual());
 		}
+		else
+		{
+			if(vertices.size()==1)
+			{
+				edgesVis.nPointsN=0;	
+			}
+		}
 
 		
 	}

@@ -35,7 +35,7 @@ public class VisPolyLineScaled
 		
 	private float vertices[]; 
 	
-	private int nPointsN = 0;
+	public int nPointsN = 0;
 
 	public int renderType = Roi3D.WIRE;
 	

@@ -609,8 +609,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 {
 		 LineTrace3D tracing;
 		 tracing = (LineTrace3D) rois.get(activeRoi);
+		 boolean bRemove =tracing.removeLastSegment();
 		 bt.repaintBVV();
-		 return tracing.removeLastSegment();
+		 return bRemove;
 	 }
 
 	 /** adds point to active Polyline3D ROI
