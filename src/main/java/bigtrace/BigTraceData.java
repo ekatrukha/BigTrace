@@ -30,6 +30,9 @@ public class BigTraceData {
 	/** global voxel size (for now one for all)  **/
 	public static double [] globCal = new double [3];
 	
+	/** minimum voxel size  **/
+	public static double  dMinVoxelSize = 0.0;
+	
 	/** unit of voxel **/
 	public String sVoxelUnit = "pixel";
 	
@@ -48,9 +51,7 @@ public class BigTraceData {
 	/** far clip plane position for BVV  **/
 	double dClipFar = Prefs.get("BigTrace.dClipFar",1000.0);
 	
-	public RenderSettings renderParams = new RenderSettings();
-	
-	
+	public static RenderSettings renderParams = new RenderSettings();	
 	
 	/** object to store brightness/alpha range of the channel during tracing**/
 	public BCsettings bcTraceChannel = new BCsettings();

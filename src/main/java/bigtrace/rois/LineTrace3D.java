@@ -128,7 +128,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 
 
 	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
+	public void draw(final GL3 gl, final Matrix4fc pvm, final int[] screen_size) {
 		
 
 		verticesVis.draw(gl, pvm, screen_size);

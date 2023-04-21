@@ -30,7 +30,7 @@ public interface Roi3D
 	public void setName(String name);
 	
 	/** Draws ROI into the volume **/
-	public void draw( GL3 gl, Matrix4fc pvm,  final int [] screen_size);
+	public void draw( final GL3 gl, final Matrix4fc pvm,  final int [] screen_size);
 	
 	public void setLineColorRGB(Color lineColor_);
 	public void setPointColorRGB(Color pointColor_);

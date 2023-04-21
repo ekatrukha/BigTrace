@@ -187,7 +187,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 
 		roiManager = new RoiManager3D(this);
-		//init(0.25*Math.min(btdata.nDimIni[1][0]*btdata.globCal[0], Math.min(btdata.nDimIni[1][1]*btdata.globCal[1],btdata.nDimIni[1][2]*btdata.globCal[2])));
 		init(0.25*Math.min(btdata.nDimIni[1][0], Math.min(btdata.nDimIni[1][1],btdata.nDimIni[1][2])));
 		
 	
@@ -240,6 +239,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		BigTraceData.globCal[0] = imp.getCalibration().pixelWidth;
 		BigTraceData.globCal[1] = imp.getCalibration().pixelHeight;
 		BigTraceData.globCal[2] = imp.getCalibration().pixelDepth;
+		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		btdata.sVoxelUnit = imp.getCalibration().getUnit();
 		
 		
@@ -1218,6 +1218,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		final Matrix4f pvm=new Matrix4f( data.getPv() );
 		
+		//to be able to change point size in shader
+		gl.glEnable(GL3.GL_PROGRAM_POINT_SIZE);
+		
 		synchronized (roiManager)
 		{
 			roiManager.draw(gl, pvm,  screen_size);
@@ -1269,12 +1272,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				dCam(btdata.dCam).
 				dClipNear(btdata.dClipNear).
 				dClipFar(btdata.dClipFar).				
-				renderWidth( btdata.renderParams.nRenderW).
-				renderHeight( btdata.renderParams.nRenderH).
-				numDitherSamples( btdata.renderParams.numDitherSamples ).
-				cacheBlockSize( btdata.renderParams.cacheBlockSize ).
-				maxCacheSizeInMB( btdata.renderParams.maxCacheSizeInMB ).
-				ditherWidth(btdata.renderParams.ditherWidth).
+				renderWidth( BigTraceData.renderParams.nRenderW).
+				renderHeight( BigTraceData.renderParams.nRenderH).
+				numDitherSamples( BigTraceData.renderParams.numDitherSamples ).
+				cacheBlockSize( BigTraceData.renderParams.cacheBlockSize ).
+				maxCacheSizeInMB( BigTraceData.renderParams.maxCacheSizeInMB ).
+				ditherWidth(BigTraceData.renderParams.ditherWidth).
 				frameTitle(filename)
 				);
 
@@ -1315,12 +1318,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				dCam(btdata.dCam).
 				dClipNear(btdata.dClipNear).
 				dClipFar(btdata.dClipFar).				
-				renderWidth( btdata.renderParams.nRenderW).
-				renderHeight( btdata.renderParams.nRenderH).
-				numDitherSamples( btdata.renderParams.numDitherSamples ).
-				cacheBlockSize( btdata.renderParams.cacheBlockSize ).
-				maxCacheSizeInMB( btdata.renderParams.maxCacheSizeInMB ).
-				ditherWidth(btdata.renderParams.ditherWidth).
+				renderWidth( BigTraceData.renderParams.nRenderW).
+				renderHeight( BigTraceData.renderParams.nRenderH).
+				numDitherSamples( BigTraceData.renderParams.numDitherSamples ).
+				cacheBlockSize( BigTraceData.renderParams.cacheBlockSize ).
+				maxCacheSizeInMB( BigTraceData.renderParams.maxCacheSizeInMB ).
+				ditherWidth(BigTraceData.renderParams.ditherWidth).
 				dCam( btdata.dCam ).
 				dClipNear( btdata.dClipNear ).
 				dClipFar( btdata.dClipFar ).
@@ -1350,7 +1353,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			}
 			(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transform);	 
 		}
-		
+		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		double [] minmaxBrightness = initBrightnessBVV( 0.001, 0.999, panel.state() );
 
 		for(int i=0;i<bvv_sources.size();i++)

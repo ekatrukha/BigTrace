@@ -96,8 +96,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		points_space = curveROI.getJointSegmentResampled();
 		tangents = curveROI.getJointSegmentTangentsResampled();
 	
-		//smallest voxel size
-		double dMinVoxSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
+
 		int dimXY = (int)(nRadius*2+1);
 		
 		final int nTotDim = bt.all_ch_RAI.numDimensions();
@@ -138,7 +137,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		{
 			
 			points_space.get(nPoint).localize(current_point); 
-			planeNorm = getNormPlaneGridXY((int)nRadius, dMinVoxSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);
+			planeNorm = getNormPlaneGridXY((int)nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);
 			
 			for (int i=0;i<dimXY;i++)
 				for (int j=0;j<dimXY;j++)
@@ -177,9 +176,9 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		
 		Calibration cal = new Calibration();
 		cal.setUnit(bt.btdata.sVoxelUnit);
-		cal.pixelWidth= dMinVoxSize;
-		cal.pixelHeight= dMinVoxSize;
-		cal.pixelDepth= dMinVoxSize;
+		cal.pixelWidth= BigTraceData.dMinVoxelSize;
+		cal.pixelHeight= BigTraceData.dMinVoxelSize;
+		cal.pixelDepth= BigTraceData.dMinVoxelSize;
 		//switch Z and X for convenience
 		VolumeMisc.wrapImgImagePlusCal(out1, sRoiName+"_straight",cal).show();
 		//VolumeMisc.wrapImgImagePlusCal(Views.permute(out1,0,2), "test",cal).show();

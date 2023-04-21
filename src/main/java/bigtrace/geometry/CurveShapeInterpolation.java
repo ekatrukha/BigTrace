@@ -20,15 +20,16 @@ public class CurveShapeInterpolation {
 	
 	/** linear intepolator **/
 	private LerpCurve3D linInter = null;
+	
 	/** spline intepolator **/
 	private SplineCurve3D splineInter = null;
+	
 	/** current interpolation. The value of -1 means interpolators were not initialized or not up-to-date **/
 	private int currInterpolation = -1;
 	
 	/** reference curve points in SPACE coordinates **/
 	ArrayList<RealPoint> points_curve = null;
-	
-	
+		
 	
 	public CurveShapeInterpolation (final int nRoiType_)
 	{
@@ -351,13 +352,13 @@ public class CurveShapeInterpolation {
 
 	private ArrayList<RealPoint> getPointsSplineVisual()
 	{
-		double dMin = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
+		
 		double dLength;
 		int nNewPoints;
 		double [] xLSample;
 		int i;
 		dLength = splineInter.getMaxArcLength();
-		nNewPoints =(int) Math.floor(dLength/dMin);
+		nNewPoints =(int) Math.floor(dLength/BigTraceData.dMinVoxelSize);
 		xLSample = new double[nNewPoints+1];
 		double dStep = dLength/nNewPoints;
 		for(i = 0;i<=nNewPoints;i++)
@@ -368,13 +369,13 @@ public class CurveShapeInterpolation {
 	}
 	private ArrayList<double []> getTangentsSplineVisual()
 	{
-		double dMin = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
+	
 		double dLength;
 		int nNewPoints;
 		double [] xLSample;
 		int i;
 		dLength = splineInter.getMaxArcLength();
-		nNewPoints =(int) Math.floor(dLength/dMin);
+		nNewPoints =(int) Math.floor(dLength/BigTraceData.dMinVoxelSize);
 		xLSample = new double[nNewPoints+1];
 		double dStep = dLength/nNewPoints;
 		for(i = 0;i<=nNewPoints;i++)
@@ -386,7 +387,7 @@ public class CurveShapeInterpolation {
 	
 	public ArrayList<RealPoint> getVerticesResample()
 	{
-		double dMinVoxSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
+	
 		double dLength;
 		int nNewPoints;
 		double [] xLSample;
@@ -399,11 +400,11 @@ public class CurveShapeInterpolation {
 		{
 			dLength = splineInter.getMaxArcLength();
 		}
-		nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
+		nNewPoints =(int) Math.ceil(dLength/ BigTraceData.dMinVoxelSize);
 		xLSample = new double[nNewPoints];
 		for(i = 0;i<nNewPoints;i++)
 		{
-			xLSample[i]=i*dMinVoxSize;
+			xLSample[i]=i*BigTraceData.dMinVoxelSize;
 		}
 		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
 		{
@@ -416,7 +417,7 @@ public class CurveShapeInterpolation {
 	}
 	public ArrayList<double[]> getTangentsResample()
 	{
-		double dMinVoxSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
+		
 		double dLength;
 		int nNewPoints;
 		double [] xLSample;
@@ -429,11 +430,11 @@ public class CurveShapeInterpolation {
 		{
 			dLength = splineInter.getMaxArcLength();
 		}
-		nNewPoints =(int) Math.ceil(dLength/ dMinVoxSize);
+		nNewPoints =(int) Math.ceil(dLength/ BigTraceData.dMinVoxelSize);
 		xLSample = new double[nNewPoints];
 		for(i = 0;i<nNewPoints;i++)
 		{
-			xLSample[i]=i*dMinVoxSize;
+			xLSample[i]=i*BigTraceData.dMinVoxelSize;
 		}
 		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
 		{

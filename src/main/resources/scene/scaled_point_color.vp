@@ -1,56 +1,57 @@
 layout (location = 0) in vec3 aPos;
 
-
-out float dScale;
 uniform float pointSizeReal;
-uniform float pointSizeMaxRender;
+uniform float pointScale;
 uniform mat4 pvm;
-uniform vec2 screenSize;
-
-const float minPointScale = 0.15;
+uniform vec2 windowSize;
+uniform vec3 voxelScale;
 
 void main()
 {
-	vec4 Pos = vec4( aPos, 1.0 );
  	
- 	//projected vertex position
- 	gl_Position = pvm * Pos;
+ 	//projected (on screen) vertex position of the center
+ 	gl_Position = pvm * vec4( aPos, 1.0 );
  	
  	//let's shift it to the side 
- 	//for some value in the screen coordinates
- 	vec4 shift= gl_Position;
- 	shift.x=shift.x+100.0;
-
-	//let's go back to original coordinates
-	//and see the line in x direction of the screen
- 	mat4 invPVM = inverse(pvm);
- 	shift=invPVM*shift;
+ 	//for some value in x in the screen coordinates,
+ 	//so we stay in the same z-plane
  	
+ 	vec4 shift = gl_Position;
+ 	shift.x = shift.x + 100.0;
+ 	//why 100? why not?
+
+	// let's go back to original (voxel) coordinates
+	// and get now the line in x direction of the screen
+	// (in the same z plane)
+	
+ 	mat4 invPVM = inverse(pvm);
+ 	shift = invPVM * shift;
+ 	
+ 	//move to space units
+ 	shift.xyz = voxelScale * shift.xyz;
+ 	vec3 pos_scale = voxelScale * aPos;
+
  	//normalize length along this direction
  	//in the absolute units
- 	vec4 dl = shift - Pos;
- 	float lenfactor=pointSizeReal/length(dl);
- 	dl=dl*lenfactor;
+ 	shift.xyz = shift.xyz - pos_scale;
+
+ 	shift.xyz = shift.xyz * 0.5 * pointSizeReal / length(shift.xyz);
  	
- 	//and shift in the absolute units.
- 	//this is where the boundary would be in real units
- 	dl=Pos+dl;
+ 	shift.xyz = shift.xyz + pos_scale;
  	
- 	//let's project it back to screen
- 	dl=pvm * dl;
+ 	//move back to voxel units
  	
- 	//and do perspective calculations by hand
-    vec2 projSize = screenSize * dl.xy / dl.w;
-    vec2 projSizeZero = screenSize * gl_Position.xy / gl_Position.w;
-    //now it is projected spot size
-    vec2 diff = projSize.xy - projSizeZero.xy;
-          
-    //normalize it by maximum drawing/render spot size
-    //for the fragment shader    
-    dScale = abs(diff.x)/pointSizeMaxRender;
-    //just in case it is too big
-    dScale = min(dScale,1.0);   
-    //square it, since we will be using it squared later
-    dScale = dScale*dScale;
-  	//dScale = pointSizeReal;
+ 	shift.xyz = shift.xyz / voxelScale;
+ 	
+ 	//project it back to the screen
+ 	shift = pvm * shift;
+ 	
+ 	//calculate final required radius in pixels
+ 	//(we need to multiply it by w to do a proper projection)
+ 	float dRadius = abs(windowSize.x*(shift.x/shift.w-gl_Position.x/gl_Position.w));
+ 	
+ 	//final point size,
+ 	//let's make sure it is not zero
+    gl_PointSize =  max(dRadius/pointScale,1.0);
+
 }

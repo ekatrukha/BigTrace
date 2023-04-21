@@ -20,8 +20,7 @@ public class SplineCurve3D {
 	
 	/** reparametrization of arclength spline**/
 	CubicSpline arcToNodes = null;
-	
-	
+		
 	/** do natural cubic spline interpolation **/
 	public SplineCurve3D(ArrayList<RealPoint> points)
 	{
@@ -138,12 +137,11 @@ public class SplineCurve3D {
 	public void initArcLength()
 	{		
 
-		final double dMin = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
 		final double approxL = xnodes[xnodes.length-1];
 
 		//for the polyline (sparse nodes) integration is not precise,
 		//so let's resample it		
-		final int nNewPoints =(int) Math.floor(approxL/dMin);
+		final int nNewPoints =(int) Math.floor(approxL/BigTraceData.dMinVoxelSize);
 		double [] xLSample = new double[nNewPoints+1];
 		final double dStep = approxL/nNewPoints;
 		int i;

@@ -30,6 +30,7 @@ import net.imglib2.view.Views;
 public class Point3D extends AbstractRoi3D implements Roi3D {
 
 	public RealPoint vertex;
+	
 	public VisPointsScaled vertexVis;
 
 
@@ -65,7 +66,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	
 
 	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) 
+	public void draw(final GL3 gl, final Matrix4fc pvm, final int[] screen_size) 
 	{
 		if(vertexVis!=null)
 			vertexVis.draw( gl, pvm, screen_size);

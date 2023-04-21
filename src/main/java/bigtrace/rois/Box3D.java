@@ -52,7 +52,7 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 	}
 	
 	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
+	public void draw(final GL3 gl, final Matrix4fc pvm, final int[] screen_size) {
 	
 		for (int i=0;i<edgesVis.size();i++)
 		{

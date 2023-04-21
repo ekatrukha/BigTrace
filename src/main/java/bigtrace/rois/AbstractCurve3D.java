@@ -3,7 +3,7 @@ package bigtrace.rois;
 import java.util.ArrayList;
 
 import bigtrace.BigTrace;
-
+import bigtrace.BigTraceData;
 import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.measure.Circle2DMeasure;
@@ -159,7 +159,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		final RealRandomAccess<T> ra =   interpolate.realRandomAccess();
 		double [] pos = new double[3];
 		double [] xyz;
-		final double dMinVoxelSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
+
 		
 		int i,d;
 		
@@ -182,7 +182,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		for(i=1;i<allPoints.size();i++)
 		{
 			allPoints.get(i).localize(pos);
-			out[0][i] = dMinVoxelSize*i;
+			out[0][i] = BigTraceData.dMinVoxelSize*i;
 			xyz= pos.clone();			
 			//in voxels
 			pos = Roi3D.scaleGlobInv(pos, globCal);
@@ -224,7 +224,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		double [] current_pixel = new double[3];
 		double dInt;
 		int nPixN;
-		final double dMinVoxelSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
+		
 		
 		//get a frame around line
 		double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(points, tangents);
@@ -236,7 +236,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		for (int nPoint = 0;nPoint<points.size();nPoint++)
 		{
 			//length
-			out[0][nPoint] = dMinVoxelSize*nPoint;
+			out[0][nPoint] = BigTraceData.dMinVoxelSize*nPoint;
 			
 			//log point location
 			points.get(nPoint).localize(current_point); 
@@ -255,7 +255,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 			{
 				measureCircle.cursorCircle.fwd();
 				measureCircle.cursorCircle.localize(current_pixel);
-				LinAlgHelpers.scale(current_pixel, dMinVoxelSize, current_pixel);
+				LinAlgHelpers.scale(current_pixel, BigTraceData.dMinVoxelSize, current_pixel);
 				getVoxelInPlane(rsVect[0][nPoint],rsVect[1][nPoint], current_point,current_pixel);
 				//back to voxel units
 				current_pixel =Roi3D.scaleGlobInv(current_pixel, globCal);
@@ -279,7 +279,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		double [] current_pixel = new double[3];
 		double dInt;
 		int nPixN;
-		final double dMinVoxelSize = Math.min(Math.min(globCal[0], globCal[1]),globCal[2]);
+		
 		
 		//get a frame around line
 		double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(points, tangents);
@@ -291,7 +291,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		for (int nPoint = 0;nPoint<points.size();nPoint++)
 		{
 			//length
-			out[0][nPoint] = dMinVoxelSize*nPoint;
+			out[0][nPoint] = BigTraceData.dMinVoxelSize*nPoint;
 			
 			//log point location
 			points.get(nPoint).localize(current_point); 
@@ -310,7 +310,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 			{
 				measureCircle.cursorCircle.fwd();
 				measureCircle.cursorCircle.localize(current_pixel);
-				LinAlgHelpers.scale(current_pixel, dMinVoxelSize, current_pixel);
+				LinAlgHelpers.scale(current_pixel, BigTraceData.dMinVoxelSize, current_pixel);
 				getVoxelInPlane(rsVect[0][nPoint],rsVect[1][nPoint], current_point,current_pixel);
 				//back to voxel units
 				current_pixel =Roi3D.scaleGlobInv(current_pixel, globCal);

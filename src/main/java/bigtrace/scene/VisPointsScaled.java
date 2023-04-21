@@ -1,36 +1,10 @@
 package bigtrace.scene;
-/*-
- * #%L
- * Volume rendering of bdv datasets
- * %%
- * Copyright (C) 2018 - 2021 Tobias Pietzsch
- * %%
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- * 
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- * #L%
- */
+
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 
+import bigtrace.BigTraceData;
 import net.imglib2.RealPoint;
 
 import java.awt.Color;
@@ -39,6 +13,7 @@ import java.util.ArrayList;
 
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import bvvbigtrace.backend.jogl.JoglGpuContext;
@@ -53,8 +28,7 @@ import static com.jogamp.opengl.GL.GL_FLOAT;
 
 public class VisPointsScaled
 {
-	//private final String imageFilename;
-	private static final float fMaxRenderSpotSize = 600.0f;
+
 	private final Shader prog;
 
 	private int vao;
@@ -63,82 +37,77 @@ public class VisPointsScaled
 	
 	private float fPointSize;
 	
-	//private final ArrayList< Point > points = new ArrayList<>();
-	
 	float vertices[]; 
+	
 	private int nPointsN;
+	
 	private boolean initialized;
 
 	public VisPointsScaled()
 	{
 		final Segment pointVp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point_color.fp" ).instantiate();
-	
-		
+		final Segment pointFp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point_color.fp" ).instantiate();		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 	
 	}
+	/** constructor with one point **/
 	public VisPointsScaled(final RealPoint point, final float fPointSize_,final Color color_in)
 	{		
 		this();
-
-		int j;
-		fPointSize= fPointSize_;
+		
+		fPointSize = fPointSize_;
 		
 		l_color = new Vector4f(color_in.getComponents(null));
 		
-		nPointsN=1;
+		nPointsN = 1;
+		
 		vertices = new float [nPointsN*3];//assume 3D
 		
-
-		for (j=0;j<3; j++)
-		{
-			vertices[j]=point.getFloatPosition(j);
-		}					
-	
+		point.localize(vertices);	
 
 	}
+	/** constructor with multiple vertices **/
 	public VisPointsScaled(final ArrayList< RealPoint > points,final double scalexyz_[], final float fPointSize_,final Color color_in)
 	{
 		this();
+		
 		int i,j;
 		
 		fPointSize= fPointSize_;
 		
 		l_color = new Vector4f(color_in.getComponents(null));
 		
-		nPointsN=points.size();
+		nPointsN = points.size();
+		
 		vertices = new float [nPointsN*3];//assume 3D
 
 		for (i=0;i<nPointsN; i++)
 		{
 			for (j=0;j<3; j++)
-			{
-				
-				vertices[i*3+j]=(float) (points.get(i).getFloatPosition(j));
-			}
-			
+			{				
+				vertices[i*3+j]=points.get(i).getFloatPosition(j);
+			}			
 		}
 
 	}
+	
 	public void setVertices( ArrayList< RealPoint > points)
 	{
-		int i,j;
+		int i,j;	
 		
+		nPointsN = points.size();
 		
-		nPointsN=points.size();
-		vertices = new float [nPointsN*3];//assime 3D
+		vertices = new float [nPointsN*3];//assume 3D
 		
 		for (i=0;i<nPointsN; i++)
 		{
 			for (j=0;j<3; j++)
 			{
 				vertices[i*3+j]=points.get(i).getFloatPosition(j);
-			}
-			
+			}			
 		}
 		
-		initialized=false;
+		initialized = false;
 	}
 	public void setColor(Color pointColor) {
 		
@@ -175,30 +144,55 @@ public class VisPointsScaled
 		gl.glBindVertexArray( 0 );
 	}
 
-	public void draw( GL3 gl, Matrix4fc pvm, int [] screen_size )
+	public void draw(final GL3 gl,final Matrix4fc pvm,final int [] screen_size )
 	{
 		if ( !initialized )
 			init( gl );
-		Vector2f screen_sizef;
+		Vector2f window_sizef;
+		Vector2f ellipse_axes;
 
 		JoglGpuContext context = JoglGpuContext.get( gl );
 		
 		//scale disk with viewport transform
-		screen_sizef =  new Vector2f ((float)(screen_size[0]), (float)(screen_size[1]));
+		window_sizef =  new Vector2f ((float)(screen_size[0]), (float)(screen_size[1]));
+		
+		//The whole story behind the code below is that
+		//the size of the OpenGL sprite corresponding to a point is
+		//changing depending on the actual window size and the render window size parameters.
+		//Basically it scales with coefficient screen_size[0]/renderParams.nRenderW (in each dimension).
+		//To compensate for that, we have to enlarge (shrink) effective point size
+		//(it is done in the vertex shader, we enabled gl.glEnable(GL3.GL_PROGRAM_POINT_SIZE))
+		//and then render the point as nice circle by painting it as an ellipse (in the fragment shader)
+		//that will scale into the circle %)
+		//
+		
+		ellipse_axes = new Vector2f((float)screen_size[0]/(float)BigTraceData.renderParams.nRenderW, (float)screen_size[1]/(float)BigTraceData.renderParams.nRenderH);
+		//scale of viewport vs render
+		//we enlarge/shrink to minimum dimension scale
+		//and in the ellipse the other dimension will be cropped
+		//(maybe this part can be moved to GPU? seems not critical right now)
+		float fPointScale = Math.min(ellipse_axes.x,ellipse_axes.y);
+		ellipse_axes.mul(1.0f/fPointScale);
+		//actually it is not true ellipse axes,
+		//but rather inverse squared values
+		ellipse_axes.x = ellipse_axes.x*ellipse_axes.x;
+		ellipse_axes.y = ellipse_axes.y*ellipse_axes.y;
+				
+		//voxel size
+		Vector3f globCalForw = new Vector3f((float)BigTraceData.globCal[0], (float)BigTraceData.globCal[1], (float)BigTraceData.globCal[2]);
 
-		prog.getUniform1f( "pointSizeReal" ).set( fPointSize );
-		prog.getUniform1f( "pointSizeMaxRender" ).set( fMaxRenderSpotSize);
+		prog.getUniform1f( "pointSizeReal" ).set( (float) (fPointSize*BigTraceData.dMinVoxelSize) );
+		prog.getUniform1f( "pointScale" ).set( fPointScale );
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-		//prog.getUniformMatrix4f( "projection" ).set( projection );
+		prog.getUniform3f( "voxelScale" ).set( globCalForw );
 		prog.getUniform4f("colorin").set(l_color);
-		prog.getUniform2f("screenSize").set(screen_sizef);
-
+		prog.getUniform2f("windowSize").set(window_sizef);
+		prog.getUniform2f("ellipseAxes").set(ellipse_axes);
 		prog.setUniforms( context );
 		prog.use( context );
 
 
 		gl.glBindVertexArray( vao );
-		gl.glPointSize(fMaxRenderSpotSize);
 		gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN);
 		gl.glBindVertexArray( 0 );
 	}

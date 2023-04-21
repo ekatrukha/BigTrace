@@ -619,7 +619,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			//IJ.log("voxel "+Integer.toString(d)+" "+Double.toString(newVoxelSize[d]));
 			scaleChange[d]*=BigTraceData.globCal[d];
 		}
-		
+		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		final double[][] Rcurrent = new double[ 3 ][ 3 ];
 		double[] qStart = new double[ 4 ];
 		Affine3DHelpers.extractRotationAnisotropic( transform, qStart );
