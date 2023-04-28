@@ -52,6 +52,10 @@ public interface Roi3D
 
 	public void setRenderType(int nRenderType);
 	public int getRenderType();
+	
+	public void setTimePoint(int nTimePoint_);
+	public int getTimePoint();
+	
 	public void saveRoi(final FileWriter writer);
 	
 	public void setGroup(final Roi3DGroup preset_in);

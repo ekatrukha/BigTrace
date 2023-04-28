@@ -36,7 +36,7 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 	public VisPolyLineScaled edgesVis;
 	
 
-	public PolyLine3D(final Roi3DGroup preset_in)
+	public PolyLine3D(final Roi3DGroup preset_in, final int nTimePoint_)
 	{
 		type = Roi3D.POLYLINE;
 		
@@ -57,6 +57,7 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 		edgesVis.setColor(lineColor);
 		edgesVis.setThickness(lineThickness);
 		edgesVis.setRenderType(renderType);
+		nTimePoint = nTimePoint_;
 		interpolator = new CurveShapeInterpolation(type);
 		name = "polyl"+Integer.toString(this.hashCode());
 
@@ -281,6 +282,7 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
 			writer.write("Name," + this.getName()+"\n");
 			writer.write("GroupInd," + Integer.toString(this.getGroupInd())+"\n");
+			writer.write("TimePoint," + Integer.toString(this.getTimePoint())+"\n");
 			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
 			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
 									  +	Integer.toString(pointColor.getGreen()) +","
@@ -303,7 +305,7 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 					writer.write(df3.format(vert[i])+",");
 				}
 				//time point
-				writer.write("0.0\n");
+				writer.write("\n");
 			}
 		}
 		catch (IOException e) {	

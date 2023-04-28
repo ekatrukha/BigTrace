@@ -38,7 +38,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	public Plane3D fittedPlane = null;
 
 
-	public CrossSection3D(final Roi3DGroup preset_in, final long [][] nDimIni_)
+	public CrossSection3D(final Roi3DGroup preset_in, final long [][] nDimIni_, final int nTimePoint_)
 	{
 		type = Roi3D.PLANE;
 		
@@ -62,6 +62,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		planeVis.setThickness(lineThickness);
 		planeVis.setRenderType(renderType);
 		name = "plane"+Integer.toString(this.hashCode());
+		nTimePoint = nTimePoint_;
 		nDimBox = new float [2][3];
 		for(int i=0;i<2;i++)
 			for(int j=0;j<3;j++)
@@ -203,6 +204,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
 			writer.write("Name," + this.getName()+"\n");
 			writer.write("GroupInd," + Integer.toString(this.getGroupInd())+"\n");
+			writer.write("TimePoint," + Integer.toString(this.getTimePoint())+"\n");
 			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
 			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
 									  +	Integer.toString(pointColor.getGreen()) +","
@@ -225,7 +227,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 					writer.write(df3.format(vert[i])+",");
 				}
 				//time point
-				writer.write("0.0\n");
+				writer.write("\n");
 			}
 		}
 		catch (IOException e) {	

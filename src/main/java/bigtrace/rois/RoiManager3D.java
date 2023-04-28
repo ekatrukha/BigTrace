@@ -388,7 +388,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 	 }
 	 
-	 
+	 /*
 	 public Roi3D makeRoi(int nRoiType)
 	 {
 		 Roi3D newRoi;
@@ -396,22 +396,50 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 switch (nRoiType)
 		 {
 		 case Roi3D.POINT:
-			 newRoi= new Point3D(groups.get(nActiveGroup));
+			 newRoi= new Point3D(groups.get(nActiveGroup), bt.btdata.nCurrTimepoint);
 			 break;
 		 case Roi3D.POLYLINE:
-			 newRoi = new PolyLine3D(groups.get(nActiveGroup));
+			 newRoi = new PolyLine3D(groups.get(nActiveGroup),bt.btdata.nCurrTimepoint);
 			 break;
 		 case Roi3D.LINE_TRACE:
-			 newRoi = new LineTrace3D(groups.get(nActiveGroup));
+			 newRoi = new LineTrace3D(groups.get(nActiveGroup),bt.btdata.nCurrTimepoint);
 			 break;
 		 case Roi3D.PLANE:
-			 newRoi = new CrossSection3D(groups.get(nActiveGroup),bt.btdata.nDimIni);
+			 newRoi = new CrossSection3D(groups.get(nActiveGroup),bt.btdata.nDimIni,bt.btdata.nCurrTimepoint);
 			 break;
 		 case Roi3D.BOX:
-			 newRoi = new Box3D(groups.get(nActiveGroup));
+			 newRoi = new Box3D(groups.get(nActiveGroup),bt.btdata.nCurrTimepoint);
 			 break;
 		 default:
-			 newRoi= new Point3D(groups.get(nActiveGroup));
+			 newRoi= new Point3D(groups.get(nActiveGroup),bt.btdata.nCurrTimepoint);
+		 }
+		 newRoi.setGroupInd(nActiveGroup);
+		 return newRoi;
+	 }
+	 */
+	 public Roi3D makeRoi(int nRoiType, int nTimePoint)
+	 {
+		 Roi3D newRoi;
+		 
+		 switch (nRoiType)
+		 {
+		 case Roi3D.POINT:
+			 newRoi= new Point3D(groups.get(nActiveGroup), nTimePoint);
+			 break;
+		 case Roi3D.POLYLINE:
+			 newRoi = new PolyLine3D(groups.get(nActiveGroup),nTimePoint);
+			 break;
+		 case Roi3D.LINE_TRACE:
+			 newRoi = new LineTrace3D(groups.get(nActiveGroup),nTimePoint);
+			 break;
+		 case Roi3D.PLANE:
+			 newRoi = new CrossSection3D(groups.get(nActiveGroup),bt.btdata.nDimIni,nTimePoint);
+			 break;
+		 case Roi3D.BOX:
+			 newRoi = new Box3D(groups.get(nActiveGroup),nTimePoint);
+			 break;
+		 default:
+			 newRoi= new Point3D(groups.get(nActiveGroup),nTimePoint);
 		 }
 		 newRoi.setGroupInd(nActiveGroup);
 		 return newRoi;
@@ -509,43 +537,46 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	       for (i=0;i<rois.size();i++) 
 	       {
 	    	   roi=rois.get(i);
-	    	   //save colors in case ROI is active
-	    	   if(i==activeRoi)
+	    	   if(roi.getTimePoint()==bt.btdata.nCurrTimepoint)
 	    	   {
-	    		   savePointColor = roi.getPointColor();
-	    		   saveLineColor = roi.getLineColor();
-	    		   roi.setPointColorRGB(activePointColor);
-	    		   roi.setLineColorRGB(activeLineColor);
-	    	   }
-	    	   if(bShowAll)
-	    	   {
-	    		   if(groups.get(roi.getGroupInd()).bVisible)
-	    		   {
-	    			   roi.draw(gl, pvm, screen_size);
-	    		   }
-	    		   else
-	    		   {
-	    			   //still draw active ROI
+		    	   //save colors in case ROI is active
+		    	   if(i==activeRoi)
+		    	   {
+		    		   savePointColor = roi.getPointColor();
+		    		   saveLineColor = roi.getLineColor();
+		    		   roi.setPointColorRGB(activePointColor);
+		    		   roi.setLineColorRGB(activeLineColor);
+		    	   }
+		    	   if(bShowAll)
+		    	   {
+		    		   if(groups.get(roi.getGroupInd()).bVisible)
+		    		   {
+		    			   roi.draw(gl, pvm, screen_size);
+		    		   }
+		    		   else
+		    		   {
+		    			   //still draw active ROI
+			    		   if(i==activeRoi)
+			    		   {
+			    			   roi.draw(gl, pvm, screen_size);
+			    		   }	    			   
+		    		   }
+		    	   }
+		    	   else
+		    	   {
 		    		   if(i==activeRoi)
 		    		   {
 		    			   roi.draw(gl, pvm, screen_size);
-		    		   }	    			   
-	    		   }
-	    	   }
-	    	   else
-	    	   {
-	    		   if(i==activeRoi)
-	    		   {
-	    			   roi.draw(gl, pvm, screen_size);
-	    		   }
-	    	   }
-	    	  
-	    	   //restore colors in case ROI is active
-	    	   if(i==activeRoi)
-	    	   {
-	    		   roi.setPointColor(savePointColor);
-	    		   roi.setLineColor(saveLineColor);
-	    	   }
+		    		   }
+		    	   }
+		    	  
+		    	   //restore colors in case ROI is active
+		    	   if(i==activeRoi)
+		    	   {
+		    		   roi.setPointColor(savePointColor);
+		    		   roi.setLineColor(saveLineColor);
+		    	   }
+	    	   }//show only current time point
 	       }
 	 }
 	 
@@ -572,7 +603,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public void addPoint3D(RealPoint point_)
 	 {
 
-		 Point3D pointROI =(Point3D)makeRoi( Roi3D.POINT); 
+		 Point3D pointROI =(Point3D)makeRoi( Roi3D.POINT, bt.btdata.nCurrTimepoint); 
 		 pointROI.setVertex(point_);
 		 addRoi(pointROI);
 	 }
@@ -583,7 +614,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.LINE_TRACE)
 		 {
-			 tracing = (LineTrace3D) makeRoi(Roi3D.LINE_TRACE);
+			 tracing = (LineTrace3D) makeRoi(Roi3D.LINE_TRACE, bt.btdata.nCurrTimepoint);
 			 tracing.addFirstPoint(point_);
 			 addRoi(tracing);
 			 //activeRoi = rois.size()-1; 
@@ -624,7 +655,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
 		 {
-			 polyline  = (PolyLine3D) makeRoi(Roi3D.POLYLINE);
+			 polyline  = (PolyLine3D) makeRoi(Roi3D.POLYLINE, bt.btdata.nCurrTimepoint);
 			 polyline.addPointToEnd(point_);
 			 addRoi(polyline);
 			 //activeRoi = rois.size()-1; 
@@ -651,7 +682,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //new Plane
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.PLANE)
 		 {	
-			 plane  = (CrossSection3D) makeRoi(Roi3D.PLANE);
+			 plane  = (CrossSection3D) makeRoi(Roi3D.PLANE, bt.btdata.nCurrTimepoint);
 			 plane.addPoint(point_);
 			 addRoi(plane);
 			 //activeRoi = rois.size()-1; 
@@ -776,28 +807,25 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		{
 			bt.repaintBVV();
 			roiMeasure.jlist.setSelectedIndex(jlist.getSelectedIndex());
-            if (jlist.getSelectedIndex() == -1) 
+			//No selection:
+			if (jlist.getSelectedIndex() == -1) 
             {
             	activeRoi=-1;
-            //No selection: disable delete, up, and down buttons.
-                //deleteButton.setEnabled(false);
-                //upButton.setEnabled(false);
-                //downButton.setEnabled(false);
-                //nameField.setText("");
- 
+            //Multiple selection:disabled right now		
             } else if (jlist.getSelectedIndices().length > 1) {
-            //Multiple selection: disable up and down buttons.
-                //deleteButton.setEnabled(true);
-                //upButton.setEnabled(false);
-                //downButton.setEnabled(false);
- 
+            
+            //Single selection
             } else {
-            //Single selection: permit all operations.
-                //deleteButton.setEnabled(true);
-                //upButton.setEnabled(true);
-                //downButton.setEnabled(true);
-                //nameField.setText(list.getSelectedValue().toString());
+
             	activeRoi=jlist.getSelectedIndex();
+            	//update the timepoint
+            	if(rois.get(activeRoi).getTimePoint()!=bt.panel.state().getCurrentTimepoint())
+            	{
+            		bt.btdata.bDeselectROITime = false;
+            		bt.panel.setTimepoint(rois.get(activeRoi).getTimePoint());
+            	}
+            	//jlist.setSelectedIndex(activeRoi);
+            	//update the timepoint
             	fireActiveRoiChanged(jlist.getSelectedIndex()); 
             }
         }
@@ -1532,11 +1560,15 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		double dCurrDist = 0.0;
 			for (int i=0;i<rois.size();i++)
 			{
-				dCurrDist= rois.get(i).getMinDist(clickLine);
-				if(dCurrDist<dDistMin)
+				//only roi at the current timepoint
+				if(rois.get(i).getTimePoint()==bt.btdata.nCurrTimepoint)
 				{
-					dDistMin = dCurrDist;
-					dInd=i;
+					dCurrDist= rois.get(i).getMinDist(clickLine);
+					if(dCurrDist<dDistMin)
+					{
+						dDistMin = dCurrDist;
+						dInd=i;
+					}
 				}
 				//roi.updateRenderVertices();
 				//roi.setGroup(groups.get(roi.getGroupInd()));

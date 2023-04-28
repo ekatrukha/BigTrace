@@ -24,7 +24,7 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 	public ArrayList<VisPolyLineSimple> edgesVis;
 
 	
-	public Box3D(final Roi3DGroup preset_in)
+	public Box3D(final Roi3DGroup preset_in, final int nTimePoint_)
 	{
 		type = Roi3D.BOX;
 
@@ -33,13 +33,15 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
-
+		nTimePoint = nTimePoint_;
 	}
-	public Box3D(float [][] nDimBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_)
+	public Box3D(float [][] nDimBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nTimePoint_)
 	{
 		type = Roi3D.BOX;
 		lineThickness=lineThickness_;
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
+
+		nTimePoint = nTimePoint_;
 		verticesVis = new ArrayList<VisPointsScaled>();
 		edgesVis = new ArrayList<VisPolyLineSimple>();
 		int i;
@@ -117,6 +119,7 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
 			writer.write("Name," + this.getName()+"\n");
 			writer.write("GroupInd," + Integer.toString(this.getGroupInd())+"\n");
+			writer.write("TimePoint," + Integer.toString(this.getTimePoint())+"\n");
 			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
 			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
 									  +	Integer.toString(pointColor.getGreen()) +","

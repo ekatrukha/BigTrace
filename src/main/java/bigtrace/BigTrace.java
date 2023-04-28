@@ -35,6 +35,7 @@ import bdv.tools.transformation.TransformedSource;
 import bdv.util.Bounds;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
+import bdv.viewer.TimePointListener;
 import bdv.viewer.ViewerState;
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
@@ -86,8 +87,9 @@ import bvvbigtrace.example2.VolumeViewerPanel;
 import bvvbigtrace.util.MatrixMath;
 
 
-public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListener
+public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListener, TimePointListener
 {
+	/** main instance of BVV **/
 	public  BvvStackSource< ? > bvv_main = null;
 	
 	/** BVV sources used for the volume visualization **/
@@ -97,7 +99,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 
 	public ArrayList<IntervalView< T >>  sources = null;//new ArrayList<IntervalView< T >>();
+
 	public Color [] colorsCh;
+
 	public double [][] channelRanges;
 	
 	/** if the source is BDV HDF file, it is true, otherwise we take it from ImageJ **/
@@ -106,10 +110,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** whether or not TraceMode is active **/
 	private boolean bTraceMode = false;
 
-	
-	
+
 	/** input from ImageJ reader**/
-	public Img<T> img_ImageJ= null;
+	//public Img<T> img_ImageJ= null;
 	
 	/** input from XML/HDF5 **/
 	public SpimDataMinimal spimData;
@@ -229,20 +232,23 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			return false;
 		}
 		
-		
-		if(imp.getNFrames()>1 && imp.getNSlices()>1)
+		/*
+		if(imp.getNFrames()>1)
+			&& imp.getNSlices()>1)
 		{
 			IJ.showMessage("Timelapse datasets are not supported yet, sorry.");
 			return false;
 		}
+		*/
 		
 		BigTraceData.globCal[0] = imp.getCalibration().pixelWidth;
 		BigTraceData.globCal[1] = imp.getCalibration().pixelHeight;
 		BigTraceData.globCal[2] = imp.getCalibration().pixelDepth;
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		btdata.sVoxelUnit = imp.getCalibration().getUnit();
+		BigTraceData.nNumTimepoints = imp.getNFrames();
 		
-		
+		Img<T> img_ImageJ;
 
 				
 		nBitDepth = imp.getBitDepth();
@@ -254,42 +260,47 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			img_ImageJ = (Img<T>) VolumeMisc.convertFloatToUnsignedShort(ImageJFunctions.wrapReal(imp));
 		}
-
+		long[] test = img_ImageJ.dimensionsAsLongArray();
+		
+		//let's convert it to XYZTC for BVV to understand
+		
 		
 		btdata.nTotalChannels=imp.getNChannels();
 		if(btdata.nTotalChannels==1)
 		{
-			all_ch_RAI = img_ImageJ;
+			//add dimension for the channels
+			all_ch_RAI = Views.addDimension(img_ImageJ, 0, 0);
 		}
 		else
 		{
-			//img_ImageJ = ImgPlusViews.permute(new ImgPlus<T>(img_ImageJ), 2, 3).getImg();
-			//all_ch_RAI = Views.interval(img_ImageJ, img_ImageJ);
-			//all_ch_RAI = Views.moveAxis(img_ImageJ, 2,3);
+			//change the order of C and Z
 			all_ch_RAI = Views.permute(img_ImageJ, 2,3);
 		}
+		test = all_ch_RAI.dimensionsAsLongArray();
 		
-		if(btdata.nTotalChannels==1)
-		{
-			
-			sources.add(Views.interval(all_ch_RAI,all_ch_RAI));
-			colorsCh = new Color[1];
-			colorsCh[0] = Color.WHITE;
-			channelRanges = new double [2][1];
-			channelRanges[0][0]=imp.getDisplayRangeMin();
-			channelRanges[1][0]=imp.getDisplayRangeMax();
-			//img = Views.interval(img_in,img_in);;
-		}
-		else
-		{
-			getChannelsColors(imp);
 
-			for(int i=0;i<btdata.nTotalChannels;i++)
+		getChannelsColors(imp);
+
+		if(BigTraceData.nNumTimepoints==1)
+		{
+			all_ch_RAI = Views.addDimension(all_ch_RAI, 0, 0);
+			test = all_ch_RAI.dimensionsAsLongArray();
+			if(btdata.nTotalChannels==1)
 			{
-				sources.add( Views.hyperSlice(all_ch_RAI,3,i) );
+				all_ch_RAI =Views.permute(all_ch_RAI, 3,4);
 			}
+			test = all_ch_RAI.dimensionsAsLongArray();
 		}
-		
+		//finally change C and T (or it can be already fine, if we added C dimension)
+		if(btdata.nTotalChannels>1)
+		{
+			all_ch_RAI =Views.permute(all_ch_RAI, 4,3);
+		}
+		test = all_ch_RAI.dimensionsAsLongArray();
+		for(int i=0;i<btdata.nTotalChannels;i++)
+		{
+			sources.add(Views.hyperSlice(Views.hyperSlice(all_ch_RAI,4,i),3,0));
+		}
 
 		sources.get(0).min( btdata.nDimIni[0] );
 		sources.get(0).max( btdata.nDimIni[1] );
@@ -309,13 +320,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 		
 		final SequenceDescriptionMinimal seq = spimData.getSequenceDescription();
-		final int numTimepoints = seq.getTimePoints().size();
+		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
 
-		if(numTimepoints>1)
+		/*if(numTimepoints>1)
 		{
 			IJ.showMessage("Timelapse datasets are not supported yet, sorry.");
 			return false;
-		}
+		}*/
 		RandomAccessibleInterval<T> raitest= (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0);
 		raitest.min(btdata.nDimIni[0]);
 		raitest.min( btdata.nDimIni[0] );
@@ -380,7 +391,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			nDimBox[0][i]=btdata.nDimIni[0][i]+0.5f;
 			nDimBox[1][i]=(btdata.nDimIni[1][i]-1.0f);
 		}
-		volumeBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY);
+		volumeBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 	}
 	public void init(double origin_axis_length)
 	{
@@ -400,6 +411,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions = new Actions( new InputTriggerConfig() );
 		installActions(actions);
 		setInitialTransform();
+		panel.addTimePointListener(this);
 	}
 	
 	
@@ -450,7 +462,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			RealPoint target = new RealPoint(3);
 			if(!bTraceMode)
 			{
-				
+
 				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
 				{
 					//semi auto tracing initialize
@@ -868,19 +880,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			if(bBDVsource)
 			{
-				RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(btdata.nChAnalysis).getImage(0);
+				RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(btdata.nChAnalysis).getImage(btdata.nCurrTimepoint);
 				return Views.interval(full_int, full_int);
 			}
 			else
 			{
-				if(btdata.nTotalChannels==1)
-				{
-					return Views.interval(all_ch_RAI, all_ch_RAI);
-				}
-				else
-				{
-					return Views.hyperSlice(all_ch_RAI,3,btdata.nChAnalysis);
-				}
+				return Views.hyperSlice(Views.hyperSlice(all_ch_RAI,4,btdata.nChAnalysis),3,btdata.nCurrTimepoint);
 			}
 		}
 	}
@@ -1165,7 +1170,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			bvv_trace.setAlphaRange(0., 150.0);
 
 		}
-		//handl.setDisplayMode(DisplayMode.SINGLE);
+
 	}
 	
 	/** removes tracebox from BVV **/
@@ -1196,6 +1201,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(bStatus)
 		{
 			panel.state().getViewerTransform(btdata.transformBeforeTracing);
+			//disable time slider
+			//panel.setNumTimepoints(1);
 			//transformBeforeTracing.set(panel.);
 		}
 		//exiting trace mode,
@@ -1206,6 +1213,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			panel.state().getViewerTransform(transform);
 			final AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(transform,btdata.transformBeforeTracing,0,0,1500);
 			panel.setTransformAnimator(anim);
+
+
 		}
 	}
 
@@ -1266,8 +1275,34 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		final Img< UnsignedByteType > imgx = ArrayImgs.unsignedBytes( new long[]{ 2, 2, 2 } );
 		empty_view =				 
 				 Views.interval( imgx, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
+		/*
+		bvv_main = BvvFunctions.show( all_ch_RAI, "empty" ,Bvv.options().
+				dCam(btdata.dCam).
+				dClipNear(btdata.dClipNear).
+				dClipFar(btdata.dClipFar).				
+				renderWidth( BigTraceData.renderParams.nRenderW).
+				renderHeight( BigTraceData.renderParams.nRenderH).
+				numDitherSamples( BigTraceData.renderParams.numDitherSamples ).
+				cacheBlockSize( BigTraceData.renderParams.cacheBlockSize ).
+				maxCacheSizeInMB( BigTraceData.renderParams.maxCacheSizeInMB ).
+				ditherWidth(BigTraceData.renderParams.ditherWidth).
+				frameTitle(filename)
+				);*/
+		/*
+		bvv_main = BvvFunctions.show( all_ch_RAI, "empty" ,Bvv.options().
+				dCam(btdata.dCam).
+				dClipNear(btdata.dClipNear).
+				dClipFar(btdata.dClipFar).				
+				renderWidth( BigTraceData.renderParams.nRenderW).
+				renderHeight( BigTraceData.renderParams.nRenderH).
+				numDitherSamples( BigTraceData.renderParams.numDitherSamples ).
+				cacheBlockSize( BigTraceData.renderParams.cacheBlockSize ).
+				maxCacheSizeInMB( BigTraceData.renderParams.maxCacheSizeInMB ).
+				ditherWidth(BigTraceData.renderParams.ditherWidth).
+				frameTitle(filename)
+				);
 		
-						
+		*/
 		bvv_main = BvvFunctions.show( empty_view, "empty" ,Bvv.options().
 				dCam(btdata.dCam).
 				dClipNear(btdata.dClipNear).
@@ -1281,13 +1316,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				frameTitle(filename)
 				);
 
-		
-		bvv_main.setActive(true);
-		
-		for(int i=0;i<sources.size();i++)
+
+	for(int i=0;i<sources.size();i++)
 		{
-			bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
-						
+		//bvv_main.getSources()
+		
+			//bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
+			bvv_sources.add(BvvFunctions.show( Views.hyperSlice(all_ch_RAI,4,i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));			
 			if(nBitDepth<=8)
 			{
 				bvv_sources.get(i).setDisplayRangeBounds(0, 255);
@@ -1306,6 +1341,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		bvv_main.removeFromBdv();
 		bvv_main = bvv_sources.get(0);
+		//
 		panel = bvv_main.getBvvHandle().getViewerPanel();
 	}
 	
@@ -1715,7 +1751,27 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	            }
 	        }
 	}
+	@Override
+	public void timePointChanged(int timePointIndex) {
+			
+		
+		if(btdata.nCurrTimepoint != panel.state().getCurrentTimepoint())
+		{
+			btdata.nCurrTimepoint = panel.state().getCurrentTimepoint();
+			if(btdata.bDeselectROITime)
+			{
+				actionDeselect();
+			}
+			else
+			{
+				btdata.bDeselectROITime = true;
+			}
+			//if(btpanel!=null)
+			btpanel.updateViewDataSources();
+		}
 
+		
+	}
 
 
 	@Override
@@ -1796,6 +1852,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		
 	}
+
+
 
 	
 }

@@ -92,12 +92,12 @@ public class DijkstraFHRestrictVector {
 		long [] endPoint = new long [dim.length];
 		iniPoint = new long [dim.length];
 		long nTotPix = 1;
-		for (int i =0;i<dim.length; i++)
+		for (int i = 0; i < dim.length; i++)
 		{
-			iniPoint[i]=(long)Math.round(startPoint_.getFloatPosition(i));			
-			currPoint[i]=iniPoint[i];
-			nTotPix *=dim[i];
-			endPoint[i]=(long)Math.round(endPoint_.getFloatPosition(i));	
+			iniPoint[i] = (long)Math.round(startPoint_.getFloatPosition(i));			
+			currPoint[i] = iniPoint[i];
+			nTotPix *= dim[i];
+			endPoint[i] = (long)Math.round(endPoint_.getFloatPosition(i));	
 		}
 		long [][] pos = new long [(int)(nTotPix)][dim.length];
 		entries = new ArrayList<Entry< Integer >>((int)(nTotPix));

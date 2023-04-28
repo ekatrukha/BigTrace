@@ -13,6 +13,7 @@ public abstract class AbstractRoi3D implements Roi3D {
 	public int type;
 	public int renderType;
 	public int groupIndex = -1;
+	public int nTimePoint;
 	
 	
 	@Override
@@ -104,6 +105,16 @@ public abstract class AbstractRoi3D implements Roi3D {
 		setRenderType(preset_in.renderType);
 		setPointSize(preset_in.pointSize);
 		setLineThickness(preset_in.lineThickness);
+	}
+	@Override
+	public void setTimePoint(int nTimePoint_)
+	{
+		nTimePoint = nTimePoint_;
+	}
+	@Override
+	public int getTimePoint()
+	{
+		return nTimePoint;
 	}
 
 }

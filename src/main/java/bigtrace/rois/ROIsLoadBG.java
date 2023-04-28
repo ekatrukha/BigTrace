@@ -49,6 +49,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
         ArrayList<RealPoint> segment;
         
         int nROIGroupInd = 0;
+        int nTimePoint = 0;
         float pointSize = 0.0f;
         float lineThickness = 0.0f;
         Color pointColor = Color.BLACK;
@@ -177,6 +178,9 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 				  case "Name":					  
 					  sName = line_array[1];
 					  break;
+				  case "TimePoint":					  
+					  nTimePoint = Integer.parseInt(line_array[1]);
+					  break;  
 					  
 				  case "GroupInd":
 					  if(nLoadMode ==0)
@@ -226,7 +230,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 					  {
 					  case Roi3D.POINT:
 
-						  Point3D roiP = (Point3D) bt.roiManager.makeRoi(nRoiType);						  
+						  Point3D roiP = (Point3D) bt.roiManager.makeRoi(nRoiType, nTimePoint);						  
 						  roiP.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
 						  roiP.setGroupInd(nROIGroupInd);
 						  roiP.setName(sName);
@@ -237,7 +241,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  break;
 					  case Roi3D.POLYLINE:
 
-						  PolyLine3D roiPL = (PolyLine3D) bt.roiManager.makeRoi(nRoiType);						  
+						  PolyLine3D roiPL = (PolyLine3D) bt.roiManager.makeRoi(nRoiType, nTimePoint);						  
 						  roiPL.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
 						  roiPL.setGroupInd(nROIGroupInd);
 						  roiPL.setName(sName);
@@ -247,7 +251,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  break;
 					  case Roi3D.LINE_TRACE:
 
-						  LineTrace3D roiLT = (LineTrace3D) bt.roiManager.makeRoi(nRoiType);
+						  LineTrace3D roiLT = (LineTrace3D) bt.roiManager.makeRoi(nRoiType, nTimePoint);
 						  
 						  roiLT.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
 						  roiLT.setGroupInd(nROIGroupInd);
@@ -277,7 +281,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 						  bt.roiManager.addRoi(roiLT);
 						  break;
 					  case Roi3D.PLANE:
-						  CrossSection3D roiCS = (CrossSection3D) bt.roiManager.makeRoi(nRoiType);
+						  CrossSection3D roiCS = (CrossSection3D) bt.roiManager.makeRoi(nRoiType, nTimePoint);
 						  roiCS.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
 						  roiCS.setGroupInd(nROIGroupInd);
 						  roiCS.setName(sName);

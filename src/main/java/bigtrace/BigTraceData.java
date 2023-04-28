@@ -14,7 +14,7 @@ import net.imglib2.view.IntervalView;
 public class BigTraceData {
 
 	
-	public static String sVersion = "0.2.1";
+	public static String sVersion = "0.3.0";
 	
 	/** path and full input filename **/
 	public String sFileNameFullImg;
@@ -59,11 +59,20 @@ public class BigTraceData {
 	/** object to store brightness/alpha range of the tracebox **/
 	public BCsettings bcTraceBox = new BCsettings();
 	
-	/**the number of current channel used for analysis/tracing **/
-	public int nChAnalysis=0;
+	/** the number of current channel used for analysis/tracing **/
+	public int nChAnalysis = 0;
 	
 	/** total number of channels in the dataset**/
-	public int nTotalChannels=0;
+	public int nTotalChannels = 0;
+	
+	/** currently selected timePoint**/
+	public int nCurrTimepoint = 0;
+	
+	/** total number of TimePoints**/
+	static public int nNumTimepoints = 0;
+	
+	/** whether or not deselect ROI on time point change **/
+	public boolean bDeselectROITime = true;
 	
 	/** dataset rendering method 
 	 * 0 maximum intensity, 

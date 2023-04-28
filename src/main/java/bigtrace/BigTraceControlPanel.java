@@ -560,43 +560,48 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 					btdata.nDimCurr[1][i]=box[1][i];
 				}
 				
-				//update data sources
-				if(bt.bBDVsource)
-				{
-					for(i=0;i<bt.btdata.nTotalChannels;i++)
-					{
-						bt.sources.set(i,Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(i).getImage(0), btdata.nDimCurr[0], btdata.nDimCurr[1]));
-					}
-				}
-				else
-				{
-					if(bt.btdata.nTotalChannels==1)
-					{						
-						bt.sources.set(0,Views.interval(bt.all_ch_RAI, btdata.nDimCurr[0], btdata.nDimCurr[1] ));						
-					}
-					else
-					{
-						for(i=0;i<bt.btdata.nTotalChannels;i++)
-						{	
-								bt.sources.set(i,Views.interval(Views.hyperSlice(bt.all_ch_RAI,3,i), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
-						}
-					}
-				}
-				//update bvv sources crop
-				double [][] doubleCrop = new double [2][3];
-				for (i=0;i<3;i++)
-					for(int j=0;j<2;j++)
-					    doubleCrop[j][i] = (double)btdata.nDimCurr[j][i];
-
-				final FinalRealInterval cropInt = new FinalRealInterval(doubleCrop[0],doubleCrop[1]);
-				for(i=0;i<bt.bvv_sources.size();i++)
-				{
-					((BvvStackSource)bt.bvv_sources.get(i)).setCropInterval(cropInt);
-				}			
-				
+				updateViewDataSources();
 			}
 	}
 	
+	/** updates data sources/bvvsources to the current state**/
+	public void updateViewDataSources()
+	{
+		int i;
+		//update data sources
+		if(bt.bBDVsource)
+		{
+			for(i=0;i<bt.btdata.nTotalChannels;i++)
+			{
+				bt.sources.set(i,Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(i).getImage(btdata.nCurrTimepoint), btdata.nDimCurr[0], btdata.nDimCurr[1]));
+			}
+		}
+		else
+		{
+			/*if(bt.btdata.nTotalChannels==1)
+			{						
+				bt.sources.set(0,Views.interval(bt.all_ch_RAI, btdata.nDimCurr[0], btdata.nDimCurr[1] ));						
+			}
+			else*/
+			{
+				for(i=0;i<bt.btdata.nTotalChannels;i++)
+				{	
+						bt.sources.set(i,Views.interval(Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,i),3,btdata.nCurrTimepoint), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
+				}
+			}
+		}
+		//update bvv sources crop
+		double [][] doubleCrop = new double [2][3];
+		for (i=0;i<3;i++)
+			for(int j=0;j<2;j++)
+			    doubleCrop[j][i] = (double)btdata.nDimCurr[j][i];
+
+		final FinalRealInterval cropInt = new FinalRealInterval(doubleCrop[0],doubleCrop[1]);
+		for(i=0;i<bt.bvv_sources.size();i++)
+		{
+			((BvvStackSource)bt.bvv_sources.get(i)).setCropInterval(cropInt);
+		}		
+	}
 	
 	synchronized void voxelChanged(double [] newVoxelSize)
 	{

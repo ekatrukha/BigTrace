@@ -37,7 +37,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 	
 	
 
-	public LineTrace3D(final Roi3DGroup preset_in)
+	public LineTrace3D(final Roi3DGroup preset_in, final int nTimePoint_)
 	{
 		type = Roi3D.LINE_TRACE;
 		pointSize = preset_in.pointSize;
@@ -46,6 +46,8 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
 
+		nTimePoint = nTimePoint_;
+		
 		renderType= preset_in.renderType;
 		
 		vertices = new ArrayList<RealPoint>();
@@ -289,6 +291,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
 			writer.write("Name," + this.getName()+"\n");
 			writer.write("GroupInd," + Integer.toString(this.getGroupInd())+"\n");
+			writer.write("TimePoint," + Integer.toString(this.getTimePoint())+"\n");
 			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
 			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
 									  +	Integer.toString(pointColor.getGreen()) +","
@@ -311,7 +314,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 					writer.write(df3.format(vert[i])+",");
 				}
 				//time point
-				writer.write("0.0\n");
+				writer.write("\n");
 			}
 			writer.write("SegmentsNumber,"+Integer.toString(segments.size())+"\n");
 			for(iSegment=0;iSegment<segments.size();iSegment++)
@@ -326,7 +329,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 						writer.write(df3.format(vert[i])+",");
 					}
 					//time point
-					writer.write("0.0\n");
+					writer.write("\n");
 				}
 			}
 		}

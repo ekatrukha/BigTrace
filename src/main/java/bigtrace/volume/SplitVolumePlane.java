@@ -67,15 +67,6 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
         bt.bInputLock = true;
         bt.roiManager.setLockMode(true);
         
-		boolean nMultCh;
-		if(bt.btdata.nTotalChannels==1)
-		{
-			nMultCh=false;
-		}
-		else
-		{
-			nMultCh=true;
-		}
 
 		try {
 			  Thread.sleep(1);
@@ -131,18 +122,13 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 			cursor1.fwd();
 			cursor2.fwd();
 			cursor1.localize(position);
-			if(!nMultCh)
+
+			for(d=0;d<3;d++)
 			{
-				rp.setPosition(position);
-			}
-			else
-			{
-				for(d=0;d<3;d++)
-				{
 					position3[d]=position[d];
-				}
-				rp.setPosition(position3);
 			}
+			rp.setPosition(position3);
+			
 			
 			if(crossSection.fittedPlane.signedDistance(rp)>0.0)
 			{
@@ -185,16 +171,9 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 			}
 			//add vertices of corners depending on the sign
 			ArrayList<RealPoint> boxVert; 
-			//one channel
-			if(!nMultCh)
-			{				
-				boxVert = Box3D.getBoxVertices(out1);
-			}
-			//many channels
-			else
-			{
-				boxVert = Box3D.getBoxVertices(Views.hyperSlice(out1, 3, 0));
-			}
+
+			boxVert = Box3D.getBoxVertices(Views.hyperSlice(out1, 3, 0));
+	
 			
 			//split vertexes of the bounding box based
 			//on their relative position to the plane
@@ -216,33 +195,23 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 			
 			//crop intervals
 			FinalInterval [] newCrop = new FinalInterval[2];
-			//one channel
-			if(!nMultCh)
+			
+			long [][] rangeCh = new long[2][4];
+			for (int intervN = 0; intervN<2; intervN ++)
 			{
 				for(i=0;i<2;i++)
 				{
-					newCrop[i]=new FinalInterval(newBoundBoxes[i][0],newBoundBoxes[i][1]);
-				}
-			}
-			//many channels
-			else
-			{
-				long [][] rangeCh = new long[2][4];
-				for (int intervN = 0; intervN<2; intervN ++)
-				{
-					for(i=0;i<2;i++)
+					for(d=0;d<3;d++)
 					{
-						for(d=0;d<3;d++)
-						{
-							rangeCh[i][d]= newBoundBoxes[intervN][i][d];
-						}
+						rangeCh[i][d]= newBoundBoxes[intervN][i][d];
 					}
-					rangeCh[0][3]=out1.min(3);
-					rangeCh[1][3]=out1.max(3);
-					newCrop[intervN]=new FinalInterval(rangeCh[0],rangeCh[1]);
 				}
-
+				rangeCh[0][3]=out1.min(3);
+				rangeCh[1][3]=out1.max(3);
+				newCrop[intervN]=new FinalInterval(rangeCh[0],rangeCh[1]);
 			}
+
+			
 			
 			VolumeMisc.wrapImgImagePlusCal(Views.interval(out1, newCrop[0]),fileName+"_vol1", cal).show();
 			VolumeMisc.wrapImgImagePlusCal(Views.interval(out2, newCrop[1]),fileName+"_vol2", cal).show();

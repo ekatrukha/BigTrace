@@ -34,7 +34,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	public VisPointsScaled vertexVis;
 
 
-	public Point3D( final Roi3DGroup preset_in)
+	public Point3D( final Roi3DGroup preset_in, final int nTimePoint_)
 	{
 		type = Roi3D.POINT;
 		pointSize = preset_in.pointSize;		
@@ -46,8 +46,9 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 		name = "point"+Integer.toString(this.hashCode());
 		vertex = null;
 		vertexVis = null;
+		nTimePoint = nTimePoint_;
 	}
-	public Point3D(final float pointSize_, final Color pointColor_)
+	public Point3D(final float pointSize_, final Color pointColor_, final int nTimePoint_)
 	{
 		type = Roi3D.POINT;
 		pointSize = pointSize_;		
@@ -55,7 +56,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 		lineColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
 
 		name = "point"+Integer.toString(this.hashCode());
-
+		nTimePoint = nTimePoint_;
 	}
 	
 	public void setVertex(final RealPoint vertex_)
@@ -97,6 +98,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 			writer.write("Type," + Roi3D.intTypeToString(this.getType())+"\n");
 			writer.write("Name," + this.getName()+"\n");
 			writer.write("GroupInd," + Integer.toString(this.getGroupInd())+"\n");
+			writer.write("TimePoint," + Integer.toString(this.getTimePoint())+"\n");
 			writer.write("PointSize," + df3.format(this.getPointSize())+"\n");
 			writer.write("PointColor,"+ Integer.toString(pointColor.getRed()) +","
 									  +	Integer.toString(pointColor.getGreen()) +","
@@ -109,8 +111,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 			{
 				writer.write(df3.format(vert[i])+",");
 			}
-			//time point
-			writer.write("0.0\n");
+			writer.write("\n");
 		}
 		catch (IOException e) {	
 			System.err.print(e.getMessage());
