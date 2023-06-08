@@ -98,10 +98,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** saliency view (TraceBox) for semi-auto tracing **/
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 
+	/** currently active and displayed volume **/
 	public ArrayList<IntervalView< T >>  sources = null;//new ArrayList<IntervalView< T >>();
 
+	/** colors for each channel **/
 	public Color [] colorsCh;
-
+	/** intensity range for channels **/
 	public double [][] channelRanges;
 	
 	/** if the source is BDV HDF file, it is true, otherwise we take it from ImageJ **/
@@ -1054,70 +1056,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	{
 		
 		final AffineTransform3D transform = new AffineTransform3D();
+		
 		panel.state().getViewerTransform(transform);
+		
 		return getCenteredViewTransform(transform, inInterval, zoomFraction);
-		/*
-		int i;
-		int nDim = inInterval.numDimensions();
-		final long [] minDim = inInterval.minAsLongArray();
-		final long [] maxDim = inInterval.maxAsLongArray();
-		float [] centerCoord = new float[nDim];
-		float [] centerCoordWorldOld = new float[nDim];
-		
-		
-		//center of the interval in the volume coordinates
-		for(i=0;i<nDim;i++)
-		{
-			centerCoord[i] = (float)Math.round(minDim[i]+ 0.5*(maxDim[i]-minDim[i]));
-		}
-		
-		//current window dimensions
-		final int sW = panel.getWidth();
-		final int sH = panel.getHeight();
-		
-		//current view transform
-		final AffineTransform3D transform = new AffineTransform3D();
-		panel.state().getViewerTransform(transform);
-		
-		//calculate scale factor
-		//current width/height
-		FinalRealInterval boxAfter = transform.estimateBounds(inInterval);
-		double dCurrW = boxAfter.realMax(0)-boxAfter.realMin(0);
-		double dCurrH = boxAfter.realMax(1)-boxAfter.realMin(1);
-		double scaleX = (zoomFraction)*sW/dCurrW;
-		double scaleY = (zoomFraction)*sH/dCurrH;
-		double scalefin=Math.min(scaleX, scaleY);
-		
-		transform.scale(scalefin);
-		
-		
-		//current coordinates of center in the current(old) transform
-		transform.apply(centerCoord, centerCoordWorldOld);
-
-		//center of the screen "volume" 		
-		Vector3f vcenter = new Vector3f();			
-		Matrix4f matPersp = new Matrix4f();
-		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPersp );
-		
-		matPersp.unproject(0.5f*sW,0.5f*sH,0.0f, //z=0 does not matter here
-				new int[] { 0, 0, sW, sH },vcenter);
-		float [] centerViewPoint = new float[3];
-		centerViewPoint[0]=vcenter.x;
-		centerViewPoint[1]=vcenter.y;
-		centerViewPoint[2]=0.0f; //center of the "screen" volume		
-		
-		//position center of the volume in the center of "screen" volume
-		double [] dl = transform.getTranslation();
-		
-		//translation after source transform to new position
-		for(i=0;i<3;i++)
-		{
-			dl[i]+= (centerViewPoint[i]-centerCoordWorldOld[i]);
-		}
-		transform.setTranslation(dl);
-		
-		return transform;
-		*/
 	}
 	
 	public AnisotropicTransformAnimator3D getCenteredViewAnim(final Interval inInterval, double zoomFraction)

@@ -43,6 +43,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
@@ -564,32 +565,30 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			}
 	}
 	
+	/** returns data sources for specific channel and time point **/
+	public IntervalView< T > getDataSource(final int nChannel, final int nTimePoint)
+	{
+		if(bt.bBDVsource)
+		{
+			return Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint), btdata.nDimCurr[0], btdata.nDimCurr[1]);
+		}
+		else
+		{
+			return Views.interval(Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,nChannel),3,nTimePoint), btdata.nDimCurr[0], btdata.nDimCurr[1]);
+			
+		}
+	}
+	
 	/** updates data sources/bvvsources to the current state**/
 	public void updateViewDataSources()
 	{
 		int i;
 		//update data sources
-		if(bt.bBDVsource)
+		for(i=0;i<bt.btdata.nTotalChannels;i++)
 		{
-			for(i=0;i<bt.btdata.nTotalChannels;i++)
-			{
-				bt.sources.set(i,Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(i).getImage(btdata.nCurrTimepoint), btdata.nDimCurr[0], btdata.nDimCurr[1]));
-			}
+				bt.sources.set(i,getDataSource(i, btdata.nCurrTimepoint));
 		}
-		else
-		{
-			/*if(bt.btdata.nTotalChannels==1)
-			{						
-				bt.sources.set(0,Views.interval(bt.all_ch_RAI, btdata.nDimCurr[0], btdata.nDimCurr[1] ));						
-			}
-			else*/
-			{
-				for(i=0;i<bt.btdata.nTotalChannels;i++)
-				{	
-						bt.sources.set(i,Views.interval(Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,i),3,btdata.nCurrTimepoint), btdata.nDimCurr[0], btdata.nDimCurr[1] ));
-				}
-			}
-		}
+
 		//update bvv sources crop
 		double [][] doubleCrop = new double [2][3];
 		for (i=0;i<3;i++)

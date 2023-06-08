@@ -1297,6 +1297,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	{
 		JPanel dialProperties = new JPanel(new GridBagLayout());
 		GridBagConstraints cd = new GridBagConstraints();
+		NumberField nfTimePoint = new NumberField(4);
 		NumberField nfPointSize = new NumberField(4);
 		NumberField nfLineThickness = new NumberField(4);
 		NumberField nfOpacity = new NumberField(4);
@@ -1305,6 +1306,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 		String[] sRenderType = { "Outline", "Wire", "Surface" };
 		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
+		nfTimePoint.setIntegersOnly(true);
+		nfTimePoint.setText(Integer.toString(currentROI.getTimePoint()));
 		nfPointSize.setText(Float.toString(currentROI.getPointSize()));
 		nfLineThickness.setText(Float.toString(currentROI.getLineThickness()));
 		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
@@ -1359,6 +1362,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		{
 			dialProperties.add(new JLabel(groups.get(currentROI.getGroupInd()).getName()),cd);	
 		}
+
+		
+		cd.gridx=0;
+		cd.gridy++;
+		dialProperties.add(new JLabel("Time point: "),cd);
+		cd.gridx++;
+		dialProperties.add(nfTimePoint,cd);
+
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -1408,6 +1419,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		if (reply == JOptionPane.OK_OPTION) 
 		{
+			
+			//time point
+			currentROI.setTimePoint(Math.min(Math.max(0, Integer.parseInt(nfTimePoint.getText())),BigTraceData.nNumTimepoints-1));
 			//point size 
 			currentROI.setPointSize(Float.parseFloat(nfPointSize.getText()));
 			
