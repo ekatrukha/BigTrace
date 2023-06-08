@@ -2,7 +2,7 @@ package bigtrace.volume;
 
 import java.util.ArrayList;
 
-
+import bigtrace.BigTraceData;
 import bigtrace.geometry.Cuboid3D;
 import ij.ImagePlus;
 import ij.measure.Calibration;
@@ -401,7 +401,7 @@ public class VolumeMisc {
 		return Intervals.createMinMax(minL[0],minL[1],minL[2], maxL[0],maxL[1],maxL[2]);
 	}
 	
-	/** assume there is no time axis 
+	/** assume the input image format is in XYZTC
 	 * @param <T>**/
 	public static <T extends NumericType<T> > ImagePlus wrapImgImagePlusCal(RandomAccessibleInterval< T > img, String sTitle, Calibration cal)
 	{
@@ -415,15 +415,25 @@ public class VolumeMisc {
 		}
 		else
 		{
-			//multichannel 3D volume
+			//multichannel 3D volume or one channel timelapse
 			if(img.numDimensions()==4)
 			{
 				outIP = ImageJFunctions.wrap(Views.permute(img,2,3), sTitle);
-				outIP.setDimensions((int)img.dimension(3), (int)img.dimension(2), 1);
+				//multichannel
+				if(BigTraceData.nNumTimepoints==0)
+				{
+					outIP.setDimensions((int)img.dimension(3), (int)img.dimension(2), 1);
+				}
+				//timelapse
+				else
+				{
+					outIP.setDimensions(1, (int)img.dimension(2), (int)img.dimension(3));
+				}
 			}
 			else
 			{
-				return null;
+				outIP = ImageJFunctions.wrap(Views.permute(img,2,3), sTitle);
+				outIP.setDimensions((int)img.dimension(4), (int)img.dimension(2),(int)img.dimension(3));
 			}
 		}
 		

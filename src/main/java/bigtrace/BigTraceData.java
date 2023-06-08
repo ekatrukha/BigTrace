@@ -1,23 +1,34 @@
 package bigtrace;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import bdv.spimdata.SequenceDescriptionMinimal;
 import bigtrace.gui.BCsettings;
 import bigtrace.gui.RenderSettings;
 import ij.Prefs;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
+import net.imglib2.view.Views;
 
 /** class that stores settings and main data from BigTrace **/
-public class BigTraceData {
+public class BigTraceData < T extends RealType< T > > {
 
-	
+	/** current plugin version **/
 	public static String sVersion = "0.3.0";
+	
+	/** plugin instanse **/
+	BigTrace<T> bt;
 	
 	/** path and full input filename **/
 	public String sFileNameFullImg;
+	
+	/** if the source is BDV HDF file, it is true, otherwise we take it from ImageJ **/
+	public boolean bBDVsource = false;
 	
 	///////////////////////////// volume/image  and rendering
 	
@@ -35,6 +46,9 @@ public class BigTraceData {
 	
 	/** unit of voxel **/
 	public String sVoxelUnit = "pixel";
+	
+	/** unit of voxel **/
+	public String sTimeUnit = "frame";
 	
 	/** whether or not display color coded origin of coordinates **/
 	public boolean bShowOrigin = true;
@@ -163,8 +177,10 @@ public class BigTraceData {
 	
 
 	
-	public BigTraceData()
+	public BigTraceData(final BigTrace<T> bt_)
 	{
+		
+		bt = bt_;
 		//default scale
 		globCal[0]= 1.0;
 		globCal[1]= 1.0;
@@ -184,5 +200,65 @@ public class BigTraceData {
 		fTraceBoxAdvanceFraction = (float) Prefs.get("BigTrace.fTraceBoxAdvanceFraction", 0.9);
 		dTraceBoxScreenFraction = Prefs.get("BigTrace.dTraceBoxScreenFraction", 0.5);
 		bTraceOnlyCrop= Prefs.get("BigTrace.bTraceOnlyCrop", false);
+	}
+	
+	/** returns data sources for specific channel and time point,
+	 * limits output to the current cropped area **/
+	public IntervalView< T > getDataSourceCropped(final int nChannel, final int nTimePoint)
+	{
+		if(bBDVsource)
+		{
+			return Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint), nDimCurr[0], nDimCurr[1]);
+		}
+		else
+		{
+			return Views.interval(Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,nChannel),3,nTimePoint), nDimCurr[0], nDimCurr[1]);
+			
+		}
+	}
+	
+	/** returns data sources for specific channel and time point,
+	 * does not limit output to the current cropped area **/
+	public RandomAccessibleInterval<T> getDataSourceFull(final int nChannel, final int nTimePoint)
+	{
+		if(bBDVsource)
+		{
+			return (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
+		}
+		else
+		{
+			return Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,nChannel),3,nTimePoint);
+			
+		}
+	}
+	
+	public RandomAccessibleInterval<T> getAllDataRAI()
+	{
+		//output should be XYZTC
+		
+		if(bBDVsource)
+		{
+			final SequenceDescriptionMinimal seq = bt.spimData.getSequenceDescription();
+			
+			List<RandomAccessibleInterval<T>> raiXYZTC = new ArrayList<RandomAccessibleInterval<T>> ();
+			List<RandomAccessibleInterval<T>> raiXYZT;// = new ArrayList<RandomAccessibleInterval<T>> ();
+			
+			
+			for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
+			{
+				raiXYZT = new ArrayList<RandomAccessibleInterval<T>> ();
+				for(int nTimePoint = 0;nTimePoint<BigTraceData.nNumTimepoints;nTimePoint++)
+				{
+					raiXYZT.add((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(nTimePoint));
+				}
+				raiXYZTC.add(Views.stack(raiXYZT));
+			}
+		
+			return Views.stack(raiXYZTC);
+		}
+		else
+		{
+			return bt.all_ch_RAI;
+		}
 	}
 }

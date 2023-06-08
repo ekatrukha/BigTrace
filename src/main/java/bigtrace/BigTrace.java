@@ -106,8 +106,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** intensity range for channels **/
 	public double [][] channelRanges;
 	
-	/** if the source is BDV HDF file, it is true, otherwise we take it from ImageJ **/
-	public boolean bBDVsource = false;
+
 
 	/** whether or not TraceMode is active **/
 	private boolean bTraceMode = false;
@@ -139,7 +138,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	Box3D volumeBox;
 
 	/** object storing main data/variables **/
-	public BigTraceData btdata = new BigTraceData();
+	public BigTraceData<T> btdata ;
 	
 	/** bit depth of the source **/
 	public int nBitDepth = 8;
@@ -152,6 +151,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 	public void run(String arg)
 	{
+		btdata = new BigTraceData<T>(this);
 		
 		if(arg.equals(""))
 		{
@@ -167,14 +167,14 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		if(btdata.sFileNameFullImg.endsWith(".tif"))
 		{
-			bBDVsource = false;
+			btdata.bBDVsource = false;
 			if(!initDataSourcesImageJ())
 				return;
 		}
 		
 		if(btdata.sFileNameFullImg.endsWith(".xml"))
 		{
-			bBDVsource = true;
+			btdata.bBDVsource = true;
 			try {
 				if(!initDataSourcesHDF5())
 					return;
@@ -248,6 +248,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		BigTraceData.globCal[2] = imp.getCalibration().pixelDepth;
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		btdata.sVoxelUnit = imp.getCalibration().getUnit();
+		btdata.sTimeUnit = imp.getCalibration().getTimeUnit();
 		BigTraceData.nNumTimepoints = imp.getNFrames();
 		
 		Img<T> img_ImageJ;
@@ -262,7 +263,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			img_ImageJ = (Img<T>) VolumeMisc.convertFloatToUnsignedShort(ImageJFunctions.wrapReal(imp));
 		}
-		long[] test = img_ImageJ.dimensionsAsLongArray();
+		//long[] test = img_ImageJ.dimensionsAsLongArray();
 		
 		//let's convert it to XYZTC for BVV to understand
 		
@@ -278,7 +279,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			//change the order of C and Z
 			all_ch_RAI = Views.permute(img_ImageJ, 2,3);
 		}
-		test = all_ch_RAI.dimensionsAsLongArray();
+		//test = all_ch_RAI.dimensionsAsLongArray();
 		
 
 		getChannelsColors(imp);
@@ -286,19 +287,19 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(BigTraceData.nNumTimepoints==1)
 		{
 			all_ch_RAI = Views.addDimension(all_ch_RAI, 0, 0);
-			test = all_ch_RAI.dimensionsAsLongArray();
+			//test = all_ch_RAI.dimensionsAsLongArray();
 			if(btdata.nTotalChannels==1)
 			{
 				all_ch_RAI =Views.permute(all_ch_RAI, 3,4);
 			}
-			test = all_ch_RAI.dimensionsAsLongArray();
+			//test = all_ch_RAI.dimensionsAsLongArray();
 		}
 		//finally change C and T (or it can be already fine, if we added C dimension)
 		if(btdata.nTotalChannels>1)
 		{
 			all_ch_RAI =Views.permute(all_ch_RAI, 4,3);
 		}
-		test = all_ch_RAI.dimensionsAsLongArray();
+		//test = all_ch_RAI.dimensionsAsLongArray();
 		for(int i=0;i<btdata.nTotalChannels;i++)
 		{
 			sources.add(Views.hyperSlice(Views.hyperSlice(all_ch_RAI,4,i),3,0));
@@ -339,15 +340,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		btdata.sVoxelUnit=seq.getViewSetupsOrdered().get(0).getVoxelSize().unit();
 		
 		btdata.nTotalChannels = seq.getViewSetupsOrdered().size();
-		/*
-		int setupN=0;
-		for ( final BasicViewSetup setup : spimData.getSequenceDescription().getViewSetupsOrdered() )
-		{
-			setupN ++;
-			sources.add(Views.interval((RandomAccessibleInterval<T>)seq.getImgLoader().getSetupImgLoader(setup.getId()).getImage(0),raitest));
-			
-		}
-		 	*/
+
 		
 		
 		for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
@@ -400,7 +393,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		initOriginAndBox(origin_axis_length);
 	
-		if(bBDVsource)
+		if(btdata.bBDVsource)
 		{
 			initBVVSourcesHDF5();
 		}
@@ -880,7 +873,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		else
 		{
-			if(bBDVsource)
+			if(btdata.bBDVsource)
 			{
 				RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(btdata.nChAnalysis).getImage(btdata.nCurrTimepoint);
 				return Views.interval(full_int, full_int);

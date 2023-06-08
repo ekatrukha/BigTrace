@@ -79,7 +79,7 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 		//(for now)
 		//make two copies
 
-		if(bt.bBDVsource)
+		if(bt.btdata.bBDVsource)
 		{
 			final SequenceDescriptionMinimal seq = bt.spimData.getSequenceDescription();
 			

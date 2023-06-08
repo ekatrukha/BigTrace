@@ -687,7 +687,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	void measureMeanIntensity(final Roi3D roi, final MeasureValues val)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btpanel.getDataSource(bt.btdata.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceCropped(bt.btdata.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile;
 		val.mean = Double.NaN;
 		switch (roi.getType())
@@ -722,7 +722,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	void measureSDIntensity(final Roi3D roi, final MeasureValues val)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btpanel.getDataSource(bt.btdata.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceCropped(bt.btdata.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile;
 		val.stdDev = Double.NaN;
 		switch (roi.getType())
@@ -829,7 +829,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	double [][] measureLineProfile(final Roi3D roi, final boolean bMakePlot)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btpanel.getDataSource(bt.btdata.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceCropped(bt.btdata.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile = null;
 		Plot plotProfile;
 		switch (roi.getType())
@@ -935,6 +935,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		
 		float fRadiusStraighted = 0.0f;
 		int nRadiusType = 0;
+		int nTimePoint = -1;
 		
 		NumberField nfRadius = new NumberField(4);
 		
@@ -945,6 +946,8 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		
 		String[] sStraightenType = { "Take from ROI settings", "Specify here" };
 		JComboBox<String> straightenRadiusList = new JComboBox<String>(sStraightenType);
+		String[] sStraightenTime = { "Single time point", "All time points" };
+		JComboBox<String> straightenTimeList = new JComboBox<String>(sStraightenTime);
 		cd.gridx=0;
 		cd.gridy=0;
 		straightenSettings.add(new JLabel("Curve thickness: "),cd);
@@ -961,6 +964,17 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		cd.gridy++;
 		straightenSettings.add(nfRadius,cd);
 		
+		if(BigTraceData.nNumTimepoints>1)
+		{
+			cd.gridx++;
+			cd.gridy=0;
+			straightenSettings.add(new JLabel("Time range: "),cd);
+			straightenTimeList.setSelectedIndex((int)Prefs.get("BigTrace.nStraightenTime", 0));
+			cd.gridy++;
+			straightenSettings.add(straightenTimeList,cd);
+			
+		}
+		
 		int reply = JOptionPane.showConfirmDialog(null, straightenSettings, "Straighten curve", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (reply == JOptionPane.OK_OPTION) 
@@ -976,8 +990,27 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				fRadiusStraighted = Float.parseFloat(nfRadius.getText());
 				Prefs.set("BigTrace.fRadiusStraighted", fRadiusStraighted);				
 			}
+			if(BigTraceData.nNumTimepoints>1)
+			{
+				nTimePoint = straightenTimeList.getSelectedIndex();
+				Prefs.set("BigTrace.nRadiusType", nTimePoint);
+				//only current frame
+				if(nTimePoint == 0)
+				{
+					nTimePoint = bt.btdata.nCurrTimepoint;
+				}
+				//all frames
+				else
+				{
+					nTimePoint = -1;
+				}
+			}
+			else
+			{
+				nTimePoint = bt.btdata.nCurrTimepoint;
+			}
 			//run in a separate thread
-			StraightenCurve<T> straightBG = new StraightenCurve<T>(curveLine, bt, fRadiusStraighted);
+			StraightenCurve<T> straightBG = new StraightenCurve<T>(curveLine, bt, fRadiusStraighted, nTimePoint);
 			straightBG.sRoiName = bt.roiManager.getGroupPrefixRoiName(curveLine);
 			straightBG.addPropertyChangeListener(bt.btpanel);
 			straightBG.execute();

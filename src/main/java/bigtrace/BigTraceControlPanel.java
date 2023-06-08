@@ -58,7 +58,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	private static final long serialVersionUID = -8992158095263652259L;
 	
 	BigTrace<T> bt;
-	BigTraceData btdata;	
+	BigTraceData<T> btdata;	
 	
 	public CropPanel cropPanel;	
 	public VoxelSizePanel voxelSizePanel;
@@ -76,7 +76,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	JButton butSettings;
 
 	
-	public BigTraceControlPanel(final BigTrace<T> bt_,final BigTraceData btd_, final RoiManager3D roiManager_)//, int locx, int locy) 
+	public BigTraceControlPanel(final BigTrace<T> bt_,final BigTraceData<T> btd_, final RoiManager3D roiManager_)//, int locx, int locy) 
 	{
 		//finalPanel = new JPanel(new GridBagLayout());
 		super(new GridBagLayout());
@@ -516,7 +516,6 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	        
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public synchronized void bbChanged(long [][] box )
 	{
 		int i;
@@ -565,19 +564,6 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			}
 	}
 	
-	/** returns data sources for specific channel and time point **/
-	public IntervalView< T > getDataSource(final int nChannel, final int nTimePoint)
-	{
-		if(bt.bBDVsource)
-		{
-			return Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint), btdata.nDimCurr[0], btdata.nDimCurr[1]);
-		}
-		else
-		{
-			return Views.interval(Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,nChannel),3,nTimePoint), btdata.nDimCurr[0], btdata.nDimCurr[1]);
-			
-		}
-	}
 	
 	/** updates data sources/bvvsources to the current state**/
 	public void updateViewDataSources()
@@ -586,7 +572,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		//update data sources
 		for(i=0;i<bt.btdata.nTotalChannels;i++)
 		{
-				bt.sources.set(i,getDataSource(i, btdata.nCurrTimepoint));
+				bt.sources.set(i,btdata.getDataSourceCropped(i, btdata.nCurrTimepoint));
 		}
 
 		//update bvv sources crop

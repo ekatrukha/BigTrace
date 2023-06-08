@@ -30,14 +30,16 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 	private String progressState;
 	public BigTrace<T> bt;
 	float nRadius;
+	int nTimePoint;
 	AbstractCurve3D curveROI;
 	public String sRoiName="";
 	
-	public StraightenCurve(final AbstractCurve3D curveROI_, final BigTrace<T> bt_, final float nRadius_)
+	public StraightenCurve(final AbstractCurve3D curveROI_, final BigTrace<T> bt_, final float nRadius_, final int nTimePoint_)
 	{
 		super();
 		curveROI = curveROI_;
 		bt = bt_;
+		nTimePoint = nTimePoint_;
 		//round it up
 		nRadius= (float)Math.ceil(nRadius_);
 	}
@@ -69,23 +71,11 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		setProgress(1);
 		setProgressState("allocating volume..");
 		
-		//get the data RAI
-		if(bt.bBDVsource)
-		{
-			final SequenceDescriptionMinimal seq = bt.spimData.getSequenceDescription();
-			
-			List<RandomAccessibleInterval<T>> hyperslices = new ArrayList<RandomAccessibleInterval<T>> ();
-			
-			
-			for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
-			{
-				hyperslices.add((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0));
-			}
-			//for()
-			bt.all_ch_RAI = Views.stack(hyperslices);
-		}
-		
-		
+		//get the all data RAI
+		//XYZTC
+		RandomAccessibleInterval<T> all_RAI = bt.btdata.getAllDataRAI();
+	
+	
 		//get the curve and tangent vectors
 		ArrayList<RealPoint> points_space;
 		//get tangent vectors		
@@ -99,23 +89,33 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 
 		int dimXY = (int)(nRadius*2+1);
 		
-		final int nTotDim = bt.all_ch_RAI.numDimensions();
+		final int nTotDim = all_RAI.numDimensions();
 		long [] dimS =new long[nTotDim];
-		bt.all_ch_RAI.dimensions(dimS);
+		all_RAI.dimensions(dimS);
 		dimS[0]=points_space.size(); //length along the line becomes Z
 		dimS[1]=dimXY;
 		dimS[2]=dimXY;
 		long nChannelN = 1;
-		boolean nMultCh = false;
+		//boolean nMultCh = false;
+		int nMinTimePoint, nMaxTimePoint;
 		double [] currXYmCh = new double[nTotDim];
-		if(nTotDim>3)
+		//single time point
+		if(nTimePoint>=0)
 		{
-			nChannelN = dimS[3];
-			nMultCh = true;
+			dimS[3] = 1;
+			nMinTimePoint = nTimePoint;
+			nMaxTimePoint = nTimePoint;
 		}
-		
+		else
+		{
+			nMinTimePoint = 0;
+			nMaxTimePoint = BigTraceData.nNumTimepoints-1;
+		}
+		//channels number
+		nChannelN = dimS[4];
+
 		//this is where we store straightened volume
-		Img<T> out1 = Util.getSuitableImgFactory(bt.all_ch_RAI, Util.getTypeFromInterval(bt.all_ch_RAI)).create(new FinalInterval(dimS));
+		Img<T> out1 = Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(new FinalInterval(dimS));
 		
 		
 		//get a frame around line
@@ -126,7 +126,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		ArrayList< RealPoint > planeNorm;
 
 		double [] current_point = new double [3];
-		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(bt.all_ch_RAI), bt.roiManager.roiMeasure.nInterpolatorFactory);
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(all_RAI), bt.roiManager.roiMeasure.nInterpolatorFactory);
 		final RealRandomAccess<T> ra = interpolate.realRandomAccess();
 		final RandomAccess<T> ra_out = out1.randomAccess();
 	
@@ -146,28 +146,31 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 					curr_XY = new RealPoint( planeNorm.get(j+i*dimXY));
 
 					//back to voxel units
-					curr_XY =Roi3D.scaleGlobInv(curr_XY, BigTraceData.globCal);
-					
-					for (int nCh=0;nCh<nChannelN;nCh++)
+					curr_XY = Roi3D.scaleGlobInv(curr_XY, BigTraceData.globCal);
+					for(int nTimePoint = nMinTimePoint;nTimePoint<=nMaxTimePoint;nTimePoint++)
 					{
+						for (int nCh=0;nCh<nChannelN;nCh++)
+						{
 						//position RA at corresponding points
 						//multichannel
-						if(nMultCh)
-						{
+						//if(nMultCh)
+						//{
 							curr_XY.localize(currXYmCh);
+							//time
+							currXYmCh[3] = nTimePoint; 
 							//channel
-							currXYmCh[3] = nCh; 
+							currXYmCh[4] = nCh; 
 							ra.setPosition(currXYmCh);
-							ra_out.setPosition(new int [] {nPoint,j,i,nCh});
+							ra_out.setPosition(new int [] {nPoint,j,i,nTimePoint-nMinTimePoint,nCh});
+						//}
+						////one channel
+						//else
+						//{							
+						////	ra.setPosition(curr_XY);
+						//	ra_out.setPosition(new int [] {nPoint,j,i});
+						//}
+							ra_out.get().setReal(ra.get().getRealDouble());
 						}
-						//one channel
-						else
-						{							
-							ra.setPosition(curr_XY);
-							ra_out.setPosition(new int [] {nPoint,j,i});
-						}
-						ra_out.get().setReal(ra.get().getRealDouble());
-						
 					}
 				}	
 			setProgress(100*nPoint/(points_space.size()-1));
@@ -176,9 +179,11 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		
 		Calibration cal = new Calibration();
 		cal.setUnit(bt.btdata.sVoxelUnit);
+		cal.setTimeUnit(bt.btdata.sTimeUnit);
 		cal.pixelWidth= BigTraceData.dMinVoxelSize;
 		cal.pixelHeight= BigTraceData.dMinVoxelSize;
 		cal.pixelDepth= BigTraceData.dMinVoxelSize;
+		
 		//switch Z and X for convenience
 		VolumeMisc.wrapImgImagePlusCal(out1, sRoiName+"_straight",cal).show();
 		//VolumeMisc.wrapImgImagePlusCal(Views.permute(out1,0,2), "test",cal).show();
@@ -187,6 +192,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		setProgress(100);
 		return null;
 	}
+	
 	/** generates initial square XY plane sampling with data from -nRadius till nRadius values (in dPixSize units) in XY 
 	 * centered around (0,0)**/
 	public static ArrayList< RealPoint > iniNormPlane(final int nRadius,final double dPixSize)
