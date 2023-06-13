@@ -993,7 +993,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			if(BigTraceData.nNumTimepoints>1)
 			{
 				nTimePoint = straightenTimeList.getSelectedIndex();
-				Prefs.set("BigTrace.nRadiusType", nTimePoint);
+				Prefs.set("BigTrace.nStraightenTime", nTimePoint);
 				//only current frame
 				if(nTimePoint == 0)
 				{

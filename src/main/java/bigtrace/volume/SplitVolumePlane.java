@@ -78,29 +78,18 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 		
 		//(for now)
 		//make two copies
-
-		if(bt.btdata.bBDVsource)
-		{
-			final SequenceDescriptionMinimal seq = bt.spimData.getSequenceDescription();
-			
-			List<RandomAccessibleInterval<T>> hyperslices = new ArrayList<RandomAccessibleInterval<T>> ();
-			
-			
-			for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
-			{
-				hyperslices.add((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0));
-			}
-			//for()
-			bt.all_ch_RAI = Views.stack(hyperslices);
-		}
+		
+		//get the all data RAI
+		//XYZTC
+		RandomAccessibleInterval<T> all_RAI = bt.btdata.getAllDataRAI();
 
 	
-		Img<T> out1 =  Util.getSuitableImgFactory(bt.all_ch_RAI, Util.getTypeFromInterval(bt.all_ch_RAI)).create(bt.all_ch_RAI);
-		LoopBuilder.setImages(out1, bt.all_ch_RAI).forEachPixel(Type::set);
-		Img<T> out2 =  Util.getSuitableImgFactory(bt.all_ch_RAI, Util.getTypeFromInterval(bt.all_ch_RAI)).create(bt.all_ch_RAI);
-		LoopBuilder.setImages(out2, bt.all_ch_RAI).forEachPixel(Type::set);
+		Img<T> out1 =  Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(all_RAI);
+		LoopBuilder.setImages(out1,all_RAI).forEachPixel(Type::set);
+		Img<T> out2 =  Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(all_RAI);
+		LoopBuilder.setImages(out2, all_RAI).forEachPixel(Type::set);
 		
-		final long [] nTotPixArr = bt.all_ch_RAI.dimensionsAsLongArray();
+		final long [] nTotPixArr = all_RAI.dimensionsAsLongArray();
 		
 		// total number of pixels for the progress bar 
 		long nTotPixCount = nTotPixArr[0];
@@ -143,6 +132,7 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 		}
 		Calibration cal = new Calibration();
 		cal.setUnit(bt.btdata.sVoxelUnit);
+		cal.setTimeUnit(bt.btdata.sTimeUnit);
 		cal.pixelWidth= BigTraceData.globCal[0];
 		cal.pixelHeight= BigTraceData.globCal[1];
 		cal.pixelDepth= BigTraceData.globCal[2];
@@ -196,7 +186,7 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 			//crop intervals
 			FinalInterval [] newCrop = new FinalInterval[2];
 			
-			long [][] rangeCh = new long[2][4];
+			long [][] rangeCh = new long[2][5];
 			for (int intervN = 0; intervN<2; intervN ++)
 			{
 				for(i=0;i<2;i++)
@@ -208,6 +198,8 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 				}
 				rangeCh[0][3]=out1.min(3);
 				rangeCh[1][3]=out1.max(3);
+				rangeCh[0][4]=out1.min(4);
+				rangeCh[1][4]=out1.max(4);
 				newCrop[intervN]=new FinalInterval(rangeCh[0],rangeCh[1]);
 			}
 

@@ -432,8 +432,9 @@ public class VolumeMisc {
 			}
 			else
 			{
-				outIP = ImageJFunctions.wrap(Views.permute(img,2,3), sTitle);
-				outIP.setDimensions((int)img.dimension(4), (int)img.dimension(2),(int)img.dimension(3));
+				//outIP = ImageJFunctions.wrap(img, sTitle);
+				outIP = ImageJFunctions.wrap(Views.permute(Views.permute(img,2,3),2,4), sTitle);
+				//outIP.setDimensions((int)img.dimension(4), (int)img.dimension(2),(int)img.dimension(3));
 			}
 		}
 		
