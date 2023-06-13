@@ -3,11 +3,9 @@ package bigtrace.volume;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.SwingWorker;
 
-import bdv.spimdata.SequenceDescriptionMinimal;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
@@ -54,14 +52,12 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 		progressState=state_;
 	}
 	
-	
-	@SuppressWarnings("unchecked")
 	@Override
 	protected Void doInBackground() throws Exception {
 		
 		int i,d;
 		//check if there is a fitted plane
-		if (crossSection.fittedPlane==null)
+		if (crossSection.fittedPlane == null)
 			return null;
 		
         bt.bInputLock = true;
@@ -73,19 +69,17 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 		  } catch (InterruptedException ignore) {}
 		setProgress(1);
 		setProgressState("allocating two new volumes..");
-		  
-		
-		
-		//(for now)
-		//make two copies
-		
+	
 		//get the all data RAI
 		//XYZTC
 		RandomAccessibleInterval<T> all_RAI = bt.btdata.getAllDataRAI();
-
+		
+		//(for now)
+		//make two copies
 	
 		Img<T> out1 =  Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(all_RAI);
 		LoopBuilder.setImages(out1,all_RAI).forEachPixel(Type::set);
+		
 		Img<T> out2 =  Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(all_RAI);
 		LoopBuilder.setImages(out2, all_RAI).forEachPixel(Type::set);
 		
@@ -151,8 +145,9 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 		else
 		{
 			//make arrays of points for each subvolume
-			ArrayList<RealPoint> vertOut1= new ArrayList<RealPoint>();
-			ArrayList<RealPoint> vertOut2= new ArrayList<RealPoint>();
+			ArrayList<RealPoint> vertOut1 = new ArrayList<RealPoint>();
+			ArrayList<RealPoint> vertOut2 = new ArrayList<RealPoint>();
+			
 			//add cross-section polygon vertices
 			for (i=0;i<crossSection.polygonVert.size();i++)
 			{
@@ -187,7 +182,7 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 			FinalInterval [] newCrop = new FinalInterval[2];
 			
 			long [][] rangeCh = new long[2][5];
-			for (int intervN = 0; intervN<2; intervN ++)
+			for (int intervN = 0; intervN < 2; intervN ++)
 			{
 				for(i=0;i<2;i++)
 				{
@@ -200,11 +195,10 @@ public class SplitVolumePlane < T extends RealType< T > > extends SwingWorker<Vo
 				rangeCh[1][3]=out1.max(3);
 				rangeCh[0][4]=out1.min(4);
 				rangeCh[1][4]=out1.max(4);
-				newCrop[intervN]=new FinalInterval(rangeCh[0],rangeCh[1]);
+				newCrop[intervN] = new FinalInterval(rangeCh[0],rangeCh[1]);
 			}
-
-			
-			
+		
+			//apply calibration and show
 			VolumeMisc.wrapImgImagePlusCal(Views.interval(out1, newCrop[0]),fileName+"_vol1", cal).show();
 			VolumeMisc.wrapImgImagePlusCal(Views.interval(out2, newCrop[1]),fileName+"_vol2", cal).show();
 		}

@@ -118,7 +118,7 @@ public class BigTraceData < T extends RealType< T > > {
 	public IntervalView< UnsignedByteType > trace_weights = null;
 	
 	/** directions of curve at each voxel for the trace box**/
-	public IntervalView< FloatType > trace_vectors=null;
+	public IntervalView< FloatType > trace_vectors = null;
 	
 	/**special points Dijkstra search for the trace box**/
 	public ArrayList<long []> jump_points = null;
@@ -159,7 +159,7 @@ public class BigTraceData < T extends RealType< T > > {
 	public static int rotationMinFrame = (int) Prefs.get("BigTrace.RotationMinFrame",0);
 	
 	/** size of moving average window to smooth traces (in points) **/
-	public static int nSmoothWindow=(int) Prefs.get("BigTrace.nSmoothWindow", 5);
+	public static int nSmoothWindow = (int) Prefs.get("BigTrace.nSmoothWindow", 5);
 
 	/** number of segments in the cylinder cross-section (for polyline/trace ROIs),
 	 *  3 = prism, 4 = cuboid, etc.
@@ -204,6 +204,7 @@ public class BigTraceData < T extends RealType< T > > {
 	
 	/** returns data sources for specific channel and time point,
 	 * limits output to the current cropped area **/
+	@SuppressWarnings("unchecked")
 	public IntervalView< T > getDataSourceCropped(final int nChannel, final int nTimePoint)
 	{
 		if(bBDVsource)
@@ -219,6 +220,7 @@ public class BigTraceData < T extends RealType< T > > {
 	
 	/** returns data sources for specific channel and time point,
 	 * does not limit output to the current cropped area **/
+	@SuppressWarnings("unchecked")
 	public RandomAccessibleInterval<T> getDataSourceFull(final int nChannel, final int nTimePoint)
 	{
 		if(bBDVsource)
@@ -232,6 +234,7 @@ public class BigTraceData < T extends RealType< T > > {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public RandomAccessibleInterval<T> getAllDataRAI()
 	{
 		//output should be XYZTC

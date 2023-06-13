@@ -1,11 +1,9 @@
 package bigtrace.volume;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.SwingWorker;
 
-import bdv.spimdata.SequenceDescriptionMinimal;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;

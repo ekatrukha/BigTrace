@@ -176,7 +176,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	}
 	
 	/** get intensity values in Sphere around the point **/
-	public < T extends RealType< T > > double[] getIntensityValuesTEST(BigTrace bt, final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
+	public < T extends RealType< T > > double[] getIntensityValuesTEST(BigTrace<T> bt, final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
 	{
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
 		RealRandomAccess<T> ra =   interpolate.realRandomAccess();

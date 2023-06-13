@@ -233,15 +233,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			IJ.showMessage("Only 8-, 16- and 32-bit images supported for now.");
 			return false;
 		}
-		
-		/*
-		if(imp.getNFrames()>1)
-			&& imp.getNSlices()>1)
-		{
-			IJ.showMessage("Timelapse datasets are not supported yet, sorry.");
-			return false;
-		}
-		*/
+
 		
 		BigTraceData.globCal[0] = imp.getCalibration().pixelWidth;
 		BigTraceData.globCal[1] = imp.getCalibration().pixelHeight;
@@ -325,13 +317,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		final SequenceDescriptionMinimal seq = spimData.getSequenceDescription();
 		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
 
-		/*if(numTimepoints>1)
-		{
-			IJ.showMessage("Timelapse datasets are not supported yet, sorry.");
-			return false;
-		}*/
-		RandomAccessibleInterval<T> raitest= (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0);
-		raitest.min(btdata.nDimIni[0]);
+		RandomAccessibleInterval<T> raitest = (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0);
+		
 		raitest.min( btdata.nDimIni[0] );
 		raitest.max( btdata.nDimIni[1] );
 		raitest.min( btdata.nDimCurr[0] );
