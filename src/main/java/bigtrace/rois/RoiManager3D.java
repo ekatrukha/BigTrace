@@ -108,6 +108,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JToggleButton roiPolyLineMode;
 	 JToggleButton roiPolySemiAMode;
 	 JToggleButton roiPlaneMode;
+	 JButton roiImport;
 	 JButton roiSettings;
 	 
 	 
@@ -170,6 +171,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 if(mode==RoiManager3D.ADD_POINT_PLANE)
 		 	{roiPlaneMode.setSelected(true);}
 		 
+		 icon_path = bigtrace.BigTrace.class.getResource("/icons/file_import.png");
+		 tabIcon = new ImageIcon(icon_path);
+		 roiImport = new JButton(tabIcon);
+		 roiImport.setToolTipText("Import ROIs");
+		 roiImport.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		 
 		 icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
 		 tabIcon = new ImageIcon(icon_path);
 		 roiSettings = new JButton(tabIcon);
@@ -187,6 +194,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 roiPolySemiAMode.addActionListener(this);
 		 roiPlaneMode.addActionListener(this);
 		 
+		 roiImport.addActionListener(this);
 		 roiSettings.addActionListener(this);
 		 //add to the panel
 		 GridBagConstraints ct = new GridBagConstraints();
@@ -209,6 +217,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 //ct.gridx++;
 		 ct.weightx = 0.01;
 		 panTracing.add(new JLabel(), ct);
+		 ct.gridx++;
+		 panTracing.add(roiImport,ct);
 		 ct.gridx++;
 		 panTracing.add(roiSettings,ct);
 
@@ -536,9 +546,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	       
 	       for (i=0;i<rois.size();i++) 
 	       {
-	    	   roi=rois.get(i);
-	    	   if(roi.getTimePoint()==bt.btdata.nCurrTimepoint)
+	    	   roi = rois.get(i);
+	    	   //int nShift =  Math.abs(roi.getTimePoint() - bt.btdata.nCurrTimepoint);
+	    	   //if(nShift < 2 )
+	    	   if( roi.getTimePoint() == bt.btdata.nCurrTimepoint)
 	    	   {
+
 		    	   //save colors in case ROI is active
 		    	   if(i==activeRoi)
 		    	   {
@@ -547,6 +560,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		    		   roi.setPointColorRGB(activePointColor);
 		    		   roi.setLineColorRGB(activeLineColor);
 		    	   }
+	    		//   if(nShift>0)
+	    		  // {
+	    			//   roi.setOpacity(roi.getOpacity()*0.5f);
+	    		   //}
 		    	   if(bShowAll)
 		    	   {
 		    		   if(groups.get(roi.getGroupInd()).bVisible)
@@ -576,6 +593,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		    		   roi.setPointColor(savePointColor);
 		    		   roi.setLineColor(saveLineColor);
 		    	   }
+		    	   //restore opacity
+	    		   //if(nShift>0)
+	    		   //{
+	    			 //  roi.setOpacity(roi.getOpacity()*2.0f);
+	    		   //}
 	    	   }//show only current time point
 	       }
 	 }
@@ -916,6 +938,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		if(e.getSource() == butLoadROIs)
 		{
 			diagLoadROIs();
+		}
+		//IMPORT ROIS
+		if(e.getSource() == roiImport)
+		{
+			diagImportROIs();
 		}
 		
 		//Groups Manager
@@ -1489,6 +1516,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         saveTask.execute();
         //this.setLockMode(false);
 	}
+	
 	/** Load ROIS dialog and saving **/
 	public void diagLoadROIs()
 	{
@@ -1535,6 +1563,35 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         
         loadTask.sFilename=filename;
         loadTask.nLoadMode = nLoadMode;
+        loadTask.bt=this.bt;
+        loadTask.addPropertyChangeListener(bt.btpanel);
+        loadTask.execute();
+        
+	}
+	
+	/** Import ROIs dialog **/
+	public void diagImportROIs()
+	{
+		String filename;
+
+   
+		OpenDialog openDial = new OpenDialog("Import TrackMate XML","", "*.xml");
+		
+        String path = openDial.getDirectory();
+        if (path==null)
+        	return;
+
+        filename = path+openDial.getFileName();
+                
+
+       //	this.groups = new ArrayList<Roi3DGroup>();
+       	this.rois = new ArrayList<Roi3D >();
+        listModel.clear();
+
+
+        ROIsImportTrackMateBG loadTask = new ROIsImportTrackMateBG();
+        
+        loadTask.sFilename=filename;
         loadTask.bt=this.bt;
         loadTask.addPropertyChangeListener(bt.btpanel);
         loadTask.execute();

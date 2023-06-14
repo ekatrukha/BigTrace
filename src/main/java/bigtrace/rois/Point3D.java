@@ -223,7 +223,10 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	public void setPointColor(Color pointColor_) {
 
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
-		vertexVis.setColor(pointColor);
+		if(vertexVis != null)
+		{
+			vertexVis.setColor(pointColor);
+		}
 	}
 	
 	@Override

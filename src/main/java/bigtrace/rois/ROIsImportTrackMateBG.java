@@ -1,0 +1,173 @@
+package bigtrace.rois;
+
+import java.awt.Color;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+
+import javax.swing.DefaultListModel;
+import javax.swing.SwingWorker;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
+
+import bigtrace.BigTrace;
+import bigtrace.BigTraceBGWorker;
+import bigtrace.BigTraceData;
+import ij.IJ;
+import net.imglib2.RealPoint;
+
+public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements BigTraceBGWorker
+{
+
+	private String progressState;
+	
+	public BigTrace<?> bt;
+	public String sFilename;
+	String sFinalOut = "";
+	
+	
+	@Override
+	public String getProgressState() {
+		
+		return progressState;
+	}
+
+	@Override
+	public void setProgressState(String state_) {
+		
+		progressState=state_;
+		
+	}
+
+	@Override
+	protected Void doInBackground() throws Exception {
+		
+		int nTotTracks = 0;
+		long nTotParticles = 0;
+		ArrayList<Roi3D> allRois = new ArrayList<Roi3D>();
+		Color cCurrentTrackColor = null;
+		//enter locked mode
+        bt.bInputLock = true;
+        bt.roiManager.setLockMode(true);
+		try
+        {
+			int nTrack = 0;
+        	int nFrame;
+        	
+			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+        	InputStream in = new FileInputStream(sFilename);
+        	XMLStreamReader streamReader = inputFactory.createXMLStreamReader(in);
+        	int nPoint = 0;
+        	RealPoint vertex = new RealPoint();
+        	while (streamReader.hasNext()) 
+        	{
+                if (streamReader.isStartElement()) 
+                {
+                    switch (streamReader.getLocalName()) 
+                    {
+	                    case "Tracks": 
+	                    {
+	                    	IJ.log("Importing total of: " + streamReader.getAttributeValue(0) + " tracks... "); 
+	                    	nTotTracks = Integer.parseInt(streamReader.getAttributeValue(0));
+	
+	                        break;
+	                    }
+	                    case "particle": 
+	                    {
+	                    	nPoint = 1;
+	                    	nTrack = nTrack + 1;
+	                    	cCurrentTrackColor = SwitchingColorPalette(nTrack);
+	                    	try {
+							  Thread.sleep(1);
+	                    	} catch (InterruptedException ignore) {}
+	                    	setProgress(nTrack*100/nTotTracks);
+	                    	setProgressState("loading ROIs from track #"+Integer.toString(nTrack) +" of "+Integer.toString(nTotTracks));
+	                        break;
+	                    }
+	                    case "detection": 
+	                    {
+	                    	nTotParticles++;
+	                    	//IJ.log(streamReader.getAttributeValue(0));
+	                    	nFrame = Integer.parseInt(streamReader.getAttributeValue(0));
+	                    	Point3D roiP = (Point3D) bt.roiManager.makeRoi(Roi3D.POINT, nFrame);
+	                    	roiP.setName("track_"+Integer.toString(nTrack)+"_point_"+Integer.toString(nPoint));
+	                    	
+	                    	vertex = new RealPoint(Float.parseFloat(streamReader.getAttributeValue(1))/BigTraceData.globCal[0],
+	                    			               Float.parseFloat(streamReader.getAttributeValue(2))/BigTraceData.globCal[1],
+	                    			               Float.parseFloat(streamReader.getAttributeValue(3))/BigTraceData.globCal[2]);
+							roiP.setVertex(vertex);
+							roiP.setPointColorRGB(cCurrentTrackColor);
+							allRois.add(roiP);
+	                    	nPoint++;
+	                        break;
+	                    }
+                    }
+                } 
+                streamReader.next();           
+        	}
+        }
+        catch (Exception em)
+        {
+        	 IJ.log("Error reading "+sFilename);
+        	 IJ.log(em.getMessage());
+        }
+		
+		setProgress(100);
+		bt.roiManager.rois = allRois;
+		DefaultListModel<String> listModelin = new  DefaultListModel<String>();
+		for (int i =0;i<allRois.size();i++)
+		{
+			listModelin.addElement(allRois.get(i).getName());
+		}
+		bt.roiManager.listModel = listModelin;
+		bt.roiManager.jlist.setModel(bt.roiManager.listModel);
+		sFinalOut="importing TrackMate tracks done.";
+		setProgressState(sFinalOut);
+		IJ.log("Imported " + Integer.toString(nTotTracks)+ " tracks, created "+Long.toString(nTotParticles)+" point ROIs."); 
+		
+		return null;
+	}
+    /*
+     * Executed in event dispatching thread
+     */
+    @Override
+    public void done() 
+    {
+		//unlock user interaction
+    	bt.bInputLock = false;
+        bt.roiManager.setLockMode(false);
+        setProgress(100);
+        setProgressState(sFinalOut);
+        bt.repaintBVV();
+
+    }
+    
+	//function given an integer number 
+	//returns color from a list of 8 very distinct numbers 
+	Color SwitchingColorPalette(long nNumber)	
+	{
+		int nColor = (int) (nNumber%8);	
+		switch(nColor){
+		case 0:
+			return Color.blue;
+		case 1:
+			return Color.cyan;
+		case 2:
+			return Color.green;
+		case 3:
+			return Color.magenta;
+		case 4:
+			return Color.orange;
+		case 5:
+			return Color.pink;
+		case 6:
+			return Color.red;
+		case 7:
+			return Color.yellow;
+		default:
+			return Color.white;		
+		
+		}				
+	}
+	
+}

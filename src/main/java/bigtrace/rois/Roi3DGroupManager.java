@@ -244,7 +244,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 
 		
 		
-		int reply = JOptionPane.showConfirmDialog(null, dialProperties, "ROI Properties", 
+		int reply = JOptionPane.showConfirmDialog(null, dialProperties, "Group Properties", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		
 		
