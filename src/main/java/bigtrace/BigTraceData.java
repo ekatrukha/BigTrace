@@ -155,7 +155,7 @@ public class BigTraceData < T extends RealType< T > > {
 	/** current ROI shape interpolation **/
 	public static int shapeInterpolation = (int) Prefs.get("BigTrace.ShapeInterpolation",SHAPE_Spline);
 	
-	/** current ROI shape interpolation **/
+	/** algorithm to build rotation minimizing frame **/
 	public static int rotationMinFrame = (int) Prefs.get("BigTrace.RotationMinFrame",0);
 	
 	/** size of moving average window to smooth traces (in points) **/
@@ -172,6 +172,12 @@ public class BigTraceData < T extends RealType< T > > {
 	
 	/** step of gridline displaying cross-section ROI in wired mode (in voxels)**/
 	public static int crossSectionGridStep = (int) Prefs.get("BigTrace.crossSectionGridStep", 20);
+	
+	/** time rendering option **/
+	public static int timeRender = (int) Prefs.get("BigTrace.timeRender",0);
+	
+	/** time rendering fade in frames **/
+	public static int timeFade = (int) Prefs.get("BigTrace.timeFade",0);
 	
 	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
 	

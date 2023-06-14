@@ -543,13 +543,16 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	       Color savePointColor= null;
 	       Color saveLineColor = null;
 	       int i;
+	       int nShift;
+	       float fOpacityScale = 1.0f;
+	       float fOpacitySave = 1.0f;
 	       
 	       for (i=0;i<rois.size();i++) 
 	       {
 	    	   roi = rois.get(i);
-	    	   //int nShift =  Math.abs(roi.getTimePoint() - bt.btdata.nCurrTimepoint);
-	    	   //if(nShift < 2 )
-	    	   if( roi.getTimePoint() == bt.btdata.nCurrTimepoint)
+	    	   nShift =  roi.getTimePoint() - bt.btdata.nCurrTimepoint;
+	    	   if(nShift>=(int)Math.min(0,BigTraceData.timeFade) && nShift <= (int)Math.max(0,BigTraceData.timeFade))
+	    	   //if( roi.getTimePoint() == bt.btdata.nCurrTimepoint)
 	    	   {
 
 		    	   //save colors in case ROI is active
@@ -560,10 +563,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		    		   roi.setPointColorRGB(activePointColor);
 		    		   roi.setLineColorRGB(activeLineColor);
 		    	   }
-	    		//   if(nShift>0)
-	    		  // {
-	    			//   roi.setOpacity(roi.getOpacity()*0.5f);
-	    		   //}
+		    	   nShift = (int)Math.abs(nShift);
+	    		   if(nShift>0)
+	    		   {
+	    			   fOpacityScale=1.0f-(float)nShift/(float)(Math.abs(BigTraceData.timeFade)+1);
+	    			   fOpacitySave = roi.getOpacity();
+	    			   roi.setOpacity(roi.getOpacity()*fOpacityScale);
+	    		   }
 		    	   if(bShowAll)
 		    	   {
 		    		   if(groups.get(roi.getGroupInd()).bVisible)
@@ -594,10 +600,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		    		   roi.setLineColor(saveLineColor);
 		    	   }
 		    	   //restore opacity
-	    		   //if(nShift>0)
-	    		   //{
-	    			 //  roi.setOpacity(roi.getOpacity()*2.0f);
-	    		   //}
+	    		   if(nShift>0)
+	    		   {
+	    			   roi.setOpacity(fOpacitySave);
+	    		   }
 	    	   }//show only current time point
 	       }
 	 }
@@ -1095,6 +1101,16 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		nfCrossSectionGridStep.setIntegersOnly(true);
 		nfCrossSectionGridStep.setText(Integer.toString(BigTraceData.crossSectionGridStep));
 		
+		String[] sTimeRenderROIs = { "current timepoint", "backward in time", "forward in time"};
+		JComboBox<String> sTimeRenderROIsList = new JComboBox<String>(sTimeRenderROIs);
+		sTimeRenderROIsList.setSelectedIndex(BigTraceData.timeRender);
+		
+		NumberField nfTimeFadeROIs = new NumberField(4);
+		nfTimeFadeROIs.setIntegersOnly(true);
+		nfTimeFadeROIs.setText(Integer.toString((int)Math.abs(BigTraceData.timeFade)));
+		
+		
+		
 		cd.gridx=0;
 		cd.gridy=0;
 		pROIrender.add(new JLabel("Selected ROI point color: "),cd);
@@ -1126,7 +1142,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		
 		cd.gridx=0;
 		cd.gridy++;
-		pROIrender.add(new JLabel("Wireframe contour distance (px): "),cd);
+		pROIrender.add(new JLabel("Curve contours distance (px): "),cd);
 		cd.gridx++;
 		pROIrender.add(nfWireContourStep,cd);
 		
@@ -1136,6 +1152,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridx++;
 		pROIrender.add(nfCrossSectionGridStep,cd);
 
+		if(BigTraceData.nNumTimepoints>0)
+		{
+			cd.gridx=0;
+			cd.gridy++;
+			pROIrender.add(new JLabel("Show ROI over time: "),cd);
+			cd.gridx++;
+			pROIrender.add(sTimeRenderROIsList,cd);
+			cd.gridx=0;
+			cd.gridy++;
+			pROIrender.add(new JLabel("Time fade range (frames): "),cd);
+			cd.gridx++;
+			pROIrender.add(nfTimeFadeROIs,cd);
+		}
 
 		
 		////////////TRACING OPTIONS
@@ -1281,6 +1310,36 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				BigTraceData.shapeInterpolation= shapeInterpolationList.getSelectedIndex();
 				Prefs.set("BigTrace.ShapeInterpolation",BigTraceData.shapeInterpolation);
 				bUpdateROIs  = true;				
+			}
+			
+			//TIME RENDER
+			if(BigTraceData.nNumTimepoints>0)
+			{
+				if(BigTraceData.timeFade != Integer.parseInt(nfTimeFadeROIs.getText())||BigTraceData.timeRender!= sTimeRenderROIsList.getSelectedIndex())
+				{
+					BigTraceData.timeRender= sTimeRenderROIsList.getSelectedIndex();
+					Prefs.set("BigTrace.timeRender",BigTraceData.timeRender);
+					if(BigTraceData.timeRender==0)
+					{
+						BigTraceData.timeFade = 0;
+					}
+					else
+					{
+						if(BigTraceData.timeRender == 1)
+						{
+							BigTraceData.timeFade = (-1)*Integer.parseInt(nfTimeFadeROIs.getText());
+						}
+						else
+						{
+							BigTraceData.timeFade = Integer.parseInt(nfTimeFadeROIs.getText());
+						}
+						Prefs.set("BigTrace.timeFade", BigTraceData.timeFade);
+					}
+					
+					
+
+					bUpdateROIs  = true;	
+				}
 			}
 			
 			
