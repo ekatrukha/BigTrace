@@ -1040,6 +1040,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	}
 	
 	/** show ROI Properties dialog**/
+	@SuppressWarnings("unchecked")
 	public void dialSettings()
 	{
 		
@@ -1572,30 +1573,78 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	/** Import ROIs dialog **/
 	public void diagImportROIs()
 	{
-		String filename;
+	
+	      
+        String [] sRoiImportOptions = new String [] {"Points from TrackMate XML","Points from CSV"};
+		
+        String input = (String) JOptionPane.showInputDialog(this, "Importing ROIs",
+                "Import:", JOptionPane.QUESTION_MESSAGE, null, // Use
+                                                                                // default
+                                                                                // icon
+                sRoiImportOptions, // Array of choices
+                sRoiImportOptions[(int)Prefs.get("BigTrace.ImportRoisMode", 0)]);
 
-   
+        if(input == null)
+        	return;
+        if(input.isEmpty())
+        	return;
+        int nImportMode;
+        if(input.equals("Points from TrackMate XML"))
+        {
+        	nImportMode = 0;
+        	diagImportTrackMate();
+        }
+        else
+        {
+        	nImportMode = 1;
+        }
+        Prefs.set("BigTrace.ImportRoisMode", nImportMode);
+	}
+	
+	public void diagImportTrackMate()
+	{
+		String filename;
 		OpenDialog openDial = new OpenDialog("Import TrackMate XML","", "*.xml");
 		
         String path = openDial.getDirectory();
         if (path==null)
         	return;
-
+        
         filename = path+openDial.getFileName();
-                
+        
+        String [] sTMColorOptions = new String [] {"Random color per track","Current active group color"};
+		
+        String inputColor = (String) JOptionPane.showInputDialog(this, "Coloring ROIs",
+                "For color, use:", JOptionPane.QUESTION_MESSAGE, null, // Use
+                                                                                // default
+                                                                                // icon
+                sTMColorOptions, // Array of choices
+                sTMColorOptions[(int)Prefs.get("BigTrace.ImportTMColorMode", 0)]);
+        
+        if(inputColor == null)
+        	return;
+        if(inputColor.isEmpty())
+        	return;
+        int nImportColor;
+        if(inputColor.equals("Random color per track"))
+        {
+        	nImportColor = 0;
+        }
+        else
+        {
+        	nImportColor = 1;
+        }
+        Prefs.set("BigTrace.ImportTMColorMode", nImportColor);
+		
 
-       //	this.groups = new ArrayList<Roi3DGroup>();
        	this.rois = new ArrayList<Roi3D >();
         listModel.clear();
-
-
-        ROIsImportTrackMateBG loadTask = new ROIsImportTrackMateBG();
-        
-        loadTask.sFilename=filename;
-        loadTask.bt=this.bt;
-        loadTask.addPropertyChangeListener(bt.btpanel);
-        loadTask.execute();
-        
+        ROIsImportTrackMateBG importTask = new ROIsImportTrackMateBG();
+        importTask.nImportColor = nImportColor;
+        importTask.sFilename = filename;
+        importTask.bt = this.bt;
+        importTask.addPropertyChangeListener(bt.btpanel);
+        importTask.execute();
 	}
 
 	/** updates ROIs image for a specific group **/

@@ -20,7 +20,7 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
 {
 
 	private String progressState;
-	
+	public int nImportColor = 0;
 	public BigTrace<?> bt;
 	public String sFilename;
 	String sFinalOut = "";
@@ -44,6 +44,10 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
 		
 		int nTotTracks = 0;
 		long nTotParticles = 0;
+		int nTrack = 0;
+    	int nFrameRead;
+    	int nFrame;
+    	
 		ArrayList<Roi3D> allRois = new ArrayList<Roi3D>();
 		Color cCurrentTrackColor = null;
 		//enter locked mode
@@ -51,8 +55,7 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
         bt.roiManager.setLockMode(true);
 		try
         {
-			int nTrack = 0;
-        	int nFrame;
+
         	
 			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         	InputStream in = new FileInputStream(sFilename);
@@ -67,7 +70,7 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
                     {
 	                    case "Tracks": 
 	                    {
-	                    	IJ.log("Importing total of: " + streamReader.getAttributeValue(0) + " tracks... "); 
+	                    	IJ.log("Importing total of: " + streamReader.getAttributeValue(0) + " tracks. "); 
 	                    	nTotTracks = Integer.parseInt(streamReader.getAttributeValue(0));
 	
 	                        break;
@@ -81,14 +84,21 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
 							  Thread.sleep(1);
 	                    	} catch (InterruptedException ignore) {}
 	                    	setProgress(nTrack*100/nTotTracks);
-	                    	setProgressState("loading ROIs from track #"+Integer.toString(nTrack) +" of "+Integer.toString(nTotTracks));
+	                    	setProgressState("importing track #"+Integer.toString(nTrack) +" of "+Integer.toString(nTotTracks));
 	                        break;
 	                    }
 	                    case "detection": 
 	                    {
 	                    	nTotParticles++;
 	                    	//IJ.log(streamReader.getAttributeValue(0));
-	                    	nFrame = Integer.parseInt(streamReader.getAttributeValue(0));
+	                    	nFrameRead = Integer.parseInt(streamReader.getAttributeValue(0));
+	                    	
+	                    	nFrame = Math.min(Math.max(0, nFrameRead),BigTraceData.nNumTimepoints-1);
+	                    	if(nFrame!=nFrameRead)
+	                    	{
+	                    		IJ.log("Warning: time frame is outside dataset range for track "+Integer.toString(nTrack)+" particle "+Integer.toString(nPoint)+".");
+	                    	}
+
 	                    	Point3D roiP = (Point3D) bt.roiManager.makeRoi(Roi3D.POINT, nFrame);
 	                    	roiP.setName("track_"+Integer.toString(nTrack)+"_point_"+Integer.toString(nPoint));
 	                    	
@@ -96,7 +106,10 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
 	                    			               Float.parseFloat(streamReader.getAttributeValue(2))/BigTraceData.globCal[1],
 	                    			               Float.parseFloat(streamReader.getAttributeValue(3))/BigTraceData.globCal[2]);
 							roiP.setVertex(vertex);
-							roiP.setPointColorRGB(cCurrentTrackColor);
+							if(nImportColor == 0)
+							{
+								roiP.setPointColorRGB(cCurrentTrackColor);
+							}
 							allRois.add(roiP);
 	                    	nPoint++;
 	                        break;
