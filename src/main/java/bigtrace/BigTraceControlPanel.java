@@ -39,12 +39,10 @@ import bigtrace.BigTraceData;
 import btbvv.util.BvvStackSource;
 import ij.Prefs;
 import net.imglib2.FinalRealInterval;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
-import net.imglib2.view.IntervalView;
-import net.imglib2.view.Views;
+
 
 public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 //public class BigTraceControlPanel extends JFrame
@@ -566,6 +564,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	
 	
 	/** updates data sources/bvvsources to the current state**/
+	@SuppressWarnings("rawtypes")
 	public void updateViewDataSources()
 	{
 		int i;

@@ -241,6 +241,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		btdata.sVoxelUnit = imp.getCalibration().getUnit();
 		btdata.sTimeUnit = imp.getCalibration().getTimeUnit();
+		btdata.dFrameInterval = imp.getCalibration().frameInterval;
 		BigTraceData.nNumTimepoints = imp.getNFrames();
 		
 		Img<T> img_ImageJ;
@@ -1763,6 +1764,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	}
 
 	
+	@SuppressWarnings("rawtypes")
 	public static void main( String... args) throws Exception
 	{
 		

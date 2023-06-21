@@ -44,11 +44,14 @@ public class BigTraceData < T extends RealType< T > > {
 	/** minimum voxel size  **/
 	public static double  dMinVoxelSize = 0.0;
 	
-	/** unit of voxel **/
+	/** units of voxel **/
 	public String sVoxelUnit = "pixel";
 	
-	/** unit of voxel **/
+	/** units of time **/
 	public String sTimeUnit = "frame";
+	
+	/** frame interval  **/
+	public double dFrameInterval = 1.0;
 	
 	/** whether or not display color coded origin of coordinates **/
 	public boolean bShowOrigin = true;

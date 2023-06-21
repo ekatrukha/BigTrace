@@ -5,6 +5,7 @@ import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTraceData;
+import bigtrace.rois.Roi3D;
 import net.imglib2.RealPoint;
 
 import java.awt.Color;
@@ -37,6 +38,8 @@ public class VisPointsScaled
 	
 	private float fPointSize;
 	
+	public int renderType = Roi3D.WIRE;
+	
 	float vertices[]; 
 	
 	private int nPointsN;
@@ -51,7 +54,7 @@ public class VisPointsScaled
 	
 	}
 	/** constructor with one point **/
-	public VisPointsScaled(final RealPoint point, final float fPointSize_,final Color color_in)
+	public VisPointsScaled(final RealPoint point, final float fPointSize_,final Color color_in, final int nRenderType)
 	{		
 		this();
 		
@@ -61,13 +64,16 @@ public class VisPointsScaled
 		
 		nPointsN = 1;
 		
+		renderType = nRenderType;
+		
 		vertices = new float [nPointsN*3];//assume 3D
 		
 		point.localize(vertices);	
 
 	}
+	
 	/** constructor with multiple vertices **/
-	public VisPointsScaled(final ArrayList< RealPoint > points,final double scalexyz_[], final float fPointSize_,final Color color_in)
+	public VisPointsScaled(final ArrayList< RealPoint > points,final double scalexyz_[], final float fPointSize_,final Color color_in ,final int nRenderType)
 	{
 		this();
 		
@@ -78,6 +84,8 @@ public class VisPointsScaled
 		l_color = new Vector4f(color_in.getComponents(null));
 		
 		nPointsN = points.size();
+		
+		renderType = nRenderType;
 		
 		vertices = new float [nPointsN*3];//assume 3D
 
@@ -117,6 +125,11 @@ public class VisPointsScaled
 	public void setSize(float fPointSize_)
 	{
 		fPointSize= fPointSize_;
+	}
+	public void setRenderType(int nRenderType_)
+	{
+		renderType = nRenderType_;
+		
 	}
 
 	private void init( GL3 gl )
@@ -188,6 +201,7 @@ public class VisPointsScaled
 		prog.getUniform4f("colorin").set(l_color);
 		prog.getUniform2f("windowSize").set(window_sizef);
 		prog.getUniform2f("ellipseAxes").set(ellipse_axes);
+		prog.getUniform1i("renderType").set(renderType);
 		prog.setUniforms( context );
 		prog.use( context );
 

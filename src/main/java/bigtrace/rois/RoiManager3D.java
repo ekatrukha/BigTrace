@@ -546,13 +546,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	       int nShift;
 	       float fOpacityScale = 1.0f;
 	       float fOpacitySave = 1.0f;
+	       final int nMinF = (int)Math.min(0,BigTraceData.timeFade);
+	       final int nMaxF = (int)Math.max(0,BigTraceData.timeFade);
 	       
 	       for (i=0;i<rois.size();i++) 
 	       {
 	    	   roi = rois.get(i);
 	    	   nShift =  roi.getTimePoint() - bt.btdata.nCurrTimepoint;
-	    	   if(nShift>=(int)Math.min(0,BigTraceData.timeFade) && nShift <= (int)Math.max(0,BigTraceData.timeFade))
-	    	   //if( roi.getTimePoint() == bt.btdata.nCurrTimepoint)
+	    	   if(nShift >= nMinF && nShift <= nMaxF)
 	    	   {
 
 		    	   //save colors in case ROI is active
@@ -1489,15 +1490,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridx++;
 		dialProperties.add(nfOpacity,cd);
 		
-		if(currentROI.getType()>Roi3D.POINT)
-		{
-			cd.gridx=0;
-			cd.gridy++;
-			dialProperties.add(new JLabel("Render as: "),cd);
-			renderTypeList.setSelectedIndex(currentROI.getRenderType());
-			cd.gridx++;
-			dialProperties.add(renderTypeList,cd);
-		}
+
+		cd.gridx=0;
+		cd.gridy++;
+		dialProperties.add(new JLabel("Render as: "),cd);
+		renderTypeList.setSelectedIndex(currentROI.getRenderType());
+		cd.gridx++;
+		dialProperties.add(renderTypeList,cd);
+
 		
 		
 		int reply = JOptionPane.showConfirmDialog(null, dialProperties, "ROI Properties", 
@@ -1526,7 +1526,12 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			if(fNewOpacity>1.0f)
 				{fNewOpacity=1.0f;}
 			currentROI.setOpacity(fNewOpacity);
-
+			
+			//render type
+			if(renderTypeList.getSelectedIndex()!=currentROI.getRenderType())
+			{
+				currentROI.setRenderType(renderTypeList.getSelectedIndex());
+			}
 			//line
 			if(currentROI.getType()>Roi3D.POINT)
 			{
@@ -1543,11 +1548,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 					selectColors.setColor(null, 1);
 				
 				}
-				//render type
-				if(renderTypeList.getSelectedIndex()!=currentROI.getRenderType())
-				{
-					currentROI.setRenderType(renderTypeList.getSelectedIndex());
-				}
+
 			}
 			
 			fireActiveRoiChanged(activeRoi); 
@@ -1634,7 +1635,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	{
 	
 	      
-        String [] sRoiImportOptions = new String [] {"Points from TrackMate XML","Points from CSV"};
+        String [] sRoiImportOptions = new String [] {"Points from TrackMate XML (Export)","Points from CSV (coming soon)"};
 		
         String input = (String) JOptionPane.showInputDialog(this, "Importing ROIs",
                 "Import:", JOptionPane.QUESTION_MESSAGE, null, // Use
@@ -1648,7 +1649,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         if(input.isEmpty())
         	return;
         int nImportMode;
-        if(input.equals("Points from TrackMate XML"))
+        if(input.equals("Points from TrackMate XML (Export)"))
         {
         	nImportMode = 0;
         	diagImportTrackMate();
@@ -1737,28 +1738,34 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		double dDistMin = Double.MAX_VALUE; 
 		int dInd = -1;
 		double dCurrDist = 0.0;
-			for (int i=0;i<rois.size();i++)
+	    
+		final int nMinF = (int)Math.min(0,BigTraceData.timeFade);
+	    final int nMaxF = (int)Math.max(0,BigTraceData.timeFade);
+		int nShift;
+		
+		for (int i=0;i<rois.size();i++)
+		{
+			//if ROI is visible at the current time frame
+			nShift =  rois.get(i).getTimePoint() - bt.btdata.nCurrTimepoint;
+			if(nShift >= nMinF && nShift <= nMaxF)
 			{
-				//only roi at the current timepoint
-				if(rois.get(i).getTimePoint()==bt.btdata.nCurrTimepoint)
+				dCurrDist= rois.get(i).getMinDist(clickLine);
+				if(dCurrDist<dDistMin)
 				{
-					dCurrDist= rois.get(i).getMinDist(clickLine);
-					if(dCurrDist<dDistMin)
-					{
-						dDistMin = dCurrDist;
-						dInd=i;
-					}
+					dDistMin = dCurrDist;
+					dInd=i;
 				}
-				//roi.updateRenderVertices();
-				//roi.setGroup(groups.get(roi.getGroupInd()));
 			}
-			if(Math.abs(dDistMin-Double.MAX_VALUE)>0.1)
-			{
-				jlist.setSelectedIndex(dInd);
-				fireActiveRoiChanged(jlist.getSelectedIndex()); 
-			}
-			//bt.repaintScene();
+
+		}
+		if(Math.abs(dDistMin-Double.MAX_VALUE) > 0.1)
+		{
+			jlist.setSelectedIndex(dInd);
+			fireActiveRoiChanged(jlist.getSelectedIndex()); 
+		}
+
 	}
+	
 	/** marks ROIs of specific group as undefined and updates ROI indexes**/
 	public void markROIsUndefined(int nGroupN)
 	{

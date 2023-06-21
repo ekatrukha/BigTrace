@@ -56,8 +56,10 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
 			writer.write("ImageVoxelWidth," + df3.format(BigTraceData.globCal[0]) + "\n");
 			writer.write("ImageVoxelHeight," + df3.format(BigTraceData.globCal[1]) + "\n");
 			writer.write("ImageVoxelDepth," + df3.format(BigTraceData.globCal[2]) + "\n");
-			nRoiN=bt.roiManager.rois.size();
-			writer.write("ROIsNumber,"+Integer.toString(nRoiN)+"\n");
+			writer.write("TimeUnits," + bt.btdata.sTimeUnit + "\n");
+			writer.write("FrameInterval," + df3.format(bt.btdata.dFrameInterval) + "\n");
+			nRoiN = bt.roiManager.rois.size();
+			writer.write("ROIsNumber," + Integer.toString(nRoiN)+"\n");
 			for(nRoi=0;nRoi<nRoiN;nRoi++)
 			{
 				  //Sleep for up to one second.

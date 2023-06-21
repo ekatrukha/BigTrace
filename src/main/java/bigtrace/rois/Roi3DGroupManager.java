@@ -144,7 +144,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 
     
 	/** show Group Properties dialog**/
-	public boolean dialProperties(final Roi3DGroup preset, boolean bNameChangable)	
+	public boolean dialPropertiesShow(final Roi3DGroup preset, boolean bNameChangable)	
 	{
 		JPanel dialProperties = new JPanel(new GridBagLayout());
 		GridBagConstraints cd = new GridBagConstraints();
@@ -587,7 +587,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 				{
 					bNameChange = true;
 				}
-				if(dialProperties(roiManager.groups.get(indList),bNameChange))
+				if(dialPropertiesShow(roiManager.groups.get(indList),bNameChange))
 				{
 					listModel.set(indList,roiManager.groups.get(indList).getName());
 					roiManager.updateROIsGroupDisplay(indList);
@@ -605,7 +605,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 				{
 					newGroup = new Roi3DGroup(roiManager.groups.get(indList), roiManager.groups.get(indList).getName()+"_copy"); 
 				}
-				if(dialProperties(newGroup, true))
+				if(dialPropertiesShow(newGroup, true))
 				{
 					roiManager.groups.add(newGroup);
 					listModel.addElement(newGroup.getName());					

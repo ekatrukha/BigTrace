@@ -55,6 +55,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
+		verticesVis.setRenderType(Roi3D.SURFACE);
 		interpolator = new CurveShapeInterpolation(type);
 		segmentsVis = new VisPolyLineScaled();
 		segmentsVis.setColor(lineColor);
@@ -177,6 +178,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 		
 		
 		renderType=nRenderType;
+		//verticesVis.setRenderType(renderType);
 		segmentsVis.setRenderType(renderType);
 		updateRenderVertices();
 

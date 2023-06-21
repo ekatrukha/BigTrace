@@ -41,6 +41,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
 
+		renderType = preset_in.renderType;
 		//vertex = new RealPoint(vertex_);
 		//vertexVis = new VisPointsScaled(vertex_,pointSize,pointColor);
 		name = "point"+Integer.toString(this.hashCode());
@@ -48,10 +49,11 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 		vertexVis = null;
 		nTimePoint = nTimePoint_;
 	}
-	public Point3D(final float pointSize_, final Color pointColor_, final int nTimePoint_)
+	public Point3D(final float pointSize_, final Color pointColor_, final int nRenderType_, final int nTimePoint_)
 	{
 		type = Roi3D.POINT;
 		pointSize = pointSize_;		
+		renderType = nRenderType_;
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
 		lineColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
 
@@ -62,7 +64,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	public void setVertex(final RealPoint vertex_)
 	{
 		vertex = new RealPoint(vertex_);
-		vertexVis = new VisPointsScaled(vertex_,pointSize,pointColor);
+		vertexVis = new VisPointsScaled(vertex_,pointSize,pointColor, renderType);
 	}
 	
 
@@ -81,13 +83,11 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	}
 	@Override
 	public void setRenderType(int nRenderType){
+		renderType=nRenderType;
+		vertexVis.setRenderType(renderType);
 		return;
 	}	
 	
-	@Override
-	public int getRenderType(){
-		return 0;
-	}
 	@Override
 	public void saveRoi(final FileWriter writer)
 	{
@@ -129,6 +129,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 
 		pointSize = preset_in.pointSize;		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());		
+		renderType = preset_in.renderType;
 		if(vertex!=null)
 			setVertex(vertex);
 	}

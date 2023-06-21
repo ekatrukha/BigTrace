@@ -147,21 +147,26 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 				  
 				  switch (line_array[0]){
 				  case "ROIsNumber":
-					  nRoiN=Integer.parseInt(line_array[1]);
+					  nRoiN = Integer.parseInt(line_array[1]);
 					  break;
 				  case "ImageUnits":
-					  sUnits=new String(line_array[1]);
+					  sUnits = new String(line_array[1]);
 					  break;
 				  case "ImageVoxelWidth":
-					  globCalNew[0]=Double.parseDouble(line_array[1]);
+					  globCalNew[0] = Double.parseDouble(line_array[1]);
 					  break;
 				  case "ImageVoxelHeight":
-					  globCalNew[1]=Double.parseDouble(line_array[1]);
+					  globCalNew[1] = Double.parseDouble(line_array[1]);
 					  break;
 				  case "ImageVoxelDepth":
-					  globCalNew[2]=Double.parseDouble(line_array[1]);
+					  globCalNew[2] = Double.parseDouble(line_array[1]);
 					  break;
-					  
+				  case "TimeUnits":
+					  bt.btdata.sTimeUnit = new String(line_array[1]);
+					  break;
+				  case "FrameInterval":
+					  bt.btdata.dFrameInterval = Double.parseDouble(line_array[1]);
+					  break;					  
 				  case "BT_Roi":
 					  //Sleep for up to one second.
 					  try {
