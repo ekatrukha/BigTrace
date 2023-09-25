@@ -21,6 +21,7 @@ import net.imglib2.algorithm.neighborhood.Neighborhood;
 import net.imglib2.algorithm.neighborhood.RectangleShape;
 import net.imglib2.algorithm.neighborhood.Shape;
 import net.imglib2.algorithm.region.BresenhamLine;
+import net.imglib2.converter.Converters;
 import net.imglib2.converter.RealUnsignedByteConverter;
 import net.imglib2.converter.RealUnsignedShortConverter;
 import net.imglib2.converter.read.ConvertedRandomAccessibleInterval;
@@ -183,18 +184,21 @@ public class VolumeMisc {
 			return output;
 		}
 	
-	public static IntervalView<UnsignedByteType> convertFloatToUnsignedByte(IntervalView<FloatType> input, boolean inverse)
+	public static IntervalView<UnsignedByteType> convertFloatToUnsignedByte(RandomAccessibleInterval<FloatType> input, boolean inverse)
 	{
+
+		
 		float minVal = Float.MAX_VALUE;
 		float maxVal = -Float.MAX_VALUE;
-		for ( final FloatType h : input )
+		IntervalView<FloatType> inInt = Views.interval(input,input.minAsLongArray(),input.maxAsLongArray());
+		for ( final FloatType h : inInt )
 		{
 			final float dd = h.get();
 			minVal = Math.min( dd, minVal );
 			maxVal = Math.max( dd, maxVal );
 		}
 
-		
+
 		//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
 		final RealUnsignedByteConverter<FloatType> cvU;
 		if (inverse)
@@ -205,9 +209,16 @@ public class VolumeMisc {
 		{
 			cvU = new RealUnsignedByteConverter<FloatType>(minVal, maxVal);
 		}
-		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > inputScaled = new ConvertedRandomAccessibleInterval<>( input, ( s, t ) -> {
-			cvU.convert(s,t);
+		
+		
+		
+		RandomAccessibleInterval<UnsignedByteType> inputScaled = Converters.convert(input, cvU, new UnsignedByteType());
+		
+		/*
+		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > inputScaled = new ConvertedRandomAccessibleInterval<FloatType, UnsignedByteType>( input, ( s, t ) -> {
+			cvU.convert(s, t);
 		}, new UnsignedByteType() );	
+		*/
 		return Views.interval(inputScaled,inputScaled.minAsLongArray(),inputScaled.maxAsLongArray());
 		
 	}

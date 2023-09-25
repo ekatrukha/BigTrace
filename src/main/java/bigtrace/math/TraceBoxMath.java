@@ -1,6 +1,7 @@
 package bigtrace.math;
 
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -84,7 +85,7 @@ public class TraceBoxMath < T extends RealType< T > > extends SwingWorker<Void, 
 				nDerivOrder[d2]++;
 				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btdata.sigmaTrace, nDerivOrder );
 				derivKernel = Kernel1D.centralAsymmetric(kernels);
-				convObj=SeparableKernelConvolution.convolution( derivKernel );
+				convObj = SeparableKernelConvolution.convolution( derivKernel );
 				convObj.setExecutor(es);
 				convObj.process(Views.extendBorder(input), hs2 );
 				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
@@ -112,11 +113,15 @@ public class TraceBoxMath < T extends RealType< T > > extends SwingWorker<Void, 
 
 		mEV.computeVWCRAI(hessian, directionVectors,salWeights, lineCorners,nThreads,es);
 		es.shutdown();
+
 		setProgress(100);
 		setProgressState("trace box done.");
-		bt.btdata.trace_weights=VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
+
+		bt.btdata.trace_weights = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
+
+		
 		//bt.btdata.jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 50);
-		bt.btdata.jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
+		bt.btdata.jump_points = VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
 		bt.btdata.trace_vectors = directionVectors;
 		//bt.showCorners(bt.btdata.jump_points);
 		return null;
@@ -127,7 +132,19 @@ public class TraceBoxMath < T extends RealType< T > > extends SwingWorker<Void, 
     @Override
     public void done() 
     {
-    	bt.showTraceBox(bt.btdata.trace_weights);
+    	//see if we have some errors
+    	 try {
+             get();
+         	} 
+    	 catch (ExecutionException e) {
+             e.getCause().printStackTrace();
+             String msg = String.format("Unexpected problem during Hessian calculations: %s", 
+                            e.getCause().toString());
+             System.out.println(msg);
+         } catch (InterruptedException e) {
+             // Process e here
+         }
+    	bt.showTraceBox();
 
 		//unlock user interaction
     	bt.bInputLock = false;

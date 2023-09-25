@@ -32,6 +32,7 @@ import bdv.spimdata.SpimDataMinimal;
 import bdv.spimdata.XmlIoSpimDataMinimal;
 import bdv.tools.InitializeViewerState;
 import bdv.tools.transformation.TransformedSource;
+import bdv.util.AxisOrder;
 import bdv.util.Bounds;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
@@ -1055,7 +1056,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		return anim;
 	}
 
-	public void showTraceBox(IntervalView<UnsignedByteType> weights)
+	public void showTraceBox()
 	{
 
 		// there is a trace box already, let's remove it
@@ -1076,7 +1077,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			}
 			
 		}
-		bvv_trace = BvvFunctions.show(weights, "weights", Bvv.options().addTo(bvv_main));
+
+		bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
 		bvv_trace.setCurrent();
 		bvv_trace.setRenderType(btdata.nRenderMethod);
 		bvv_trace.setDisplayRangeBounds(0, 255);
@@ -1100,8 +1102,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public void removeTraceBox()
 	{
 
-	
-		if(bvv_trace!=null)
+		if(bvv_trace != null)
 		{
 			btdata.bcTraceBox.storeBC(bvv_trace);
 			bvv_trace.removeFromBdv();
