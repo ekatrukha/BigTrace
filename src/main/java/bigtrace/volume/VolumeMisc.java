@@ -127,6 +127,34 @@ public class VolumeMisc {
 		}
 		return bFound;
 	}
+	/** maximum intensity finding function, but without cuboid **/
+	public static < T extends Comparable< T > & Type< T > > void findMaxLocation(
+			final IterableInterval< T > input,  final RealPoint maxLocation )
+		{
+			// create a cursor for the image (the order does not matter)
+			final Cursor< T > cursor = input.cursor();
+			
+
+			// initialize min and max with the first image value
+			T type = cursor.next();
+			T max = type.copy();
+			double [] pos = new double [3];
+			// loop over the rest of the data and determine min and max value
+			while ( cursor.hasNext() )
+			{
+				// we need this type more than once
+				type = cursor.next();
+	 
+					if ( type.compareTo( max ) > 0 )
+					{
+						cursor.localize(pos);
+						max.set( type );
+						maxLocation.setPosition( cursor );
+						
+					}
+			}
+			return ;
+		}
 	
 	public static IntervalView< UnsignedByteType > localMax(final IntervalView< UnsignedByteType > input)
 		{

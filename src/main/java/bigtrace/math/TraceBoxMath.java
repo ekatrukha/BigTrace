@@ -11,6 +11,8 @@ import javax.swing.SwingWorker;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.volume.VolumeMisc;
+import net.imglib2.FinalInterval;
+import net.imglib2.RealPoint;
 import net.imglib2.algorithm.convolution.Convolution;
 import net.imglib2.algorithm.convolution.kernel.Kernel1D;
 import net.imglib2.algorithm.convolution.kernel.SeparableKernelConvolution;
@@ -28,6 +30,7 @@ public class TraceBoxMath < T extends RealType< T > > extends SwingWorker<Void, 
 	public BigTrace<T> bt;
 	public IntervalView<T> input; 
 	private String progressState;
+	public RealPoint refinePosition = null;
 	
 	public String getProgressState()
 	{
@@ -124,6 +127,14 @@ public class TraceBoxMath < T extends RealType< T > > extends SwingWorker<Void, 
 		bt.btdata.jump_points = VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
 		bt.btdata.trace_vectors = directionVectors;
 		//bt.showCorners(bt.btdata.jump_points);
+		
+		//refine positions of the point
+		if(refinePosition != null)
+		{
+			RealPoint refined = refinePointUsingSaliency(refinePosition);
+			System.out.println("Max int pos:"+Float.toString(refined.getFloatPosition(0))+" " +Float.toString(refined.getFloatPosition(1))+" "+Float.toString(refined.getFloatPosition(2))+" ");
+			bt.roiManager.addSegment(refined,null);
+		}
 		return null;
 	}
     /*
@@ -149,5 +160,27 @@ public class TraceBoxMath < T extends RealType< T > > extends SwingWorker<Void, 
 		//unlock user interaction
     	bt.bInputLock = false;
     }
+    
+	
+	/** returns local maximum of saliency (using trace_weights) 
+	 * around target_in point. The search box is equal to SD of tracing x2 **/
+	RealPoint refinePointUsingSaliency(RealPoint target_in)
+	{
+		long[][] rangeMax = new long[2][3];
+		float dSDN = 2.0f;
+		for(int d=0;d<3;d++)
+		{
+			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d)-dSDN*bt.btdata.sigmaTrace[d]);
+			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+dSDN*bt.btdata.sigmaTrace[d]);
+		}
+		//get an box around the target
+		FinalInterval maxSearchArea = new FinalInterval(rangeMax[0],rangeMax[1]);
+		
+		RealPoint out = new RealPoint(3);
+		
+		VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(bt.btdata.trace_weights), maxSearchArea),out);
+		return out;
+		
+	}
 
 }

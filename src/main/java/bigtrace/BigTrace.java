@@ -459,8 +459,20 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 						//nothing selected, make a new tracing
 						if(roiManager.activeRoi==-1)
 						{
-							roiManager.addSegment(target, null);																
-							calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+							
+							System.out.println("Max int pos:"+Float.toString(target.getFloatPosition(0))+" " +Float.toString(target.getFloatPosition(1))+" "+Float.toString(target.getFloatPosition(2))+" ");
+							//make a temporary ROI to calculate TraceBox
+							LineTrace3D tracing_for_box = (LineTrace3D) roiManager.makeRoi(Roi3D.LINE_TRACE, btdata.nCurrTimepoint);
+							tracing_for_box.addFirstPoint(target);
+							//calculate a box around maximum intensity point
+							calcShowTraceBox(tracing_for_box, true);
+							//refine the position of the click point
+							//using calculated saliency map
+							
+							//roiManager.addSegment(target, null);	
+							
+							//System.out.println("Max int pos:"+Float.toString(refined.getFloatPosition(0))+" " +Float.toString(refined.getFloatPosition(1))+" "+Float.toString(refined.getFloatPosition(2))+" ");
+							//roiManager.addSegment(refined, null);	
 						}
 						else
 						{
@@ -468,13 +480,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 							//continue tracing for the selected tracing
 							if(nRoiType ==Roi3D.LINE_TRACE)
 							{
-								calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+								calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
 							}
 							//otherwise make a new tracing
 							else
 							{
 								roiManager.addSegment(target, null);																
-								calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+								calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
 							}
 						}
 
@@ -534,7 +546,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				{
 					roiManager.unselect();
 					roiManager.addSegment(target, null);																
-					calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+					calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
 				}				
 			}
 		}
@@ -571,7 +583,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 					btdata.nPointsInTraceBox--;
 					if(btdata.nPointsInTraceBox==0)
 					{
-						calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+						calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
 					}
 				}
 				
@@ -628,7 +640,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 					roiManager.getActiveRoi().reversePoints();
 					if(bTraceMode)
 					{
-						calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+						calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
 						btdata.nPointsInTraceBox=1;
 					}
 				}
@@ -646,7 +658,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			if(bTraceMode && btdata.nPointsInTraceBox>1)
 			{
-				calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi());
+				calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
 				btdata.nPointsInTraceBox=1;
 			}
 		}
@@ -811,9 +823,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	}
 	
-
+	/** calculates trace box around last vertice of provided trace.
+	 * if bRefine is true, it will refine the position of the dot
+	 * and add it to the ROI manager **/
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void calcShowTraceBox(final LineTrace3D trace)
+	public void calcShowTraceBox(final LineTrace3D trace, final boolean bRefine)
 	{
 		FinalInterval rangeTraceBox;
 		
@@ -835,14 +849,19 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		//getCenteredView(traceInterval);
 		panel.setTransformAnimator(getCenteredViewAnim(traceInterval,btdata.dTraceBoxScreenFraction));
 		//long start1, end1;
+		
 
 		//start1 = System.currentTimeMillis();
 		//calcWeightVectrosCorners(traceInterval, sigmaGlob);
 		//end1 = System.currentTimeMillis();
 		bInputLock = true;
 		TraceBoxMath calcTask = new TraceBoxMath();
-		calcTask.input=traceInterval;
-		calcTask.bt=this;
+		if(bRefine)
+		{
+			calcTask.refinePosition = trace.vertices.get(0);
+		}
+		calcTask.input = traceInterval;
+		calcTask.bt = this;
 		calcTask.addPropertyChangeListener(btpanel);
 		calcTask.execute();
 		//System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
@@ -876,7 +895,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 
 	
-	
+	/** calculate optimal path **/
 	public void getSemiAutoTrace(RealPoint target)
 	{
 		
@@ -969,6 +988,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		return finInt;
 									
 	}
+
 
 	public AffineTransform3D getCenteredViewTransform(final AffineTransform3D ini_transform, final Interval inInterval, double zoomFraction)
 	{
@@ -1227,7 +1247,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				);
 		
 		*/
-		bvv_main = BvvFunctions.show( empty_view, "empty" ,Bvv.options().
+		//imgx
+		bvv_main = BvvFunctions.show( imgx, "empty" ,Bvv.options().
+		//bvv_main = BvvFunctions.show( empty_view, "empty" ,Bvv.options().
 				dCam(btdata.dCam).
 				dClipNear(btdata.dClipNear).
 				dClipFar(btdata.dClipFar).				
