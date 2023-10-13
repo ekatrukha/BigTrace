@@ -1817,18 +1817,18 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		testI.run("");
+		//testI.run("");
 		
 		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
 		
-		/*
+		/**/
 		//testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
 		
 		
 		testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
 		
 		
-		testI.setTraceBoxMode(true);
+		testI.roiManager.setLockMode(true);
 		float [] point = new float[3];
 		point[0]=17;
 		point[1]=61;
@@ -1837,6 +1837,20 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 		testI.runOneClickTrace(target);
 		
+		/**/
+		
+		/*
+		testI.run("/home/eugene/Desktop/BigTrace_data/Emma8bit.xml"); 
+		
+		
+		testI.roiManager.setLockMode(true);
+		float [] point = new float[3];
+		point[0]=368;
+		point[1]=954;
+		point[2]=69;
+		RealPoint target = new RealPoint(point);
+
+		testI.runOneClickTrace(target);
 		*/
 		
 	}

@@ -41,11 +41,14 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	public long [] boxHalfRange;
 	public long[] dim;
 	public double rangeBox = 3.0;
-	RandomAccess<FloatType> raV;
-	RandomAccess<FloatType> raW;
+	double dAngleThreshold = 0.6;
 	
+	int nNeighborsMethods = 0;
 	int nCountReset = 2;
 	int nPointPerSegment = 10;
+	
+	int [][] nNeighborsIndexes = new int[26][3];
+	double [][] nNeighborsVectors = new double[26][3];
 	
 	private HashMap<String, ArrayList<int[]>> neighborsMap = new HashMap<String, ArrayList<int[]>>();
 	double [] lastDirectionVector;
@@ -61,6 +64,10 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	
 	IntervalView<FloatType> directionVectors;
 	IntervalView<FloatType> salWeights;
+	RandomAccess<FloatType> raV;
+	RandomAccess<FloatType> raW;
+
+	
 	//IntervalView<UnsignedByteType> salWeightsUB;
 	
 	ArrayImg<FloatType, FloatArray> gradFloat;
@@ -79,10 +86,10 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	@Override
 	protected Void doInBackground() throws Exception {
 	
-		RealPoint nextPoint;
+		//RealPoint nextPoint;
 		//RealPoint startPointRefined;
 
-		int nCountPoints = 0;
+		//int nCountPoints = 0;
 		
 
 		setProgress(0);
@@ -179,7 +186,29 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 				getMathForCurrentPoint(points.get(points.size()-1));
 				ptCount = nCountReset;
 			}
+			double [] saveVector = new double[3];
+			for (int d=0; d<3; d++)
+			{
+				saveVector[d]=lastDirectionVector[d];
+			}
+			/*
+			if(nCountPoints==73)
+			{
+				int d=0;
+				d=10;
+			}*/
 			nextPoint = getNextPoint(points.get(points.size()-1));
+			if(nextPoint!=null)
+			{
+				double [] nextPointD = nextPoint.positionAsDoubleArray();
+				double [] prevPointD = points.get(points.size()-1).positionAsDoubleArray();
+				LinAlgHelpers.subtract(nextPointD, prevPointD, nextPointD);
+				LinAlgHelpers.scale(nextPointD, 1.0/LinAlgHelpers.length(nextPointD), nextPointD);
+				
+				//System.out.println(LinAlgHelpers.length(saveVector)+" "+LinAlgHelpers.length(nextPointD)+" "+LinAlgHelpers.dot(saveVector, nextPointD));
+				//System.out.println(LinAlgHelpers.dot(saveVector, nextPointD));
+				//System.out.println(nCountPoints+" "+LinAlgHelpers.dot(saveVector, nextPointD));
+			}
 			//setProgress(100);
 
 		}
@@ -208,7 +237,9 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		
 		dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
 		sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
-		fillNeighborsHashMap();
+		
+		initNeighborsHashMap();
+		//initNeighbors();
 		
 		nThreads = Runtime.getRuntime().availableProcessors();
 		es = Executors.newFixedThreadPool( nThreads );
@@ -239,6 +270,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	{
 		RealPoint out = null;
 		int i,d;
+		double [] newDirection = null;
+		double [] candDirection;
 	
 		//find a pixel in the neighborhood 
 		//according to direction vector
@@ -250,10 +283,18 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			currNeighborHash=currNeighborHash+Integer.toString(currNeighbor[d]);
 		}
 		//get all relevant neighbors
-
 		float maxSal = (-1)*Float.MAX_VALUE;
 		float currSal = (-1)*Float.MAX_VALUE;
-		ArrayList<int[]> scannedPos = neighborsMap.get(currNeighborHash);
+		//double [] candVector;
+		ArrayList<int[]> scannedPos;
+		if(nNeighborsMethods==0)
+		{
+			scannedPos = neighborsMap.get(currNeighborHash);
+		}
+		else
+		{
+			scannedPos = getNeighborPixels(lastDirectionVector);
+		}
 		int [] candidateNeighbor; 
 
 		long[] candPos = new long[3];
@@ -268,8 +309,14 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			if(Intervals.contains(fullInput, new RealPoint(new float []{candPos[0],candPos[1],candPos[2]})))
 			{
 				currSal=raW.setPositionAndGet(candPos).get();
+				candDirection = getVectorAtLocation(candPos);
 				if(currSal>0)
 				{
+					
+					if(Math.abs(LinAlgHelpers.dot(candDirection, lastDirectionVector))<dAngleThreshold)
+					{
+						currSal=0.0f;
+					}
 					if(currSal>maxSal)
 					{
 						maxSal=currSal;
@@ -277,6 +324,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 						{
 							finPos[i] = candPos[i];
 						}
+						newDirection=candDirection;
 					}
 				}
 			}
@@ -284,8 +332,11 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		//System.out.println(maxSal);
 		if(maxSal>0.000001)
 		{
-			double [] newDirection = getVectorAtLocation(new RealPoint(finPos));
-			if(LinAlgHelpers.dot(newDirection, lastDirectionVector)>0)
+			// newDirection = getVectorAtLocation(new RealPoint(finPos));
+			double dCos = LinAlgHelpers.dot(newDirection, lastDirectionVector);
+			//System.out.println(dCos);
+			if(dCos>0)
+			//if(LinAlgHelpers.dot(newDirection, lastDirectionVector)>0)
 			{
 				lastDirectionVector = newDirection;
 			}
@@ -409,7 +460,16 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		return out;
 		
 	}
-	
+	public double[] getVectorAtLocation(long[] point)
+	{
+		RealPoint out = new RealPoint(3);
+		//for(int d=0;d<3;d++)
+		//{
+			out.setPosition(point);
+			return getVectorAtLocation(out);
+		//}
+		
+	}
 	public double[] getVectorAtLocation(RealPoint point)
 	{
 		int d;
@@ -430,10 +490,55 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		return currDirVector;
 	}
 	
+	ArrayList<int[]> getNeighborPixels(double [] directionVector)
+	{
+		ArrayList<int[]> out = new ArrayList<int[]>();
+		for(int i=0;i<26;i++)
+		{
+			if(LinAlgHelpers.dot(directionVector, nNeighborsVectors[i])>0.5)
+			{
+				out.add(nNeighborsIndexes[i]);
+			}
+		}
+		return out;
+
+	}
+	
+	void initNeighbors()
+	{
+		int nCount = 0;
+		int [] dx = new int[3];
+		for (dx[0]=-1; dx[0]<2; dx[0]++)
+		{
+			for (dx[1]=-1; dx[1]<2; dx[1]++)
+			{
+				for (dx[2]=-1; dx[2]<2; dx[2]++)
+				{
+					int nType = Math.abs(dx[0])+Math.abs(dx[1])+Math.abs(dx[2]);
+					//remove central pixel
+					if(nType!=0)
+					{
+						nNeighborsIndexes[nCount]= new int[3];
+						nNeighborsVectors[nCount]= new double[3];
+						for(int d=0;d<3;d++)
+						{
+							nNeighborsIndexes[nCount][d]= dx[d];
+							nNeighborsVectors[nCount][d]= (double)dx[d];
+							LinAlgHelpers.normalize(nNeighborsVectors[nCount]);
+						}
+						nCount++;
+						
+					}
+				}
+			}
+		}
+		
+	}
+	
 	/** for each voxel in the 26 neighborhood
 	 * it maps adjacent voxels
 	 */
-	void fillNeighborsHashMap()
+	void initNeighborsHashMap()
 	{
 		int nCount = 0;
 		for (int d1=-1;d1<2;d1++)
@@ -518,14 +623,28 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			}
 		}
 		//System.out.println(nCount);
-		
-//		ArrayList<int[]> test = neighborsMap.get("011");
-//		for(int d=0;d<test.size();d++)
-//		{
-//			int[] vals=test.get(d);
-//			System.out.println(Integer.toString(vals[0])+Integer.toString(vals[1])+Integer.toString(vals[2]));
-//		}
-		
+		/*
+		ArrayList<int[]> test = neighborsMap.get("0-11");
+		for(int d=0;d<test.size();d++)
+		{
+			int[] vals=test.get(d);
+			//System.out.println(Integer.toString(vals[0])+Integer.toString(vals[1])+Integer.toString(vals[2]));
+			double [] origvector = new double[3];
+			origvector[0] = 0.0;
+			origvector[1] = -1.0;
+			origvector[2] = 1.0;
+			LinAlgHelpers.normalize(origvector);
+			double [] neighbor = new double [3];
+			for(int i=0;i<3;i++)
+			{
+				neighbor[i] = vals[i];
+			}
+			LinAlgHelpers.normalize(neighbor);
+			//LinAlgHelpers.scale(neighbor, LinAlgHelpers.length(neighbor), neighbor);
+			System.out.println(LinAlgHelpers.dot(origvector, neighbor));
+			
+		}
+		*/
 		
 	}
     /*

@@ -14,6 +14,7 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+
 import com.jidesoft.swing.RangeSlider;
 
 
@@ -21,6 +22,7 @@ import com.jidesoft.swing.RangeSlider;
 public class RangeSliderTF extends JPanel implements FocusListener, NumberField.Listener, ChangeListener{
 
 	public static void main(String[] args) {
+		
 		JFrame frame = new JFrame();
 		RangeSliderTF slider = new RangeSliderTF(new int[] {-100, 100}, new int[] {20, 50});
 		frame.getContentPane().add(slider);
