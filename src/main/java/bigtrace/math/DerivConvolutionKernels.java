@@ -235,7 +235,7 @@ public class DerivConvolutionKernels {
 
 
 
-/** return 3D Gaussian derivative convolution kernels defined in derv_type */
+/** return 3D Gaussian derivative convolution kernels defined in deriv_type */
 public static double [][] convolve_derive_kernel(double [] sigma, int [] deriv_type)
 {
 	

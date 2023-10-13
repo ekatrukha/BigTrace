@@ -42,6 +42,7 @@ import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
+import bigtrace.math.OneClickTrace;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
 import bigtrace.rois.Box3D;
@@ -449,64 +450,64 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
 				{
-					//semi auto tracing initialize
-					if(RoiManager3D.mode==RoiManager3D.ADD_POINT_SEMIAUTOLINE)
+					
+					switch (RoiManager3D.mode)
 					{
-						setTraceBoxMode(true);
-						//bTraceMode= true;								
-						//roiManager.setLockMode(bTraceMode);
-						
-						//nothing selected, make a new tracing
-						if(roiManager.activeRoi==-1)
-						{
+						case RoiManager3D.ADD_POINT_SEMIAUTOLINE:
 							
-							System.out.println("Max int pos:"+Float.toString(target.getFloatPosition(0))+" " +Float.toString(target.getFloatPosition(1))+" "+Float.toString(target.getFloatPosition(2))+" ");
-							//make a temporary ROI to calculate TraceBox
-							LineTrace3D tracing_for_box = (LineTrace3D) roiManager.makeRoi(Roi3D.LINE_TRACE, btdata.nCurrTimepoint);
-							tracing_for_box.addFirstPoint(target);
-							//calculate a box around maximum intensity point
-							calcShowTraceBox(tracing_for_box, true);
-							//refine the position of the click point
-							//using calculated saliency map
+							setTraceBoxMode(true);
 							
-							//roiManager.addSegment(target, null);	
-							
-							//System.out.println("Max int pos:"+Float.toString(refined.getFloatPosition(0))+" " +Float.toString(refined.getFloatPosition(1))+" "+Float.toString(refined.getFloatPosition(2))+" ");
-							//roiManager.addSegment(refined, null);	
-						}
-						else
-						{
-							int nRoiType = roiManager.getActiveRoi().getType();
-							//continue tracing for the selected tracing
-							if(nRoiType ==Roi3D.LINE_TRACE)
+							//nothing selected, make a new tracing
+							if(roiManager.activeRoi==-1)
 							{
-								calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
+								//make a temporary ROI to calculate TraceBox
+								LineTrace3D tracing_for_box = (LineTrace3D) roiManager.makeRoi(Roi3D.LINE_TRACE, btdata.nCurrTimepoint);
+								tracing_for_box.addFirstPoint(target);
+								//calculate a box around maximum intensity point
+								calcShowTraceBox(tracing_for_box, true);
+
 							}
-							//otherwise make a new tracing
 							else
 							{
-								roiManager.addSegment(target, null);																
-								calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
+								int nRoiType = roiManager.getActiveRoi().getType();
+								//continue tracing for the selected tracing
+								if(nRoiType ==Roi3D.LINE_TRACE)
+								{
+									calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
+								}
+								//otherwise make a new tracing
+								else
+								{
+									roiManager.addSegment(target, null);																
+									calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
+								}
 							}
-						}
-
+							break;
+						case RoiManager3D.ADD_POINT_ONECLICKLINE:
+							roiManager.unselect();
+							setTraceBoxMode(true);
+							runOneClickTrace(target);
+							
+							break;
+						default:
+							roiManager.addPoint(target);
 					}
-					//point, polyline or plane
-					else
-					{
-						roiManager.addPoint(target);
-					}
+					
 				}
 			}
+			//we are in the tracebox mode,
 			//continue to trace within the trace box
 			else
 			{
-				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+				if(RoiManager3D.mode==RoiManager3D.ADD_POINT_SEMIAUTOLINE)
 				{
-					//run trace finding in a separate thread
-					getSemiAutoTrace(target);
-					
-				}						
+					if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+					{
+						//run trace finding in a separate thread
+						getSemiAutoTrace(target);
+						
+					}
+				}
 			}
 		}
 		
@@ -870,6 +871,27 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		btdata.nPointsInTraceBox = 1;
 	}
 	
+	/** calculates trace box around last vertice of provided trace.
+	 * if bRefine is true, it will refine the position of the dot
+	 * and add it to the ROI manager **/
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void runOneClickTrace(final RealPoint pclick)
+	{
+		
+		IntervalView<?> traceIV;
+		
+		traceIV = getTraceInterval(btdata.bTraceOnlyCrop);		
+
+		bInputLock = true;
+		OneClickTrace calcTask = new OneClickTrace();
+		calcTask.fullInput = traceIV;
+		calcTask.bt = this;
+		calcTask.startPoint = pclick;
+		calcTask.addPropertyChangeListener(btpanel);
+		calcTask.execute();
+	
+	}
+	
 	/** returns current Interval for the tracing. If bCroppedInterval is true,
 	 * returns cropped area, otherwise returns full original volume. **/
 	@SuppressWarnings("unchecked")
@@ -1138,7 +1160,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	public void setTraceBoxMode(boolean bStatus)
 	{
-		bTraceMode= bStatus;								
+		bTraceMode = bStatus;								
 		roiManager.setLockMode(bStatus);
 		//entering trace mode, 
 		//let's save current view
@@ -1157,7 +1179,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			panel.state().getViewerTransform(transform);
 			final AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(transform,btdata.transformBeforeTracing,0,0,1500);
 			panel.setTransformAnimator(anim);
-
 
 		}
 	}
@@ -1795,7 +1816,21 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		BigTrace testI = new BigTrace(); 
 		
 		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
-		testI.run("");
+		//testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
+		
+		
+		testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
+		
+		
+		testI.setTraceBoxMode(true);
+		float [] point = new float[3];
+		point[0]=17;
+		point[1]=61;
+		point[2]=110;
+		RealPoint target = new RealPoint(point);
+
+		testI.runOneClickTrace(target);
+		//testI.run("");
 		
 		
 	}

@@ -61,7 +61,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 BigTrace bt;
 
 	 private static final long serialVersionUID = -2843907862066423151L;
-	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2, ADD_POINT_PLANE=3;
+	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2, ADD_POINT_ONECLICKLINE=3, ADD_POINT_PLANE=4;
 	 ///public static final int SECTORS_DEF=16;
 	 
 	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
@@ -107,6 +107,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 JToggleButton roiPointMode;
 	 JToggleButton roiPolyLineMode;
 	 JToggleButton roiPolySemiAMode;
+	 JToggleButton roiPolyOneClickMode;
 	 JToggleButton roiPlaneMode;
 	 JButton roiImport;
 	 JButton roiSettings;
@@ -162,6 +163,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 if(mode==RoiManager3D.ADD_POINT_SEMIAUTOLINE)
 		 	{roiPolySemiAMode.setSelected(true);}
 
+		 icon_path = bigtrace.BigTrace.class.getResource("/icons/oneclicktrace.png");
+		 tabIcon = new ImageIcon(icon_path);
+		 roiPolyOneClickMode = new JToggleButton(tabIcon);
+		 roiPolyOneClickMode.setToolTipText("One click trace");
+		 roiPolyOneClickMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		 if(mode==RoiManager3D.ADD_POINT_ONECLICKLINE)
+		 	{roiPolyOneClickMode.setSelected(true);}
 		 
 		 icon_path = bigtrace.BigTrace.class.getResource("/icons/plane.png");
 		 tabIcon = new ImageIcon(icon_path);
@@ -187,11 +195,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 roiTraceMode.add(roiPointMode);
 		 roiTraceMode.add(roiPolyLineMode);
 		 roiTraceMode.add(roiPolySemiAMode);
+		 roiTraceMode.add(roiPolyOneClickMode);
 		 roiTraceMode.add(roiPlaneMode);
 		 
 		 roiPointMode.addActionListener(this);
 		 roiPolyLineMode.addActionListener(this);
 		 roiPolySemiAMode.addActionListener(this);
+		 roiPolyOneClickMode.addActionListener(this);
 		 roiPlaneMode.addActionListener(this);
 		 
 		 roiImport.addActionListener(this);
@@ -205,6 +215,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 panTracing.add(roiPolyLineMode,ct);
 		 ct.gridx++;
 		 panTracing.add(roiPolySemiAMode,ct);
+		 ct.gridx++;
+		 panTracing.add(roiPolyOneClickMode,ct);
 		 ct.gridx++;
 		 panTracing.add(roiPlaneMode,ct);
 		 ct.gridx++;
@@ -888,6 +900,15 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			if(RoiManager3D.mode != RoiManager3D.ADD_POINT_SEMIAUTOLINE)
 			{
 				RoiManager3D.mode = RoiManager3D.ADD_POINT_SEMIAUTOLINE;
+				Prefs.set("BigTrace.RoiManagerMode", RoiManager3D.mode);
+				unselect();
+			}
+		}
+		if(e.getSource() == roiPolyOneClickMode)
+		{
+			if(RoiManager3D.mode != RoiManager3D.ADD_POINT_ONECLICKLINE)
+			{
+				RoiManager3D.mode = RoiManager3D.ADD_POINT_ONECLICKLINE;
 				Prefs.set("BigTrace.RoiManagerMode", RoiManager3D.mode);
 				unselect();
 			}

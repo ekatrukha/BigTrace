@@ -243,7 +243,7 @@ public class VolumeMisc {
 		RandomAccessibleInterval<UnsignedByteType> inputScaled = Converters.convert(input, cvU, new UnsignedByteType());
 		
 		/*
-		final ConvertedRandomAccessibleInterval< FloatType, UnsignedByteType > inputScaled = new ConvertedRandomAccessibleInterval<FloatType, UnsignedByteType>( input, ( s, t ) -> {
+		final ConvertedRandomAccessibleInterval< FloatType, Unsig nedByteType > inputScaled = new ConvertedRandomAccessibleInterval<FloatType, UnsignedByteType>( input, ( s, t ) -> {
 			cvU.convert(s, t);
 		}, new UnsignedByteType() );	
 		*/

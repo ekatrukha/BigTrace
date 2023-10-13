@@ -412,8 +412,17 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 	@Override
 	public double getMinDist(Line3D line) 
 	{
+		
+		ArrayList<RealPoint> allvertices;
 		//in VOXEL coordinates
-		final ArrayList<RealPoint> allvertices = Roi3D.scaleGlobInv(interpolator.getVerticesVisual(), BigTraceData.globCal);
+		if(this.vertices.size()==1)
+		{
+			allvertices = this.vertices;
+		}
+		else
+		{
+			allvertices = Roi3D.scaleGlobInv(interpolator.getVerticesVisual(), BigTraceData.globCal);
+		}
 		double dMinDist = Double.MAX_VALUE;
 		double currDist = 0.0;
 		for(int i=0;i<allvertices.size();i++)
