@@ -41,9 +41,14 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	public long [] boxHalfRange;
 	public long[] dim;
 	public double rangeBox = 3.0;
+	RandomAccess<FloatType> raV;
+	RandomAccess<FloatType> raW;
+	
+	int nCountReset = 2;
+	int nPointPerSegment = 10;
 	
 	private HashMap<String, ArrayList<int[]>> neighborsMap = new HashMap<String, ArrayList<int[]>>();
-	
+	double [] lastDirectionVector;
 	
 	Convolution [] convObjects = new Convolution[6];
 	ExecutorService es;// = Executors.newFixedThreadPool( nThreads );
@@ -56,7 +61,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	
 	IntervalView<FloatType> directionVectors;
 	IntervalView<FloatType> salWeights;
-	IntervalView<UnsignedByteType> salWeightsUB;
+	//IntervalView<UnsignedByteType> salWeightsUB;
 	
 	ArrayImg<FloatType, FloatArray> gradFloat;
 	ArrayImg<FloatType, FloatArray> hessFloat;
@@ -75,51 +80,103 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	protected Void doInBackground() throws Exception {
 	
 		RealPoint nextPoint;
+		//RealPoint startPointRefined;
 
 		int nCountPoints = 0;
-		ArrayList<RealPoint> points = new ArrayList<RealPoint>();
+		//ArrayList<RealPoint> points = new ArrayList<RealPoint>();
 		init();
 		
+
 		long start1, end1;
 		start1 = System.currentTimeMillis();
 		
-		
+		//init math
 		getMathForCurrentPoint(startPoint);
+		startPoint=refinePointUsingSaliency(startPoint);
 		
-		points.add(refinePointUsingSaliency(startPoint));
+		double [] startDirectionVector = getVectorAtLocation(startPoint);
+		lastDirectionVector = new double [3];
+		for (int d=0; d<3; d++)
+		{
+			lastDirectionVector[d]=startDirectionVector[d];
+		}
+		//trace in one direction
+		int nTotPoints = traceOneDirection(true, 0);
+		//look for another direction
+		for (int d=0; d<3; d++)
+		{
+			lastDirectionVector[d]=(-1)*startDirectionVector[d];
+		}
+		//reverse ROI
+		bt.roiManager.rois.get(bt.roiManager.activeRoi).reversePoints();
+		//init math
+		getMathForCurrentPoint(startPoint);
+		nTotPoints = traceOneDirection(false, nTotPoints);
 		
-		//bt.roiManager.addPoint3D(points.get(0));
-		nCountPoints++;
+		end1 = System.currentTimeMillis();
+		System.out.println("THREADED Elapsed Time in seconds: "+ 0.001*(end1-start1));
+		
+		//show it
+		System.out.println("YOHOOO!");
+
+
+		
+		setProgress(100);
+		setProgressState("trace with "+Integer.toString(nTotPoints)+" points. auto-tracing done.");
+
+		return null;
+	}
+	
+	public int traceOneDirection(boolean bFirstTrace, int nCountIn)
+	{
+		
+		ArrayList<RealPoint> points = new ArrayList<RealPoint>();
+		RealPoint nextPoint;
+		
+		int nCountPoints=0;
+		points.add(startPoint);
+		if(bFirstTrace)
+		{
+			bt.roiManager.addSegment(points.get(0),null);
+		}
+		else
+		{
+			nCountPoints = nCountIn;
+		}
+		
 		nextPoint = getNextPoint(points.get(0));
 		int testCount = 0;
-		int nCountReset = 3;
+
 		int ptCount = nCountReset-1;
 		while (nextPoint != null)
 		//while (nextPoint != null && testCount<100)
 		{
+			if(points.size()==nPointPerSegment)
+			{
+				bt.roiManager.addSegment(points.get(points.size()-1), points);
+				points = new ArrayList<RealPoint>();
+				setProgressState(Integer.toString(testCount)+"points found.");
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException ignore) {}
+			}
 			points.add(new RealPoint(nextPoint));
 			nCountPoints++;
 			//bt.roiManager.addPoint3D(points.get(nCountPoints-1));
 			ptCount--;
 			if(ptCount ==0)
 			{
-				getMathForCurrentPoint(points.get(nCountPoints-1));
+				getMathForCurrentPoint(points.get(points.size()-1));
 				ptCount = nCountReset;
 			}
-			nextPoint = getNextPoint(points.get(nCountPoints-1));
+			nextPoint = getNextPoint(points.get(points.size()-1));
 			testCount++;
 			//setProgress(100);
-			setProgressState(Integer.toString(testCount)+"points found.");
-		}
-		end1 = System.currentTimeMillis();
-		System.out.println("THREADED Elapsed Time in seconds: "+ 0.001*(end1-start1));
-		
-		//show it
-		System.out.println("YOHOOO!");
-		bt.roiManager.addSegment(points.get(0),null);
-		bt.roiManager.addSegment(points.get(points.size()-1), points);
 
-		return null;
+		}
+		bt.roiManager.addSegment(points.get(points.size()-1), points);
+		
+		return nCountPoints;
 	}
 	
 	public void init()
@@ -173,41 +230,18 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	{
 		RealPoint out = null;
 		int i,d;
-		//let's get the direction vector
-		RandomAccess<FloatType> raV = directionVectors.randomAccess();
-		//RandomAccess<UnsignedByteType> raW = salWeightsUB.randomAccess();
-		RandomAccess<FloatType> raW = salWeights.randomAccess();
-		
-		
-		//double [] currDirVector = getDirectionVector(currpoint,raV);
-		
-		double [] currDirVector = new double[3];
-		long [] currpos = new long [4];
-
-		for (d=0;d<3;d++)
-		{
-			currpos[d]=Math.round(currpoint.getFloatPosition(d));
-		}
-		
-		for(d=0;d<3;d++)
-		{
-			currpos[3]=d;
-			raV.setPosition(currpos);
-			currDirVector[d] = raV.get().getRealDouble();
-		}
-		
 	
-		
+		//find a pixel in the neighborhood 
+		//according to direction vector
 		int [] currNeighbor = new int[3];
 		String currNeighborHash="";
 		for (d=0;d<3;d++)
 		{
-			currNeighbor[d]=(int)Math.round(currDirVector[d]);
+			currNeighbor[d]=(int)Math.round(lastDirectionVector[d]);
 			currNeighborHash=currNeighborHash+Integer.toString(currNeighbor[d]);
 		}
 		//get all relevant neighbors
-		//int maxSal = 0;
-		//int currSal;
+
 		float maxSal = (-1)*Float.MAX_VALUE;
 		float currSal = (-1)*Float.MAX_VALUE;
 		ArrayList<int[]> scannedPos = neighborsMap.get(currNeighborHash);
@@ -220,7 +254,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			candidateNeighbor=scannedPos.get(nScan);
 			for(d=0;d<3;d++)
 			{
-				candPos[d]=currpos[d]+candidateNeighbor[d];
+				candPos[d]=Math.round(currpoint.getFloatPosition(d))+candidateNeighbor[d];
 			}
 			if(Intervals.contains(fullInput, new RealPoint(new float []{candPos[0],candPos[1],candPos[2]})))
 			{
@@ -241,6 +275,15 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		//System.out.println(maxSal);
 		if(maxSal>0.000001)
 		{
+			double [] newDirection = getVectorAtLocation(new RealPoint(finPos));
+			if(LinAlgHelpers.dot(newDirection, lastDirectionVector)>0)
+			{
+				lastDirectionVector = newDirection;
+			}
+			else
+			{
+				LinAlgHelpers.scale(newDirection,-1.0,lastDirectionVector);
+			}
 			out = new RealPoint(finPos);
 		}
 		else
@@ -314,8 +357,10 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 
 		directionVectors =  Views.translate(dV, nShift);
 		salWeights =  Views.translate(sW, minV);
-		salWeightsUB = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
+		//salWeightsUB = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
 		mEV.computeVWRAI(hessian, directionVectors, salWeights, nThreads, es);
+		raV = directionVectors.randomAccess();
+		raW = salWeights.randomAccess();
 		
 	}
 	
@@ -355,8 +400,30 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		return out;
 		
 	}
-	//for each voxel in the 26 neighborhood
-	//it maps adjacent voxels
+	
+	public double[] getVectorAtLocation(RealPoint point)
+	{
+		int d;
+		double [] currDirVector = new double[3];
+		long [] currpos = new long [4];
+
+		for (d=0;d<3;d++)
+		{
+			currpos[d]=Math.round(point.getFloatPosition(d));
+		}
+		
+		for(d=0;d<3;d++)
+		{
+			currpos[3]=d;
+			raV.setPosition(currpos);
+			currDirVector[d] = raV.get().getRealDouble();
+		}
+		return currDirVector;
+	}
+	
+	/** for each voxel in the 26 neighborhood
+	 * it maps adjacent voxels
+	 */
 	void fillNeighborsHashMap()
 	{
 		int nCount = 0;
@@ -472,7 +539,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
          }
     	 es.shutdown();
     	//bt.showTraceBox();
-    	bt.setTraceBoxMode(false);
+    	//bt.setTraceBoxMode(false);
+    	bt.roiManager.setLockMode(false);
     	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
 		//unlock user interaction
     	bt.bInputLock = false;

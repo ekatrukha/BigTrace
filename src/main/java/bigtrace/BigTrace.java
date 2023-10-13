@@ -485,7 +485,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 							break;
 						case RoiManager3D.ADD_POINT_ONECLICKLINE:
 							roiManager.unselect();
-							setTraceBoxMode(true);
+							//setTraceBoxMode(true);
+							roiManager.setLockMode(true);
 							runOneClickTrace(target);
 							
 							break;
@@ -1158,6 +1159,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 	}	
 	
+	/** Locks interface and enters Trace mode**/
 	public void setTraceBoxMode(boolean bStatus)
 	{
 		bTraceMode = bStatus;								
