@@ -83,7 +83,9 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		//RealPoint startPointRefined;
 
 		int nCountPoints = 0;
-		//ArrayList<RealPoint> points = new ArrayList<RealPoint>();
+		
+
+		setProgress(0);
 		init();
 		
 
@@ -102,6 +104,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		}
 		//trace in one direction
 		int nTotPoints = traceOneDirection(true, 0);
+		setProgress(50);
+		setProgressState(Integer.toString(nTotPoints)+"points found.");
 		//look for another direction
 		for (int d=0; d<3; d++)
 		{
@@ -117,10 +121,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		System.out.println("THREADED Elapsed Time in seconds: "+ 0.001*(end1-start1));
 		
 		//show it
-		System.out.println("YOHOOO!");
+		//System.out.println("YOHOOO!");
 
-
-		
 		setProgress(100);
 		setProgressState("trace with "+Integer.toString(nTotPoints)+" points. auto-tracing done.");
 
@@ -145,8 +147,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		}
 		
 		nextPoint = getNextPoint(points.get(0));
-		int testCount = 0;
-
+		//points inside the current math box
 		int ptCount = nCountReset-1;
 		while (nextPoint != null)
 		//while (nextPoint != null && testCount<100)
@@ -155,14 +156,23 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			{
 				bt.roiManager.addSegment(points.get(points.size()-1), points);
 				points = new ArrayList<RealPoint>();
-				setProgressState(Integer.toString(testCount)+"points found.");
+				setProgressState(Integer.toString(nCountPoints)+"points found.");
+				if(bFirstTrace)
+				{
+					setProgress(20);
+				}
+				else
+				{
+					setProgress(70);
+				}
+				
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException ignore) {}
 			}
 			points.add(new RealPoint(nextPoint));
 			nCountPoints++;
-			//bt.roiManager.addPoint3D(points.get(nCountPoints-1));
+		
 			ptCount--;
 			if(ptCount ==0)
 			{
@@ -170,7 +180,6 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 				ptCount = nCountReset;
 			}
 			nextPoint = getNextPoint(points.get(points.size()-1));
-			testCount++;
 			//setProgress(100);
 
 		}
