@@ -1815,7 +1815,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		
+		/*
 		//testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
 		
 		
@@ -1831,7 +1833,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 		testI.runOneClickTrace(target);
 		//testI.run("");
-		
+		*/
 		
 	}
 

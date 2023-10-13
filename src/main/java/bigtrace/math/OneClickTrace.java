@@ -44,6 +44,11 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	
 	private HashMap<String, ArrayList<int[]>> neighborsMap = new HashMap<String, ArrayList<int[]>>();
 	
+	
+	Convolution [] convObjects = new Convolution[6];
+	ExecutorService es;// = Executors.newFixedThreadPool( nThreads );
+	int nThreads;
+	
 	/** eigenvectors container **/
 	ArrayImg<FloatType, FloatArray> dV;
 	/** weights (saliency) container **/
@@ -138,6 +143,30 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
 		sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
 		fillNeighborsHashMap();
+		
+		nThreads = Runtime.getRuntime().availableProcessors();
+		es = Executors.newFixedThreadPool( nThreads );
+
+		int count = 0;
+		int d1,d2;
+		double [][] kernels;
+		Kernel1D[] derivKernel;
+		int [] nDerivOrder;
+		for (d1=0;d1<3;d1++)
+		{
+			for (d2 = d1; d2 < 3; d2++ )
+			{
+
+				nDerivOrder = new int [3];
+				nDerivOrder[d1]++;
+				nDerivOrder[d2]++;
+				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btdata.sigmaTrace, nDerivOrder);
+				derivKernel = Kernel1D.centralAsymmetric(kernels);
+				convObjects[count] = SeparableKernelConvolution.convolution( derivKernel );
+				convObjects[count].setExecutor(es);
+				count++;
+			}
+		}
 	}
 	
 	public RealPoint getNextPoint(RealPoint currpoint)
@@ -240,7 +269,9 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		//IntervalView<FloatType> gradient = Views.translate(gradFloat, nShift);
 		IntervalView<FloatType> hessian = Views.translate(hessFloat, nShift);
 		
-	
+		
+
+	/*
 		double [][] kernels;
 		Kernel1D[] derivKernel;
 		int [] nDerivOrder;
@@ -272,30 +303,11 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		{
 			for (d2 = d1; d2 < 3; d2++ )
 			{
-				//update progress bar
-				/*setProgressState("trace box deriv_" +Integer.toString(d1+1)+"_"+Integer.toString(d2+1)+"...");
-				  //Sleep for up to one second.
-				try {
-					Thread.sleep(1);
-				} catch (InterruptedException ignore) {}
-				setProgress(count*100/7);
-*/
 				IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
-				nDerivOrder = new int [3];
-				nDerivOrder[d1]++;
-				nDerivOrder[d2]++;
-				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btdata.sigmaTrace, nDerivOrder);
-				derivKernel = Kernel1D.centralAsymmetric(kernels);
-				convObj = SeparableKernelConvolution.convolution( derivKernel );
-				convObj.setExecutor(es);
-				convObj.process(Views.extendBorder(currentBox), hs2 );
-				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
+				convObjects[count].process(Views.extendBorder(currentBox), hs2 );
 				count++;
-				//System.out.println(count);
 			}
 		}
-		//end1 = System.currentTimeMillis();
-		//System.out.println("THREADED Elapsed Time in milli seconds: "+ (end1-start1));
 
 
 		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
@@ -303,24 +315,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		directionVectors =  Views.translate(dV, nShift);
 		salWeights =  Views.translate(sW, minV);
 		salWeightsUB = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
-
-		/*
-		setProgressState("trace box eigenvalues/corners...");
-		  //Sleep for up to one second.
-		try {
-			Thread.sleep(1);
-		} catch (InterruptedException ignore) {}
-		setProgress(6*100/7);
-		*/
-
 		mEV.computeVWRAI(hessian, directionVectors, salWeights, nThreads, es);
 		
-		es.shutdown();
-
-		//setProgress(100);
-		//setProgressState("trace box done.");
-		
-
 	}
 	
 	/** gets a box around "target" extending in each side according to range in each axis.
@@ -474,6 +470,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
          } catch (InterruptedException e) {
              // Process e here
          }
+    	 es.shutdown();
     	//bt.showTraceBox();
     	bt.setTraceBoxMode(false);
     	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
