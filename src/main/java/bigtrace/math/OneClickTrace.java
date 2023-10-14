@@ -1,5 +1,6 @@
 package bigtrace.math;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
@@ -11,6 +12,7 @@ import javax.swing.SwingWorker;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.volume.VolumeMisc;
+import bigtrace.rois.Box3D;
 import btbvv.util.Bvv;
 import btbvv.util.BvvFunctions;
 import net.imglib2.AbstractInterval;
@@ -372,7 +374,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		//IntervalView<FloatType> gradient = Views.translate(gradFloat, nShift);
 		IntervalView<FloatType> hessian = Views.translate(hessFloat, nShift);
 		
-		
+		bt.visBox= new Box3D(currentBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 
 	/*
 		double [][] kernels;
@@ -668,6 +670,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
     	 es.shutdown();
     	//bt.showTraceBox();
     	//bt.setTraceBoxMode(false);
+    	bt.visBox = null;
     	bt.roiManager.setLockMode(false);
     	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
 		//unlock user interaction

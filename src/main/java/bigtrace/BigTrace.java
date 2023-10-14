@@ -138,6 +138,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	/** box around volume **/
 	Box3D volumeBox;
+	
+	/** helper box to visualize things **/
+	public Box3D visBox = null;
 
 	/** object storing main data/variables **/
 	public BigTraceData<T> btdata ;
@@ -1217,6 +1220,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				volumeBox.draw(gl, pvm, screen_size);
 			}
 		
+			if(visBox != null)
+			{
+				visBox.draw(gl, pvm, screen_size);
+				
+			}
 		//panel.requestRepaint(RepaintType.SCENE);
 
 	}
@@ -1819,11 +1827,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		//testI.run("");
 		
-		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
 		
 		/**/
 		//testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
 		
+		/*
 		
 		testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
 		
@@ -1837,7 +1846,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 		testI.runOneClickTrace(target);
 		
-		/**/
+		*/
 		
 		/*
 		testI.run("/home/eugene/Desktop/BigTrace_data/Emma8bit.xml"); 

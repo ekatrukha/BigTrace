@@ -13,6 +13,8 @@ import com.jogamp.opengl.GL3;
 import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineSimple;
+import net.imglib2.AbstractInterval;
+import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 
@@ -46,13 +48,41 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 		edgesVis = new ArrayList<VisPolyLineSimple>();
 		int i;
 		
+		
 		ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
 		for(i=0;i<edgesPairPoints.size(); i++)
 		{
 			edgesVis.add(new VisPolyLineSimple(edgesPairPoints.get(i), lineThickness,lineColor));
 		}
 	}
-	
+
+	public Box3D(AbstractInterval nIntervalBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nTimePoint_)
+	{
+		type = Roi3D.BOX;
+		lineThickness=lineThickness_;
+		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
+
+		nTimePoint = nTimePoint_;
+		verticesVis = new ArrayList<VisPointsScaled>();
+		edgesVis = new ArrayList<VisPolyLineSimple>();
+		int i;
+		float [][] nDimBox = new float [2][3];
+		
+		double [] minI = nIntervalBox.minAsDoubleArray();
+		double [] maxI = nIntervalBox.maxAsDoubleArray();
+
+		for(i=0;i<3;i++)
+		{
+			nDimBox[0][i]=(float)minI[i];
+			nDimBox[1][i]=(float)maxI[i];
+
+		}
+		ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
+		for(i=0;i<edgesPairPoints.size(); i++)
+		{
+			edgesVis.add(new VisPolyLineSimple(edgesPairPoints.get(i), lineThickness,lineColor));
+		}
+	}
 	@Override
 	public void draw(final GL3 gl, final Matrix4fc pvm, final int[] screen_size) {
 	
