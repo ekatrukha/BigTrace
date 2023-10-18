@@ -224,7 +224,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		
 		nPointPerSegment = bt.btdata.nVertexPlacementPointN;
 		
-		nCountReset = Math.max(Math.max(bt.btdata.sigmaTrace[0], bt.btdata.sigmaTrace[1]),bt.btdata.sigmaTrace[2]);
+		//nCountReset = Math.max(Math.max(bt.btdata.sigmaTrace[0], bt.btdata.sigmaTrace[1]),bt.btdata.sigmaTrace[2]);
 		boxHalfRange = new long[3];
 		
 		for (int d=0;d<3;d++)
