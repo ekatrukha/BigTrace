@@ -221,6 +221,10 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	
 	public void init()
 	{
+		
+		nPointPerSegment = bt.btdata.nVertexPlacementPointN;
+		
+		nCountReset = Math.max(Math.max(bt.btdata.sigmaTrace[0], bt.btdata.sigmaTrace[1]),bt.btdata.sigmaTrace[2]);
 		boxHalfRange = new long[3];
 		
 		for (int d=0;d<3;d++)
@@ -409,6 +413,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			for (d2 = d1; d2 < 3; d2++ )
 			{
 				IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
+				FinalInterval test = (FinalInterval) convObjects[count].requiredSourceInterval(hs2);
 				convObjects[count].process(Views.extendBorder(currentBox), hs2 );
 				count++;
 			}

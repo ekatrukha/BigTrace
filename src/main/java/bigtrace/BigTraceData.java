@@ -115,7 +115,7 @@ public class BigTraceData < T extends RealType< T > > {
 	/** animation speed, i.e. duration of transform **/
 	public long nAnimationDuration =  (int)Prefs.get("BigTrace.nAnimationDuration",400);
 		
-	///////////////////////////// tracing box
+	///////////////////////////// TRACING
 	
 	/** weights of curve probability (saliency) for the trace box**/
 	public IntervalView< UnsignedByteType > trace_weights = null;
@@ -126,31 +126,40 @@ public class BigTraceData < T extends RealType< T > > {
 	/**special points Dijkstra search for the trace box**/
 	public ArrayList<long []> jump_points = null;
 	
+///////////////////////////// TRACING SETTINGS GENERAL
+	
 	/** characteristic size (SD) of lines (for each dimension)**/
 	public double [] sigmaTrace = new double [3];
 	
-	/** weight of orientation vs saliency in the tracing**/
-	public double gammaTrace = 0.0;
+	/** whether to limit tracing to cropped area**/
+	public boolean bTraceOnlyCrop = false;
+	
+	///////////////////////////// TRACING SETTINGS SEMI AUTO
 	
 	/** whether (1) or not (0) remove visibility of volume data during tracing **/
 	public int nTraceBoxView = 1;
 	
 	/** half size of tracing box (for now in all dimensions) **/
-	public long lTraceBoxSize = 50;
+	public long lTraceBoxSize;
 	
 	/** fraction of screen occupied by trace box **/
-	public double dTraceBoxScreenFraction = 0.5;	
+	public double dTraceBoxScreenFraction;	
 	
 	/** After advancing tracebox, this parameter defines 
 	 * how much tracebox is going to follow the last direction of trace (with respect to the last added point):
 	 * in the range [0..1], 0 = last point in the center of new tracebox, 1 = previous point is at the edge of the new tracebox**/
-	public float fTraceBoxAdvanceFraction = 0.9f;
+	public float fTraceBoxAdvanceFraction;
 	
-	/** whether to limit tracing to cropped area**/
-	public boolean bTraceOnlyCrop = false;
+	/** weight of orientation vs saliency in the tracing**/
+	public double gammaTrace;
 	
 	/** current number of vertices in the tracebox **/
-	public int nPointsInTraceBox=0;
+	public int nPointsInTraceBox = 0;
+	
+	///////////////////////////// TRACING SETTINGS ONE CLICK
+	
+	/** current number of vertices in the tracebox **/
+	public int nVertexPlacementPointN;
 	
 	/** ROI shape interpolation types **/
 	public static final int SHAPE_Voxel=0, SHAPE_Smooth=1, SHAPE_Spline=2; 
@@ -204,11 +213,14 @@ public class BigTraceData < T extends RealType< T > > {
 		sigmaTrace[0] = Prefs.get("BigTrace.sigmaTraceX", 2.0);
 		sigmaTrace[1] = Prefs.get("BigTrace.sigmaTraceY", 2.0);
 		sigmaTrace[2] = Prefs.get("BigTrace.sigmaTraceZ", 2.0);
-		gammaTrace =  Prefs.get("BigTrace.gammaTrace", 0.0);
+		bTraceOnlyCrop= Prefs.get("BigTrace.bTraceOnlyCrop", false);
+		
 		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);				
 		fTraceBoxAdvanceFraction = (float) Prefs.get("BigTrace.fTraceBoxAdvanceFraction", 0.9);
 		dTraceBoxScreenFraction = Prefs.get("BigTrace.dTraceBoxScreenFraction", 0.5);
-		bTraceOnlyCrop= Prefs.get("BigTrace.bTraceOnlyCrop", false);
+		gammaTrace =  Prefs.get("BigTrace.gammaTrace", 0.0);
+		
+		nVertexPlacementPointN = (int) Prefs.get("BigTrace.nVertexPlacementPointN", 10);	
 	}
 	
 	/** returns data sources for specific channel and time point,
