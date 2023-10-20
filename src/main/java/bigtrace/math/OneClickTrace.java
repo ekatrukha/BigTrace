@@ -13,10 +13,7 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.volume.VolumeMisc;
 import bigtrace.rois.Box3D;
-import btbvv.util.Bvv;
-import btbvv.util.BvvFunctions;
 import net.imglib2.AbstractInterval;
-import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RealPoint;
@@ -37,17 +34,29 @@ import net.imglib2.view.Views;
 public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
 	public BigTrace<T> bt;
+	/** full dataset to trace **/
 	public IntervalView<T> fullInput; 
+	/** if a tracing leaving this box,
+	 * new full box is recalculated at the current location **/
+	public FinalInterval innerTraceBox; 
 	public RealPoint startPoint;
 	public RealPoint currentVector;
-	public long [] boxHalfRange;
-	public long[] dim;
-	public double rangeBox = 3.0;
+	public long [] boxFullHalfRange;
+	public long [] boxInnerHalfRange;
+
+	/** dimensions of the box where saliency + vectors 
+	 * will be calculated in rangeFullBoxDim * sigma of the axis **/
+	final double rangeFullBoxDim = 3.0;
+	/** dimensions of the box where tracing will happen
+	 	(in sigmas) before new box needs to be calculated**/
+	final double rangeInnerBoxDim = 2.0;
+	
+	long [] minV;
+	
 	double dAngleThreshold = 0.6;
 	
 	int nNeighborsMethods = 0;
-	int nCountReset = 2;
-	int nPointPerSegment = 10;
+	int nPointPerSegment;
 	
 	int [][] nNeighborsIndexes = new int[26][3];
 	double [][] nNeighborsVectors = new double[26][3];
@@ -156,8 +165,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		}
 		
 		nextPoint = getNextPoint(points.get(0));
+		
 		//points inside the current math box
-		int ptCount = nCountReset-1;
 		while (nextPoint != null)
 		//while (nextPoint != null && testCount<100)
 		{
@@ -181,18 +190,13 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			}
 			points.add(new RealPoint(nextPoint));
 			nCountPoints++;
-		
-			ptCount--;
-			if(ptCount ==0)
+			//see if we are still inside reasonable 
+			//values for math box
+			if(!Intervals.contains(innerTraceBox, points.get(points.size()-1)))
 			{
 				getMathForCurrentPoint(points.get(points.size()-1));
-				ptCount = nCountReset;
 			}
-			double [] saveVector = new double[3];
-			for (int d=0; d<3; d++)
-			{
-				saveVector[d]=lastDirectionVector[d];
-			}
+
 			/*
 			if(nCountPoints==73)
 			{
@@ -225,24 +229,33 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		nPointPerSegment = bt.btdata.nVertexPlacementPointN;
 		
 		//nCountReset = Math.max(Math.max(bt.btdata.sigmaTrace[0], bt.btdata.sigmaTrace[1]),bt.btdata.sigmaTrace[2]);
-		boxHalfRange = new long[3];
+		boxFullHalfRange = new long[3];
+		boxInnerHalfRange = new long[3];
+		long [] boxFullRange = new long[3];
+
 		
 		for (int d=0;d<3;d++)
 		{
-			boxHalfRange[d]=(long) (Math.ceil(rangeBox*bt.btdata.sigmaTrace[d])); 
-			
+			boxFullHalfRange[d]=(long) (Math.ceil(rangeFullBoxDim*bt.btdata.sigmaTrace[d])); 
+			boxInnerHalfRange[d]=(long) (Math.ceil(rangeInnerBoxDim*bt.btdata.sigmaTrace[d])); 
+			boxFullRange[d] = (long) (Math.ceil(rangeFullBoxDim*bt.btdata.sigmaTrace[d])*2+1); 		
 		}
-		IntervalView<T> input = Views.interval(fullInput, getLocalTraceBox(fullInput,boxHalfRange,startPoint));
-		dim = Intervals.dimensionsAsLongArray( input );
+		//IntervalView<T> input = Views.interval(fullInput, getLocalTraceBox(fullInput,boxFullHalfRange,startPoint));
+		//dim = Intervals.dimensionsAsLongArray( input );
 		
 		//gradient, first derivatives, 3 values per voxel
 		//gradFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
 
 		//hessian, second derivatives, 6 values per voxel
-		hessFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
-		
-		dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
-		sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
+		//hessFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
+		//dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
+		//sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
+		minV = new long [4];
+
+		hessFloat = ArrayImgs.floats( boxFullRange[ 0 ], boxFullRange[ 1 ], boxFullRange[ 2 ], 6 );
+		dV = ArrayImgs.floats( boxFullRange[ 0 ], boxFullRange[ 1 ], boxFullRange[ 2 ], 3 );
+		sW = ArrayImgs.floats( boxFullRange[ 0 ], boxFullRange[ 1 ], boxFullRange[ 2 ]);
+
 		
 		initNeighborsHashMap();
 		//initNeighbors();
@@ -312,6 +325,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			{
 				candPos[d]=Math.round(currpoint.getFloatPosition(d))+candidateNeighbor[d];
 			}
+		
 			if(Intervals.contains(fullInput, new RealPoint(new float []{candPos[0],candPos[1],candPos[2]})))
 			{
 				currSal=raW.setPositionAndGet(candPos).get();
@@ -365,18 +379,14 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	public void getMathForCurrentPoint(final RealPoint currPoint)
 	{
 		//let's figure out the volume around the point
-		IntervalView<T> currentBox = Views.interval(fullInput, getLocalTraceBox(fullInput,boxHalfRange,currPoint));
-		int i;
-		long[] minV = currentBox.minAsLongArray();
-		long[] nShift = new long [currentBox.numDimensions()+1];
-		
-		for (i=0;i<currentBox.numDimensions();i++)
-		{
-			nShift[i]=minV[i];
-		}
+		IntervalView<T> currentBox = Views.interval(fullInput, getLocalTraceBox(fullInput,boxFullHalfRange,currPoint));
+		innerTraceBox = getLocalTraceBox(fullInput,boxInnerHalfRange,currPoint);
+		//long[] minV = new long [currentBox.numDimensions()+1];
+		//minV = new long [currentBox.numDimensions()+1];
+		currentBox.min(minV);
 		
 		//IntervalView<FloatType> gradient = Views.translate(gradFloat, nShift);
-		IntervalView<FloatType> hessian = Views.translate(hessFloat, nShift);
+		IntervalView<FloatType> hessian = Views.translate(hessFloat, minV);
 		
 		bt.visBox= new Box3D(currentBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 
@@ -413,7 +423,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			for (d2 = d1; d2 < 3; d2++ )
 			{
 				IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
-				FinalInterval test = (FinalInterval) convObjects[count].requiredSourceInterval(hs2);
+				//FinalInterval test = (FinalInterval) convObjects[count].requiredSourceInterval(hs2);
 				convObjects[count].process(Views.extendBorder(currentBox), hs2 );
 				count++;
 			}
@@ -422,12 +432,14 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 
 		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
 
-		directionVectors =  Views.translate(dV, nShift);
-		salWeights =  Views.translate(sW, minV);
+		directionVectors =  Views.translate(dV, minV);
+		salWeights =  Views.translate(sW, minV[0],minV[1],minV[2]);
 		//salWeightsUB = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
 		mEV.computeVWRAI(hessian, directionVectors, salWeights, nThreads, es);
 		raV = directionVectors.randomAccess();
 		raW = salWeights.randomAccess();
+		//calculate inner box
+		
 		
 	}
 	
@@ -719,7 +731,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			rasW.get().set(zz);
 		//}
 	}
-	//square roor
+	//square root
 	cu = salWeights.cursor();
 	cu.reset();
 	while(cu.hasNext())

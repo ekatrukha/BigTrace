@@ -93,7 +93,7 @@ public class TraceBoxMath < T extends RealType< T > > extends SwingWorker<Void, 
 				convObj.process(Views.extendBorder(input), hs2 );
 				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
 				count++;
-				System.out.println(count);
+				//System.out.println(count);
 			}
 		}
 		//end1 = System.currentTimeMillis();
@@ -132,7 +132,7 @@ public class TraceBoxMath < T extends RealType< T > > extends SwingWorker<Void, 
 		if(refinePosition != null)
 		{
 			RealPoint refined = refinePointUsingSaliency(refinePosition);
-			System.out.println("Max int pos:"+Float.toString(refined.getFloatPosition(0))+" " +Float.toString(refined.getFloatPosition(1))+" "+Float.toString(refined.getFloatPosition(2))+" ");
+			//System.out.println("Max int pos:"+Float.toString(refined.getFloatPosition(0))+" " +Float.toString(refined.getFloatPosition(1))+" "+Float.toString(refined.getFloatPosition(2))+" ");
 			bt.roiManager.addSegment(refined,null);
 		}
 		return null;
