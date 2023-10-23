@@ -161,6 +161,9 @@ public class BigTraceData < T extends RealType< T > > {
 	/** current number of vertices in the tracebox **/
 	public int nVertexPlacementPointN;
 	
+	/** directionality constrain for one click **/
+	public double dDirectionalityOneClick;
+	
 	/** ROI shape interpolation types **/
 	public static final int SHAPE_Voxel=0, SHAPE_Smooth=1, SHAPE_Spline=2; 
 	
@@ -220,7 +223,8 @@ public class BigTraceData < T extends RealType< T > > {
 		dTraceBoxScreenFraction = Prefs.get("BigTrace.dTraceBoxScreenFraction", 0.5);
 		gammaTrace =  Prefs.get("BigTrace.gammaTrace", 0.0);
 		
-		nVertexPlacementPointN = (int) Prefs.get("BigTrace.nVertexPlacementPointN", 10);	
+		nVertexPlacementPointN = (int) Prefs.get("BigTrace.nVertexPlacementPointN", 10);
+		dDirectionalityOneClick = Prefs.get("BigTrace.dDirectionalityOneClick", 0.6);
 	}
 	
 	/** returns data sources for specific channel and time point,

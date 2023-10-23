@@ -49,14 +49,15 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	final double rangeFullBoxDim = 3.0;
 	/** dimensions of the box where tracing will happen
 	 	(in sigmas) before new box needs to be calculated**/
-	final double rangeInnerBoxDim = 2.0;
+	final double rangeInnerBoxDim = 1.0;
 	
 	long [] minV;
 	
-	double dAngleThreshold = 0.6;
+	public double dAngleThreshold;// = 0.8;
 	
 	int nNeighborsMethods = 0;
 	int nPointPerSegment;
+	
 	
 	int [][] nNeighborsIndexes = new int[26][3];
 	double [][] nNeighborsVectors = new double[26][3];
@@ -67,6 +68,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	Convolution [] convObjects = new Convolution[6];
 	ExecutorService es;// = Executors.newFixedThreadPool( nThreads );
 	int nThreads;
+	
+	//boolean bPrint = false;
 	
 	/** eigenvectors container **/
 	ArrayImg<FloatType, FloatArray> dV;
@@ -120,6 +123,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		{
 			lastDirectionVector[d]=startDirectionVector[d];
 		}
+	
 		//trace in one direction
 		int nTotPoints = traceOneDirection(true, 0);
 		setProgress(50);
@@ -147,10 +151,12 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		return null;
 	}
 	
+	
 	public int traceOneDirection(boolean bFirstTrace, int nCountIn)
 	{
 		
 		ArrayList<RealPoint> points = new ArrayList<RealPoint>();
+		
 		RealPoint nextPoint;
 		
 		int nCountPoints=0;
@@ -227,6 +233,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	{
 		
 		nPointPerSegment = bt.btdata.nVertexPlacementPointN;
+		dAngleThreshold = bt.btdata.dDirectionalityOneClick;
 		
 		//nCountReset = Math.max(Math.max(bt.btdata.sigmaTrace[0], bt.btdata.sigmaTrace[1]),bt.btdata.sigmaTrace[2]);
 		boxFullHalfRange = new long[3];
@@ -288,6 +295,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	public RealPoint getNextPoint(RealPoint currpoint)
 	{
 		RealPoint out = null;
+
 		int i,d;
 		double [] newDirection = null;
 		double [] candDirection;
@@ -330,9 +338,23 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			{
 				currSal=raW.setPositionAndGet(candPos).get();
 				candDirection = getVectorAtLocation(candPos);
+//				if(bPrint)
+//				{
+//					//System.out.println(candidateNeighbor[0]+"\t"+candidateNeighbor[1]+"\t"+candidateNeighbor[2]+"\t"+currSal);
+//					System.out.println(currSal);
+//				}
+//				double [] dirX = new double [3];
+//				for (int zz=0;zz<2;zz++)
+//				{
+//					dirX[zz] = (double)candidateNeighbor[zz];
+//				}
+//				LinAlgHelpers.normalize(dirX);
+//				currSal *= LinAlgHelpers.dot(dirX, lastDirectionVector);
+				
 				if(currSal>0)
 				{
-					
+					//double valS = Math.abs(LinAlgHelpers.dot(candDirection, lastDirectionVector));
+					//if(Math.abs(LinAlgHelpers.dot(candDirection, hystVector))<dAngleThreshold)
 					if(Math.abs(LinAlgHelpers.dot(candDirection, lastDirectionVector))<dAngleThreshold)
 					{
 						currSal=0.0f;
@@ -365,11 +387,18 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 				LinAlgHelpers.scale(newDirection,-1.0,lastDirectionVector);
 			}
 			out = new RealPoint(finPos);
+//			if(Math.abs(out.getDoublePosition(0)-49)+Math.abs(out.getDoublePosition(1)-48)<0.001)
+//			{
+//				System.out.println("Found deviation point");
+//				bPrint = true;
+//				
+//			}
 		}
 		else
 		{
 			out = null;
 		}
+
 
 		return out;
 		

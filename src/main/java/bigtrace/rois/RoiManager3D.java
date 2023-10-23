@@ -754,7 +754,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 final int nRoiType = rois.get(activeRoi).getType();
 		 
 		 //active ROI is not a line or none ROI selected
-		 if(nRoiType==Roi3D.POLYLINE || nRoiType==Roi3D.PLANE)
+		 //if(nRoiType==Roi3D.POLYLINE || nRoiType==Roi3D.PLANE)
 		 {
 			 switch (nRoiType)
 			 {
@@ -763,6 +763,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 				 break;
 			 case Roi3D.PLANE:
 				 bPointRemoved = ((CrossSection3D) rois.get(activeRoi)).removePoint();
+				 break;
+			 case Roi3D.LINE_TRACE:
+				 bPointRemoved = ((LineTrace3D) rois.get(activeRoi)).removeLastSegment();
 				 break;
 			 }
 			
@@ -1075,7 +1078,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		JTabbedPane tabPane = new JTabbedPane();
 		GridBagConstraints cd = new GridBagConstraints();
 	
-		
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
 		////////////ROI RENDER OPTIONS
 		JPanel pROIrender = new JPanel(new GridBagLayout());
 		JButton butPointActiveColor = new JButton( new ColorIcon( activePointColor ) );	
@@ -1199,10 +1204,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		NumberField nfSigmaZ = new NumberField(4);
 		JCheckBox cbTraceOnlyCrop = new JCheckBox();
 
+		
+		nfSigmaX.setText(df.format(bt.btdata.sigmaTrace[0]));
+		nfSigmaY.setText(df.format(bt.btdata.sigmaTrace[1]));
+		nfSigmaZ.setText(df.format(bt.btdata.sigmaTrace[2]));
 
-		nfSigmaX.setText(Double.toString(bt.btdata.sigmaTrace[0]));
-		nfSigmaY.setText(Double.toString(bt.btdata.sigmaTrace[1]));
-		nfSigmaZ.setText(Double.toString(bt.btdata.sigmaTrace[2]));
+		//nfSigmaX.setText(Double.toString(bt.btdata.sigmaTrace[0]));
+		//nfSigmaY.setText(Double.toString(bt.btdata.sigmaTrace[1]));
+		//nfSigmaZ.setText(Double.toString(bt.btdata.sigmaTrace[2]));
 		cbTraceOnlyCrop.setSelected(bt.btdata.bTraceOnlyCrop);
 		
 		cd.gridx=0;
@@ -1241,9 +1250,9 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		NumberField nfTBAdvance = new NumberField(4);
 		
 		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btdata.lTraceBoxSize)));
-		nfTraceBoxScreenFraction.setText(Double.toString(bt.btdata.dTraceBoxScreenFraction));
-		nfGammaTrace.setText(Double.toString(bt.btdata.gammaTrace));
-		nfTBAdvance.setText(Float.toString(bt.btdata.fTraceBoxAdvanceFraction));
+		nfTraceBoxScreenFraction.setText(df.format(bt.btdata.dTraceBoxScreenFraction));
+		nfGammaTrace.setText(df.format(bt.btdata.gammaTrace));
+		nfTBAdvance.setText(df.format(bt.btdata.fTraceBoxAdvanceFraction));
 			
 		cd.gridx=0;
 		cd.gridy=0;
@@ -1272,20 +1281,27 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		cd.gridx++;
 		pSemiAuto.add(nfGammaTrace,cd);
 		
-		////////////SEMI-AUTO TRACING OPTIONS
+		////////////ONE-CLICK TRACING OPTIONS
 		JPanel pOneCLick = new JPanel(new GridBagLayout());
 		
 		NumberField nfPlaceVertex = new NumberField(4);
+		NumberField nfDirectionalityOneClick = new NumberField(4);
 		
 		nfPlaceVertex.setIntegersOnly(true);
 		nfPlaceVertex.setText(Integer.toString((int)(bt.btdata.nVertexPlacementPointN)));
+		nfDirectionalityOneClick.setText(df.format(bt.btdata.dDirectionalityOneClick));
 		
 		cd.gridx=0;
 		cd.gridy=0;		
-		pOneCLick.add(new JLabel("Intermediate vertex placement (px): "),cd);
+		pOneCLick.add(new JLabel("Intermediate vertex placement (px, >=3): "),cd);
 		cd.gridx++;
 		pOneCLick.add(nfPlaceVertex,cd);
 		
+		cd.gridx=0;		
+		cd.gridy++;
+		pOneCLick.add(new JLabel("Constrain directionality (0-1): "),cd);
+		cd.gridx++;
+		pOneCLick.add(nfDirectionalityOneClick,cd);
 		
 		//assemble pane
 		tabPane.addTab("ROI render",pROIrender);
@@ -1419,8 +1435,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			bt.btdata.gammaTrace = Double.parseDouble(nfGammaTrace.getText());
 			Prefs.set("BigTrace.gammaTrace", (double)(bt.btdata.gammaTrace));
 			
-			bt.btdata.nVertexPlacementPointN=(int)(Integer.parseInt(nfPlaceVertex.getText()));
+			bt.btdata.nVertexPlacementPointN=(int)(Math.max(3, Integer.parseInt(nfPlaceVertex.getText())));
 			Prefs.set("BigTrace.nVertexPlacementPointN", (double)(bt.btdata.nVertexPlacementPointN));
+			
+			bt.btdata.dDirectionalityOneClick=Math.min(1.0, (Math.max(0, Double.parseDouble(nfDirectionalityOneClick.getText()))));
+			Prefs.set("BigTrace.dDirectionalityOneClick",bt.btdata.dDirectionalityOneClick);
 			
 			
 		}

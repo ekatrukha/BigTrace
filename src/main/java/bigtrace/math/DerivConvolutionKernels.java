@@ -1,7 +1,5 @@
 package bigtrace.math;
 
-
-
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;

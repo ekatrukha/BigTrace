@@ -884,7 +884,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		IntervalView<?> traceIV;
 		
-		traceIV = getTraceInterval(btdata.bTraceOnlyCrop);		
+		traceIV = getTraceInterval(btdata.bTraceOnlyCrop);	
+//		System.out.println(pclick.getDoublePosition(0));
+//		System.out.println(pclick.getDoublePosition(1));
+//		System.out.println(pclick.getDoublePosition(2));
 
 		bInputLock = true;
 		OneClickTrace calcTask = new OneClickTrace();
@@ -1824,16 +1827,41 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
-		
 		testI.run("");
 		
-		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		/*
+		testI.run("/home/eugene/Desktop/BigTrace_data/intersection.tif");
+		
+		testI.roiManager.setLockMode(true);
+		float [] point = new float[3];
+//		point[0]=23;
+//		point[1]=23;
+//		point[2]=10;
+
+		point[0]=37;
+		point[1]=61;
+		point[2]=10;
+
+		RealPoint target = new RealPoint(point);
+
+		testI.runOneClickTrace(target);
+		*/
+	/*	testI.roiManager.setLockMode(true);
+
+		point[0]=24;
+		point[1]=24;
+		point[2]=10;
+		target = new RealPoint(point);
+		
+
+		testI.runOneClickTrace(target);*/
+
 		
 		/**/
-		//testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
-		
+		//directionality test
+		//testI.run("");
 		/*
-		
+		//performance test
 		testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
 		
 		
@@ -1846,20 +1874,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 		testI.runOneClickTrace(target);
 		
-		*/
-		
-		/*
-		testI.run("/home/eugene/Desktop/BigTrace_data/Emma8bit.xml"); 
-		
-		
-		testI.roiManager.setLockMode(true);
-		float [] point = new float[3];
-		point[0]=368;
-		point[1]=954;
-		point[2]=69;
-		RealPoint target = new RealPoint(point);
-
-		testI.runOneClickTrace(target);
 		*/
 		
 	}
