@@ -213,9 +213,9 @@ public class BigTraceData < T extends RealType< T > > {
 
 		//tracing
 		sigmaTrace = new double [3];
-		sigmaTrace[0] = Prefs.get("BigTrace.sigmaTraceX", 2.0);
-		sigmaTrace[1] = Prefs.get("BigTrace.sigmaTraceY", 2.0);
-		sigmaTrace[2] = Prefs.get("BigTrace.sigmaTraceZ", 2.0);
+		sigmaTrace[0] = Prefs.get("BigTrace.sigmaTraceX", 3.0);
+		sigmaTrace[1] = Prefs.get("BigTrace.sigmaTraceY", 3.0);
+		sigmaTrace[2] = Prefs.get("BigTrace.sigmaTraceZ", 3.0);
 		bTraceOnlyCrop= Prefs.get("BigTrace.bTraceOnlyCrop", false);
 		
 		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);				
