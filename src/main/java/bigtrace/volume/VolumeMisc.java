@@ -132,7 +132,7 @@ public class VolumeMisc {
 			final IterableInterval< T > input,  final RealPoint maxLocation )
 		{
 			// create a cursor for the image (the order does not matter)
-			final Cursor< T > cursor = input.cursor();
+			final Cursor< T > cursor = input.localizingCursor();
 			
 
 			// initialize min and max with the first image value
@@ -423,21 +423,22 @@ public class VolumeMisc {
 	
 
 	
-	FinalInterval RealIntervaltoInterval (RealInterval R_Int)	
+	public static FinalInterval RealIntervaltoInterval (RealInterval R_Int)	
 	{
 		int i;
-		long [] minL = new long [3];
-		long [] maxL = new long [3];
-		double [] minR = new double [3];
-		double [] maxR = new double [3];
+		final int d = R_Int.numDimensions();
+		long [] minL = new long [d];
+		long [] maxL = new long [d];
+		double [] minR = new double [d];
+		double [] maxR = new double [d];
 		R_Int.realMax(maxR);
 		R_Int.realMin(minR);
-		for (i=0;i<3;i++)
+		for (i=0;i<d;i++)
 		{
 			minL[i]=(int)Math.round(minR[i]);
 			maxL[i]=(int)Math.round(maxR[i]);			
 		}
-		return Intervals.createMinMax(minL[0],minL[1],minL[2], maxL[0],maxL[1],maxL[2]);
+		return new FinalInterval(minL, maxL);
 	}
 	
 	/** assume the input image format is in XYZTC
