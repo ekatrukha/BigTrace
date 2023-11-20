@@ -24,7 +24,6 @@ import net.imglib2.algorithm.region.BresenhamLine;
 import net.imglib2.converter.Converters;
 import net.imglib2.converter.RealUnsignedByteConverter;
 import net.imglib2.converter.RealUnsignedShortConverter;
-import net.imglib2.converter.read.ConvertedRandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;

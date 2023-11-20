@@ -36,7 +36,7 @@ import bigtrace.gui.VoxelSizePanel;
 import bigtrace.measure.RoiMeasure3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.BigTraceData;
-import btbvv.util.BvvStackSource;
+import btbvv.vistools.BvvStackSource;
 import ij.Prefs;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.realtransform.AffineTransform3D;

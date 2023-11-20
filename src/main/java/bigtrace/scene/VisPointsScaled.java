@@ -17,11 +17,11 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import bvvbigtrace.backend.jogl.JoglGpuContext;
-import bvvbigtrace.shadergen.DefaultShader;
-import bvvbigtrace.shadergen.Shader;
-import bvvbigtrace.shadergen.generate.Segment;
-import bvvbigtrace.shadergen.generate.SegmentTemplate;
+import btbvv.core.backend.jogl.JoglGpuContext;
+import btbvv.core.shadergen.DefaultShader;
+import btbvv.core.shadergen.Shader;
+import btbvv.core.shadergen.generate.Segment;
+import btbvv.core.shadergen.generate.SegmentTemplate;
 
 
 import static com.jogamp.opengl.GL.GL_FLOAT;

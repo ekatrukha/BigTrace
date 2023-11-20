@@ -1,7 +1,5 @@
 package bigtrace.rois;
 
-
-
 import java.awt.Color;
 
 import java.awt.Dimension;
@@ -42,6 +40,12 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
 import bdv.tools.brightness.ColorIcon;
+
+import ij.Prefs;
+import ij.io.OpenDialog;
+import ij.io.SaveDialog;
+import net.imglib2.RealPoint;
+
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
@@ -49,15 +53,12 @@ import bigtrace.gui.GuiMisc;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.measure.RoiMeasure3D;
-import ij.Prefs;
-import ij.io.OpenDialog;
-import ij.io.SaveDialog;
-import net.imglib2.RealPoint;
 
 
 public class RoiManager3D extends JPanel implements ListSelectionListener, ActionListener {
 	
 
+	 @SuppressWarnings("rawtypes")
 	 BigTrace bt;
 
 	 private static final long serialVersionUID = -2843907862066423151L;
@@ -81,7 +82,8 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 public boolean bShowAll = true;
 
 	 //MEASURE OBJECT
-	 public RoiMeasure3D roiMeasure = null;
+	 @SuppressWarnings("rawtypes")
+	public RoiMeasure3D roiMeasure = null;
 	 
 	 //GUI
 	 public DefaultListModel<String> listModel; 
@@ -558,8 +560,13 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	       int nShift;
 	       float fOpacityScale = 1.0f;
 	       float fOpacitySave = 1.0f;
-	       final int nMinF = (int)Math.min(0,BigTraceData.timeFade);
-	       final int nMaxF = (int)Math.max(0,BigTraceData.timeFade);
+	       int nMinF = (int)Math.min(0,BigTraceData.timeFade);
+	       int nMaxF = (int)Math.max(0,BigTraceData.timeFade);
+	       if(BigTraceData.timeRender==0)
+	       {
+		       nMinF = 0;
+		       nMaxF = 0;
+	       }
 	       
 	       for (i=0;i<rois.size();i++) 
 	       {
@@ -843,6 +850,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			l.activeRoiChanged(nRoi);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void valueChanged(ListSelectionEvent e) 
 	{
@@ -876,6 +884,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
     }
 
 	//buttons
+	@SuppressWarnings("unchecked")
 	@Override
 	public void actionPerformed(ActionEvent e) 
 	{
@@ -1622,6 +1631,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	}
 	
 	/** Save ROIS dialog and saving **/
+	@SuppressWarnings("unchecked")
 	public void diagSaveROIs()
 	{
 		String filename;

@@ -19,11 +19,12 @@ import bigtrace.geometry.Plane3D;
 import bigtrace.rois.Roi3D;
 import net.imglib2.RealPoint;
 import net.imglib2.util.LinAlgHelpers;
-import bvvbigtrace.backend.jogl.JoglGpuContext;
-import bvvbigtrace.shadergen.DefaultShader;
-import bvvbigtrace.shadergen.Shader;
-import bvvbigtrace.shadergen.generate.Segment;
-import bvvbigtrace.shadergen.generate.SegmentTemplate;
+
+import btbvv.core.backend.jogl.JoglGpuContext;
+import btbvv.core.shadergen.DefaultShader;
+import btbvv.core.shadergen.Shader;
+import btbvv.core.shadergen.generate.Segment;
+import btbvv.core.shadergen.generate.SegmentTemplate;
 
 public class VisPolygonFlat {
 

@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>33.2.0</version>
+		<version>36.0.0</version>
 		<relativePath />
 	</parent>
 
 	<groupId>sc.fiji</groupId>
 	<artifactId>bigtrace</artifactId>
-	<version>0.3.2</version>
+	<version>0.3.3-SNAPSHOT</version>
 
 	<name>BigTrace</name>
 	<description>Tracing of curvilinear structures in 3D</description>
@@ -96,7 +96,7 @@
 		<dependency>
 		  <groupId>fiji.experimental</groupId>
 		  <artifactId>bvv-playground</artifactId>
-		  <version>0.0.9</version>
+		  <version>0.1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.formdev</groupId>
@@ -119,7 +119,6 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
-			<version>6.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imglib2</groupId>

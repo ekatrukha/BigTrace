@@ -1,9 +1,8 @@
-
 package bigtrace;
-
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -27,17 +26,54 @@ import org.scijava.ui.behaviour.util.Actions;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
+import ij.CompositeImage;
+import ij.IJ;
+import ij.ImageJ;
+import ij.ImagePlus;
+import ij.plugin.PlugIn;
+import ij.process.LUT;
+
+import mpicbg.spim.data.SpimDataException;
+import net.imglib2.AbstractInterval;
+import net.imglib2.FinalInterval;
+import net.imglib2.FinalRealInterval;
+import net.imglib2.Interval;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealPoint;
+
+import net.imglib2.img.Img;
+
+import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.realtransform.AffineTransform3D;
+
+import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.util.Intervals;
+import net.imglib2.util.LinAlgHelpers;
+import net.imglib2.view.IntervalView;
+import net.imglib2.view.Views;
+
 import bdv.spimdata.SequenceDescriptionMinimal;
 import bdv.spimdata.SpimDataMinimal;
 import bdv.spimdata.XmlIoSpimDataMinimal;
 import bdv.tools.InitializeViewerState;
 import bdv.tools.transformation.TransformedSource;
-import bdv.util.AxisOrder;
 import bdv.util.Bounds;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.TimePointListener;
 import bdv.viewer.ViewerState;
+
+import btbvv.vistools.BvvFunctions;
+import btbvv.vistools.Bvv;
+import btbvv.vistools.BvvStackSource;
+import btbvv.core.render.RenderData;
+import btbvv.core.render.VolumeRenderer.RepaintType;
+import btbvv.btuitools.BvvGamma;
+import btbvv.core.VolumeViewerPanel;
+import btbvv.core.util.MatrixMath;
+
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
@@ -51,43 +87,6 @@ import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
-
-import btbvv.util.BvvStackSource;
-import ij.CompositeImage;
-import ij.IJ;
-import ij.ImageJ;
-import ij.ImagePlus;
-import ij.plugin.PlugIn;
-import ij.process.LUT;
-import mpicbg.spim.data.SpimDataException;
-import btbvv.util.BvvFunctions;
-import btbvv.util.Bvv;
-import net.imglib2.AbstractInterval;
-import net.imglib2.FinalInterval;
-import net.imglib2.FinalRealInterval;
-import net.imglib2.Interval;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.RealPoint;
-
-import net.imglib2.img.Img;
-
-import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.realtransform.AffineTransform3D;
-
-import net.imglib2.type.numeric.ARGBType;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.util.Intervals;
-import net.imglib2.util.LinAlgHelpers;
-import net.imglib2.view.IntervalView;
-import net.imglib2.view.Views;
-
-import bvvbigtrace.example2.RenderData;
-import bvvbigtrace.example2.VolumeRenderer.RepaintType;
-import bvvbigtrace.example2.VolumeViewerPanel;
-import bvvbigtrace.util.MatrixMath;
-
 
 public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListener, TimePointListener
 {
@@ -207,7 +206,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		} catch( Exception ex ) {
 		    System.err.println( "Failed to initialize LaF" );
 		}
-		
 		//not sure we really need it, but anyway
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -772,10 +770,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(btdata.nRenderMethod==0)
 		{
 			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(1);
+			panel.showMessage("volumetric");
 		}
 		else
 		{
 			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(0);
+			panel.showMessage("maximum intensity");
 		}
 	}
 	public void installActions(final Actions actions)
@@ -791,7 +791,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions.runnableAction(() -> actionZoomToPoint(),			"zoom in to click", "D" );
 		actions.runnableAction(() -> actionZoomOut(),				"center view (zoom out)", "C" );
 		actions.runnableAction(() -> actionResetCrop(),				"reset crop", "X" );
-		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "P" );
+		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "O" );
 		actions.runnableAction(() -> actionSelectRoi(),	            "select ROI", "E" );
 				
 		
@@ -1247,43 +1247,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		Path p = Paths.get(btdata.sFileNameFullImg);
 		String filename = p.getFileName().toString();
 		
-		/// "dummy" interval to init BVV
-		RandomAccessibleInterval< UnsignedByteType > empty_view;
-		// init bigvolumeviewer
-		final Img< UnsignedByteType > imgx = ArrayImgs.unsignedBytes( new long[]{ 2, 2, 2 } );
-		empty_view =				 
-				 Views.interval( imgx, new long[] { 0, 0, 0 }, new long[]{ 1, 1, 1 } );
-		/*
-		bvv_main = BvvFunctions.show( all_ch_RAI, "empty" ,Bvv.options().
-				dCam(btdata.dCam).
-				dClipNear(btdata.dClipNear).
-				dClipFar(btdata.dClipFar).				
-				renderWidth( BigTraceData.renderParams.nRenderW).
-				renderHeight( BigTraceData.renderParams.nRenderH).
-				numDitherSamples( BigTraceData.renderParams.numDitherSamples ).
-				cacheBlockSize( BigTraceData.renderParams.cacheBlockSize ).
-				maxCacheSizeInMB( BigTraceData.renderParams.maxCacheSizeInMB ).
-				ditherWidth(BigTraceData.renderParams.ditherWidth).
-				frameTitle(filename)
-				);*/
-		/*
-		bvv_main = BvvFunctions.show( all_ch_RAI, "empty" ,Bvv.options().
-				dCam(btdata.dCam).
-				dClipNear(btdata.dClipNear).
-				dClipFar(btdata.dClipFar).				
-				renderWidth( BigTraceData.renderParams.nRenderW).
-				renderHeight( BigTraceData.renderParams.nRenderH).
-				numDitherSamples( BigTraceData.renderParams.numDitherSamples ).
-				cacheBlockSize( BigTraceData.renderParams.cacheBlockSize ).
-				maxCacheSizeInMB( BigTraceData.renderParams.maxCacheSizeInMB ).
-				ditherWidth(BigTraceData.renderParams.ditherWidth).
-				frameTitle(filename)
-				);
-		
-		*/
-		//imgx
-		bvv_main = BvvFunctions.show( imgx, "empty" ,Bvv.options().
-		//bvv_main = BvvFunctions.show( empty_view, "empty" ,Bvv.options().
+		Bvv Tempbvv = BvvFunctions.show( Bvv.options().
 				dCam(btdata.dCam).
 				dClipNear(btdata.dClipNear).
 				dClipFar(btdata.dClipFar).				
@@ -1299,10 +1263,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	for(int i=0;i<sources.size();i++)
 		{
-		//bvv_main.getSources()
-		
-			//bvv_sources.add(BvvFunctions.show( sources.get(i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));
-			bvv_sources.add(BvvFunctions.show( Views.hyperSlice(all_ch_RAI,4,i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(bvv_main)));			
+	
+			bvv_sources.add(BvvFunctions.show( Views.hyperSlice(all_ch_RAI,4,i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(Tempbvv)));
 			if(nBitDepth<=8)
 			{
 				bvv_sources.get(i).setDisplayRangeBounds(0, 255);
@@ -1319,9 +1281,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			bvv_sources.get(i).setRenderType(btdata.nRenderMethod);
 
 		}
-		bvv_main.removeFromBdv();
+		
 		bvv_main = bvv_sources.get(0);
-		//
+
 		panel = bvv_main.getBvvHandle().getViewerPanel();
 	}
 	
@@ -1369,14 +1331,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			}
 			(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transform);	 
 		}
+		
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
-		double [] minmaxBrightness = initBrightnessBVV( 0.001, 0.999, panel.state() );
+		
+		BvvGamma.initBrightness( 0.001, 0.999, panel.state(), panel.getConverterSetups());
 
-		for(int i=0;i<bvv_sources.size();i++)
-		{
-			bvv_sources.get(i).setDisplayRange(minmaxBrightness[0], minmaxBrightness[1]);
-			bvv_sources.get(i).setAlphaRange(minmaxBrightness[0], minmaxBrightness[1]);
-		}
 	}
 	
 	public void setInitialTransform()
