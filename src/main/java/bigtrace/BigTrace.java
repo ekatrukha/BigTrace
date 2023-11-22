@@ -2,11 +2,9 @@ package bigtrace;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.awt.image.IndexColorModel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -26,13 +24,10 @@ import org.scijava.ui.behaviour.util.Actions;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.jogamp.opengl.GL3;
 
-import ij.CompositeImage;
 import ij.IJ;
 import ij.ImageJ;
-import ij.ImagePlus;
 import ij.plugin.PlugIn;
-import ij.process.LUT;
-
+import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
@@ -40,12 +35,7 @@ import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
-
-import net.imglib2.img.Img;
-
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
-
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -54,9 +44,6 @@ import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
-import bdv.spimdata.SequenceDescriptionMinimal;
-import bdv.spimdata.SpimDataMinimal;
-import bdv.spimdata.XmlIoSpimDataMinimal;
 import bdv.tools.InitializeViewerState;
 import bdv.tools.transformation.TransformedSource;
 import bdv.util.Bounds;
@@ -102,23 +89,15 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** currently active and displayed volume **/
 	public ArrayList<IntervalView< T >>  sources = null;//new ArrayList<IntervalView< T >>();
 
-	/** colors for each channel **/
-	public Color [] colorsCh;
-	/** intensity range for channels **/
-	public double [][] channelRanges;
-	
-
-
 	/** whether or not TraceMode is active **/
 	private boolean bTraceMode = false;
-
-
-	/** input from ImageJ reader**/
-	//public Img<T> img_ImageJ= null;
 	
 	/** input from XML/HDF5 **/
-	public SpimDataMinimal spimData;
-
+	public SpimData spimData;
+	
+	public boolean bTestLLSTransform = false;
+	
+	public AffineTransform3D afDataTransform = new AffineTransform3D();
 	
 	/** input data in XYZC format**/
 	public RandomAccessibleInterval<T> all_ch_RAI;
@@ -131,21 +110,21 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** flag to check if user interface is frozen **/
 	public boolean bInputLock = false;
 	
-
 	/** visualization of coordinates origin axes **/
 	ArrayList<VisPolyLineSimple> originVis = new ArrayList<VisPolyLineSimple>();
 
 	/** box around volume **/
 	Box3D volumeBox;
 	
-	/** helper box to visualize things **/
+	/** helper box to visualize one-click tracing things **/
 	public Box3D visBox = null;
 
 	/** object storing main data/variables **/
-	public BigTraceData<T> btdata ;
+	public BigTraceData<T> btdata;
 	
-	/** bit depth of the source **/
-	public int nBitDepth = 8;
+	/** object loading data **/
+	public BigTraceLoad<T> btload;
+	
 	
 	/** BigTrace Panel **/
 	public BigTraceControlPanel<T> btpanel;
@@ -156,23 +135,26 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public void run(String arg)
 	{
 		btdata = new BigTraceData<T>(this);
+		btload = new BigTraceLoad<T>(this);
 		
 		if(arg.equals(""))
 		{
-			btdata.sFileNameFullImg=IJ.getFilePath("Open TIF/BDV file (3D, composite)...");
+			btdata.sFileNameFullImg = IJ.getFilePath("Open TIF/BDV file (3D, composite)...");
 		}
 		else
 		{
-			btdata.sFileNameFullImg=arg;
+			btdata.sFileNameFullImg = arg;
 		}
 
 		if(btdata.sFileNameFullImg==null)
 			return;
 		
+		
+		
 		if(btdata.sFileNameFullImg.endsWith(".tif"))
 		{
 			btdata.bBDVsource = false;
-			if(!initDataSourcesImageJ())
+			if(!btload.initDataSourcesImageJ())
 				return;
 		}
 		
@@ -180,7 +162,18 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			btdata.bBDVsource = true;
 			try {
-				if(!initDataSourcesHDF5())
+				if(!btload.initDataSourcesHDF5())
+					return;
+			} catch (SpimDataException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		if(btdata.sFileNameFullImg.endsWith(".czi"))
+		{
+			btdata.bBDVsource = true;
+			try {
+				if(!btload.initDataSourcesBioFormats())
 					return;
 			} catch (SpimDataException e) {
 				e.printStackTrace();
@@ -196,7 +189,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 
 		roiManager = new RoiManager3D(this);
-		init(0.25*Math.min(btdata.nDimIni[1][0], Math.min(btdata.nDimIni[1][1],btdata.nDimIni[1][2])));
+		initSourcesCanvas(0.25*Math.min(btdata.nDimIni[1][0], Math.min(btdata.nDimIni[1][1],btdata.nDimIni[1][2])));
 		
 	
 		
@@ -215,141 +208,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
         
 
 	}
-	
-	@SuppressWarnings("unchecked")
-	public boolean initDataSourcesImageJ()
-	{
 		
-		sources = new ArrayList<IntervalView< T >>();
-		
-		final ImagePlus imp = IJ.openImage( btdata.sFileNameFullImg );
-		
-		if (imp == null)
-		{
-			IJ.showMessage("BigTrace: cannot open selected TIF file. Plugin terminated.");
-			return false;
-		}
-		
-		
-		if(imp.getType()!=ImagePlus.GRAY8 && imp.getType()!=ImagePlus.GRAY16 && imp.getType()!=ImagePlus.GRAY32)
-		{
-			IJ.showMessage("Only 8-, 16- and 32-bit images supported for now.");
-			return false;
-		}
-
-		
-		BigTraceData.globCal[0] = imp.getCalibration().pixelWidth;
-		BigTraceData.globCal[1] = imp.getCalibration().pixelHeight;
-		BigTraceData.globCal[2] = imp.getCalibration().pixelDepth;
-		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
-		btdata.sVoxelUnit = imp.getCalibration().getUnit();
-		btdata.sTimeUnit = imp.getCalibration().getTimeUnit();
-		btdata.dFrameInterval = imp.getCalibration().frameInterval;
-		BigTraceData.nNumTimepoints = imp.getNFrames();
-		
-		Img<T> img_ImageJ;
-
-				
-		nBitDepth = imp.getBitDepth();
-		if(nBitDepth<=16)
-		{
-			img_ImageJ = ImageJFunctions.wrapReal(imp);
-		}
-		else
-		{
-			img_ImageJ = (Img<T>) VolumeMisc.convertFloatToUnsignedShort(ImageJFunctions.wrapReal(imp));
-		}
-		//long[] test = img_ImageJ.dimensionsAsLongArray();
-		
-		//let's convert it to XYZTC for BVV to understand
-		
-		
-		btdata.nTotalChannels=imp.getNChannels();
-		if(btdata.nTotalChannels==1)
-		{
-			//add dimension for the channels
-			all_ch_RAI = Views.addDimension(img_ImageJ, 0, 0);
-		}
-		else
-		{
-			//change the order of C and Z
-			all_ch_RAI = Views.permute(img_ImageJ, 2,3);
-		}
-		//test = all_ch_RAI.dimensionsAsLongArray();
-		
-
-		getChannelsColors(imp);
-
-		if(BigTraceData.nNumTimepoints==1)
-		{
-			all_ch_RAI = Views.addDimension(all_ch_RAI, 0, 0);
-			//test = all_ch_RAI.dimensionsAsLongArray();
-			if(btdata.nTotalChannels==1)
-			{
-				all_ch_RAI =Views.permute(all_ch_RAI, 3,4);
-			}
-			//test = all_ch_RAI.dimensionsAsLongArray();
-		}
-		//finally change C and T (or it can be already fine, if we added C dimension)
-		if(btdata.nTotalChannels>1)
-		{
-			all_ch_RAI =Views.permute(all_ch_RAI, 4,3);
-		}
-		//test = all_ch_RAI.dimensionsAsLongArray();
-		for(int i=0;i<btdata.nTotalChannels;i++)
-		{
-			sources.add(Views.hyperSlice(Views.hyperSlice(all_ch_RAI,4,i),3,0));
-		}
-
-		sources.get(0).min( btdata.nDimIni[0] );
-		sources.get(0).max( btdata.nDimIni[1] );
-		sources.get(0).min( btdata.nDimCurr[0] );
-		sources.get(0).max( btdata.nDimCurr[1] );
-		
-		return true;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public boolean initDataSourcesHDF5() throws SpimDataException
-	{
-		
-		sources = new ArrayList<IntervalView< T >>();
-		
-		spimData = new XmlIoSpimDataMinimal().load( btdata.sFileNameFullImg );
-
-		
-		final SequenceDescriptionMinimal seq = spimData.getSequenceDescription();
-		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
-
-		RandomAccessibleInterval<T> raitest = (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0);
-		
-		raitest.min( btdata.nDimIni[0] );
-		raitest.max( btdata.nDimIni[1] );
-		raitest.min( btdata.nDimCurr[0] );
-		raitest.max( btdata.nDimCurr[1] );
-		
-		btdata.sVoxelUnit=seq.getViewSetupsOrdered().get(0).getVoxelSize().unit();
-		
-		btdata.nTotalChannels = seq.getViewSetupsOrdered().size();
-
-		
-		
-		for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
-		{
-			sources.add(Views.interval((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0),raitest));
-		}
-		
-		//TODO FOR NOW, get it from the class
-		//not really needed later, but anyway
-		nBitDepth = 16;
-		colorsCh = new Color[btdata.nTotalChannels];
-		channelRanges = new double [2][btdata.nTotalChannels];
-		
-		
-		return true;
-		
-	}
-	
 	public void initOriginAndBox(double axis_length)
 	{
 		int i;
@@ -379,7 +238,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		volumeBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 	}
-	public void init(double origin_axis_length)
+	public void initSourcesCanvas(double origin_axis_length)
 	{
 		
 		initOriginAndBox(origin_axis_length);
@@ -901,24 +760,17 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	/** returns current Interval for the tracing. If bCroppedInterval is true,
 	 * returns cropped area, otherwise returns full original volume. **/
-	@SuppressWarnings("unchecked")
-	IntervalView<?> getTraceInterval(boolean bCroppedInterval)
+	IntervalView<T> getTraceInterval(boolean bCroppedInterval)
 	{
 		if(bCroppedInterval)
 		{
-			return sources.get(btdata.nChAnalysis);
+			return btdata.getDataSourceCropped(btdata.nChAnalysis, btdata.nCurrTimepoint);
 		}
 		else
 		{
-			if(btdata.bBDVsource)
-			{
-				RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(btdata.nChAnalysis).getImage(btdata.nCurrTimepoint);
-				return Views.interval(full_int, full_int);
-			}
-			else
-			{
-				return Views.hyperSlice(Views.hyperSlice(all_ch_RAI,4,btdata.nChAnalysis),3,btdata.nCurrTimepoint);
-			}
+			RandomAccessibleInterval<T> full_int = btdata.getDataSourceFull(btdata.nChAnalysis, btdata.nCurrTimepoint);
+			
+			return Views.interval(full_int, full_int);
 		}
 	}
 	
@@ -1265,7 +1117,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 	
 			bvv_sources.add(BvvFunctions.show( Views.hyperSlice(all_ch_RAI,4,i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(Tempbvv)));
-			if(nBitDepth<=8)
+			if(btdata.nBitDepth<=8)
 			{
 				bvv_sources.get(i).setDisplayRangeBounds(0, 255);
 				bvv_sources.get(i).setAlphaRangeBounds(0, 255);
@@ -1275,9 +1127,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				bvv_sources.get(i).setDisplayRangeBounds(0, 65535);
 				bvv_sources.get(i).setAlphaRangeBounds(0, 65535);
 			}
-			bvv_sources.get(i).setColor( new ARGBType( colorsCh[i].getRGB() ));
-			bvv_sources.get(i).setDisplayRange(channelRanges[0][i], channelRanges[1][i]);
-			bvv_sources.get(i).setAlphaRange(channelRanges[0][i], channelRanges[1][i]);
+			bvv_sources.get(i).setColor( new ARGBType( btload.colorsCh[i].getRGB() ));
+			bvv_sources.get(i).setDisplayRange(btload.channelRanges[0][i], btload.channelRanges[1][i]);
+			bvv_sources.get(i).setAlphaRange(btload.channelRanges[0][i], btload.channelRanges[1][i]);
 			bvv_sources.get(i).setRenderType(btdata.nRenderMethod);
 
 		}
@@ -1292,7 +1144,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 		Path p = Paths.get(btdata.sFileNameFullImg);
 		String filename = p.getFileName().toString();
-		List<BvvStackSource<?>> sourcesSPIM = BvvFunctions.show( spimData,Bvv.options().
+		List<BvvStackSource<?>> sourcesSPIM = BvvFunctions.show(spimData,Bvv.options().
 				dCam(btdata.dCam).
 				dClipNear(btdata.dClipNear).
 				dClipFar(btdata.dClipFar).				
@@ -1305,7 +1157,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				dCam( btdata.dCam ).
 				dClipNear( btdata.dClipNear ).
 				dClipFar( btdata.dClipFar ).
-				frameTitle(filename)
+				frameTitle(filename)//.
+				//sourceTransform(afDataTransform)
 				);		
 		
 		for(int i=0;i<sourcesSPIM.size();i++)
@@ -1317,20 +1170,54 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		bvv_main = bvv_sources.get(0);
 		panel = bvv_main.getBvvHandle().getViewerPanel();
 		
-		//remove scale transforms for all sources. It is assumed all channels have the same
-		// and currently there is on scale in the Viewer.
+		//AffineTransform3D transformfin = new AffineTransform3D();
+
+
+		
+		// Remove scale and translation transforms for all sources.
+		// From the scale transform we get pixel size (not sure it is correct).
+		// Later pixel size transform is applied to the general ViewerPanel.
 		for ( SourceAndConverter< ? > source : panel.state().getSources() )
 		{
-			AffineTransform3D transform = new AffineTransform3D();
-			(( TransformedSource< ? > ) source.getSpimSource() ).getSourceTransform(0, 0, transform);
-	
+			AffineTransform3D transformSource = new AffineTransform3D();
+
+			(( TransformedSource< ? > ) source.getSpimSource() ).getSourceTransform(0, 0, transformSource);
+			
+			AffineTransform3D transformScale = new AffineTransform3D();
+			AffineTransform3D transformTranslation = new AffineTransform3D();
+			transformTranslation.identity();
+			double [] shiftTR = new double [3];
 			for(int j=0;j<3;j++)
 			{
-				BigTraceData.globCal[j]=transform.get(j, j);
-				transform.set(1.0/transform.get(j, j), j, j);
+				BigTraceData.globCal[j] = transformSource.get(j, j);
+				transformScale.set(1.0/transformSource.get(j, j), j, j);
+				shiftTR[j]= (-1.0)*transformSource.get(j, 3);
 			}
-			(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transform);	 
+			transformTranslation.identity();
+			transformTranslation.translate(shiftTR);
+			//AffineTransform3D transformFinal = transformScale.concatenate(transformTranslation);
+			AffineTransform3D transformFinal = transformScale.concatenate(transformTranslation);
+			(( TransformedSource< ? > ) source.getSpimSource() ).setFixedTransform(transformFinal);
+//			(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transformFinal);
+			
+			//(( TransformedSource< ? > ) source.getSpimSource() ).getSourceTransform(0, 0, transformfin);
 		}
+
+		if(bTestLLSTransform)
+		{
+			//remove translation
+			for ( SourceAndConverter< ? > source : panel.state().getSources() )
+			{
+				//AffineTransform3D transform = new AffineTransform3D();
+				//(( TransformedSource< ? > ) source.getSpimSource() ).getIncrementalTransform(transform);
+				BigTraceData.globCal[0]=1.0;
+				BigTraceData.globCal[1]=1.0;
+				BigTraceData.globCal[2]=1.0;
+				(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(afDataTransform);				
+				//(( TransformedSource< ? > ) source.getSpimSource() ).getSourceTransform(0, 0, transformfin);
+			}
+		}
+
 		
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		
@@ -1644,52 +1531,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}	
 		
 	}
-	/** creates and fills array colorsCh with channel colors,
-	 * taken from Christian Tischer reply in this thread
-	 * https://forum.image.sc/t/composite-image-channel-color/45196/3 **/
-	public void getChannelsColors(ImagePlus imp)
-	{
-		colorsCh = new Color[imp.getNChannels()];
-		channelRanges = new double [2][imp.getNChannels()];
-	      for ( int c = 0; c < imp.getNChannels(); ++c )
-	        {
-	            if ( imp instanceof CompositeImage )
-	            {
-	                CompositeImage compositeImage = ( CompositeImage ) imp;
-					LUT channelLut = compositeImage.getChannelLut( c + 1 );
-					int mode = compositeImage.getMode();
-					if ( channelLut == null || mode == CompositeImage.GRAYSCALE )
-					{
-						colorsCh[c] = Color.WHITE;
-					}
-					else
-					{
-						IndexColorModel cm = channelLut.getColorModel();
-						if ( cm == null )
-						{
-							colorsCh[c] = Color.WHITE;
-						}
-						else
-						{
-							int i = cm.getMapSize() - 1;
-							colorsCh[c] = new Color(cm.getRed( i ) ,cm.getGreen( i ) ,cm.getBlue( i ) );
 
-						}
-
-					}
-
-					compositeImage.setC( c + 1 );
-					channelRanges[0][c]=(int)imp.getDisplayRangeMin();
-					channelRanges[1][c]=(int)imp.getDisplayRangeMax();
-	            }
-	            else
-	            {
-	            	colorsCh[c] = Color.WHITE;
-	    			channelRanges[0][c]=(int)imp.getDisplayRangeMin();
-					channelRanges[1][c]=(int)imp.getDisplayRangeMax();
-	            }
-	        }
-	}
 	@Override
 	public void timePointChanged(int timePointIndex) {
 			

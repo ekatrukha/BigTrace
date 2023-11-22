@@ -3,12 +3,15 @@ package bigtrace;
 import java.util.ArrayList;
 import java.util.List;
 
-import bdv.spimdata.SequenceDescriptionMinimal;
 import bigtrace.gui.BCsettings;
 import bigtrace.gui.RenderSettings;
 import ij.Prefs;
+import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealRandomAccessible;
+import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -19,16 +22,27 @@ import net.imglib2.view.Views;
 public class BigTraceData < T extends RealType< T > > {
 
 	/** current plugin version **/
-	public static String sVersion = "0.3.3";
+	public static String sVersion = "0.3.4";
 	
-	/** plugin instanse **/
+	/** plugin instance **/
 	BigTrace<T> bt;
+	
+	//////////////input dataset characteristics 
 	
 	/** path and full input filename **/
 	public String sFileNameFullImg;
 	
 	/** if the source is BDV HDF file, it is true, otherwise we take it from ImageJ **/
 	public boolean bBDVsource = false;
+	
+	/** bit depth of the sources **/
+	public int nBitDepth = 8;
+	
+	/** total number of channels in the dataset**/
+	public int nTotalChannels = 0;
+	
+	/** total number of TimePoints**/
+	static public int nNumTimepoints = 0;
 	
 	///////////////////////////// volume/image  and rendering
 	
@@ -79,14 +93,9 @@ public class BigTraceData < T extends RealType< T > > {
 	/** the number of current channel used for analysis/tracing **/
 	public int nChAnalysis = 0;
 	
-	/** total number of channels in the dataset**/
-	public int nTotalChannels = 0;
-	
 	/** currently selected timePoint**/
 	public int nCurrTimepoint = 0;
 	
-	/** total number of TimePoints**/
-	static public int nNumTimepoints = 0;
 	
 	/** whether or not deselect ROI on time point change **/
 	public boolean bDeselectROITime = true;
@@ -229,18 +238,10 @@ public class BigTraceData < T extends RealType< T > > {
 	
 	/** returns data sources for specific channel and time point,
 	 * limits output to the current cropped area **/
-	@SuppressWarnings("unchecked")
 	public IntervalView< T > getDataSourceCropped(final int nChannel, final int nTimePoint)
-	{
-		if(bBDVsource)
-		{
-			return Views.interval((RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint), nDimCurr[0], nDimCurr[1]);
-		}
-		else
-		{
-			return Views.interval(Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,nChannel),3,nTimePoint), nDimCurr[0], nDimCurr[1]);
-			
-		}
+	{		
+		return Views.interval(getDataSourceFull(nChannel,nTimePoint),nDimCurr[0], nDimCurr[1]);
+
 	}
 	
 	/** returns data sources for specific channel and time point,
@@ -250,7 +251,19 @@ public class BigTraceData < T extends RealType< T > > {
 	{
 		if(bBDVsource)
 		{
-			return (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
+			RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
+			if(bt.bTestLLSTransform)
+			{
+				NearestNeighborInterpolatorFactory< T > factoryInt =
+						new NearestNeighborInterpolatorFactory<>();
+				RealRandomAccessible<T> rra = Views.interpolate(Views.extendZero(full_int), factoryInt);
+				RealRandomAccessible<T> rra_tr = RealViews.affine(rra, bt.afDataTransform);
+				return Views.interval(Views.raster(rra_tr), new FinalInterval(nDimIni[0],nDimIni[1]));	
+			}
+			else
+			{
+				return (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
+			}
 		}
 		else
 		{
@@ -259,25 +272,23 @@ public class BigTraceData < T extends RealType< T > > {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public RandomAccessibleInterval<T> getAllDataRAI()
 	{
 		//output should be XYZTC
 		
 		if(bBDVsource)
 		{
-			final SequenceDescriptionMinimal seq = bt.spimData.getSequenceDescription();
 			
 			List<RandomAccessibleInterval<T>> raiXYZTC = new ArrayList<RandomAccessibleInterval<T>> ();
+
 			List<RandomAccessibleInterval<T>> raiXYZT;// = new ArrayList<RandomAccessibleInterval<T>> ();
 			
-			
-			for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
+			for (int nCh=0; nCh < nTotalChannels; nCh++)
 			{
 				raiXYZT = new ArrayList<RandomAccessibleInterval<T>> ();
 				for(int nTimePoint = 0;nTimePoint<BigTraceData.nNumTimepoints;nTimePoint++)
 				{
-					raiXYZT.add((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(nTimePoint));
+					raiXYZT.add(getDataSourceFull(nCh,nTimePoint));
 				}
 				raiXYZTC.add(Views.stack(raiXYZT));
 			}
