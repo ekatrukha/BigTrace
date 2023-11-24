@@ -49,6 +49,10 @@ public class BigTraceData < T extends RealType< T > > {
 	static public int nNumTimepoints = 0;
 	
 	///////////////////////DATASET PROCESSING/MEASURE SETTING
+
+	/** voxel size determined from input file  **/
+	public static double [] inputCal = new double [3];
+	
 	/** global voxel size (for now one for all)  **/
 	public static double [] globCal = new double [3];
 	

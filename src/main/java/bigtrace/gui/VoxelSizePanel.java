@@ -154,4 +154,14 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 		else 
 			return false;
 	}
+	
+	public void allowVoxelSizeChange(boolean allow)
+	{
+		for(int i=0;i<3;i++)
+		{
+			nfAllSize[i].setTFEnabled(allow);
+		}
+		tfUnits.setEnabled(allow);
+	}
+
 }

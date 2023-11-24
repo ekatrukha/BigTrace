@@ -68,6 +68,7 @@ public class NumberField extends JPanel {
 				System.out.println("value changed to " + v);
 			}
 		});
+		//nf.setTFEnabled(false);
 		JFrame frame = new JFrame("");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(nf);
@@ -218,6 +219,10 @@ public class NumberField extends JPanel {
 			int intVal = (int)Math.round(Double.parseDouble(getText()));
 			setTextAndFire(Integer.toString(intVal));
 		}
+	}
+	public void setTFEnabled(boolean enabled)
+	{
+		textfield.setEnabled(enabled);
 	}
 
 	public NumberField(int n) {

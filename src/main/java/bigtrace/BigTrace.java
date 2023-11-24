@@ -1214,6 +1214,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				//adjust pixel size to homogeneous scaling
 				for(int d=0;d<3;d++)
 				{
+					//store original values
+					BigTraceData.inputCal[d] = BigTraceData.globCal[d];
+					//since we are resampling
 					BigTraceData.globCal[d] = BigTraceData.dMinVoxelSize;
 				}
 

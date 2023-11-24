@@ -179,6 +179,10 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 				voxelChanged(newVoxelSize);
 			}
 		});
+		if(bt.bTestLLSTransform)
+		{
+			voxelSizePanel.allowVoxelSizeChange(false);
+		}
 		
 		//CROP PANEL
 		cropPanel = new CropPanel(btdata.nDimIni[1]);
@@ -266,7 +270,14 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		
 		//Voxel size panel
 	    JPanel panVoxel=new JPanel(new GridBagLayout()); 
-	    panVoxel.setBorder(new PanelTitle(" Voxel size "));
+	    if(bt.bTestLLSTransform)
+	    {
+	    	panVoxel.setBorder(new PanelTitle(" Voxel size (LLS transformed) "));
+	    }
+	    else
+	    {
+	    	panVoxel.setBorder(new PanelTitle(" Voxel size "));
+	    }
 		
 	    c.gridx=0;
 	    c.gridy=0;
