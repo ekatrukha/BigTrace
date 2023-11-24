@@ -7,8 +7,12 @@ import bigtrace.gui.BCsettings;
 import bigtrace.gui.RenderSettings;
 import ij.Prefs;
 import net.imglib2.FinalInterval;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
+import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.interpolation.randomaccess.ClampingNLinearInterpolatorFactory;
+import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
@@ -44,14 +48,7 @@ public class BigTraceData < T extends RealType< T > > {
 	/** total number of TimePoints**/
 	static public int nNumTimepoints = 0;
 	
-	///////////////////////////// volume/image  and rendering
-	
-	/** dimensions of the volume/image (without crop) **/
-	public long [][] nDimIni = new long [2][3];
-	
-	/** current dimensions of the volume/image (after crop) **/
-	public long [][] nDimCurr = new long [2][3];
-	
+	///////////////////////DATASET PROCESSING/MEASURE SETTING
 	/** global voxel size (for now one for all)  **/
 	public static double [] globCal = new double [3];
 	
@@ -67,6 +64,30 @@ public class BigTraceData < T extends RealType< T > > {
 	/** frame interval  **/
 	public double dFrameInterval = 1.0;
 	
+	/** the number of current channel used for analysis/tracing **/
+	public int nChAnalysis = 0;
+	
+	/** currently selected timePoint**/
+	public int nCurrTimepoint = 0;	
+	
+	/** interpolation factory for intensity/volume quantification **/
+	public InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory;
+	
+	/** Intensity interpolation types **/
+	public static final int INT_NearestNeighbor=0, INT_NLinear=1, INT_Lanczos=2; 
+	
+	
+	/** current intensity interpolation type **/	
+	public static int intensityInterpolation = (int)Prefs.get("BigTrace.IntInterpolation",INT_NLinear);
+	
+	///////////////////////////// VOLUME RENDERING
+	
+	/** dimensions of the volume/image (without crop) **/
+	public long [][] nDimIni = new long [2][3];
+	
+	/** current dimensions of the volume/image (after crop) **/
+	public long [][] nDimCurr = new long [2][3];
+
 	/** whether or not display color coded origin of coordinates **/
 	public boolean bShowOrigin = true;
 	
@@ -88,30 +109,56 @@ public class BigTraceData < T extends RealType< T > > {
 	public BCsettings bcTraceChannel = new BCsettings();
 	
 	/** object to store brightness/alpha range of the tracebox **/
-	public BCsettings bcTraceBox = new BCsettings();
-	
-	/** the number of current channel used for analysis/tracing **/
-	public int nChAnalysis = 0;
-	
-	/** currently selected timePoint**/
-	public int nCurrTimepoint = 0;
-	
-	
-	/** whether or not deselect ROI on time point change **/
-	public boolean bDeselectROITime = true;
+	public BCsettings bcTraceBox = new BCsettings();	
 	
 	/** dataset rendering method 
 	 * 0 maximum intensity, 
 	 * 1 volumetric **/
 	public int nRenderMethod = (int)Prefs.get("BigTrace.nRenderMethod",0.0);
+	
+	/////////////////////////////////GLOBAL ROI APPEARANCE SETTINGS
+	
+	/** whether or not deselect ROI on time point change **/
+	public boolean bDeselectROITime = true;
+	
+	/** ROI shape interpolation types **/
+	public static final int SHAPE_Voxel=0, SHAPE_Smooth=1, SHAPE_Spline=2; 
+	
+	/** current ROI shape interpolation **/
+	public static int shapeInterpolation = (int) Prefs.get("BigTrace.ShapeInterpolation",SHAPE_Spline);
+	
+	/** algorithm to build rotation minimizing frame **/
+	public static int rotationMinFrame = (int) Prefs.get("BigTrace.RotationMinFrame",0);
+	
+	/** size of moving average window to smooth traces (in points) **/
+	public static int nSmoothWindow = (int) Prefs.get("BigTrace.nSmoothWindow", 5);
+
+	/** number of segments in the cylinder cross-section (for polyline/trace ROIs),
+	 *  3 = prism, 4 = cuboid, etc.
+	 *  The more the number, more smooth is surface **/
+	public static int sectorN = (int) Prefs.get("BigTrace.nSectorN", 16);
+	
+	/** approximate distance between contrours along the pipe visualizing a curve
+	 *  in minimum voxel size units **/
+	public static int wireCountourStep = (int) Prefs.get("BigTrace.wireCountourStep",1);
+	
+	/** step of gridline displaying cross-section ROI in wired mode (in voxels)**/
+	public static int crossSectionGridStep = (int) Prefs.get("BigTrace.crossSectionGridStep", 20);
+	
+	//////rendering ROI over time
+	
+	/** time rendering option **/
+	public static int timeRender = (int) Prefs.get("BigTrace.timeRender",0);
+	
+	/** time rendering fade in frames **/
+	public static int timeFade = (int) Prefs.get("BigTrace.timeFade",0);
 		
-	/////////////////////////////////clicking interface 
+	/////////////////////////////////USER INTERFACE "CLICKING"
 	
 	/** half size of rectangle around click point (in screen pixels)
 	 * used to find maximum intensity voxel **/
 	public int nHalfClickSizeWindow = (int)Prefs.get("BigTrace.nHalfClickSizeWindow",5.0);
-	
-	
+		
 	/** whether to crop volume when zooming **/
 	public boolean bZoomCrop = Prefs.get("BigTrace.bZoomCrop", false);
 	
@@ -124,7 +171,7 @@ public class BigTraceData < T extends RealType< T > > {
 	/** animation speed, i.e. duration of transform **/
 	public long nAnimationDuration =  (int)Prefs.get("BigTrace.nAnimationDuration",400);
 		
-	///////////////////////////// TRACING
+	///////////////////////////// SEMI-AUTO TRACING DATA
 	
 	/** weights of curve probability (saliency) for the trace box**/
 	public IntervalView< UnsignedByteType > trace_weights = null;
@@ -173,36 +220,8 @@ public class BigTraceData < T extends RealType< T > > {
 	/** directionality constrain for one click **/
 	public double dDirectionalityOneClick;
 	
-	/** ROI shape interpolation types **/
-	public static final int SHAPE_Voxel=0, SHAPE_Smooth=1, SHAPE_Spline=2; 
 	
-	/** current ROI shape interpolation **/
-	public static int shapeInterpolation = (int) Prefs.get("BigTrace.ShapeInterpolation",SHAPE_Spline);
-	
-	/** algorithm to build rotation minimizing frame **/
-	public static int rotationMinFrame = (int) Prefs.get("BigTrace.RotationMinFrame",0);
-	
-	/** size of moving average window to smooth traces (in points) **/
-	public static int nSmoothWindow = (int) Prefs.get("BigTrace.nSmoothWindow", 5);
-
-	/** number of segments in the cylinder cross-section (for polyline/trace ROIs),
-	 *  3 = prism, 4 = cuboid, etc.
-	 *  The more the number, more smooth is surface **/
-	public static int sectorN = (int) Prefs.get("BigTrace.nSectorN", 16);
-	
-	/** approximate distance between contrours along the pipe visualizing a curve
-	 *  in minimum voxel size units **/
-	public static int wireCountourStep = (int) Prefs.get("BigTrace.wireCountourStep",1);
-	
-	/** step of gridline displaying cross-section ROI in wired mode (in voxels)**/
-	public static int crossSectionGridStep = (int) Prefs.get("BigTrace.crossSectionGridStep", 20);
-	
-	/** time rendering option **/
-	public static int timeRender = (int) Prefs.get("BigTrace.timeRender",0);
-	
-	/** time rendering fade in frames **/
-	public static int timeFade = (int) Prefs.get("BigTrace.timeFade",0);
-	
+	/** storage of the dataset orientation before entering TraceBox mode **/
 	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
 	
 
@@ -234,6 +253,8 @@ public class BigTraceData < T extends RealType< T > > {
 		
 		nVertexPlacementPointN = (int) Prefs.get("BigTrace.nVertexPlacementPointN", 10);
 		dDirectionalityOneClick = Prefs.get("BigTrace.dDirectionalityOneClick", 0.6);
+		//init interpolation factory
+		setInterpolationFactory();
 	}
 	
 	/** returns data sources for specific channel and time point,
@@ -254,9 +275,7 @@ public class BigTraceData < T extends RealType< T > > {
 			RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
 			if(bt.bTestLLSTransform)
 			{
-				NearestNeighborInterpolatorFactory< T > factoryInt =
-						new NearestNeighborInterpolatorFactory<>();
-				RealRandomAccessible<T> rra = Views.interpolate(Views.extendZero(full_int), factoryInt);
+				RealRandomAccessible<T> rra = Views.interpolate(Views.extendZero(full_int), nInterpolatorFactory);
 				RealRandomAccessible<T> rra_tr = RealViews.affine(rra, bt.afDataTransform);
 				return Views.interval(Views.raster(rra_tr), new FinalInterval(nDimIni[0],nDimIni[1]));	
 			}
@@ -298,6 +317,26 @@ public class BigTraceData < T extends RealType< T > > {
 		else
 		{
 			return bt.all_ch_RAI;
+		}
+	}
+	
+	public void setInterpolationFactory()
+	{
+		switch (intensityInterpolation)
+		{
+			case INT_NearestNeighbor:
+				nInterpolatorFactory = new NearestNeighborInterpolatorFactory<T>();
+				break;
+			case INT_NLinear:
+				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<T>();
+				break;
+			case INT_Lanczos:
+				nInterpolatorFactory = new LanczosInterpolatorFactory<T>();
+				break;
+			default:
+				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<T>();
+				break;
+				
 		}
 	}
 }

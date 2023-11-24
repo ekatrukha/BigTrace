@@ -124,7 +124,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		ArrayList< RealPoint > planeNorm;
 
 		double [] current_point = new double [3];
-		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(all_RAI), bt.roiManager.roiMeasure.nInterpolatorFactory);
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(all_RAI), bt.btdata.nInterpolatorFactory);
 		final RealRandomAccess<T> ra = interpolate.realRandomAccess();
 		final RandomAccess<T> ra_out = out1.randomAccess();
 	

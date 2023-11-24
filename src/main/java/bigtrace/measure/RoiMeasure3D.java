@@ -63,7 +63,8 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	 * 
 	 */
 	private static final long serialVersionUID = -4635723145578489755L;
-	BigTrace<T> bt;
+	final BigTrace<T> bt;
+	final BigTraceData<T> btdata;
 	
 	JButton butLineProfile;
 	JButton butLineAlignment;
@@ -80,15 +81,10 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	// Order must agree with order of checkboxes in Set Measurements dialog box
 	private static final int[] list = { LENGTH,  DIST_ENDS, MEAN, STD_DEV, STRAIGHTNESS, ENDS_COORDS, ENDS_DIR};
 	private static final String[] colTemplates = { "Length", "Distance_between_ends", "Mean_intensity", "SD_intensity", "Straightness", "End_","Direction_"};
-
-	public InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory;
-	
-	public static final int INT_NearestNeighbor=0, INT_NLinear=1, INT_Lanczos=2; // Intensity interpolation types
 	
 
 	private static int systemMeasurements = (int)Prefs.get("BigTrace.Measurements",LENGTH+MEAN);
-	
-	private static int intensityInterpolation = (int)Prefs.get("BigTrace.IntInterpolation",INT_NLinear);
+
 
 	private double [] coalignVector;
 	private boolean bAlignCosine = Prefs.get("BigTrace.bAlignCosine", true);
@@ -100,6 +96,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	public RoiMeasure3D(BigTrace<T> bt)
 	{
 		this.bt = bt;
+		this.btdata = bt.btdata;
 		int nButtonSize = 40;
 			
 		coalignVector = new double [3];
@@ -112,7 +109,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		
 		rt = systemRT;
 		
-		setInterpolationFactory();
+		btdata.setInterpolationFactory();
 		JPanel panLineTools = new JPanel(new GridBagLayout());  
 		panLineTools.setBorder(new PanelTitle(" Tools "));
 
@@ -309,7 +306,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		JComboBox<String> intensityInterpolationList = new JComboBox<String>(sIntInterpolationType);
 		pMeasureSettings.add(new JLabel(" "));
 		pMeasureSettings.add(new JLabel("Intensity interpolation: "));
-		intensityInterpolationList.setSelectedIndex(intensityInterpolation);
+		intensityInterpolationList.setSelectedIndex(BigTraceData.intensityInterpolation);
 		pMeasureSettings.add(intensityInterpolationList);
 		
 		String[] sShapeInterpolationType = { "Voxel", "Smooth", "Spline"};
@@ -347,9 +344,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			Prefs.set("BigTrace.Measurements", systemMeasurements);
 			
 			//intensity interpolation
-			intensityInterpolation=intensityInterpolationList.getSelectedIndex();
-			Prefs.set("BigTrace.IntInterpolation",intensityInterpolation);
-			setInterpolationFactory();
+			BigTraceData.intensityInterpolation = intensityInterpolationList.getSelectedIndex();
+			Prefs.set("BigTrace.IntInterpolation",BigTraceData.intensityInterpolation);
+			btdata.setInterpolationFactory();
 			
 			
 			if(BigTraceData.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText())||
@@ -694,7 +691,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		{
 		
 			case Roi3D.POINT:
-				val.intensity_values = ((Point3D)roi).getIntensityValues(source, nInterpolatorFactory);
+				val.intensity_values = ((Point3D)roi).getIntensityValues(source, btdata.nInterpolatorFactory);
 				//val.intensity_values = ((Point3D)roi).getIntensityValuesTEST(bt,source, nInterpolatorFactory);
 				if(val.intensity_values != null)
 				{
@@ -705,7 +702,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			case Roi3D.LINE_TRACE:
 				
 				//li_profile = ((AbstractCurve3D)roi).getIntensityProfile(source, BigTraceData.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),btdata.nInterpolatorFactory, BigTraceData.shapeInterpolation);
 
 				if (li_profile!=null)
 				{
@@ -731,7 +728,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			case Roi3D.POINT:
 				if(val.intensity_values == null)
 				{
-					val.intensity_values = ((Point3D)roi).getIntensityValues(source, nInterpolatorFactory);
+					val.intensity_values = ((Point3D)roi).getIntensityValues(source, btdata.nInterpolatorFactory);
 					
 				}
 				if((systemMeasurements&MEAN)!=0) 
@@ -748,7 +745,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			case Roi3D.LINE_TRACE:
 				if(val.intensity_values==null)
 				{
-					li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+					li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),btdata.nInterpolatorFactory, BigTraceData.shapeInterpolation);
 					if(li_profile!=null)
 					{
 						val.intensity_values = li_profile[1].clone();
@@ -841,7 +838,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			case Roi3D.POLYLINE:
 			case Roi3D.LINE_TRACE:				
 				
-				li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),nInterpolatorFactory, BigTraceData.shapeInterpolation);
+				li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),btdata.nInterpolatorFactory, BigTraceData.shapeInterpolation);
 				
 				break;			
 		}
@@ -887,25 +884,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		return li_profile;
 	}
 	
-	public void setInterpolationFactory()
-	{
-		switch (intensityInterpolation)
-		{
-			case INT_NearestNeighbor:
-				nInterpolatorFactory = new NearestNeighborInterpolatorFactory<T>();
-				break;
-			case INT_NLinear:
-				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<T>();
-				break;
-			case INT_Lanczos:
-				nInterpolatorFactory = new LanczosInterpolatorFactory<T>();
-				break;
-			default:
-				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<T>();
-				break;
-				
-		}
-	}
+
 	
 	public static double getMeanDoubleArray(final double [] values)
 	{

@@ -134,6 +134,14 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 	public void run(String arg)
 	{
+		//switch to FlatLaf theme
+		
+		try {
+		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
+		} catch( Exception ex ) {
+		    System.err.println( "Failed to initialize LaF" );
+		}
+		
 		btdata = new BigTraceData<T>(this);
 		btload = new BigTraceLoad<T>(this);
 		
@@ -194,11 +202,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 		
 		
-		try {
-		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
-		} catch( Exception ex ) {
-		    System.err.println( "Failed to initialize LaF" );
-		}
+
 		//not sure we really need it, but anyway
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -1172,11 +1176,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		//AffineTransform3D transformfin = new AffineTransform3D();
 
-
-		
-		// Remove scale and translation transforms for all sources.
-		// From the scale transform we get pixel size (not sure it is correct).
-		// Later pixel size transform is applied to the general ViewerPanel.
+		// Remove voxel scale and any translation transforms for all sources.
+		// We needed it, because later voxel size transform is applied to the general ViewerPanel.
 		for ( SourceAndConverter< ? > source : panel.state().getSources() )
 		{
 			AffineTransform3D transformSource = new AffineTransform3D();
@@ -1189,8 +1190,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			double [] shiftTR = new double [3];
 			for(int j=0;j<3;j++)
 			{
-				BigTraceData.globCal[j] = transformSource.get(j, j);
-				transformScale.set(1.0/transformSource.get(j, j), j, j);
+				//BigTraceData.globCal[j] = transformSource.get(j, j);
+				transformScale.set(1.0/BigTraceData.globCal[j], j, j);
 				shiftTR[j]= (-1.0)*transformSource.get(j, 3);
 			}
 			transformTranslation.identity();
@@ -1208,19 +1209,17 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			//remove translation
 			for ( SourceAndConverter< ? > source : panel.state().getSources() )
 			{
-				//AffineTransform3D transform = new AffineTransform3D();
-				//(( TransformedSource< ? > ) source.getSpimSource() ).getIncrementalTransform(transform);
-				BigTraceData.globCal[0]=1.0;
-				BigTraceData.globCal[1]=1.0;
-				BigTraceData.globCal[2]=1.0;
-				(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(afDataTransform);				
-				//(( TransformedSource< ? > ) source.getSpimSource() ).getSourceTransform(0, 0, transformfin);
+
+				(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(afDataTransform);
+				//adjust pixel size to homogeneous scaling
+				for(int d=0;d<3;d++)
+				{
+					BigTraceData.globCal[d] = BigTraceData.dMinVoxelSize;
+				}
+
 			}
 		}
 
-		
-		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
-		
 		BvvGamma.initBrightness( 0.001, 0.999, panel.state(), panel.getConverterSetups());
 
 	}

@@ -5,7 +5,7 @@ import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.util.ArrayList;
 
-
+import javax.swing.JOptionPane;
 
 import bigtrace.volume.VolumeMisc;
 import ch.epfl.biop.bdv.img.OpenersToSpimData;
@@ -19,8 +19,10 @@ import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.sequence.SequenceDescription;
+import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
@@ -63,8 +65,15 @@ public class BigTraceLoad < T extends RealType< T > >
 
 		
 		final SequenceDescription seq = bt.spimData.getSequenceDescription();
+		
+		//get voxel size
+		for (int d =0;d<3;d++)
+		{
+			BigTraceData.globCal[d] = seq.getViewDescription(0,0).getViewSetup().getVoxelSize().dimension(0);
+		}
+		//number of timepoints
 		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
-
+		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		
 		FinalInterval rai_int = new FinalInterval((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0));
 
@@ -112,9 +121,19 @@ public class BigTraceLoad < T extends RealType< T > >
 		bt.spimData = (SpimData) OpenersToSpimData.getSpimData(settings);	
 
 		final SequenceDescription seq = bt.spimData.getSequenceDescription();
+
+		//get voxel size
+		for (int d =0;d<3;d++)
+		{
+			BigTraceData.globCal[d] = seq.getViewDescription(0,0).getViewSetup().getVoxelSize().dimension(d);
+		}
+		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		
+		//number of timepoints
+		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
+		
+		//see if data comes from LLS7
 		String sTestLLS = seq.getViewDescription(0, 0).getViewSetup().getName();
-		
 		if(sTestLLS.length()>3)
 		{
 		
@@ -122,56 +141,32 @@ public class BigTraceLoad < T extends RealType< T > >
 			
 			if(isLLS.equals("LLS"))
 			{
-				//TODO: show a dialog
-				bt.bTestLLSTransform = true;
+				if (JOptionPane.showConfirmDialog(null, "Looks like the input comes from Zeiss LLS7.\nDo you want to deskew it?\n"
+						+ "(if it is already deskewed, click No)", "Loading option",
+				        JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+				    // yes option
+					bt.bTestLLSTransform = true;
+				} else {
+				    // no option
+				}
+				
 			}
+
 		}
 		
-		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
+
 		
 		FinalInterval rai_int;
-
+		RandomAccessibleInterval<T> raitest = (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0);
+		
 		if(bt.bTestLLSTransform)
 		{
-			RandomAccessibleInterval<T> raitest = (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0);
-			bt.afDataTransform = new AffineTransform3D();
-			AffineTransform3D tShear = new AffineTransform3D();
-			AffineTransform3D tRotate = new AffineTransform3D();
-			
-			//rotate 30 degrees
-			tRotate.rotate(0, (-1.0)*Math.PI/6.0);
-			//shearing transform
-			tShear.set(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.7320508075688767, 0.0, 0.0, 0.0, 1.0, 0.0);
-			//Z-step adjustment transform
-			bt.afDataTransform.set(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 2.0690769230769233, 0.0);
-			
-			bt.afDataTransform = tShear.concatenate(bt.afDataTransform);
-			bt.afDataTransform = tRotate.concatenate(bt.afDataTransform);
-			FinalRealInterval finReal = bt.afDataTransform.estimateBounds(raitest);
-			double [][] dBounds = new double [2][3]; 
-			long [][] lBounds = new long [2][3]; 
-			finReal.realMin(dBounds[0]);
-			AffineTransform3D tZeroMin = new AffineTransform3D();
-			for (int i = 0;i<3;i++)
-			{
-				dBounds[0][i] = dBounds[0][i]*(-1);
-			}			
-			tZeroMin.translate(dBounds[0]);
-			bt.afDataTransform = bt.afDataTransform.preConcatenate(tZeroMin);
-			finReal = bt.afDataTransform.estimateBounds(raitest);
-			finReal.realMin(dBounds[0]);
-			finReal.realMax(dBounds[1]);
-			for (int i = 0;i<3;i++)
-				{
-					lBounds[0][i] = (long) Math.floor(dBounds[0][i]);
-					lBounds[1][i] = (long) Math.ceil(dBounds[1][i]);
-				}
-			rai_int = new FinalInterval(lBounds[0],lBounds[1]);
-			
+			//build LLS transform
+			rai_int = makeLLS7Transform(BigTraceData.globCal,raitest);
 		}
 		else
 		{
-			rai_int = new FinalInterval((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0));
+			rai_int = new FinalInterval(raitest);
 		}
 		
 		rai_int.min( btdata.nDimIni[0] );
@@ -183,15 +178,12 @@ public class BigTraceLoad < T extends RealType< T > >
 		
 		btdata.nTotalChannels = seq.getViewSetupsOrdered().size();	
 		
-		NearestNeighborInterpolatorFactory< T > factoryInt =
-				new NearestNeighborInterpolatorFactory<>();
 		for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
 		{
-			//IntervalView<T> raw = Views.interval((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0),rai_int);
 			if(bt.bTestLLSTransform)
 			{	
 				RandomAccessibleInterval<T> rai_orig = (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0);
-				RealRandomAccessible<T> rra = Views.interpolate(Views.extendZero(rai_orig), factoryInt);
+				RealRandomAccessible<T> rra = Views.interpolate(Views.extendZero(rai_orig), btdata.nInterpolatorFactory);
 				RealRandomAccessible<T> rra_tr = RealViews.affine(rra, bt.afDataTransform);
 				bt.sources.add(Views.interval(Views.raster(rra_tr),rai_int));
 			}
@@ -210,6 +202,48 @@ public class BigTraceLoad < T extends RealType< T > >
 		
 		return true;
 		
+	}
+	
+	/** function assigns new LLS7 transform to bt.afDataTransform (using provided voxel size of original data) 
+	 * and returns the new interval of transformed source **/
+	FinalInterval makeLLS7Transform(final double [] voxelSize, final Interval orig_rai)
+	{
+		bt.afDataTransform = new AffineTransform3D();
+		AffineTransform3D tShear = new AffineTransform3D();
+		AffineTransform3D tRotate = new AffineTransform3D();
+	
+		
+		//rotate 30 degrees
+		tRotate.rotate(0, (-1.0)*Math.PI/6.0);
+		//shearing transform
+		tShear.set(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.7320508075688767, 0.0, 0.0, 0.0, 1.0, 0.0);
+		//Z-step adjustment transform
+		bt.afDataTransform.set(BigTraceData.globCal[0]/BigTraceData.dMinVoxelSize, 0.0, 0.0, 0.0, 
+								0.0, BigTraceData.globCal[1]/BigTraceData.dMinVoxelSize, 0.0, 0.0, 
+								0.0, 0.0, 0.5*BigTraceData.globCal[2]/BigTraceData.dMinVoxelSize, 0.0);
+		
+		bt.afDataTransform = tShear.concatenate(bt.afDataTransform);
+		bt.afDataTransform = tRotate.concatenate(bt.afDataTransform);
+		FinalRealInterval finReal = bt.afDataTransform.estimateBounds(orig_rai);
+		double [][] dBounds = new double [2][3]; 
+		long [][] lBounds = new long [2][3]; 
+		finReal.realMin(dBounds[0]);
+		AffineTransform3D tZeroMin = new AffineTransform3D();
+		for (int i = 0;i<3;i++)
+		{
+			dBounds[0][i] = dBounds[0][i]*(-1);
+		}			
+		tZeroMin.translate(dBounds[0]);
+		bt.afDataTransform = bt.afDataTransform.preConcatenate(tZeroMin);
+		finReal = bt.afDataTransform.estimateBounds(orig_rai);
+		finReal.realMin(dBounds[0]);
+		finReal.realMax(dBounds[1]);
+		for (int i = 0;i<3;i++)
+			{
+				lBounds[0][i] = (long) Math.floor(dBounds[0][i]);
+				lBounds[1][i] = (long) Math.ceil(dBounds[1][i]);
+			}
+		return new FinalInterval(lBounds[0],lBounds[1]);
 	}
 	
 	@SuppressWarnings("unchecked")
