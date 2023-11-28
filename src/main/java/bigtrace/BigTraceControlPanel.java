@@ -585,21 +585,19 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 				bt.sources.set(i,btdata.getDataSourceCropped(i, btdata.nCurrTimepoint));
 		}
 
-		//TODO: remove when a proper crop for transformed source is made
-		if(!bt.bTestLLSTransform)
+
+		//update bvv sources crop
+		double [][] doubleCrop = new double [2][3];
+		for (i=0;i<3;i++)
+			for(int j=0;j<2;j++)
+			    doubleCrop[j][i] = (double)btdata.nDimCurr[j][i];
+
+		final FinalRealInterval cropInt = new FinalRealInterval(doubleCrop[0],doubleCrop[1]);
+		for(i=0;i<bt.bvv_sources.size();i++)
 		{
-			//update bvv sources crop
-			double [][] doubleCrop = new double [2][3];
-			for (i=0;i<3;i++)
-				for(int j=0;j<2;j++)
-				    doubleCrop[j][i] = (double)btdata.nDimCurr[j][i];
-	
-			final FinalRealInterval cropInt = new FinalRealInterval(doubleCrop[0],doubleCrop[1]);
-			for(i=0;i<bt.bvv_sources.size();i++)
-			{
-				((BvvStackSource)bt.bvv_sources.get(i)).setCropInterval(cropInt);
-			}	
-		}
+			((BvvStackSource)bt.bvv_sources.get(i)).setCropInterval(cropInt);
+		}	
+		
 	}
 	
 	synchronized void voxelChanged(double [] newVoxelSize)

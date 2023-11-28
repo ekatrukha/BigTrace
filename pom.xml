@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>36.0.0</version>
+		<version>37.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -74,29 +74,46 @@
 		<package-name>BigTrace</package-name>
       			<license.licenseName>gpl_v3</license.licenseName>
         <license.copyrightOwners>Fiji distribution of ImageJ for the life sciences.</license.copyrightOwners>
-
+    	<formats-gpl.version>7.0.1</formats-gpl.version>
+    	<logback.version>1.2.11</logback.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<!--  releaseProfiles>sign,deploy-to-scijava</releaseProfiles -->
 	</properties>
 
 	<repositories>
+		
 		<repository>
 			<id>scijava.public</id>
 			<url>https://maven.scijava.org/content/groups/public</url>
 		</repository>
+		
 		<repository>
     		<id>github</id>
     		<name>GitHub Packages</name>
     		<url>https://maven.pkg.github.com/ekatrukha/bvv-playground</url>
 		</repository>
+
 	</repositories>
 
 	<dependencies>
+
 		<dependency>
 		  <groupId>fiji.experimental</groupId>
 		  <artifactId>bvv-playground</artifactId>
-		  <version>0.1.1</version>
+		  <version>0.1.2</version>
+		</dependency>
+		
+		<!-- BIOFORMATS -->
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>bio-formats_plugins</artifactId>
+			<exclusions>
+				<exclusion><!-- NB: Exclude problematic uber-JAR that bundles commons-io. -->
+					<groupId>ch.systems.cisd</groupId>
+					<artifactId>jhdf5</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		
 		<dependency>

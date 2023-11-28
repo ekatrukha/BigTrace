@@ -3,9 +3,10 @@ package bigtrace;
 import java.awt.Color;
 import java.awt.image.IndexColorModel;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-
 import javax.swing.JOptionPane;
+
 
 import bigtrace.volume.VolumeMisc;
 import ch.epfl.biop.bdv.img.OpenersToSpimData;
@@ -13,13 +14,22 @@ import ch.epfl.biop.bdv.img.opener.OpenerSettings;
 import ij.CompositeImage;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.GenericDialog;
 import ij.process.LUT;
 import loci.common.DebugTools;
+import loci.common.services.DependencyException;
+import loci.common.services.ServiceException;
+import loci.common.services.ServiceFactory;
+import loci.formats.ChannelSeparator;
+import loci.formats.FormatException;
+import loci.formats.meta.MetadataRetrieve;
+import loci.formats.services.OMEXMLService;
+import loci.plugins.util.ImageProcessorReader;
+import loci.plugins.util.LociPrefs;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.sequence.SequenceDescription;
-import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
@@ -27,7 +37,6 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.numeric.RealType;
@@ -82,7 +91,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		rai_int.min( btdata.nDimCurr[0] );
 		rai_int.max( btdata.nDimCurr[1] );
 		
-		btdata.sVoxelUnit=seq.getViewSetupsOrdered().get(0).getVoxelSize().unit();
+		btdata.sVoxelUnit = seq.getViewSetupsOrdered().get(0).getVoxelSize().unit();
 		
 		btdata.nTotalChannels = seq.getViewSetupsOrdered().size();
 
@@ -105,21 +114,113 @@ public class BigTraceLoad < T extends RealType< T > >
 	}
 	
 	@SuppressWarnings("unchecked")
-	public boolean initDataSourcesBioFormats() throws SpimDataException
+	public String initDataSourcesBioFormats() 
 	{
 		DebugTools.setRootLevel("INFO");
 		bt.sources = new ArrayList<IntervalView< T >>();
-		File f = new File(btdata.sFileNameFullImg);
-		//int nSeries = BioFormatsHelper.getNSeries(f);
-		//BioFormatsHelper.
-		OpenerSettings settings = OpenerSettings.BioFormats()
-		.location(f)
-		.unit( "MICROMETER")
-		.setSerie(0)
-		.positionConvention("TOP LEFT");
+	
+		//analyze file a bit
+		int nSeriesCount = 0;
 		
-		bt.spimData = (SpimData) OpenersToSpimData.getSpimData(settings);	
+		ImageProcessorReader r = new ImageProcessorReader(
+			      new ChannelSeparator(LociPrefs.makeImageReader()));
+	    
+		String[] seriesName = null;
+		
+	    int[] seriesZsize = null;
+	    
+		// check if multiple files inside, like LIF
+	    try {
+	        ServiceFactory factory = new ServiceFactory();
+	        OMEXMLService service = factory.getInstance(OMEXMLService.class);
+	        r.setMetadataStore(service.createOMEXMLMetadata());
+	      }
+	      catch (DependencyException de) { }
+	      catch (ServiceException se) { }
+		try {
 
+		      r.setId(btdata.sFileNameFullImg);
+		      nSeriesCount = r.getSeriesCount();
+		      seriesName = new String[nSeriesCount];
+		      seriesZsize = new int[nSeriesCount];
+		     
+		      MetadataRetrieve retrieve = (MetadataRetrieve) r.getMetadataStore();
+		      for (int nS=0;nS<nSeriesCount;nS++)
+		      {
+		    	  r.setSeries(nS);
+		    	  seriesZsize[nS] = r.getSizeZ();
+		    	  seriesName[nS] = retrieve.getImageName(nS);
+		      }
+		      r.close();
+		  }
+	    catch (FormatException exc) {
+	      return "Sorry, an error occurred: " + exc.getMessage();
+	    
+	    }
+	    catch (IOException exc) {
+	      return "Sorry, an error occurred: " + exc.getMessage();
+	    }
+		int nOpenSeries = 0;
+		if(nSeriesCount==1)
+		{
+			if(seriesZsize[0]>1)
+			{
+				nOpenSeries = 0;
+			}
+			else
+			{
+				return "Sorry, an error occurred: only 3D datasets are supported.";
+			}
+		}
+		else
+		{
+			//make a list of 3D series
+			int outCount = 0;
+			for(int nS=0;nS<nSeriesCount;nS++)
+			{
+				if(seriesZsize[nS] > 1)
+				{
+					outCount++;
+				}
+			}
+			if(outCount == 0)
+			{
+				return "Sorry, an error occurred: cannot find 3D datasets in provided file\n"+btdata.sFileNameFullImg;
+			}
+			
+			String [] nDatasetNames = new String[outCount];
+			int [] nDatasetIDs = new int[outCount];
+			int nCurrDS = 0;
+			for(int nS=0;nS<nSeriesCount;nS++)
+			{
+				if(seriesZsize[nS] > 1)
+				{
+					nDatasetNames[nCurrDS] = seriesName[nS];
+					nDatasetIDs[nCurrDS] = nS;
+					nCurrDS++;
+				}
+			}
+			GenericDialog openDatasetN = new GenericDialog("Choose dataset..");
+			openDatasetN.addChoice("Name: ",nDatasetNames, nDatasetNames[0]);
+			openDatasetN.showDialog();
+			if (openDatasetN.wasCanceled())
+	            return "Dataset opening was cancelled.";
+			
+			nOpenSeries = nDatasetIDs[openDatasetN.getNextChoiceIndex()];
+			
+		}
+			
+		
+		OpenerSettings settings = OpenerSettings.BioFormats()
+		.location(new File(btdata.sFileNameFullImg))
+		.unit( "MICROMETER")
+		.setSerie(nOpenSeries)
+		.positionConvention("TOP LEFT");
+	
+		
+
+		bt.spimData = (SpimData) OpenersToSpimData.getSpimData(settings);	
+	
 		final SequenceDescription seq = bt.spimData.getSequenceDescription();
 
 		//get voxel size
@@ -138,8 +239,8 @@ public class BigTraceLoad < T extends RealType< T > >
 		{
 		
 			String isLLS = sTestLLS.substring(sTestLLS.length()-4,sTestLLS.length()-1);
-			
-			if(isLLS.equals("LLS"))
+
+			if(isLLS.equals("LLS") && btdata.sFileNameFullImg.endsWith(".czi"))
 			{
 				if (JOptionPane.showConfirmDialog(null, "Looks like the input comes from Zeiss LLS7.\nDo you want to deskew it?\n"
 						+ "(if it is already deskewed, click No)", "Loading option",
@@ -200,7 +301,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		channelRanges = new double [2][btdata.nTotalChannels];
 		
 		
-		return true;
+		return null;
 		
 	}
 	

@@ -37,7 +37,7 @@ public class BigTraceData < T extends RealType< T > > {
 	public String sFileNameFullImg;
 	
 	/** if the source is BDV HDF file, it is true, otherwise we take it from ImageJ **/
-	public boolean bBDVsource = false;
+	public boolean bSpimSource = false;
 	
 	/** bit depth of the sources **/
 	public int nBitDepth = 8;
@@ -274,7 +274,7 @@ public class BigTraceData < T extends RealType< T > > {
 	@SuppressWarnings("unchecked")
 	public RandomAccessibleInterval<T> getDataSourceFull(final int nChannel, final int nTimePoint)
 	{
-		if(bBDVsource)
+		if(bSpimSource)
 		{
 			RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
 			if(bt.bTestLLSTransform)
@@ -299,7 +299,7 @@ public class BigTraceData < T extends RealType< T > > {
 	{
 		//output should be XYZTC
 		
-		if(bBDVsource)
+		if(bSpimSource)
 		{
 			
 			List<RandomAccessibleInterval<T>> raiXYZTC = new ArrayList<RandomAccessibleInterval<T>> ();

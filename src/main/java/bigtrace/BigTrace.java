@@ -35,6 +35,7 @@ import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
@@ -74,6 +75,7 @@ import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
+
 
 public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListener, TimePointListener
 {
@@ -161,31 +163,35 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		if(btdata.sFileNameFullImg.endsWith(".tif"))
 		{
-			btdata.bBDVsource = false;
+			btdata.bSpimSource = false;
 			if(!btload.initDataSourcesImageJ())
 				return;
 		}
 		
 		if(btdata.sFileNameFullImg.endsWith(".xml"))
 		{
-			btdata.bBDVsource = true;
+			btdata.bSpimSource = true;
 			try {
 				if(!btload.initDataSourcesHDF5())
 					return;
 			} catch (SpimDataException e) {
 				e.printStackTrace();
+				IJ.showMessage("BigTrace: cannot open selected XML file.\nMaybe it is not BDV compartible HDF5?\nPlugin terminated.");
+				return;
 			}
 		}
-		
-		if(btdata.sFileNameFullImg.endsWith(".czi"))
+		else
+		//if(btdata.sFileNameFullImg.endsWith(".czi"))
 		{
-			btdata.bBDVsource = true;
-			try {
-				if(!btload.initDataSourcesBioFormats())
+			btdata.bSpimSource = true;
+			String outLog = btload.initDataSourcesBioFormats(); 
+			if(outLog != null)
+			{
+				IJ.error(outLog);
+				//IJ.showMessage("BigTrace: cannot open \n"+btdata.sFileNameFullImg+"\nMake sure it is image data that is BioFormats readable.\nPlugin terminated.");
 					return;
-			} catch (SpimDataException e) {
-				e.printStackTrace();
 			}
+		
 		}
 		
 		if(sources == null)
@@ -247,9 +253,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		initOriginAndBox(origin_axis_length);
 	
-		if(btdata.bBDVsource)
+		if(btdata.bSpimSource)
 		{
-			initBVVSourcesHDF5();
+			initBVVSourcesSpimData();
 		}
 		else
 		{
@@ -1031,6 +1037,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(bStatus)
 		{
 			panel.state().getViewerTransform(btdata.transformBeforeTracing);
+			panel.showMessage("TraceBox mode on");
 			//disable time slider
 			//panel.setNumTimepoints(1);
 			//transformBeforeTracing.set(panel.);
@@ -1043,6 +1050,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			panel.state().getViewerTransform(transform);
 			final AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(transform,btdata.transformBeforeTracing,0,0,1500);
 			panel.setTransformAnimator(anim);
+			panel.showMessage("TraceBox mode off");
 
 		}
 	}
@@ -1143,7 +1151,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		panel = bvv_main.getBvvHandle().getViewerPanel();
 	}
 	
-	public void initBVVSourcesHDF5()
+	public void initBVVSourcesSpimData()
 	{
 
 		Path p = Paths.get(btdata.sFileNameFullImg);
@@ -1209,8 +1217,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			//remove translation
 			for ( SourceAndConverter< ? > source : panel.state().getSources() )
 			{
-
-				(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(afDataTransform);
+				AffineTransform3D transformExtra = afDataTransform.copy();
+				//not sure why, but overlap with raster data looks better under those settings 
+				transformExtra.translate(0.5,2.0,0.0);
+				(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transformExtra);
+				//(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(afDataTransform);
 				//adjust pixel size to homogeneous scaling
 				for(int d=0;d<3;d++)
 				{
@@ -1221,6 +1232,15 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				}
 
 			}
+			
+			for(int i=0;i<bvv_sources.size();i++)
+			{
+				bvv_sources.get(i).setCropTransform(afDataTransform);
+
+			}
+			//check the alignment
+			//BvvFunctions.show(btdata.getDataSourceFull(0, 0),"test",Bvv.options().addTo(bvv_main));
+			//ImageJFunctions.show(btdata.getDataSourceFull(0, 0));
 		}
 
 		BvvGamma.initBrightness( 0.001, 0.999, panel.state(), panel.getConverterSetups());
@@ -1236,7 +1256,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t.rotate(1, (-1)*Math.PI/6.0);
 		t.rotate(0, Math.PI/9.0);
 		panel.state().setViewerTransform(t);
-		t= getCenteredViewTransform(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]), 0.9);
+		t = getCenteredViewTransform(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]), 0.9);
 		panel.state().setViewerTransform(t);
 	}
 	
@@ -1254,26 +1274,26 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		else
 		{
 			nBox = new long [2][3];
-			nBox[0]= btdata.trace_weights.minAsLongArray();
-			nBox[1]= btdata.trace_weights.maxAsLongArray();
+			nBox[0] = btdata.trace_weights.minAsLongArray();
+			nBox[1] = btdata.trace_weights.maxAsLongArray();
 		}
 		
-		double nW= (double)(nBox[1][0]-nBox[0][0])*BigTraceData.globCal[0];
-		double nH= (double)(nBox[1][1]-nBox[0][1])*BigTraceData.globCal[1];
-		double nWoff= (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
-		double nHoff= (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
-		double nDoff= (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
+		double nW = (double)(nBox[1][0]-nBox[0][0])*BigTraceData.globCal[0];
+		double nH = (double)(nBox[1][1]-nBox[0][1])*BigTraceData.globCal[1];
+		double nWoff = (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
+		double nHoff = (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
+		double nDoff = (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
 		
 		double sW = panel.getWidth();
 		double sH = panel.getHeight();
 		
 		if(sW/nW<sH/nH)
 		{
-			scale=sW/nW;
+			scale = sW/nW;
 		}
 		else
 		{
-			scale=sH/nH;
+			scale = sH/nH;
 		}
 		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
@@ -1299,24 +1319,24 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		else
 		{
 			nBox = new long [2][3];
-			nBox[0]= btdata.trace_weights.minAsLongArray();
-			nBox[1]= btdata.trace_weights.maxAsLongArray();
+			nBox[0] = btdata.trace_weights.minAsLongArray();
+			nBox[1] = btdata.trace_weights.maxAsLongArray();
 		}
-		double nH= (double)(nBox[1][1]-nBox[0][1])*BigTraceData.globCal[1];
-		double nD= (double)(nBox[1][2]-nBox[0][2])*BigTraceData.globCal[2];
-		double nWoff= (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
-		double nHoff= (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
-		double nDoff= (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
+		double nH = (double)(nBox[1][1]-nBox[0][1])*BigTraceData.globCal[1];
+		double nD = (double)(nBox[1][2]-nBox[0][2])*BigTraceData.globCal[2];
+		double nWoff = (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
+		double nHoff = (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
+		double nDoff = (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
 		double sW = panel.getWidth();
 		double sH = panel.getHeight();
 		
 		if(sW/nD<sH/nH)
 		{
-			scale=sW/nD;
+			scale = sW/nD;
 		}
 		else
 		{
-			scale=sH/nH;
+			scale = sH/nH;
 		}
 		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
@@ -1344,24 +1364,24 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		else
 		{
 			nBox = new long [2][3];
-			nBox[0]= btdata.trace_weights.minAsLongArray();
-			nBox[1]= btdata.trace_weights.maxAsLongArray();
+			nBox[0] = btdata.trace_weights.minAsLongArray();
+			nBox[1] = btdata.trace_weights.maxAsLongArray();
 		}
-		double nW= (double)(nBox[1][0]-nBox[0][0])*BigTraceData.globCal[0];
-		double nD= (double)(nBox[1][2]-nBox[0][2])*BigTraceData.globCal[2];
-		double nWoff= (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
-		double nHoff= (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
-		double nDoff= (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
+		double nW = (double)(nBox[1][0]-nBox[0][0])*BigTraceData.globCal[0];
+		double nD = (double)(nBox[1][2]-nBox[0][2])*BigTraceData.globCal[2];
+		double nWoff = (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
+		double nHoff = (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
+		double nDoff = (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
 		double sW = panel.getWidth();
 		double sH = panel.getHeight();
 		
 		if(sW/nW<sH/nD)
 		{
-			scale=sW/nW;
+			scale = sW/nW;
 		}
 		else
 		{
-			scale=sH/nD;
+			scale = sH/nD;
 		}
 		scale = 0.9*scale;
 		AffineTransform3D t = new AffineTransform3D();
