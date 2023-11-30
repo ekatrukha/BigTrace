@@ -580,10 +580,10 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	{
 		int i;
 		//update data sources
-		for(i=0;i<bt.btdata.nTotalChannels;i++)
-		{
-				bt.sources.set(i,btdata.getDataSourceCropped(i, btdata.nCurrTimepoint));
-		}
+//		for(i=0;i<bt.btdata.nTotalChannels;i++)
+//		{
+//				bt.sources.set(i,btdata.getDataSourceCropped(i, btdata.nCurrTimepoint));
+//		}
 
 
 		//update bvv sources crop
@@ -637,7 +637,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		}
 		newtransform.set(m);
 		
-		AffineTransform3D final_transform = bt.getCenteredViewTransform(newtransform, bt.sources.get(btdata.nChAnalysis), 1.0);
+		AffineTransform3D final_transform = bt.getCenteredViewTransform(newtransform, btdata.getDataCurrentSourceCropped(), 1.0);
 		bt.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,final_transform ,0,0,btdata.nAnimationDuration));
 		//recalculate ROI shapes
 		bt.roiManager.updateROIsDisplay();

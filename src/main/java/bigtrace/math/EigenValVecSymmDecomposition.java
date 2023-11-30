@@ -98,7 +98,8 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
 	   }
    }
    
-   public void computeVWRAI( final RandomAccessibleInterval< T > tensor, 
+   @SuppressWarnings("rawtypes")
+public void computeVWRAI( final RandomAccessibleInterval< T > tensor, 
 		   final RandomAccessibleInterval< T > eVector, 
 		   final RandomAccessibleInterval< T > eWeight,
 		   final int nTasks,
@@ -200,7 +201,8 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
 	   dCalc.computeVWCRAI(  RAIin, eVector, eWeight, eCorners);
    }
    
-   public void computeVWCRAI( final RandomAccessibleInterval< T > tensor, 
+   @SuppressWarnings("rawtypes")
+public void computeVWCRAI( final RandomAccessibleInterval< T > tensor, 
 		   final RandomAccessibleInterval< T > eVector, 
 		   final RandomAccessibleInterval< T > eWeight,
 		   final RandomAccessibleInterval< T > eCorners,

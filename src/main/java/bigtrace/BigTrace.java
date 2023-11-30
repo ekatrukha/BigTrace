@@ -88,9 +88,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** saliency view (TraceBox) for semi-auto tracing **/
 	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
 
-	/** currently active and displayed volume **/
-	public ArrayList<IntervalView< T >>  sources = null;//new ArrayList<IntervalView< T >>();
-
 	/** whether or not TraceMode is active **/
 	private boolean bTraceMode = false;
 	
@@ -149,7 +146,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		if(arg.equals(""))
 		{
-			btdata.sFileNameFullImg = IJ.getFilePath("Open TIF/BDV file (3D, composite)...");
+			btdata.sFileNameFullImg = IJ.getFilePath("Open TIF/BDV/Bioformats file (3D, composite, time)...");
 		}
 		else
 		{
@@ -195,11 +192,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			
 			}
 		}	
-		if(sources == null)
-		{
-			IJ.showMessage("Currently BigTrace supports only TIF and BDV XML/HDF5 formats.");
-			return;
-		}
 
 		roiManager = new RoiManager3D(this);
 		
@@ -313,8 +305,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			RealPoint target = new RealPoint(3);
 			if(!bTraceMode)
 			{
-
-				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
+				if(findPointLocationFromClick(btdata.getDataCurrentSourceCropped(), btdata.nHalfClickSizeWindow,target))
 				{
 					
 					switch (RoiManager3D.mode)
@@ -567,7 +558,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			RealPoint target = new RealPoint(3);
 			if(!bTraceMode)
 			{
-				if(findPointLocationFromClick(sources.get(btdata.nChAnalysis), btdata.nHalfClickSizeWindow,target))
+				if(findPointLocationFromClick(btdata.getDataCurrentSourceCropped(), btdata.nHalfClickSizeWindow,target))
 				{
 					
 					final FinalInterval zoomInterval = getTraceBoxCentered(getTraceInterval(!btdata.bZoomCrop),btdata.nZoomBoxSize, target);
@@ -606,7 +597,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			if(!bTraceMode)
 			{
 			
-					panel.setTransformAnimator(getCenteredViewAnim(sources.get(btdata.nChAnalysis),1.0));
+					panel.setTransformAnimator(getCenteredViewAnim(btdata.getDataCurrentSourceCropped(),1.0));
 
 			}
 			else
@@ -1120,8 +1111,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				frameTitle(filename)
 				);
 
-
-	for(int i=0;i<sources.size();i++)
+		for(int i=0;i<btdata.nTotalChannels;i++)
 		{
 	
 			bvv_sources.add(BvvFunctions.show( Views.hyperSlice(all_ch_RAI,4,i), "ch_"+Integer.toString(i+1), Bvv.options().addTo(Tempbvv)));

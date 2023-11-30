@@ -39,7 +39,6 @@ import net.imglib2.type.Type;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.IntType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import ome.units.UNITS;
@@ -205,20 +204,37 @@ public class BioFormatsOpenerBT  implements Opener<IFormatReader> {
 		this.t = BioFormatsOpenerBT.getBioformatsBdvSourceType(this.omeMeta.getPixelsType(iSerie), this.isRGB, iSerie);
 
 		if (!skipMeta) {
+			AffineTransform3D positionPreTransform = null;
+			if (positionPreTransformMatrixArray != null) {
+				positionPreTransform = new AffineTransform3D();
+				positionPreTransform.set(positionPreTransformMatrixArray);
+			}
+
+			AffineTransform3D positionPostTransform = null;
+			if (positionPostTransformMatrixArray != null) {
+				positionPostTransform = new AffineTransform3D();
+				positionPostTransform.set(positionPostTransformMatrixArray);
+			}
+
+			AffineTransform3D voxSizePreTransform = new AffineTransform3D();
+
+			AffineTransform3D voxSizePostTransform = new AffineTransform3D();
+		
 
 			AffineTransform3D rootTransform = BioFormatsHelper.getSeriesRootTransform(
-					this.omeMeta, //metadata
-					iSerie, // serie
-					BioFormatsHelper.getUnitFromString(unit), // unit
-					positionPreTransformMatrixArray, // AffineTransform3D for positionPreTransform,
-					positionPostTransformMatrixArray, // AffineTransform3D for positionPostTransform,
+					this.omeMeta, 
+					model, 
+					iSerie, 
+					BioFormatsHelper.getUnitFromString(unit),
+					// Bioformats location fix
+					positionPreTransform, positionPostTransform, 
 					defaultSpaceUnit,
-					positionIsImageCenter, // boolean positionIsImageCenter,
-					new AffineTransform3D().getRowPackedCopy(), // voxSizePreTransform,
-					new AffineTransform3D().getRowPackedCopy(), // voxSizePostTransform,
-					defaultVoxelUnit,
-					new boolean[]{false, false, false} // axesOfImageFlip
-			);
+					positionIsImageCenter,
+					//Bioformats voxSize fix
+					voxSizePreTransform, voxSizePostTransform, defaultVoxelUnit,
+					new boolean[]{false, false, false});
+
+			
 
 			String imageName = getImageName(this.omeMeta,iSerie,dataLocation);
 			List<ChannelProperties> channelPropertiesList = getChannelProperties(this.omeMeta, iSerie, this.nChannels);
@@ -420,6 +436,7 @@ public class BioFormatsOpenerBT  implements Opener<IFormatReader> {
 		return this.isLittleEndian;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public OpenerSetupLoader<?, ?, ?> getSetupLoader(int channelIdx, int setupIdx, Supplier<VolatileGlobalCellCache> cacheSupplier) {
 		return new BioFormatsSetupLoaderBT(this,

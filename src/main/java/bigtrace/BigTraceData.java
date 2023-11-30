@@ -270,6 +270,14 @@ public class BigTraceData < T extends RealType< T > > {
 	}
 	
 	/** returns data sources for specific channel and time point,
+	 * limits output to the current cropped area **/
+	public IntervalView< T > getDataCurrentSourceCropped()
+	{		
+		return Views.interval(getDataSourceFull(nChAnalysis,nCurrTimepoint),nDimCurr[0], nDimCurr[1]);
+
+	}
+	
+	/** returns data sources for specific channel and time point,
 	 * does not limit output to the current cropped area **/
 	@SuppressWarnings("unchecked")
 	public RandomAccessibleInterval<T> getDataSourceFull(final int nChannel, final int nTimePoint)

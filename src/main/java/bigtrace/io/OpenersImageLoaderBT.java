@@ -17,10 +17,8 @@ import bdv.img.cache.VolatileGlobalCellCache;
 import ch.epfl.biop.bdv.img.CacheControlOverride;
 import ch.epfl.biop.bdv.img.OpenerSetupLoader;
 import ch.epfl.biop.bdv.img.OpenersImageLoader;
-import ch.epfl.biop.bdv.img.OpenersImageLoader.OpenerAndChannelIndex;
 import ch.epfl.biop.bdv.img.opener.EmptyOpener;
 import ch.epfl.biop.bdv.img.opener.Opener;
-import ch.epfl.biop.bdv.img.opener.OpenerSettings;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 
@@ -143,6 +141,7 @@ public class OpenersImageLoaderBT implements ViewerImgLoader, MultiResolutionImg
 	 * @param setupId : viewsetup id
 	 * @return the setupLoader corresponding to the current viewsetup id
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public OpenerSetupLoader getSetupImgLoader(int setupId) {
 		try {
 			// if already registered setup loader

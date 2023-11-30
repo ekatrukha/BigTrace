@@ -10,8 +10,6 @@ import bdv.img.cache.CacheArrayLoader;
 import bdv.img.cache.VolatileGlobalCellCache;
 import ch.epfl.biop.bdv.img.OpenerSetupLoader;
 import ch.epfl.biop.bdv.img.ResourcePool;
-import ch.epfl.biop.bdv.img.bioformats.BioFormatsArrayLoaders;
-import ch.epfl.biop.bdv.img.bioformats.BioFormatsOpener;
 import ch.epfl.biop.bdv.img.bioformats.BioFormatsSetupLoader;
 import loci.formats.IFormatReader;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
@@ -65,7 +63,7 @@ private final Dimensions[] dimensions;
 // Voxel physical dimensions
 private final VoxelDimensions voxelsDimensions;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({ "unchecked", "rawtypes" })
 protected BioFormatsSetupLoaderBT(BioFormatsOpenerBT opener,
 							 int channelIndex, int iSeries, int setup, T t, V v,
 							 Supplier<VolatileGlobalCellCache> cacheSupplier) {

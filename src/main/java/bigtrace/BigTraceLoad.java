@@ -80,10 +80,9 @@ public class BigTraceLoad < T extends RealType< T > >
 	@SuppressWarnings("unchecked")
 	public boolean initDataSourcesHDF5() throws SpimDataException
 	{
-		
-		bt.sources = new ArrayList<IntervalView< T >>();
-		
+					
 		bt.spimData = new XmlIoSpimData().load( btdata.sFileNameFullImg );
+		
 		bt.spimData.getSequenceDescription().getViewSetups();
 		
 		final SequenceDescription seq = bt.spimData.getSequenceDescription();
@@ -91,7 +90,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		//get voxel size
 		for (int d =0;d<3;d++)
 		{
-			BigTraceData.globCal[d] = seq.getViewDescription(0,0).getViewSetup().getVoxelSize().dimension(0);
+			BigTraceData.globCal[d] = seq.getViewDescription(0,0).getViewSetup().getVoxelSize().dimension(d);
 		}
 		//number of timepoints
 		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
@@ -109,12 +108,6 @@ public class BigTraceLoad < T extends RealType< T > >
 		btdata.nTotalChannels = seq.getViewSetupsOrdered().size();
 
 		
-		
-		for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
-		{
-			bt.sources.add(Views.interval((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0),rai_int));
-		}
-		
 		//TODO FOR NOW, get it from the class
 		//not really needed later, but anyway
 		btdata.nBitDepth = 16;
@@ -130,7 +123,6 @@ public class BigTraceLoad < T extends RealType< T > >
 	public String initDataSourcesBioFormats() 
 	{
 		DebugTools.setRootLevel("INFO");
-		bt.sources = new ArrayList<IntervalView< T >>();
 	
 		//analyze file a bit
 		int nSeriesCount = 0;
@@ -307,20 +299,6 @@ public class BigTraceLoad < T extends RealType< T > >
 		
 		btdata.nTotalChannels = seq.getViewSetupsOrdered().size();	
 		
-		for (int setupN=0;setupN<seq.getViewSetupsOrdered().size();setupN++)
-		{
-			if(bt.bTestLLSTransform)
-			{	
-				RandomAccessibleInterval<T> rai_orig = (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0);
-				RealRandomAccessible<T> rra = Views.interpolate(Views.extendZero(rai_orig), btdata.nInterpolatorFactory);
-				RealRandomAccessible<T> rra_tr = RealViews.affine(rra, bt.afDataTransform);
-				bt.sources.add(Views.interval(Views.raster(rra_tr),rai_int));
-			}
-			else
-			{
-				bt.sources.add(Views.interval((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(setupN).getImage(0),rai_int));
-			}
-		}
 		
 		//TODO FOR NOW, get it from the class
 		//not really needed later, but anyway
@@ -378,9 +356,7 @@ public class BigTraceLoad < T extends RealType< T > >
 	@SuppressWarnings("unchecked")
 	public boolean initDataSourcesImageJ()
 	{
-		
-		bt.sources = new ArrayList<IntervalView< T >>();
-		
+				
 		final ImagePlus imp = IJ.openImage( btdata.sFileNameFullImg );
 		
 		if (imp == null)
@@ -455,15 +431,13 @@ public class BigTraceLoad < T extends RealType< T > >
 			bt.all_ch_RAI =Views.permute(bt.all_ch_RAI, 4,3);
 		}
 		//test = all_ch_RAI.dimensionsAsLongArray();
-		for(int i=0;i<btdata.nTotalChannels;i++)
-		{
-			bt.sources.add(Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,i),3,0));
-		}
 
-		bt.sources.get(0).min( btdata.nDimIni[0] );
-		bt.sources.get(0).max( btdata.nDimIni[1] );
-		bt.sources.get(0).min( btdata.nDimCurr[0] );
-		bt.sources.get(0).max( btdata.nDimCurr[1] );
+		FinalInterval testRAI = new FinalInterval(Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,0),3,0));
+		
+		testRAI.min( btdata.nDimIni[0] );
+		testRAI.max( btdata.nDimIni[1] );
+		testRAI.min( btdata.nDimCurr[0] );
+		testRAI.max( btdata.nDimCurr[1] );
 		
 		return true;
 	}

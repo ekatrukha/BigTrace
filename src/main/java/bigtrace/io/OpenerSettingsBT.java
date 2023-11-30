@@ -12,11 +12,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 
-import ch.epfl.biop.bdv.img.bioformats.BioFormatsOpener;
 import ch.epfl.biop.bdv.img.omero.OmeroOpener;
 import ch.epfl.biop.bdv.img.opener.Opener;
 import ch.epfl.biop.bdv.img.opener.OpenerSettings;
-import ch.epfl.biop.bdv.img.opener.OpenerSettings.OpenerType;
 import ch.epfl.biop.bdv.img.qupath.QuPathOpener;
 import net.imglib2.realtransform.AffineTransform3D;
 import ome.units.UNITS;
