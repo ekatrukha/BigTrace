@@ -91,18 +91,20 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** whether or not TraceMode is active **/
 	private boolean bTraceMode = false;
 	
-	/** input from XML/HDF5 **/
+	/** input from XML/HDF5 or BioFormats (cached) **/
 	public SpimData spimData;
 	
+	/** input data in RAI XYZC format**/
+	public RandomAccessibleInterval<T> all_ch_RAI;
+	
+	/** whether LLS transform was applied **/	
 	public boolean bTestLLSTransform = false;
 	
+	/** LLS transform **/
 	public AffineTransform3D afDataTransform = new AffineTransform3D();
-	
-	/** input data in XYZC format**/
-	public RandomAccessibleInterval<T> all_ch_RAI;
 
 	/** Panel of BigVolumeViewer **/
-	public VolumeViewerPanel panel;
+	public VolumeViewerPanel viewer;
 
 	public Actions actions = null;
 	
@@ -122,13 +124,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public BigTraceData<T> btdata;
 	
 	/** object loading data **/
-	public BigTraceLoad<T> btload;
+	public BigTraceLoad<T> btload;	
 	
-	
-	/** BigTrace Panel **/
+	/** BigTrace interface panel **/
 	public BigTraceControlPanel<T> btpanel;
 	
-	/**ROI's manager + list tab **/
+	/** ROI manager + list tab **/
 	public RoiManager3D roiManager;
 		
 	public void run(String arg)
@@ -153,11 +154,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			btdata.sFileNameFullImg = arg;
 		}
 
-		if(btdata.sFileNameFullImg==null)
+		if(btdata.sFileNameFullImg == null)
 			return;
 		
+		//load data sources
 		
-		
+		// TIF files are fully loaded (to RAM) for now
 		if(btdata.sFileNameFullImg.endsWith(".tif"))
 		{
 			btdata.bSpimSource = false;
@@ -166,10 +168,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		else
 		{
+			// BDV XML/HDF5 format 
 			btdata.bSpimSource = true;
 			if(btdata.sFileNameFullImg.endsWith(".xml"))
-			{
-				
+			{				
 				try {
 					if(!btload.initDataSourcesHDF5())
 						return;
@@ -186,8 +188,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				if(outLog != null)
 				{
 					IJ.error(outLog);
-					//IJ.showMessage("BigTrace: cannot open \n"+btdata.sFileNameFullImg+"\nMake sure it is image data that is BioFormats readable.\nPlugin terminated.");
-						return;
+					return;
 				}
 			
 			}
@@ -249,12 +250,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			initBVVSourcesImageJ();
 		}
-		panel = bvv_main.getBvvHandle().getViewerPanel();
-		panel.setRenderScene(this::renderScene);
+		
+		viewer = bvv_main.getBvvHandle().getViewerPanel();
+		viewer.setRenderScene(this::renderScene);
 		actions = new Actions( new InputTriggerConfig() );
 		installActions(actions);
 		setInitialTransform();
-		panel.addTimePointListener(this);
+		viewer.addTimePointListener(this);
 	}
 	
 	
@@ -263,7 +265,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		btpanel = new BigTraceControlPanel<T>(this, btdata,roiManager);
 		btpanel.finFrame = new JFrame("BigTrace");
 
-		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(panel);
+		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(viewer);
 	 	
 	 	//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		//btpanel.frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -447,7 +449,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				}
 				
 			}
-			panel.showMessage("Point removed");
+			viewer.showMessage("Point removed");
 
 		}					
 		
@@ -568,7 +570,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 					}
 	
 					//animate
-					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,btdata.dZoomBoxScreenFraction));
+					viewer.setTransformAnimator(getCenteredViewAnim(zoomInterval,btdata.dZoomBoxScreenFraction));
 				}
 			}
 			else
@@ -578,7 +580,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 					//FinalInterval zoomInterval = getTraceBoxCentered(btdata.trace_weights,(long)(btdata.lTraceBoxSize*0.8), target);
 					FinalInterval zoomInterval = getZoomBoxCentered((long)(btdata.lTraceBoxSize*0.5), target);
 			
-					panel.setTransformAnimator(getCenteredViewAnim(zoomInterval,btdata.dZoomBoxScreenFraction));
+					viewer.setTransformAnimator(getCenteredViewAnim(zoomInterval,btdata.dZoomBoxScreenFraction));
 				}
 			}
 
@@ -597,12 +599,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			if(!bTraceMode)
 			{
 			
-					panel.setTransformAnimator(getCenteredViewAnim(btdata.getDataCurrentSourceCropped(),1.0));
+					viewer.setTransformAnimator(getCenteredViewAnim(btdata.getDataCurrentSourceCropped(),1.0));
 
 			}
 			else
 			{
-					panel.setTransformAnimator(getCenteredViewAnim(btdata.trace_weights,0.8));
+					viewer.setTransformAnimator(getCenteredViewAnim(btdata.trace_weights,0.8));
 			}
 
 		}
@@ -626,12 +628,12 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(btdata.nRenderMethod==0)
 		{
 			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(1);
-			panel.showMessage("volumetric");
+			viewer.showMessage("volumetric");
 		}
 		else
 		{
 			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(0);
-			panel.showMessage("maximum intensity");
+			viewer.showMessage("maximum intensity");
 		}
 	}
 	public void installActions(final Actions actions)
@@ -708,7 +710,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		IntervalView<?> traceInterval = Views.interval(traceIV, rangeTraceBox);
 		
 		//getCenteredView(traceInterval);
-		panel.setTransformAnimator(getCenteredViewAnim(traceInterval,btdata.dTraceBoxScreenFraction));
+		viewer.setTransformAnimator(getCenteredViewAnim(traceInterval,btdata.dTraceBoxScreenFraction));
 		//long start1, end1;
 		
 
@@ -885,8 +887,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 		
 		//current window dimensions
-		final int sW = panel.getWidth();
-		final int sH = panel.getHeight();
+		final int sW = viewer.getWidth();
+		final int sH = viewer.getHeight();
 		
 		//current view transform
 		final AffineTransform3D transform = ini_transform.copy();//new AffineTransform3D(ini_transform);
@@ -937,7 +939,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		final AffineTransform3D transform = new AffineTransform3D();
 		
-		panel.state().getViewerTransform(transform);
+		viewer.state().getViewerTransform(transform);
 		
 		return getCenteredViewTransform(transform, inInterval, zoomFraction);
 	}
@@ -945,7 +947,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public AnisotropicTransformAnimator3D getCenteredViewAnim(final Interval inInterval, double zoomFraction)
 	{
 		final AffineTransform3D transform = new AffineTransform3D();
-		panel.state().getViewerTransform(transform);
+		viewer.state().getViewerTransform(transform);
 		
 		final AffineTransform3D transform_scale = getCenteredViewTransform(inInterval,zoomFraction);
 		
@@ -1023,8 +1025,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		//let's save current view
 		if(bStatus)
 		{
-			panel.state().getViewerTransform(btdata.transformBeforeTracing);
-			panel.showMessage("TraceBox mode on");
+			viewer.state().getViewerTransform(btdata.transformBeforeTracing);
+			viewer.showMessage("TraceBox mode on");
 			//disable time slider
 			//panel.setNumTimepoints(1);
 			//transformBeforeTracing.set(panel.);
@@ -1034,10 +1036,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		else
 		{
 			final AffineTransform3D transform = new AffineTransform3D();
-			panel.state().getViewerTransform(transform);
+			viewer.state().getViewerTransform(transform);
 			final AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(transform,btdata.transformBeforeTracing,0,0,1500);
-			panel.setTransformAnimator(anim);
-			panel.showMessage("TraceBox mode off");
+			viewer.setTransformAnimator(anim);
+			viewer.showMessage("TraceBox mode off");
 
 		}
 	}
@@ -1085,11 +1087,11 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	public void repaintBVV()
 	{
-		panel.requestRepaint();
+		viewer.requestRepaint();
 	}
 	public void repaintScene()
 	{
-		panel.requestRepaint(RepaintType.SCENE);
+		viewer.requestRepaint(RepaintType.SCENE);
 	}
 	
 	public void initBVVSourcesImageJ()
@@ -1134,7 +1136,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		bvv_main = bvv_sources.get(0);
 
-		panel = bvv_main.getBvvHandle().getViewerPanel();
+		viewer = bvv_main.getBvvHandle().getViewerPanel();
 	}
 	
 	public void initBVVSourcesSpimData()
@@ -1166,13 +1168,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 
 		bvv_main = bvv_sources.get(0);
-		panel = bvv_main.getBvvHandle().getViewerPanel();
+		viewer = bvv_main.getBvvHandle().getViewerPanel();
 		
 		//AffineTransform3D transformfin = new AffineTransform3D();
 
 		// Remove voxel scale and any translation transforms for all sources.
 		// We needed it, because later voxel size transform is applied to the general ViewerPanel.
-		for ( SourceAndConverter< ? > source : panel.state().getSources() )
+		for ( SourceAndConverter< ? > source : viewer.state().getSources() )
 		{
 			AffineTransform3D transformSource = new AffineTransform3D();
 
@@ -1201,7 +1203,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(bTestLLSTransform)
 		{
 			//remove translation
-			for ( SourceAndConverter< ? > source : panel.state().getSources() )
+			for ( SourceAndConverter< ? > source : viewer.state().getSources() )
 			{
 				AffineTransform3D transformExtra = afDataTransform.copy();
 				//not sure why, but overlap with raster data looks better under those settings 
@@ -1229,7 +1231,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			//ImageJFunctions.show(btdata.getDataSourceFull(0, 0));
 		}
 
-		BvvGamma.initBrightness( 0.001, 0.999, panel.state(), panel.getConverterSetups());
+		BvvGamma.initBrightness( 0.001, 0.999, viewer.state(), viewer.getConverterSetups());
 
 	}
 	
@@ -1241,9 +1243,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t.rotate(0, Math.PI/2.0);
 		t.rotate(1, (-1)*Math.PI/6.0);
 		t.rotate(0, Math.PI/9.0);
-		panel.state().setViewerTransform(t);
+		viewer.state().setViewerTransform(t);
 		t = getCenteredViewTransform(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]), 0.9);
-		panel.state().setViewerTransform(t);
+		viewer.state().setViewerTransform(t);
 	}
 	
 
@@ -1270,8 +1272,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		double nHoff = (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
 		double nDoff = (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
 		
-		double sW = panel.getWidth();
-		double sH = panel.getHeight();
+		double sW = viewer.getWidth();
+		double sH = viewer.getHeight();
 		
 		if(sW/nW<sH/nH)
 		{
@@ -1288,8 +1290,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t.scale(BigTraceData.globCal[0]*scale, BigTraceData.globCal[1]*scale, BigTraceData.globCal[2]*scale);
 		t.translate(0.5*(sW-scale*(nW+nWoff)),0.5*(sH-scale*(nH+nHoff)),(-0.5)*scale*(nDoff));
 		
-		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
-		panel.setTransformAnimator(anim);
+		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(viewer.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
+		viewer.setTransformAnimator(anim);
 			
 	}
 	
@@ -1313,8 +1315,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		double nWoff = (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
 		double nHoff = (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
 		double nDoff = (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
-		double sW = panel.getWidth();
-		double sH = panel.getHeight();
+		double sW = viewer.getWidth();
+		double sH = viewer.getHeight();
 		
 		if(sW/nD<sH/nH)
 		{
@@ -1332,9 +1334,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t.rotate(1, (-1)*Math.PI/2.0);
 		t.translate(0.5*(sW+scale*(nD+nDoff)),0.5*(sH-scale*(nH+nHoff)),(-0.5)*scale*nWoff);
 		
-		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
+		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(viewer.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
 		
-		panel.setTransformAnimator(anim);
+		viewer.setTransformAnimator(anim);
 
 	}
 	
@@ -1358,8 +1360,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		double nWoff = (double)(2.0*nBox[0][0])*BigTraceData.globCal[0];
 		double nHoff = (double)(2.0*nBox[0][1])*BigTraceData.globCal[1];
 		double nDoff = (double)(2.0*nBox[0][2])*BigTraceData.globCal[2];
-		double sW = panel.getWidth();
-		double sH = panel.getHeight();
+		double sW = viewer.getWidth();
+		double sH = viewer.getHeight();
 		
 		if(sW/nW<sH/nD)
 		{
@@ -1378,9 +1380,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t.rotate(0, Math.PI/2.0);
 		t.translate(0.5*(sW-scale*(nW+nWoff)),0.5*(sH+scale*(nD+nDoff)),(-0.5)*scale*nHoff);
 			
-		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(panel.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
+		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(viewer.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
 		
-		panel.setTransformAnimator(anim);
+		viewer.setTransformAnimator(anim);
 
 	}
 	
@@ -1388,7 +1390,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	{
 
 
-		java.awt.Point point_mouse  = panel.getMousePosition();
+		java.awt.Point point_mouse  = viewer.getMousePosition();
 		if(point_mouse ==null)
 		{
 			return null;
@@ -1396,9 +1398,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 														
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
-		panel.state().getViewerTransform(transform);
-		int sW = panel.getWidth();
-		int sH = panel.getHeight();
+		viewer.state().getViewerTransform(transform);
+		int sW = viewer.getWidth();
+		int sH = viewer.getHeight();
 		Matrix4f matPerspWorld = new Matrix4f();
 		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
 		
@@ -1427,7 +1429,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	{
 		int i,j;
 
-		java.awt.Point point_mouse  = panel.getMousePosition();
+		java.awt.Point point_mouse  = viewer.getMousePosition();
 		if(point_mouse ==null)
 		{
 			return false;
@@ -1439,9 +1441,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 														
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
-		panel.state().getViewerTransform(transform);
-		int sW = panel.getWidth();
-		int sH = panel.getHeight();
+		viewer.state().getViewerTransform(transform);
+		int sW = viewer.getWidth();
+		int sH = viewer.getHeight();
 		Matrix4f matPerspWorld = new Matrix4f();
 		MatrixMath.screenPerspective( btdata.dCam, btdata.dClipNear, btdata.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
 		
@@ -1544,9 +1546,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public void timePointChanged(int timePointIndex) {
 			
 		
-		if(btdata.nCurrTimepoint != panel.state().getCurrentTimepoint())
+		if(btdata.nCurrTimepoint != viewer.state().getCurrentTimepoint())
 		{
-			btdata.nCurrTimepoint = panel.state().getCurrentTimepoint();
+			btdata.nCurrTimepoint = viewer.state().getCurrentTimepoint();
 			if(btdata.bDeselectROITime)
 			{
 				actionDeselect();
@@ -1609,7 +1611,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public void closeWindows()
 	{
 	
-		panel.stop();
+		viewer.stop();
 		btpanel.bvv_frame.dispose();		
 		btpanel.finFrame.dispose();
 	}

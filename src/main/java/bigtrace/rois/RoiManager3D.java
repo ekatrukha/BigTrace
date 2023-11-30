@@ -871,10 +871,10 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
             	activeRoi=jlist.getSelectedIndex();
             	//update the timepoint
-            	if(rois.get(activeRoi).getTimePoint()!=bt.panel.state().getCurrentTimepoint())
+            	if(rois.get(activeRoi).getTimePoint()!=bt.viewer.state().getCurrentTimepoint())
             	{
             		bt.btdata.bDeselectROITime = false;
-            		bt.panel.setTimepoint(rois.get(activeRoi).getTimePoint());
+            		bt.viewer.setTimepoint(rois.get(activeRoi).getTimePoint());
             	}
             	//jlist.setSelectedIndex(activeRoi);
             	//update the timepoint

@@ -462,7 +462,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			Prefs.set("BigTrace.dClipNear", (double)(bt.btdata.dClipNear));
 			Prefs.set("BigTrace.dClipFar", (double)(bt.btdata.dClipFar));
 
-			bt.panel.setCamParams(bt.btdata.dCam, bt.btdata.dClipNear, bt.btdata.dClipFar);
+			bt.viewer.setCamParams(bt.btdata.dCam, bt.btdata.dClipNear, bt.btdata.dClipFar);
 
 			bt.repaintBVV();
 		}
@@ -608,7 +608,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		
 		
 		final AffineTransform3D newtransform = new AffineTransform3D();
-		bt.panel.state().getViewerTransform(transform);
+		bt.viewer.state().getViewerTransform(transform);
 
 		
 		double[] scaleChange = new double [3];
@@ -638,7 +638,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		newtransform.set(m);
 		
 		AffineTransform3D final_transform = bt.getCenteredViewTransform(newtransform, btdata.getDataCurrentSourceCropped(), 1.0);
-		bt.panel.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,final_transform ,0,0,btdata.nAnimationDuration));
+		bt.viewer.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,final_transform ,0,0,btdata.nAnimationDuration));
 		//recalculate ROI shapes
 		bt.roiManager.updateROIsDisplay();
 	}
