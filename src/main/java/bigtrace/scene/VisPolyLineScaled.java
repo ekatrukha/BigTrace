@@ -282,8 +282,15 @@ public class VisPolyLineScaled
 
 	
 			gl.glBindVertexArray( vao );
-			
+	
 
+//			gl.glEnable(GL3.GL_LINE_SMOOTH_HINT);
+//			gl.glEnable(GL3.GL_POLYGON_SMOOTH);
+//			gl.glHint(GL3.GL_LINE_SMOOTH_HINT, GL3.GL_NICEST );
+//			gl.glHint(GL3.GL_POLYGON_SMOOTH_HINT, GL3.GL_NICEST );
+//			gl.glEnable(GL3.GL_BLEND);
+//			gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
+//			gl.glDepthFunc(GL3.GL_ALWAYS);
 			if(renderType == Roi3D.OUTLINE)
 			{
 				gl.glLineWidth(fLineThickness);
@@ -292,6 +299,7 @@ public class VisPolyLineScaled
 			
 			if(renderType == Roi3D.WIRE)
 			{
+
 				gl.glLineWidth(1.0f);
 				//contours
 				for(nPointIt=0;nPointIt<nPointsN;nPointIt+=BigTraceData.wireCountourStep)

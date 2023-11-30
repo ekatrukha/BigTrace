@@ -7,8 +7,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 
-
+import bdv.util.volatiles.VolatileViews;
+import bigtrace.io.OpenerSettingsBT;
+import bigtrace.io.SpimDataByteToShortOpener;
 import bigtrace.volume.VolumeMisc;
+import btbvv.vistools.BvvFunctions;
+import btbvv.vistools.BvvSource;
 import ch.epfl.biop.bdv.img.OpenersToSpimData;
 import ch.epfl.biop.bdv.img.opener.OpenerSettings;
 import ij.CompositeImage;
@@ -22,8 +26,11 @@ import loci.common.services.ServiceException;
 import loci.common.services.ServiceFactory;
 import loci.formats.ChannelSeparator;
 import loci.formats.FormatException;
+import loci.formats.FormatTools;
 import loci.formats.meta.MetadataRetrieve;
 import loci.formats.services.OMEXMLService;
+import loci.plugins.BF;
+import loci.plugins.in.ImporterOptions;
 import loci.plugins.util.ImageProcessorReader;
 import loci.plugins.util.LociPrefs;
 import mpicbg.spim.data.SpimData;
@@ -35,11 +42,17 @@ import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
+import net.imglib2.cache.img.CellLoader;
+import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
+import net.imglib2.cache.img.ReadOnlyCachedCellImgOptions;
+import net.imglib2.cache.img.SingleCellArrayImg;
+import net.imglib2.cache.img.optional.CacheOptions.CacheType;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
@@ -71,7 +84,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		bt.sources = new ArrayList<IntervalView< T >>();
 		
 		bt.spimData = new XmlIoSpimData().load( btdata.sFileNameFullImg );
-
+		bt.spimData.getSequenceDescription().getViewSetups();
 		
 		final SequenceDescription seq = bt.spimData.getSequenceDescription();
 		
@@ -128,6 +141,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		String[] seriesName = null;
 		
 	    int[] seriesZsize = null;
+	    int[] seriesBitDepth = null;
 	    
 		// check if multiple files inside, like LIF
 	    try {
@@ -143,6 +157,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		      nSeriesCount = r.getSeriesCount();
 		      seriesName = new String[nSeriesCount];
 		      seriesZsize = new int[nSeriesCount];
+		      seriesBitDepth = new int[nSeriesCount];
 		     
 		      MetadataRetrieve retrieve = (MetadataRetrieve) r.getMetadataStore();
 		      for (int nS=0;nS<nSeriesCount;nS++)
@@ -150,6 +165,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		    	  r.setSeries(nS);
 		    	  seriesZsize[nS] = r.getSizeZ();
 		    	  seriesName[nS] = retrieve.getImageName(nS);
+		    	  seriesBitDepth[nS] = r.getPixelType();
 		      }
 		      r.close();
 		  }
@@ -176,7 +192,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		{
 			//make a list of 3D series
 			int outCount = 0;
-			for(int nS=0;nS<nSeriesCount;nS++)
+			for(int nS=0;nS<nSeriesCount; nS++)
 			{
 				if(seriesZsize[nS] > 1)
 				{
@@ -190,6 +206,7 @@ public class BigTraceLoad < T extends RealType< T > >
 			
 			String [] nDatasetNames = new String[outCount];
 			int [] nDatasetIDs = new int[outCount];
+			int [] nDatasetType = new int[outCount];
 			int nCurrDS = 0;
 			for(int nS=0;nS<nSeriesCount;nS++)
 			{
@@ -197,6 +214,7 @@ public class BigTraceLoad < T extends RealType< T > >
 				{
 					nDatasetNames[nCurrDS] = seriesName[nS];
 					nDatasetIDs[nCurrDS] = nS;
+					nDatasetType[nCurrDS] = seriesBitDepth[nS];
 					nCurrDS++;
 				}
 			}
@@ -209,18 +227,33 @@ public class BigTraceLoad < T extends RealType< T > >
 			nOpenSeries = nDatasetIDs[openDatasetN.getNextChoiceIndex()];
 			
 		}
-			
-		
-		OpenerSettings settings = OpenerSettings.BioFormats()
-		.location(new File(btdata.sFileNameFullImg))
-		.unit( "MICROMETER")
-		.setSerie(nOpenSeries)
-		.positionConvention("TOP LEFT");
-	
 		
 
-		bt.spimData = (SpimData) OpenersToSpimData.getSpimData(settings);	
-	
+		
+		if(seriesBitDepth[nOpenSeries] == FormatTools.UINT16)
+		{
+			OpenerSettings settings = OpenerSettings.BioFormats()
+					.location(new File(btdata.sFileNameFullImg))
+					.unit("MICROMETER")
+					.setSerie(nOpenSeries)
+					.positionConvention("TOP LEFT");
+			bt.spimData = (SpimData) OpenersToSpimData.getSpimData(settings);
+			
+		}
+		else if (seriesBitDepth[nOpenSeries] == FormatTools.UINT8)
+		{
+			OpenerSettingsBT settings = OpenerSettingsBT.BioFormats()
+					.location(new File(btdata.sFileNameFullImg))
+					.unit("MICROMETER")
+					.setSerie(nOpenSeries)
+					.positionConvention("TOP LEFT");
+			bt.spimData = (SpimData) SpimDataByteToShortOpener.getSpimData(settings);
+		}
+		else
+		{
+			return "Sorry, only 8- and 16-bit BioFormats images are supported.\nClosing BigTrace.";
+		}
+
 		final SequenceDescription seq = bt.spimData.getSequenceDescription();
 
 		//get voxel size
@@ -247,15 +280,10 @@ public class BigTraceLoad < T extends RealType< T > >
 				        JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 				    // yes option
 					bt.bTestLLSTransform = true;
-				} else {
-				    // no option
-				}
-				
+				} 
 			}
 
 		}
-		
-
 		
 		FinalInterval rai_int;
 		RandomAccessibleInterval<T> raitest = (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0);

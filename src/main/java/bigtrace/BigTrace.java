@@ -167,48 +167,44 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			if(!btload.initDataSourcesImageJ())
 				return;
 		}
-		
-		if(btdata.sFileNameFullImg.endsWith(".xml"))
-		{
-			btdata.bSpimSource = true;
-			try {
-				if(!btload.initDataSourcesHDF5())
-					return;
-			} catch (SpimDataException e) {
-				e.printStackTrace();
-				IJ.showMessage("BigTrace: cannot open selected XML file.\nMaybe it is not BDV compartible HDF5?\nPlugin terminated.");
-				return;
-			}
-		}
 		else
-		//if(btdata.sFileNameFullImg.endsWith(".czi"))
 		{
 			btdata.bSpimSource = true;
-			String outLog = btload.initDataSourcesBioFormats(); 
-			if(outLog != null)
+			if(btdata.sFileNameFullImg.endsWith(".xml"))
 			{
-				IJ.error(outLog);
-				//IJ.showMessage("BigTrace: cannot open \n"+btdata.sFileNameFullImg+"\nMake sure it is image data that is BioFormats readable.\nPlugin terminated.");
+				
+				try {
+					if(!btload.initDataSourcesHDF5())
+						return;
+				} catch (SpimDataException e) {
+					e.printStackTrace();
+					IJ.showMessage("BigTrace: cannot open selected XML file.\nMaybe it is not BDV compartible HDF5?\nPlugin terminated.");
 					return;
+				}
 			}
-		
-		}
-		
+			//try BioFormats
+			else
+			{
+				String outLog = btload.initDataSourcesBioFormats(); 
+				if(outLog != null)
+				{
+					IJ.error(outLog);
+					//IJ.showMessage("BigTrace: cannot open \n"+btdata.sFileNameFullImg+"\nMake sure it is image data that is BioFormats readable.\nPlugin terminated.");
+						return;
+				}
+			
+			}
+		}	
 		if(sources == null)
 		{
 			IJ.showMessage("Currently BigTrace supports only TIF and BDV XML/HDF5 formats.");
 			return;
 		}
 
-
-
 		roiManager = new RoiManager3D(this);
+		
 		initSourcesCanvas(0.25*Math.min(btdata.nDimIni[1][0], Math.min(btdata.nDimIni[1][1],btdata.nDimIni[1][2])));
 		
-	
-		
-		
-
 		//not sure we really need it, but anyway
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
