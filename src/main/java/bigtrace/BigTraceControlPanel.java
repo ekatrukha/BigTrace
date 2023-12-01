@@ -484,7 +484,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 					+"&nbsp;<b>V</b> - new trace (in trace mode)<br>"
 					 +"<br>"
 					+"<center><b>View/Navigation</b></center><br>"
-					+"&nbsp;<b>S</b> - brightness/color<br>"
+					+"&nbsp;<b>S</b> or <b>P</b> - brightness/color/sources<br>"
 					+"&nbsp;<b>D</b> - zoom in to a point<br>"
 					+"&nbsp;<b>C</b> - center the view (zoom out)<br>"
 					+"&nbsp;<b>X</b> - reset crop<br>"
@@ -492,7 +492,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 					+"&nbsp;<b>1</b> - show centered XY view<br>"
 					+"&nbsp;<b>2</b> - show centered YZ view<br>"
 					+"&nbsp;<b>3</b> - show centered XZ view<br>"
-					+"&nbsp;<b>F6</b> - sources </html>";
+					+"&nbsp;<b>M</b>/<b>N</b> - timepoint +/- </html>";
 		JLabel jlInfo = new JLabel(shortCutInfo);
 		jlInfo.setVerticalAlignment(SwingConstants.CENTER);
 		jlInfo.setHorizontalAlignment(SwingConstants.CENTER);

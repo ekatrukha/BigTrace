@@ -9,6 +9,8 @@ import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.rois.Roi3D;
+import ij.IJ;
+import ij.ImagePlus;
 import ij.measure.Calibration;
 import bigtrace.rois.AbstractCurve3D;
 import net.imglib2.FinalInterval;
@@ -27,19 +29,28 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 
 	private String progressState;
 	public BigTrace<T> bt;
-	float nRadius;
-	int nTimePoint;
-	AbstractCurve3D curveROI;
-	public String sRoiName="";
-	
-	public StraightenCurve(final AbstractCurve3D curveROI_, final BigTrace<T> bt_, final float nRadius_, final int nTimePoint_)
+	float nRadiusIn;
+	/** 0 - single time point, 1 - all time points **/
+	int nTimeRange;
+	ArrayList<AbstractCurve3D> curveROIArr;
+	String sTimeFormat;
+	int nOutput;
+	String sSaveFolderPath;
+	Calibration cal;
+		
+	public StraightenCurve(final ArrayList<AbstractCurve3D> curveROIArr_, final BigTrace<T> bt_, final float nRadius_, final int nTimePoint_, final int nOutput_, final String sSaveFolderPath_)
 	{
 		super();
-		curveROI = curveROI_;
+		curveROIArr = curveROIArr_;
 		bt = bt_;
-		nTimePoint = nTimePoint_;
+		nTimeRange = nTimePoint_;
 		//round it up
-		nRadius= (float)Math.ceil(nRadius_);
+		nRadiusIn = nRadius_;
+		//nRadiusIn = (float)Math.ceil(nRadius_);
+		sTimeFormat = Integer.toString(String.valueOf(BigTraceData.nNumTimepoints).length());
+		nOutput = nOutput_;
+		sSaveFolderPath = sSaveFolderPath_;
+		cal = new Calibration();
 	}
 	
 	@Override
@@ -55,7 +66,6 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	protected Void doInBackground() throws Exception {
 
@@ -67,27 +77,99 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 			  Thread.sleep(1);
 		  } catch (InterruptedException ignore) {}
 		setProgress(1);
-		setProgressState("allocating volume..");
+		setProgressState("Starting straightening..");
 		
 		//get the all data RAI
 		//XYZTC
-		RandomAccessibleInterval<T> all_RAI = bt.btdata.getAllDataRAI();
+		RandomAccessibleInterval<T> full_RAI = bt.btdata.getAllDataRAI();
+		
+		//output calibration
+		cal.setUnit(bt.btdata.sVoxelUnit);
+		cal.setTimeUnit(bt.btdata.sTimeUnit);
+		cal.pixelWidth= BigTraceData.dMinVoxelSize;
+		cal.pixelHeight= BigTraceData.dMinVoxelSize;
+		cal.pixelDepth= BigTraceData.dMinVoxelSize;
+		final int nTotROIs = curveROIArr.size();  
+		if(nTotROIs == 0)
+			return null;
+		String sRoiName;
+		if(nTotROIs == 1)
+		{
+			sRoiName = getROIName(curveROIArr.get(0));
+			Img<T> extractedRAI = extractCurveRAI(curveROIArr.get(0),  full_RAI, true);
+			//VolumeMisc.wrapImgImagePlusCal(extractedRAI, curveROIArr.get(0).getName() + "_straight",cal).show();
+			outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
+		}
+		else
+		{
+			
+			for(int nRoi=0; nRoi<nTotROIs; nRoi++)
+			{
+				sRoiName = getROIName(curveROIArr.get(nRoi));
+				try {
+					  Thread.sleep(1);
+				  } catch (InterruptedException ignore) {}
+				setProgress(100*nRoi/(nTotROIs-1));
+				setProgressState("extracting ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
+				Img<T> extractedRAI = extractCurveRAI(curveROIArr.get(nRoi),  full_RAI, false);
+				setProgressState("saving ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
+				outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
+				//VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal).show();
+			}
+		}
+			
+
+		return null;
+	}
 	
+	void outputImagePlus(ImagePlus ip)
+	{
+		if(nOutput ==0)
+		{
+			ip.show();
+		}
+		else
+		{
+			IJ.saveAsTiff(ip, sSaveFolderPath+ip.getTitle());
+		}
+	}
+	String getROIName (Roi3D roi)
+	{
+		//single time point
+		if(nTimeRange>=0)
+		{
+			return "T"+String.format("%0"+sTimeFormat+"d", roi.getTimePoint())+"_"+bt.roiManager.getGroupPrefixRoiName(roi);
+		}
+		// all timepoints
+		else
+		{
+			return bt.roiManager.getGroupPrefixRoiName(roi);
+		}
+	}
 	
+	Img<T> extractCurveRAI(AbstractCurve3D curveROI, RandomAccessibleInterval<T> all_RAI, boolean bUpdateProgressBar)
+	{
 		//get the curve and tangent vectors
-		ArrayList<RealPoint> points_space;
-		//get tangent vectors		
-		ArrayList<double []> tangents;
 		//curve points in SPACE units
 		//sampled with dMin step
-
-		points_space = curveROI.getJointSegmentResampled();
-		tangents = curveROI.getJointSegmentTangentsResampled();
-	
-
+		ArrayList<RealPoint> points_space = curveROI.getJointSegmentResampled();
+		//get tangent vectors		
+		ArrayList<double []> tangents = curveROI.getJointSegmentTangentsResampled();
+		
+		int nRadius;
+		
+		//take radius from ROI
+		if(nRadiusIn < 0)
+		{
+			nRadius = (int) Math.round(0.5*curveROI.getLineThickness());			
+		}
+		else
+		{
+			nRadius = (int) Math.round(nRadiusIn);
+		}
 		int dimXY = (int)(nRadius*2+1);
 		
-		final int nTotDim = all_RAI.numDimensions();
+		int nTotDim = all_RAI.numDimensions();
 		long [] dimS =new long[nTotDim];
 		all_RAI.dimensions(dimS);
 		dimS[0]=points_space.size(); //length along the line becomes Z
@@ -98,11 +180,11 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		int nMinTimePoint, nMaxTimePoint;
 		double [] currXYmCh = new double[nTotDim];
 		//single time point
-		if(nTimePoint>=0)
+		if(nTimeRange == 0)
 		{
 			dimS[3] = 1;
-			nMinTimePoint = nTimePoint;
-			nMaxTimePoint = nTimePoint;
+			nMinTimePoint = curveROI.getTimePoint();
+			nMaxTimePoint = curveROI.getTimePoint();
 		}
 		else
 		{
@@ -125,11 +207,14 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 
 		double [] current_point = new double [3];
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(all_RAI), bt.btdata.nInterpolatorFactory);
-		final RealRandomAccess<T> ra = interpolate.realRandomAccess();
-		final RandomAccess<T> ra_out = out1.randomAccess();
+		RealRandomAccess<T> ra = interpolate.realRandomAccess();
+		RandomAccess<T> ra_out = out1.randomAccess();
 	
 		RealPoint curr_XY;
-		setProgressState("sampling pipe..");
+		if(bUpdateProgressBar)
+		{
+			setProgressState("sampling pipe " + curveROI.getName() +"..");
+		}
 		//go over all points
 		for (int nPoint = 0;nPoint<points_space.size();nPoint++)
 		{
@@ -149,10 +234,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 					{
 						for (int nCh=0;nCh<nChannelN;nCh++)
 						{
-						//position RA at corresponding points
-						//multichannel
-						//if(nMultCh)
-						//{
+	
 							curr_XY.localize(currXYmCh);
 							//time
 							currXYmCh[3] = nTimePoint; 
@@ -160,35 +242,23 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 							currXYmCh[4] = nCh; 
 							ra.setPosition(currXYmCh);
 							ra_out.setPosition(new int [] {nPoint,j,i,nTimePoint-nMinTimePoint,nCh});
-						//}
-						////one channel
-						//else
-						//{							
-						////	ra.setPosition(curr_XY);
-						//	ra_out.setPosition(new int [] {nPoint,j,i});
-						//}
+
 							ra_out.get().setReal(ra.get().getRealDouble());
 						}
 					}
 				}	
-			setProgress(100*nPoint/(points_space.size()-1));
+			if(bUpdateProgressBar)
+			{
+				setProgress(100*nPoint/(points_space.size()-1));
+			}
 			
 		}
-		
-		Calibration cal = new Calibration();
-		cal.setUnit(bt.btdata.sVoxelUnit);
-		cal.setTimeUnit(bt.btdata.sTimeUnit);
-		cal.pixelWidth= BigTraceData.dMinVoxelSize;
-		cal.pixelHeight= BigTraceData.dMinVoxelSize;
-		cal.pixelDepth= BigTraceData.dMinVoxelSize;
-		
-		//switch Z and X for convenience
-		VolumeMisc.wrapImgImagePlusCal(out1, sRoiName+"_straight",cal).show();
-		//VolumeMisc.wrapImgImagePlusCal(Views.permute(out1,0,2), "test",cal).show();
-		//double nLength = curveROI.getLength();
-		setProgressState("straighten ROI done.");
-		setProgress(100);
-		return null;
+		if(bUpdateProgressBar)
+		{
+			setProgressState("ROI straightening finished.");
+			setProgress(100);
+		}
+		return out1;
 	}
 	
 	/** generates initial square XY plane sampling with data from -nRadius till nRadius values (in dPixSize units) in XY 

@@ -33,6 +33,7 @@ import javax.swing.event.ListSelectionListener;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
+import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.rois.AbstractCurve3D;
@@ -43,7 +44,7 @@ import bigtrace.volume.SplitVolumePlane;
 import bigtrace.volume.StraightenCurve;
 import ij.IJ;
 import ij.Prefs;
-
+import ij.gui.GenericDialog;
 import ij.gui.Plot;
 import ij.io.SaveDialog;
 import ij.measure.ResultsTable;
@@ -805,6 +806,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			
 		
 	}
+	
 	void measureEndsDirection(final Roi3D roi, final MeasureValues val)
 	{
 		switch (roi.getType())
@@ -914,50 +916,77 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		
 		float fRadiusStraighted = 0.0f;
 		int nRadiusType = 0;
-		int nTimePoint = -1;
+		int nTimeRange = -1;
+		int nROIList = 0;
+		int nStraightenOutput = 0;
 		
 		NumberField nfRadius = new NumberField(4);
 		
 		
 		JPanel straightenSettings = new JPanel();
-		straightenSettings.setLayout(new GridBagLayout());
-		GridBagConstraints cd = new GridBagConstraints();
 		
-		String[] sStraightenType = { "Take from ROI settings", "Specify here" };
-		JComboBox<String> straightenRadiusList = new JComboBox<String>(sStraightenType);
-		String[] sStraightenTime = { "Single time point", "All time points" };
-		JComboBox<String> straightenTimeList = new JComboBox<String>(sStraightenTime);
+		straightenSettings.setLayout(new GridBagLayout());
+	
+		GridBagConstraints cd = new GridBagConstraints();
+
+		GBCHelper.alighLeft(cd);
+
 		cd.gridx=0;
-		cd.gridy=0;
-		straightenSettings.add(new JLabel("Curve thickness: "),cd);
-		straightenRadiusList.setSelectedIndex((int)Prefs.get("BigTrace.nRadiusType", 0));
+		cd.gridy=0;	
+		straightenSettings.add(new JLabel("Straighten:"),cd);
+		cd.gridx++;
+		String[] sStraightenROIsRange = { "Selected ROI", "All visible ROIs" };
+		JComboBox<String> straightenRoiList = new JComboBox<String>(sStraightenROIsRange);
+		straightenRoiList.setSelectedIndex((int)Prefs.get("BigTrace.nStraightROIList", 0));
+		straightenSettings.add(straightenRoiList,cd);	
+	
 		cd.gridy++;
+		cd.gridx=0;	
+		straightenSettings.add(new JLabel("Curve thickness:"),cd);
+		cd.gridx++;
+		String[] sStraightenType = { "Use ROI settings", "Override here" };
+		JComboBox<String> straightenRadiusList = new JComboBox<String>(sStraightenType);
+		straightenRadiusList.setSelectedIndex((int)Prefs.get("BigTrace.nRadiusType", 0));
 		straightenSettings.add(straightenRadiusList,cd);
+		
+		
 		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
 		decimalFormatSymbols.setDecimalSeparator('.');
 		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
 		nfRadius.setText(df.format(Prefs.get("BigTrace.fRadiusStraighted", 5)));
-		cd.gridx++;
-		cd.gridy=0;
-		straightenSettings.add(new JLabel("Radius (px): "),cd);
 		cd.gridy++;
+		cd.gridx=0;
+		straightenSettings.add(new JLabel("Override radius (px):"),cd);
+		cd.gridx++;
 		straightenSettings.add(nfRadius,cd);
 		
+		String[] sStraightenTime = { "Single ROI's time point", "All time points" };
+		JComboBox<String> straightenTimeList = new JComboBox<String>(sStraightenTime);
 		if(BigTraceData.nNumTimepoints>1)
 		{
-			cd.gridx++;
-			cd.gridy=0;
-			straightenSettings.add(new JLabel("Time range: "),cd);
-			straightenTimeList.setSelectedIndex((int)Prefs.get("BigTrace.nStraightenTime", 0));
 			cd.gridy++;
+			cd.gridx=0;
+			straightenSettings.add(new JLabel("Time range per ROI:"),cd);
+			straightenTimeList.setSelectedIndex((int)Prefs.get("BigTrace.nStraightenTime", 0));
+			cd.gridx++;
 			straightenSettings.add(straightenTimeList,cd);
 			
 		}
+		cd.gridy++;
+		cd.gridx=0;	
+		straightenSettings.add(new JLabel("Output:"),cd);
+		cd.gridx++;
+		String[] sStraightenOutput = { "show in ImageJ", "save as TIF" };
+		JComboBox<String> straightenOutputList = new JComboBox<String>(sStraightenOutput);
+		straightenOutputList.setSelectedIndex((int)Prefs.get("BigTrace.nStraightenOutput", 0));
+		straightenSettings.add(straightenOutputList,cd);
 		
-		int reply = JOptionPane.showConfirmDialog(null, straightenSettings, "Straighten curve", 
+		int reply = JOptionPane.showConfirmDialog(null, straightenSettings, "Straighten curve(s)", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (reply == JOptionPane.OK_OPTION) 
 		{
+			nROIList = straightenRoiList.getSelectedIndex();
+			Prefs.set("BigTrace.nStraightROIList", nROIList);
 			nRadiusType = straightenRadiusList.getSelectedIndex();
 			Prefs.set("BigTrace.nRadiusType", nRadiusType);
 			if(nRadiusType==0)
@@ -969,30 +998,69 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				fRadiusStraighted = Float.parseFloat(nfRadius.getText());
 				Prefs.set("BigTrace.fRadiusStraighted", fRadiusStraighted);				
 			}
+			nTimeRange = 0;
 			if(BigTraceData.nNumTimepoints>1)
 			{
-				nTimePoint = straightenTimeList.getSelectedIndex();
-				Prefs.set("BigTrace.nStraightenTime", nTimePoint);
-				//only current frame
-				if(nTimePoint == 0)
+				nTimeRange = straightenTimeList.getSelectedIndex();
+				Prefs.set("BigTrace.nStraightenTime", nTimeRange);
+			}
+
+			nStraightenOutput = straightenOutputList.getSelectedIndex();
+			Prefs.set("BigTrace.nStraightenOutput", nStraightenOutput);
+			//if saving, ask for the path
+			String sSaveDir = "";
+			if(nStraightenOutput > 0)
+			{
+				sSaveDir = IJ.getDirectory("Save straightened TIF to..");
+				if(sSaveDir == null)
 				{
-					nTimePoint = bt.btdata.nCurrTimepoint;
+					bt.btpanel.progressBar.setString("curve straightening aborted.");
+					return;
 				}
-				//all frames
-				else
+			}
+			
+			//build list of ROIs
+			final ArrayList<AbstractCurve3D> curvesOut = new ArrayList<AbstractCurve3D>();
+			//single ROI
+			if(nROIList == 0)
+			{
+				if(curveLine.vertices.size()<2)					
 				{
-					nTimePoint = -1;
+					IJ.log("Curve ROI must have more then two vertices.");
+					bt.btpanel.progressBar.setString("curve straightening aborted.");
+					return;
 				}
+				curvesOut.add(curveLine);
+			}
+			//all curve ROIs
+			else
+			{
+				for (int nRoi = 0; nRoi<bt.roiManager.rois.size(); nRoi++)
+				{
+					Roi3D roi = bt.roiManager.rois.get(nRoi);
+					if(bt.roiManager.groups.get(roi.getGroupInd()).bVisible)
+					{
+						if((roi.getType() == Roi3D.LINE_TRACE) || (roi.getType() == Roi3D.POLYLINE))
+						{
+							curvesOut.add((AbstractCurve3D) roi);
+						}
+					}
+				}
+				
+			}
+			if(curvesOut.size()>0)
+			{			
+				//run in a separate thread
+				StraightenCurve<T> straightBG = new StraightenCurve<T>(curvesOut, bt, fRadiusStraighted, nTimeRange, nStraightenOutput, sSaveDir);
+				//straightBG.sRoiName = bt.roiManager.getGroupPrefixRoiName(curveLine);
+				straightBG.addPropertyChangeListener(bt.btpanel);
+				straightBG.execute();
 			}
 			else
 			{
-				nTimePoint = bt.btdata.nCurrTimepoint;
+				IJ.log("Cannot find proper curve ROIs to straighten.");
+				bt.btpanel.progressBar.setString("curve straightening aborted.");
 			}
-			//run in a separate thread
-			StraightenCurve<T> straightBG = new StraightenCurve<T>(curveLine, bt, fRadiusStraighted, nTimePoint);
-			straightBG.sRoiName = bt.roiManager.getGroupPrefixRoiName(curveLine);
-			straightBG.addPropertyChangeListener(bt.btpanel);
-			straightBG.execute();
 
 		}
 

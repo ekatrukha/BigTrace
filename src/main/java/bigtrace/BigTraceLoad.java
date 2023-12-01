@@ -196,7 +196,7 @@ public class BigTraceLoad < T extends RealType< T > >
 				return "Sorry, an error occurred: cannot find 3D datasets in provided file\n"+btdata.sFileNameFullImg;
 			}
 			
-			String [] nDatasetNames = new String[outCount];
+			String [] sDatasetNames = new String[outCount];
 			int [] nDatasetIDs = new int[outCount];
 			int [] nDatasetType = new int[outCount];
 			int nCurrDS = 0;
@@ -204,14 +204,14 @@ public class BigTraceLoad < T extends RealType< T > >
 			{
 				if(seriesZsize[nS] > 1)
 				{
-					nDatasetNames[nCurrDS] = seriesName[nS];
+					sDatasetNames[nCurrDS] = seriesName[nS];
 					nDatasetIDs[nCurrDS] = nS;
 					nDatasetType[nCurrDS] = seriesBitDepth[nS];
 					nCurrDS++;
 				}
 			}
 			GenericDialog openDatasetN = new GenericDialog("Choose dataset..");
-			openDatasetN.addChoice("Name: ",nDatasetNames, nDatasetNames[0]);
+			openDatasetN.addChoice("Name: ",sDatasetNames, sDatasetNames[0]);
 			openDatasetN.showDialog();
 			if (openDatasetN.wasCanceled())
 	            return "Dataset opening was cancelled.";

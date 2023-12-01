@@ -330,7 +330,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 							{
 								int nRoiType = roiManager.getActiveRoi().getType();
 								//continue tracing for the selected tracing
-								if(nRoiType ==Roi3D.LINE_TRACE)
+								if(nRoiType == Roi3D.LINE_TRACE)
 								{
 									calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);
 								}
