@@ -50,13 +50,13 @@ public class LineProfileBG extends SwingWorker<Void, String> implements BigTrace
 			final DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
 			
 
-			writer.write("ROI_Name,ROI_Type,ROI_Group,Length,Intensity,X_coord,Y_coord,Z_coord\n");
+			writer.write("ROI_Name,ROI_Type,ROI_Group,ROI_TimePoint,Length,Intensity,X_coord,Y_coord,Z_coord\n");
 			for(int i = 0; i<nRoiN;i++)
 			{
 				setProgress((i+1)*100/nRoiN);
 				setProgressState("line profile ROI #"+Integer.toString(i+1)+" of "+Integer.toString(nRoiN)+"...");
 				roi = bt.roiManager.rois.get(i);
-				sPrefix = roi.getName() + ","+Roi3D.intTypeToString(roi.getType())+","+bt.roiManager.getGroupName(roi);
+				sPrefix = roi.getName() + ","+Roi3D.intTypeToString(roi.getType())+","+bt.roiManager.getGroupName(roi)+","+Integer.toString(roi.getTimePoint());
 				profile=bt.roiManager.roiMeasure.measureLineProfile(roi, false);
 				if(profile!=null)
 				{

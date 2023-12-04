@@ -460,6 +460,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		val.setRoiName(roi.getName());
 		val.setRoiType(roi.getType());
 		val.setRoiGroupName(bt.roiManager.getGroupName(roi));
+		val.setTimePoint(roi.getTimePoint());
 		if(systemMeasurements>0)
 		{
 			if (roi!=null)//should not be, but just in case
@@ -563,16 +564,16 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			
 			if(bAlignCosine)
 			{
-				writer.write("ROI_Name,ROI_Type,ROI_Group,Length,Cos(Angle_with_"+df3.format(coalignVector[0])+"_"+df3.format(coalignVector[1])+"_"+df3.format(coalignVector[2])+"),X_coord,Y_coord,Z_coord\n");
+				writer.write("ROI_Name,ROI_Type,ROI_Group,ROI_TimePoint,Length,Cos(Angle_with_"+df3.format(coalignVector[0])+"_"+df3.format(coalignVector[1])+"_"+df3.format(coalignVector[2])+"),X_coord,Y_coord,Z_coord\n");
 			}
 			else
 			{
-				writer.write("ROI_Name,ROI_Type,ROI_Group,Length,Angle_with_"+df3.format(coalignVector[0])+"_"+df3.format(coalignVector[1])+"_"+df3.format(coalignVector[2])+"(Rad),X_coord,Y_coord,Z_coord\n");
+				writer.write("ROI_Name,ROI_Type,ROI_Group,ROI_TimePoint,Length,Angle_with_"+df3.format(coalignVector[0])+"_"+df3.format(coalignVector[1])+"_"+df3.format(coalignVector[2])+"(Rad),X_coord,Y_coord,Z_coord\n");
 			}
 			for(int i = 0; i<bt.roiManager.rois.size();i++)
 			{
 				roi = bt.roiManager.rois.get(i);
-				sPrefix = roi.getName() + ","+Roi3D.intTypeToString(roi.getType())+","+bt.roiManager.getGroupName(roi);
+				sPrefix = roi.getName() + ","+Roi3D.intTypeToString(roi.getType())+","+bt.roiManager.getGroupName(roi)+","+Integer.toString(roi.getTimePoint());
 				profile=measureLineCoalignment(roi, false);
 				if(profile!=null)
 				{
@@ -607,6 +608,10 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		rt.setValue("ROI_Name", row, val.getRoiName());
 		rt.setValue("ROI_Type", row, Roi3D.intTypeToString(val.getRoiType()));
 		rt.setValue("ROI_Group", row, val.getRoiGroupName());
+		if(BigTraceData.nNumTimepoints>1)
+		{
+			rt.setValue("ROI_TimePoint", row, val.getTimePoint());
+		}
 		if ((systemMeasurements&LENGTH)!=0)
 		{
 			rt.setValue("Length", row, val.length);
