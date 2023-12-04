@@ -10,11 +10,13 @@ import java.util.ArrayList;
 import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
+import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineSimple;
 import net.imglib2.AbstractInterval;
 import net.imglib2.AbstractRealInterval;
+import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 
@@ -285,7 +287,39 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 	}
 	@Override
 	public double getMinDist(Line3D line) {
-		// TODO chenge to proper calculation
+		// TODO change to proper calculation
 		return Double.MAX_VALUE;
+	}
+	@Override
+	public Interval getRoiBoundingBox() {
+		
+		if(vertices.size()==0)
+			return null;
+	
+		long [][] bBox = new long [2][3];
+		for (int d = 0; d<3;d++)
+		{
+			bBox[0][d] = Long.MAX_VALUE; 
+			bBox[1][d]= (-1)* Long.MAX_VALUE; 
+		}
+		double [] currPoint = new double [3];
+		for (int i = 0; i<vertices.size();i++)
+		{
+			vertices.get(i).localize(currPoint);
+			currPoint = Roi3D.scaleGlobInv(currPoint, BigTraceData.globCal);
+			for (int d=0;d<3;d++)
+			{
+				if(currPoint[d]<bBox[0][d])
+				{
+					bBox[0][d] = Math.round(currPoint[d]);
+				}
+				if(currPoint[d]>bBox[1][d])
+				{
+					bBox[1][d] = Math.round(currPoint[d]);
+				}
+
+			}
+		}
+		return new FinalInterval(bBox[0],bBox[1]);
 	}
 }

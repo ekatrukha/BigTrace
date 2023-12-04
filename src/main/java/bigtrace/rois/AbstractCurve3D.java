@@ -8,6 +8,8 @@ import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.measure.Circle2DMeasure;
 import bigtrace.measure.MeasureValues;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
@@ -407,5 +409,45 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 			}
 		}
 		return out;
+	}
+	
+	@Override
+	public Interval getRoiBoundingBox() 
+	{
+		ArrayList<RealPoint> allvertices;
+		//in VOXEL coordinates
+		if(this.vertices.size()==1)
+		{
+			allvertices = this.vertices;
+		}
+		else
+		{
+			allvertices =  Roi3D.scaleGlobInv(interpolator.getVerticesVisual(), BigTraceData.globCal);
+		}
+		long [][] bBox = new long [2][3];
+		for (int d = 0; d<3;d++)
+		{
+			bBox[0][d] = Long.MAX_VALUE; 
+			bBox[1][d]= (-1)* Long.MAX_VALUE; 
+		}
+		double [] currPoint = new double [3];
+		for (int i = 0; i<allvertices.size();i++)
+		{
+			allvertices.get(i).localize(currPoint);
+			for (int d=0;d<3;d++)
+			{
+				if(currPoint[d]<bBox[0][d])
+				{
+					bBox[0][d] = Math.round(currPoint[d]);
+				}
+				if(currPoint[d]>bBox[1][d])
+				{
+					bBox[1][d] = Math.round(currPoint[d]);
+				}
+
+			}
+		}
+		return new FinalInterval(bBox[0],bBox[1]);
+		
 	}
 }

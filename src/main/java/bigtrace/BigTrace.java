@@ -556,7 +556,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	/** find a brightest pixel in the direction of a click
 	 *  zoom main view to it, limiting to nZoomBoxSize
 	 **/ 
-	public void actionZoomToPoint()
+	public void actionZoomIn()
 	{
 		
 		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
@@ -651,7 +651,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );
 		actions.runnableAction(() -> actionAdvanceTraceBox(),       "advance trace box", "T" );
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
-		actions.runnableAction(() -> actionZoomToPoint(),			"zoom in to click", "D" );
+		actions.runnableAction(() -> actionZoomIn(),			"zoom in to click", "D" );
 		actions.runnableAction(() -> actionZoomOut(),				"center view (zoom out)", "C" );
 		actions.runnableAction(() -> actionResetCrop(),				"reset crop", "X" );
 		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "O" );
@@ -689,6 +689,14 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions.install( bvv_main.getBvvHandle().getKeybindings(), "BigTrace actions" );
 
 
+	}
+	
+	public void focusOnInterval(Interval interval_in)
+	{
+		if(!bInputLock && !bTraceMode)
+		{
+			viewer.setTransformAnimator(getCenteredViewAnim(interval_in,btdata.dZoomBoxScreenFraction));
+		}
 	}
 	
 	/** calculates trace box around last vertice of provided trace.

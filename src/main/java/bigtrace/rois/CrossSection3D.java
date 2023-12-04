@@ -15,11 +15,14 @@ import com.jogamp.opengl.GL3;
 
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
+import bigtrace.BigTraceData;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolygonFlat;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 import net.imglib2.util.LinAlgHelpers;
 
@@ -420,6 +423,51 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		i++;
 	}
 	*/
+	@Override
+	public Interval getRoiBoundingBox() {
+
+		ArrayList<RealPoint> allvertices;
+		//in VOXEL coordinates
+		if(this.polygonVert==null)
+		{
+			return null;
+		}
+			
+		if(this.polygonVert.size()<3)
+		{
+			return null;
+		}
+		else
+		{
+			allvertices = this.polygonVert;
+		}
+		long [][] bBox = new long [2][3];
+		for (int d = 0; d<3;d++)
+		{
+			bBox[0][d] = Long.MAX_VALUE; 
+			bBox[1][d]= (-1)* Long.MAX_VALUE; 
+		}
+		double [] currPoint = new double [3];
+		for (int i = 0; i<allvertices.size();i++)
+		{
+			allvertices.get(i).localize(currPoint);
+			for (int d=0;d<3;d++)
+			{
+				if(currPoint[d]<bBox[0][d])
+				{
+					bBox[0][d] = Math.round(currPoint[d]);
+				}
+				if(currPoint[d]>bBox[1][d])
+				{
+					bBox[1][d] = Math.round(currPoint[d]);
+				}
+
+			}
+		}
+		return new FinalInterval(bBox[0],bBox[1]);
+
+
+	}
 
 
 }

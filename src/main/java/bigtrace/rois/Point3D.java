@@ -17,6 +17,7 @@ import bigtrace.geometry.Line3D;
 import bigtrace.measure.MeasureValues;
 import bigtrace.measure.Sphere3DMeasure;
 import bigtrace.scene.VisPointsScaled;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
@@ -240,5 +241,10 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	public double getMinDist(Line3D line) {
 		// TODO Auto-generated method stub
 		return Line3D.distancePointLine(vertex, line);
+	}
+	@Override
+	public Interval getRoiBoundingBox() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

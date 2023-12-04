@@ -43,6 +43,8 @@ import bdv.tools.brightness.ColorIcon;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 
 import bigtrace.BigTrace;
@@ -241,12 +243,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 jlist.addListSelectionListener(this);
 		 jlist.addMouseListener(new MouseAdapter() {
 			    public void mouseClicked(MouseEvent evt) {
-			        JList list = (JList)evt.getSource();
 			        if (evt.getClickCount() == 2) {
 
 			            // Double-click detected
-			            int index = list.locationToIndex(evt.getPoint());
-			            System.out.print(index);
+			            int index = jlist.locationToIndex(evt.getPoint());
+			          focusOnRoi(rois.get(index));
 			        } 
 			    }
 			});
@@ -428,6 +429,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 jlist.setSelectedIndex(rois.size()-1);
 		 activeRoi = rois.size()-1;
 
+	 }
+	 
+	 public void focusOnRoi(Roi3D roi)
+	 {	
+		 Interval roiBoundingBox = roi.getRoiBoundingBox(); 
+		 if(roiBoundingBox!=null)
+		 {
+			 bt.focusOnInterval(roiBoundingBox);
+		 }
+		 else
+		 {
+			 System.out.println("NOT IMPLEMENTED YET!");
+		 }
 	 }
 	 
 	 /*

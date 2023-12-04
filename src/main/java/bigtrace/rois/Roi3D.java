@@ -65,7 +65,7 @@ public interface Roi3D
 	public void updateRenderVertices();
 	
 	public double getMinDist(final Line3D line);
-	//public Interval getRoiBoundingBox();
+	public Interval getRoiBoundingBox();
 	
 
 	

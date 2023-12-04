@@ -18,6 +18,8 @@ import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineScaled;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.Masks;
@@ -353,6 +355,8 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 		}
 		return dMinDist;
 	}
+
+
 	
 
 }
