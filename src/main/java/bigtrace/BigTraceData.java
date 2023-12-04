@@ -98,6 +98,9 @@ public class BigTraceData < T extends RealType< T > > {
 	/** whether or not display a box around volume/image **/
 	public boolean bVolumeBox = true;
 	
+	/** whether or not display a box for crop **/
+	public boolean bCropBox = false;
+	
 	/** camera position for BVV **/
 	double dCam = Prefs.get("BigTrace.dCam",2000.0);
 	

@@ -1,6 +1,5 @@
 package bigtrace.measure;
 
-import bigtrace.rois.Roi3D;
 import ij.measure.Measurements;
 import net.imglib2.RealPoint;
 

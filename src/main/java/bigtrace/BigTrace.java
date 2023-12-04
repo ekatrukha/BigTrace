@@ -120,6 +120,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	/** helper box to visualize one-click tracing things **/
 	public Box3D visBox = null;
+	
+	/** helper box to visualize one-click tracing things **/
+	public Box3D cropBox = null;
 
 	/** object storing main data/variables **/
 	public BigTraceData<T> btdata;
@@ -239,6 +242,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			nDimBox[1][i]=(btdata.nDimIni[1][i]-1.0f);
 		}
 		volumeBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		cropBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 	}
 	public void initSourcesCanvas(double origin_axis_length)
 	{
@@ -1078,7 +1082,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			{
 				volumeBox.draw(gl, pvm, screen_size);
 			}
-		
+			//render a box around  the volume 
+			if (btdata.bCropBox)
+			{
+				cropBox.draw(gl, pvm, screen_size);
+			}
+			
+			//one click tracing box
 			if(visBox != null)
 			{
 				visBox.draw(gl, pvm, screen_size);

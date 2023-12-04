@@ -5,6 +5,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.ArrayList;
 
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -41,6 +43,9 @@ public class CropPanel extends JPanel {
 	private RangeSliderTF bbZ;
 	private ArrayList<Listener> listeners =	new ArrayList<Listener>();
 	
+	public JButton butExtractCrop;
+	public JCheckBox showCrop;
+	
 	public static interface Listener {
 		public void boundingBoxChanged(long [][] box);
 
@@ -62,6 +67,8 @@ public class CropPanel extends JPanel {
 			add(theLabel);
 			c.gridx++;
 		}
+		//c.gridx++;
+		c.gridwidth=2;
 		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1.0;
 		layout.setConstraints(slider, c);
@@ -96,8 +103,18 @@ public class CropPanel extends JPanel {
 				new int[] {0, (int) maxDim[2]},
 				new int[] {0, (int) maxDim[2]},
 				c);
-
-
+		c.gridwidth=1;
+		c.weightx = 0.1;
+		c.fill = GridBagConstraints.NONE;
+		c.anchor = GridBagConstraints.WEST;
+		showCrop = new JCheckBox("Show box?", false);
+		c.gridx=1;
+		//c.gridy++;
+		this.add(showCrop,c);
+		c.gridx=2;
+		c.anchor = GridBagConstraints.WEST;
+		butExtractCrop = new JButton("Extract");
+		this.add(butExtractCrop,c);
 
 
 		RangeSliderTF.Listener bbListener = new RangeSliderTF.Listener() {

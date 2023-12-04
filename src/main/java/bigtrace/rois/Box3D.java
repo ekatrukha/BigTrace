@@ -14,6 +14,7 @@ import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineSimple;
 import net.imglib2.AbstractInterval;
+import net.imglib2.AbstractRealInterval;
 import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 
