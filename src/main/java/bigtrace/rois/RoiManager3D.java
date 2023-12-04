@@ -8,7 +8,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -238,6 +239,18 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 jlist.setLayoutOrientation(JList.VERTICAL);
 		 jlist.setVisibleRowCount(-1);
 		 jlist.addListSelectionListener(this);
+		 jlist.addMouseListener(new MouseAdapter() {
+			    public void mouseClicked(MouseEvent evt) {
+			        JList list = (JList)evt.getSource();
+			        if (evt.getClickCount() == 2) {
+
+			            // Double-click detected
+			            int index = list.locationToIndex(evt.getPoint());
+			            System.out.print(index);
+			        } 
+			    }
+			});
+		 
 		 listScroller = new JScrollPane(jlist);
 		// listScroller.setPreferredSize(new Dimension(400, 500));
 		 listScroller.setMinimumSize(new Dimension(170, 250));

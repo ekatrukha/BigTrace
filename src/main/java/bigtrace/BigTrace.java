@@ -604,10 +604,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(!bInputLock && !(c instanceof JTextField))
 		{
 			if(!bTraceMode)
-			{
-			
+			{		
 					viewer.setTransformAnimator(getCenteredViewAnim(btdata.getDataCurrentSourceCropped(),1.0));
-
 			}
 			else
 			{
