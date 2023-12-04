@@ -173,7 +173,7 @@ public class BigTraceData < T extends RealType< T > > {
 	public int nZoomBoxSize = 150;
 	
 	/** fraction of screen occupied by zoom box **/
-	public double dZoomBoxScreenFraction = 1.0;
+	public double dZoomBoxScreenFraction = 0.6;
 	
 	/** animation speed, i.e. duration of transform **/
 	public long nAnimationDuration =  (int)Prefs.get("BigTrace.nAnimationDuration",400);
