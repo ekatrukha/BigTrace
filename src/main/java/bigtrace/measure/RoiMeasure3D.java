@@ -197,15 +197,23 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		jlist = new JList<String>(bt.roiManager.listModel);
 		listScroller = new JScrollPane(jlist);
 		jlist.addListSelectionListener(this);
-		listScroller.setPreferredSize(new Dimension(170, 400));
+		listScroller.setPreferredSize(new Dimension(300, 400));
 		listScroller.setMinimumSize(new Dimension(170, 250));
 
-		this.add(listScroller);	
+		//this.add(listScroller);	
 		cr.gridx=0;
 		cr.gridy=0;
 		cr.gridheight=GridBagConstraints.REMAINDER;
+		
+		cr.fill  = GridBagConstraints.BOTH;
+		cr.weightx=0.99;
+		cr.weighty=0.99;
 		panMeasure.add(listScroller,cr);
-
+		cr.weightx=0.0;
+		cr.weighty=0.0;
+		cr.fill = GridBagConstraints.NONE;
+		
+		
 		butMeasure = new JButton("Measure");
 		butMeasure.addActionListener(this);
 		cr.gridx++;
@@ -265,7 +273,11 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		add(panLineTools,cr);
 		//roi list
 		cr.gridy++;
+		cr.weighty = 0.99;
+		cr.fill = GridBagConstraints.BOTH;
 		add(panMeasure,cr);
+		cr.weighty = 0.0;
+		cr.fill = GridBagConstraints.HORIZONTAL;
 		cr.gridy++;
 		add(panChannel,cr);
 		// Blank/filler component

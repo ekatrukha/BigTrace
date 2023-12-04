@@ -123,11 +123,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 	 
 		 this.bt = bt;
 		 
-		 try {
-		     UIManager.setLookAndFeel( new FlatIntelliJLaf() );
-		 } catch( Exception ex ) {
-		     System.err.println( "Failed to initialize LaF" );
-		 }
 		
 		 int nButtonSize = 40;
 
@@ -246,7 +241,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 jlist.setVisibleRowCount(-1);
 		 jlist.addListSelectionListener(this);
 		 listScroller = new JScrollPane(jlist);
-		 listScroller.setPreferredSize(new Dimension(170, 400));
+		// listScroller.setPreferredSize(new Dimension(400, 500));
 		 listScroller.setMinimumSize(new Dimension(170, 250));
 		 
 		 JPanel roiList = new JPanel(new GridBagLayout());
@@ -255,10 +250,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 GridBagConstraints cr = new GridBagConstraints();
 		 cr.gridx=0;
 		 cr.gridy=0;
-		 //cr.weighty=0.5;
-		 cr.gridheight=GridBagConstraints.REMAINDER;
-		 cr.anchor = GridBagConstraints.NORTHWEST;
+		 
+		 cr.gridheight = GridBagConstraints.REMAINDER;
+
+		 cr.fill  = GridBagConstraints.BOTH;
+		 cr.weightx=0.99;
+		 cr.weighty=0.99;
+
 		 roiList.add(listScroller,cr);
+
+		 cr.weightx=0.0;
+		 cr.weighty=0.0;
+		 cr.fill = GridBagConstraints.NONE;
+		 //cr.weighty=0.0;
 		 butDelete = new JButton("Delete");
 		 butDelete.addActionListener(this);
 		 cr.gridx++;
@@ -381,16 +385,19 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		 c.insets=new Insets(4,4,2,2);
 	     c.gridx=0;
 		 c.gridy=0;
-		 //c.weightx=1.0;
-		 //c.gridwidth=GridBagConstraints.REMAINDER;
+
 		 c.fill = GridBagConstraints.HORIZONTAL;
-		 //c.fill=GridBagConstraints.REMAINDER;
+
 		 //tracing
 		 add(panTracing,c);
 		 //roi list
 		 c.gridy++;
+		 c.weighty = 0.99;
+		 c.fill = GridBagConstraints.BOTH;
 		 add(roiList,c);
 		 c.gridy++;
+		 c.weighty = 0.0;
+		 c.fill = GridBagConstraints.HORIZONTAL;
 		 add(panChannel,c);
 		 c.gridy++;
 		 add(panGroup,c);

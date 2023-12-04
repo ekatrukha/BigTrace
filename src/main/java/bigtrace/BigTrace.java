@@ -22,6 +22,7 @@ import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLaf;
 import com.jogamp.opengl.GL3;
 
 import ij.IJ;
@@ -138,6 +139,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		try {
 		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
+		    FlatLaf.registerCustomDefaultsSource( "flatlaf" );
+		    FlatIntelliJLaf.setup();
 		} catch( Exception ex ) {
 		    System.err.println( "Failed to initialize LaF" );
 		}
