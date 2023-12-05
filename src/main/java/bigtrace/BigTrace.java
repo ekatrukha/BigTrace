@@ -497,13 +497,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			{
 				int nRoiType = roiManager.getActiveRoi().getType();
 				//continue tracing for the selected tracing
-				if(nRoiType ==Roi3D.POLYLINE)
+				if(nRoiType == Roi3D.POLYLINE)
 				{
 					roiManager.getActiveRoi().reversePoints();
 					
 				}
 				
-				if(nRoiType ==Roi3D.LINE_TRACE)
+				if(nRoiType == Roi3D.LINE_TRACE)
 				{
 					roiManager.getActiveRoi().reversePoints();
 					if(bTraceMode)
@@ -512,7 +512,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 						btdata.nPointsInTraceBox=1;
 					}
 				}
-				repaintScene();
+				repaintBVV();
 			}
 
 		}
