@@ -43,7 +43,6 @@ import bdv.tools.brightness.ColorIcon;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
-import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 
