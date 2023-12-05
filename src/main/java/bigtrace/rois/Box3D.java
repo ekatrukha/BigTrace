@@ -291,7 +291,7 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 		return Double.MAX_VALUE;
 	}
 	@Override
-	public Interval getRoiBoundingBox() {
+	public Interval getBoundingBoxVisual() {
 		
 		if(vertices.size()==0)
 			return null;

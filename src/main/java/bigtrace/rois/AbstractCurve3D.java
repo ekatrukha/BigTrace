@@ -412,7 +412,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	}
 	
 	@Override
-	public Interval getRoiBoundingBox() 
+	public Interval getBoundingBoxVisual() 
 	{
 		ArrayList<RealPoint> allvertices;
 		//in VOXEL coordinates
