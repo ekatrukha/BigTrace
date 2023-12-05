@@ -54,7 +54,7 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
-		verticesVis.setRenderType(Roi3D.SURFACE);
+		verticesVis.setRenderType(renderType);
 		edgesVis = new VisPolyLineScaled();
 	
 		edgesVis.setColor(lineColor);
@@ -179,7 +179,7 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 	public void setRenderType(int nRenderType){
 	
 		renderType = nRenderType;
-		//verticesVis.setRenderType(nRenderType);
+		verticesVis.setRenderType(nRenderType);
 		edgesVis.setRenderType(renderType);
 		updateRenderVertices();
 	}	

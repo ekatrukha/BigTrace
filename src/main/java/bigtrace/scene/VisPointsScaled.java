@@ -30,7 +30,8 @@ import static com.jogamp.opengl.GL.GL_FLOAT;
 public class VisPointsScaled
 {
 
-	private final Shader prog;
+	private final Shader progRound;
+	private final Shader progSquare;
 
 	private int vao;
 	
@@ -48,9 +49,12 @@ public class VisPointsScaled
 
 	public VisPointsScaled()
 	{
-		final Segment pointVp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point_color.fp" ).instantiate();		
-		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
+		final Segment pointVp = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point.vp" ).instantiate();
+		final Segment pointVpS = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_point.vp" ).instantiate();
+		final Segment pointFpRound = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_round_point.fp" ).instantiate();		
+		final Segment pointFpSquare = new SegmentTemplate( VisPointsScaled.class, "/scene/scaled_square_point.fp" ).instantiate();
+		progRound = new DefaultShader( pointVp.getCode(), pointFpRound.getCode() );
+		progSquare = new DefaultShader( pointVpS.getCode(), pointFpSquare.getCode() );
 	
 	}
 	/** constructor with one point **/
@@ -194,20 +198,40 @@ public class VisPointsScaled
 		//voxel size
 		Vector3f globCalForw = new Vector3f((float)BigTraceData.globCal[0], (float)BigTraceData.globCal[1], (float)BigTraceData.globCal[2]);
 
-		prog.getUniform1f( "pointSizeReal" ).set( (float) (fPointSize*BigTraceData.dMinVoxelSize) );
-		prog.getUniform1f( "pointScale" ).set( fPointScale );
-		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-		prog.getUniform3f( "voxelScale" ).set( globCalForw );
-		prog.getUniform4f("colorin").set(l_color);
-		prog.getUniform2f("windowSize").set(window_sizef);
-		prog.getUniform2f("ellipseAxes").set(ellipse_axes);
-		prog.getUniform1i("renderType").set(renderType);
-		prog.setUniforms( context );
-		prog.use( context );
+		progRound.getUniform1f( "pointSizeReal" ).set( (float) (fPointSize*BigTraceData.dMinVoxelSize) );
+		progRound.getUniform1f( "pointScale" ).set( fPointScale );
+		progRound.getUniformMatrix4f( "pvm" ).set( pvm );
+		progRound.getUniform3f( "voxelScale" ).set( globCalForw );
+		progRound.getUniform4f("colorin").set(l_color);
+		progRound.getUniform2f("windowSize").set(window_sizef);
+		progRound.getUniform2f("ellipseAxes").set(ellipse_axes);
+		progRound.getUniform1i("renderType").set(renderType);
+		progRound.setUniforms( context );
+		
+		progSquare.getUniform1f( "pointSizeReal" ).set( (float) (1.25*fPointSize*BigTraceData.dMinVoxelSize) );
+		progSquare.getUniform1f( "pointScale" ).set( fPointScale );
+		progSquare.getUniformMatrix4f( "pvm" ).set( pvm );
+		progSquare.getUniform3f( "voxelScale" ).set( globCalForw );
+		progSquare.getUniform4f("colorin").set(l_color);
+		progSquare.getUniform2f("windowSize").set(window_sizef);
+		progSquare.getUniform2f("ellipseAxes").set(ellipse_axes);
+		progSquare.getUniform1i("renderType").set(renderType);
+		progSquare.setUniforms( context );
+		
+		
 
-
+		progRound.use( context );
 		gl.glBindVertexArray( vao );
-		gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN);
+		if(nPointsN==1)
+		{
+			gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN);
+		}
+		else
+		{
+			gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN-1);
+			progSquare.use( context );
+			gl.glDrawArrays( GL.GL_POINTS, nPointsN-1, 1);
+		}
 		gl.glBindVertexArray( 0 );
 	}
 
