@@ -108,14 +108,25 @@ public class VisPointsScaled
 		int i,j;	
 		
 		nPointsN = points.size();
-		
-		vertices = new float [nPointsN*3];//assume 3D
+		if(nPointsN == 1)
+			vertices = new float [nPointsN*3]; //assume 3D
+		else
+			vertices = new float [(nPointsN+1)*3]; //assume 3D
+
 		
 		for (i=0;i<nPointsN; i++)
 		{
 			for (j=0;j<3; j++)
 			{
 				vertices[i*3+j]=points.get(i).getFloatPosition(j);
+			}			
+		}
+		if(nPointsN>1)
+		{
+			i = nPointsN-1;
+			for (j=0;j<3; j++)
+			{
+				vertices[(i+1)*3+j]=points.get(i).getFloatPosition(j);
 			}			
 		}
 		
@@ -215,7 +226,7 @@ public class VisPointsScaled
 		progSquare.getUniform4f("colorin").set(l_color);
 		progSquare.getUniform2f("windowSize").set(window_sizef);
 		progSquare.getUniform2f("ellipseAxes").set(ellipse_axes);
-		progSquare.getUniform1i("renderType").set(renderType);
+		progSquare.getUniform1i("renderType").set(Roi3D.WIRE);
 		progSquare.setUniforms( context );
 		
 		
@@ -228,7 +239,7 @@ public class VisPointsScaled
 		}
 		else
 		{
-			gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN-1);
+			gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN);
 			progSquare.use( context );
 			gl.glDrawArrays( GL.GL_POINTS, nPointsN-1, 1);
 		}
