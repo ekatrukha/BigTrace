@@ -73,9 +73,8 @@
 	<properties>
 		<package-name>BigTrace</package-name>
       			<license.licenseName>gpl_v3</license.licenseName>
-        <license.copyrightOwners>Fiji distribution of ImageJ for the life sciences.</license.copyrightOwners>
-    	<formats-gpl.version>7.0.1</formats-gpl.version>
-    	<logback.version>1.2.11</logback.version>
+        		<license.copyrightOwners>Fiji distribution of ImageJ for the life sciences.</license.copyrightOwners>
+
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<!--  releaseProfiles>sign,deploy-to-scijava</releaseProfiles -->
