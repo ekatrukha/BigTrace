@@ -55,14 +55,18 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	public double dAngleThreshold;// = 0.8;
 	
 	int nNeighborsMethods = 0;
+	
 	int nPointPerSegment;
 	
-	
 	int [][] nNeighborsIndexes = new int[26][3];
+	
 	double [][] nNeighborsVectors = new double[26][3];
 	
 	private HashMap<String, ArrayList<int[]>> neighborsMap = new HashMap<String, ArrayList<int[]>>();
+	
 	double [] lastDirectionVector;
+	
+	ArrayList<double[]> allPointsIntersection;
 	
 	Convolution [] convObjects = new Convolution[6];
 	ExecutorService es;// = Executors.newFixedThreadPool( nThreads );
@@ -98,31 +102,28 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	}
 	@Override
 	protected Void doInBackground() throws Exception {
-	
-		//RealPoint nextPoint;
-		//RealPoint startPointRefined;
-
-		//int nCountPoints = 0;
 		
-
 		setProgress(0);
+		
 		init();
 		
-
 		long start1, end1;
+		
 		start1 = System.currentTimeMillis();
 		
 		//init math
 		getMathForCurrentPoint(startPoint);
-		startPoint=refinePointUsingSaliency(startPoint);
+		startPoint = refinePointUsingSaliency(startPoint);
 		
 		double [] startDirectionVector = getVectorAtLocation(startPoint);
 		lastDirectionVector = new double [3];
 		for (int d=0; d<3; d++)
 		{
-			lastDirectionVector[d]=startDirectionVector[d];
+			lastDirectionVector[d] = startDirectionVector[d];
 		}
 	
+		allPointsIntersection = new ArrayList<double[]>();
+		
 		//trace in one direction
 		int nTotPoints = traceOneDirection(true, 0);
 		setProgress(50);
@@ -134,17 +135,16 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		}
 		//reverse ROI
 		bt.roiManager.rois.get(bt.roiManager.activeRoi).reversePoints();
+		
 		//init math
 		getMathForCurrentPoint(startPoint);
 		nTotPoints = traceOneDirection(false, nTotPoints);
 		
 		end1 = System.currentTimeMillis();
 		System.out.println("THREADED Elapsed Time in seconds: "+ 0.001*(end1-start1));
-		
-		//show it
-		//System.out.println("YOHOOO!");
 
 		setProgress(100);
+		
 		setProgressState("trace with "+Integer.toString(nTotPoints)+" points. auto-tracing done.");
 
 		return null;
@@ -160,6 +160,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		
 		int nCountPoints=0;
 		points.add(startPoint);
+		allPointsIntersection.add(startPoint.positionAsDoubleArray());
 		if(bFirstTrace)
 		{
 			bt.roiManager.addSegment(points.get(0),null);
@@ -175,7 +176,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		while (nextPoint != null)
 		//while (nextPoint != null && testCount<100)
 		{
-			if(points.size()==nPointPerSegment)
+			if(points.size() == nPointPerSegment)
 			{
 				bt.roiManager.addSegment(points.get(points.size()-1), points);
 				points = new ArrayList<RealPoint>();
@@ -194,6 +195,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 				} catch (InterruptedException ignore) {}
 			}
 			points.add(new RealPoint(nextPoint));
+			allPointsIntersection.add(nextPoint.positionAsDoubleArray());
 			nCountPoints++;
 			//see if we are still inside reasonable 
 			//values for math box
@@ -202,27 +204,27 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 				getMathForCurrentPoint(points.get(points.size()-1));
 			}
 
-			/*
-			if(nCountPoints==73)
-			{
-				int d=0;
-				d=10;
-			}*/
 			nextPoint = getNextPoint(points.get(points.size()-1));
+			
 			if(nextPoint!=null)
 			{
-				double [] nextPointD = nextPoint.positionAsDoubleArray();
-				double [] prevPointD = points.get(points.size()-1).positionAsDoubleArray();
-				LinAlgHelpers.subtract(nextPointD, prevPointD, nextPointD);
-				LinAlgHelpers.scale(nextPointD, 1.0/LinAlgHelpers.length(nextPointD), nextPointD);
-				
-				//System.out.println(LinAlgHelpers.length(saveVector)+" "+LinAlgHelpers.length(nextPointD)+" "+LinAlgHelpers.dot(saveVector, nextPointD));
-				//System.out.println(LinAlgHelpers.dot(saveVector, nextPointD));
-				//System.out.println(nCountPoints+" "+LinAlgHelpers.dot(saveVector, nextPointD));
+				if(checkIntersection(nextPoint))
+				{
+					nextPoint = null;
+					System.out.println("one-click tracing stopped, self intersection found.");
+				}
+//				double [] nextPointD = nextPoint.positionAsDoubleArray();
+//				double [] prevPointD = points.get(points.size()-1).positionAsDoubleArray();
+//				LinAlgHelpers.subtract(nextPointD, prevPointD, nextPointD);
+//				LinAlgHelpers.scale(nextPointD, 1.0/LinAlgHelpers.length(nextPointD), nextPointD);				
+//				System.out.println(LinAlgHelpers.length(saveVector)+" "+LinAlgHelpers.length(nextPointD)+" "+LinAlgHelpers.dot(saveVector, nextPointD));
+//				System.out.println(LinAlgHelpers.dot(saveVector, nextPointD));
+//				System.out.println(nCountPoints+" "+LinAlgHelpers.dot(saveVector, nextPointD));
 			}
-			//setProgress(100);
+
 
 		}
+		//adding last part of the trace
 		bt.roiManager.addSegment(points.get(points.size()-1), points);
 		
 		return nCountPoints;
@@ -289,6 +291,20 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 				count++;
 			}
 		}
+	}
+	/** checks if the point intersects already traced part of the curve**/
+	boolean checkIntersection(RealPoint currpoint)
+	{
+		double [] currPos = currpoint.positionAsDoubleArray();
+		boolean bIntersect = false;
+		for(int i=0;i<allPointsIntersection.size() && !bIntersect ;i++)
+		{
+			if(LinAlgHelpers.distance(currPos,allPointsIntersection.get(i))<0.5)
+			{
+				bIntersect = true;
+			}
+		}
+		return bIntersect;
 	}
 	
 	public RealPoint getNextPoint(RealPoint currpoint)
@@ -510,12 +526,11 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	public double[] getVectorAtLocation(long[] point)
 	{
 		RealPoint out = new RealPoint(3);
-		//for(int d=0;d<3;d++)
-		//{
-			out.setPosition(point);
-			return getVectorAtLocation(out);
-		//}
+
+		out.setPosition(point);
 		
+		return getVectorAtLocation(out);
+	
 	}
 	public double[] getVectorAtLocation(RealPoint point)
 	{

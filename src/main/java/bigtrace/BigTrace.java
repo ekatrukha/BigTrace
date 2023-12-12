@@ -317,6 +317,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				if(findPointLocationFromClick(btdata.getDataCurrentSourceCropped(), btdata.nHalfClickSizeWindow,target))
 				{
 					
+//					System.out.println(target.getDoublePosition(0));
+//					System.out.println(target.getDoublePosition(1));
+//					System.out.println(target.getDoublePosition(2));
+					
 					switch (RoiManager3D.mode)
 					{
 						case RoiManager3D.ADD_POINT_SEMIAUTOLINE:
@@ -354,7 +358,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 							//setTraceBoxMode(true);
 							roiManager.setLockMode(true);
 							runOneClickTrace(target);
-							
 							break;
 						default:
 							roiManager.addPoint(target);
@@ -449,6 +452,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				else
 				{
 					btdata.nPointsInTraceBox--;
+					
 					if(btdata.nPointsInTraceBox==0)
 					{
 						calcShowTraceBox((LineTrace3D)roiManager.getActiveRoi(),false);

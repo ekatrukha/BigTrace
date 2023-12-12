@@ -5,16 +5,24 @@ import ij.Prefs;
 
 public class RenderSettings {
 	
+	
+	public static final double defRenderWidth=600.;
+	public static final double defRenderHeight=600.;
+	public static final double defDitherWidth=3.;
+	public static final double defNumDitherSamples=3;
+	public static final double defCacheBlockSize=32.;
+	public static final double defMaxCacheSizeInMB=300.;
+	
 	/** screen render width for BVV **/
-	public int nRenderW = (int) Prefs.get("BigTrace.nRenderW",800.0);
+	public int renderWidth = (int) Prefs.get("BigTrace.renderWidth",defRenderWidth);
 	
 	/** screen render height for BVV **/
-	public int nRenderH = (int) Prefs.get("BigTrace.nRenderH",600.0);
+	public int renderHeight = (int) Prefs.get("BigTrace.renderHeight",defRenderHeight);
 	
 	/** dither width BVV **/
-	public int ditherWidth = (int) Prefs.get("BigTrace.ditherWidth",3);
+	public int ditherWidth = (int) Prefs.get("BigTrace.ditherWidth",defDitherWidth);
 	
-	public int numDitherSamples = (int) Prefs.get("BigTrace.numDitherSamples",8);
+	public int numDitherSamples = (int) Prefs.get("BigTrace.numDitherSamples",defNumDitherSamples);
 
 	public int cacheBlockSize = (int) Prefs.get("BigTrace.cacheBlockSize",32);
 
