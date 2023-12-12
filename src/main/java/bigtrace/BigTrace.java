@@ -274,20 +274,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 		btpanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(viewer);
 	 	
-	 	//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		//btpanel.frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		btpanel.finFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		btpanel.bvv_frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        //Create and set up the content pane.
-        //JComponent newContentPane = btframe;
-        //newContentPane.setOpaque(true); //content panes must be opaque
-        //frame.setContentPane(newContentPane);
-		//btpanel.frame.add(btpanel);
+
 		btpanel.finFrame.add(btpanel);
 		
         //Display the window.
 		btpanel.finFrame.setSize(400,600);
-        //frame.pack();
 		btpanel.finFrame.setVisible(true);
 	    java.awt.Point bvv_p = btpanel.bvv_frame.getLocationOnScreen();
 	    java.awt.Dimension bvv_d = btpanel.bvv_frame.getSize();
@@ -296,8 +289,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	    btpanel.finFrame.addWindowListener(this);
 	    btpanel.bvv_frame.addWindowListener(this);
 
-	    //finFrame.addWindowStateListener(this);
-	    //addWindowListener(addWindowListener(this));
 	}
 	
 	/** find a brightest pixel in the direction of a click
@@ -437,7 +428,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			}
 			else
 			{
-
 				//if the last point in the tracing, leave tracing mode
 				if(!roiManager.removeSegment())
 				{
@@ -503,8 +493,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				//continue tracing for the selected tracing
 				if(nRoiType == Roi3D.POLYLINE)
 				{
-					roiManager.getActiveRoi().reversePoints();
-					
+					roiManager.getActiveRoi().reversePoints();					
 				}
 				
 				if(nRoiType == Roi3D.LINE_TRACE)
@@ -575,6 +564,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				{
 					
 					final FinalInterval zoomInterval = getTraceBoxCentered(getTraceInterval(!btdata.bZoomCrop),btdata.nZoomBoxSize, target);
+
 					if(btdata.bZoomCrop)
 					{
 						btpanel.cropPanel.setBoundingBox(zoomInterval);
@@ -1270,7 +1260,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t = getCenteredViewTransform(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]), 0.9);
 		viewer.state().setViewerTransform(t);
 	}
-	
 
 	
 	public void resetViewXY()
@@ -1412,8 +1401,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public Line3D findClickLine()
 	{
 
-
 		java.awt.Point point_mouse  = viewer.getMousePosition();
+
 		if(point_mouse ==null)
 		{
 			return null;
@@ -1438,10 +1427,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			matPerspWorld.unproject((float)point_mouse.x,sH-(float)point_mouse.y,(float)z, //z=1 ->far from camera z=0 -> close to camera
 					new int[] { 0, 0, sW, sH },temp);
 
-			mainLinePoints[z]=new RealPoint(temp.x,temp.y,temp.z);			
+			mainLinePoints[z] = new RealPoint(temp.x,temp.y,temp.z);			
 		}
 
-		Line3D clickLine=new Line3D(mainLinePoints[0],mainLinePoints[1]);
+		Line3D clickLine = new Line3D(mainLinePoints[0],mainLinePoints[1]);
 
 		return clickLine;
 	}
@@ -1536,7 +1525,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(VolumeMisc.newBoundBox(viewclick, intersectionPoints, nClickMinMax))
 		{
 
-					
 			IntervalView< X > intRay = Views.interval(viewclick, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
 																								   nClickMinMax[1][0],nClickMinMax[1][1],nClickMinMax[1][2]));
 			Cuboid3D clickVolume = new Cuboid3D(clickFrustum);
@@ -1553,10 +1541,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			{
 				btpanel.progressBar.setString("cannot find clicked point");
 				return false;
-			}
-				
-
-						
+			}					
 		}
 		else
 		{
@@ -1567,8 +1552,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 	@Override
 	public void timePointChanged(int timePointIndex) {
-			
-		
+					
 		if(btdata.nCurrTimepoint != viewer.state().getCurrentTimepoint())
 		{
 			btdata.nCurrTimepoint = viewer.state().getCurrentTimepoint();

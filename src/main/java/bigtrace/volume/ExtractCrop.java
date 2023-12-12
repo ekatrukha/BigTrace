@@ -5,14 +5,14 @@ import java.nio.file.Paths;
 
 import javax.swing.SwingWorker;
 
-import com.jidesoft.icons.IconSet.View;
-
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.Calibration;
+
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;

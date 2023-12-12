@@ -1004,6 +1004,20 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		straightenOutputList.setSelectedIndex((int)Prefs.get("BigTrace.nStraightenOutput", 0));
 		straightenSettings.add(straightenOutputList,cd);
 		
+		cd.gridy++;
+		cd.gridx=0;	
+		straightenSettings.add(new JLabel("ROI Shape:"),cd);
+		cd.gridx++;
+		String[] sShapeInterpolationType = { "Voxel", "Smooth", "Spline"};
+		straightenSettings.add(new JLabel(sShapeInterpolationType[BigTraceData.shapeInterpolation]),cd);
+		
+		cd.gridy++;
+		cd.gridx=0;	
+		straightenSettings.add(new JLabel("Intensity interpolation:"),cd);
+		cd.gridx++;
+		String[] sIntInterpolationType = { "Nearest Neighbor", "Linear", "Lanczos" };
+		straightenSettings.add(new JLabel(sIntInterpolationType[BigTraceData.intensityInterpolation]),cd);
+		
 		int reply = JOptionPane.showConfirmDialog(null, straightenSettings, "Straighten curve(s)", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (reply == JOptionPane.OK_OPTION) 

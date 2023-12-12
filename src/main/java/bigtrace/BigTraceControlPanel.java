@@ -6,7 +6,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -39,16 +38,12 @@ import bigtrace.gui.RangeSliderTF;
 import bigtrace.gui.RenderMethodPanel;
 import bigtrace.gui.VoxelSizePanel;
 import bigtrace.measure.RoiMeasure3D;
-import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.volume.ExtractCrop;
-import bigtrace.volume.StraightenCurve;
 import bigtrace.BigTraceData;
 import btbvv.vistools.BvvStackSource;
-import ij.IJ;
 import ij.Prefs;
-import ij.util.Tools;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -527,6 +522,16 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		JComboBox<String> extractCropOutputList = new JComboBox<String>(sExtractCropOutput);
 		extractCropOutputList.setSelectedIndex((int)Prefs.get("BigTrace.nExtractCropOutput", 0));
 		cropExtractSettings.add(extractCropOutputList,cd);
+		
+		if(bt.bTestLLSTransform)
+		{
+			cd.gridy++;
+			cd.gridx=0;	
+			cropExtractSettings.add(new JLabel("Intensity interpolation:"),cd);
+			cd.gridx++;
+			String[] sIntInterpolationType = { "Nearest Neighbor", "Linear", "Lanczos" };
+			cropExtractSettings.add(new JLabel(sIntInterpolationType[BigTraceData.intensityInterpolation]),cd);
+		}
 		
 		int nExtractCropOutput = 0;
 		int nTimeRangeSetting = 0;

@@ -102,7 +102,7 @@ public class VolumeMisc {
 		// create a cursor for the image (the order does not matter)
 		final Cursor< T > cursor = input.localizingCursor();
 		
-		boolean bFound=false;
+		boolean bFound = false;
 		// initialize min and max with the first image value
 		T type = cursor.next();
 		T max = type.copy();
@@ -120,7 +120,7 @@ public class VolumeMisc {
 					{
 						max.set( type );
 						maxLocation.setPosition( cursor );
-						bFound=true;
+						bFound = true;
 					}
 				}
 		}

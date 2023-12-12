@@ -15,7 +15,6 @@ import com.jogamp.opengl.GL3;
 
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
-import bigtrace.BigTraceData;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
