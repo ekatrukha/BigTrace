@@ -1127,8 +1127,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				dCam(btdata.dCam).
 				dClipNear(btdata.dClipNear).
 				dClipFar(btdata.dClipFar).				
-				renderWidth( BigTraceData.renderParams.nRenderW).
-				renderHeight( BigTraceData.renderParams.nRenderH).
+				renderWidth( BigTraceData.renderParams.renderWidth).
+				renderHeight( BigTraceData.renderParams.renderHeight).
 				numDitherSamples( BigTraceData.renderParams.numDitherSamples ).
 				cacheBlockSize( BigTraceData.renderParams.cacheBlockSize ).
 				maxCacheSizeInMB( BigTraceData.renderParams.maxCacheSizeInMB ).
@@ -1171,8 +1171,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				dCam(btdata.dCam).
 				dClipNear(btdata.dClipNear).
 				dClipFar(btdata.dClipFar).				
-				renderWidth( BigTraceData.renderParams.nRenderW).
-				renderHeight( BigTraceData.renderParams.nRenderH).
+				renderWidth( BigTraceData.renderParams.renderWidth).
+				renderHeight( BigTraceData.renderParams.renderHeight).
 				numDitherSamples( BigTraceData.renderParams.numDitherSamples ).
 				cacheBlockSize( BigTraceData.renderParams.cacheBlockSize ).
 				maxCacheSizeInMB( BigTraceData.renderParams.maxCacheSizeInMB ).

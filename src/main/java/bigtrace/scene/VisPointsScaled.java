@@ -194,7 +194,7 @@ public class VisPointsScaled
 		//that will scale into the circle %)
 		//
 		
-		ellipse_axes = new Vector2f((float)screen_size[0]/(float)BigTraceData.renderParams.nRenderW, (float)screen_size[1]/(float)BigTraceData.renderParams.nRenderH);
+		ellipse_axes = new Vector2f((float)screen_size[0]/(float)BigTraceData.renderParams.renderWidth, (float)screen_size[1]/(float)BigTraceData.renderParams.renderHeight);
 		//scale of viewport vs render
 		//we enlarge/shrink to minimum dimension scale
 		//and in the ellipse the other dimension will be cropped
