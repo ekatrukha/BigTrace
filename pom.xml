@@ -116,6 +116,11 @@
 		</dependency>
 		
 		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-mesh</artifactId>
+		</dependency>
+		
+		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
 		</dependency>

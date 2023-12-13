@@ -128,7 +128,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	 }
 
 	@Override
-	public void draw(GL3 gl, Matrix4fc pvm, int[] screen_size) {
+	public void draw(GL3 gl, Matrix4fc pvm, final Matrix4fc vm, int[] screen_size) {
 		verticesVis.draw(gl, pvm, screen_size);
 		planeVis.draw(gl, pvm);
 		

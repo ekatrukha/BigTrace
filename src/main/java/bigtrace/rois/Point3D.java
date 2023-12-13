@@ -71,7 +71,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	
 
 	@Override
-	public void draw(final GL3 gl, final Matrix4fc pvm, final int[] screen_size) 
+	public void draw(final GL3 gl, final Matrix4fc pvm, final Matrix4fc vm, final int[] screen_size) 
 	{
 		if(vertexVis!=null)
 			vertexVis.draw( gl, pvm, screen_size);

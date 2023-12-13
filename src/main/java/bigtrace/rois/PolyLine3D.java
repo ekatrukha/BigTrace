@@ -17,6 +17,7 @@ import bigtrace.BigTraceData;
 import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
+import bigtrace.scene.VisPolyLineMesh;
 import bigtrace.scene.VisPolyLineScaled;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
@@ -33,7 +34,8 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 	
 
 	public VisPointsScaled verticesVis;
-	public VisPolyLineScaled edgesVis;
+	//public VisPolyLineScaled edgesVis;
+	public VisPolyLineMesh edgesVis;
 	
 
 	public PolyLine3D(final Roi3DGroup preset_in, final int nTimePoint_)
@@ -53,7 +55,8 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
 		verticesVis.setRenderType(renderType);
-		edgesVis = new VisPolyLineScaled();
+		//edgesVis = new VisPolyLineScaled();
+		edgesVis = new VisPolyLineMesh();
 	
 		edgesVis.setColor(lineColor);
 		edgesVis.setThickness(lineThickness);
@@ -132,10 +135,10 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 	}
 
 	@Override
-	public void draw(final GL3 gl, final Matrix4fc pvm, final int[] screen_size) 
+	public void draw(final GL3 gl, final Matrix4fc pvm, final Matrix4fc vm, final int[] screen_size) 
 	{
 		verticesVis.draw(gl, pvm, screen_size);
-		edgesVis.draw(gl, pvm);
+		edgesVis.draw(gl, pvm, vm);
 		
 	}
 

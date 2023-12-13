@@ -1059,13 +1059,16 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		//handl.setRenderScene( ( gl, data ) -> {
 		
 		final Matrix4f pvm=new Matrix4f( data.getPv() );
+		final Matrix4f view = MatrixMath.affine( data.getRenderTransformWorldToScreen(), new Matrix4f() );
+		final Matrix4f camview = MatrixMath.screen( btdata.dCam, screen_size[0], screen_size[1], new Matrix4f() ).mul( view );
+
 		
 		//to be able to change point size in shader
 		gl.glEnable(GL3.GL_PROGRAM_POINT_SIZE);
 		
 		synchronized (roiManager)
 		{
-			roiManager.draw(gl, pvm,  screen_size);
+			roiManager.draw(gl, pvm, camview, screen_size);
 		}	
 		
 			//render the origin of coordinates
@@ -1080,18 +1083,18 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			//render a box around  the volume 
 			if (btdata.bVolumeBox)
 			{
-				volumeBox.draw(gl, pvm, screen_size);
+				volumeBox.draw(gl, pvm, camview, screen_size);
 			}
 			//render a box around  the volume 
 			if (btdata.bCropBox)
 			{
-				cropBox.draw(gl, pvm, screen_size);
+				cropBox.draw(gl, pvm, camview, screen_size);
 			}
 			
 			//one click tracing box
 			if(visBox != null)
 			{
-				visBox.draw(gl, pvm, screen_size);
+				visBox.draw(gl, pvm, camview, screen_size);
 				
 			}
 		//panel.requestRepaint(RepaintType.SCENE);
@@ -1646,9 +1649,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		testI.run("");
+		//testI.run("");
 		
-		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
 		
 		/*
 		testI.roiManager.setLockMode(true);

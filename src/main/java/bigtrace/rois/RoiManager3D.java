@@ -582,7 +582,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 }
 	 
 	 /** Draw all ROIS **/
-	 public void draw(final GL3 gl, final Matrix4fc pvm,  final int[] screen_size)
+	 public void draw(final GL3 gl, final Matrix4fc pvm,  Matrix4fc vm, final int[] screen_size)
 	 {
 	       Roi3D roi;
 	       Color savePointColor= null;
@@ -625,14 +625,14 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		    	   {
 		    		   if(groups.get(roi.getGroupInd()).bVisible)
 		    		   {
-		    			   roi.draw(gl, pvm, screen_size);
+		    			   roi.draw(gl, pvm, vm, screen_size);
 		    		   }
 		    		   else
 		    		   {
 		    			   //still draw active ROI
 			    		   if(i==activeRoi)
 			    		   {
-			    			   roi.draw(gl, pvm, screen_size);
+			    			   roi.draw(gl, pvm, vm, screen_size);
 			    		   }	    			   
 		    		   }
 		    	   }
@@ -640,7 +640,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		    	   {
 		    		   if(i==activeRoi)
 		    		   {
-		    			   roi.draw(gl, pvm, screen_size);
+		    			   roi.draw(gl, pvm, vm, screen_size);
 		    		   }
 		    	   }
 		    	  

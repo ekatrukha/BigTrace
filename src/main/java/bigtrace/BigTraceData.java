@@ -102,7 +102,7 @@ public class BigTraceData < T extends RealType< T > > {
 	public boolean bCropBox = false;
 	
 	/** camera position for BVV **/
-	double dCam = Prefs.get("BigTrace.dCam",2000.0);
+	public double dCam = Prefs.get("BigTrace.dCam",2000.0);
 	
 	/** near clip plane position for BVV **/
 	double dClipNear = Prefs.get("BigTrace.dClipNear",1000.0);

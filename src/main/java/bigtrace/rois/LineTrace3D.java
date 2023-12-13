@@ -17,6 +17,7 @@ import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
 import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.scene.VisPointsScaled;
+import bigtrace.scene.VisPolyLineMesh;
 import bigtrace.scene.VisPolyLineScaled;
 
 import net.imglib2.RealLocalizable;
@@ -34,7 +35,8 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 	
 	public ArrayList<ArrayList<RealPoint>> segments;
 	public VisPointsScaled verticesVis;
-	public VisPolyLineScaled segmentsVis;
+	//public VisPolyLineScaled segmentsVis;
+	public VisPolyLineMesh segmentsVis;
 	
 	
 
@@ -58,7 +60,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 		verticesVis.setSize(pointSize);
 		verticesVis.setRenderType(renderType);
 		interpolator = new CurveShapeInterpolation(type);
-		segmentsVis = new VisPolyLineScaled();
+		segmentsVis = new VisPolyLineMesh();
 		segmentsVis.setColor(lineColor);
 		segmentsVis.setThickness(lineThickness);
 		segmentsVis.setRenderType(renderType);
@@ -132,11 +134,11 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 
 
 	@Override
-	public void draw(final GL3 gl, final Matrix4fc pvm, final int[] screen_size) {
+	public void draw(final GL3 gl, final Matrix4fc pvm, final Matrix4fc vm, final int[] screen_size) {
 		
 
 		verticesVis.draw(gl, pvm, screen_size);
-		segmentsVis.draw(gl, pvm);
+		segmentsVis.draw(gl, pvm, vm);
 		
 		
 	}
