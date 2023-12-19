@@ -297,8 +297,7 @@ public class VisPolyLineMesh {
 		final int nSectorN = BigTraceData.sectorN;
 		nPointsN = allContours.size();
 		float [][] triangle = new float[3][3];
-		//float [][] triangle2 = new float[3][3];
-		//float [] point3 = new float[3];
+
 		if(nPointsN>1)
 		{
 			//all vertices
@@ -311,22 +310,44 @@ public class VisPolyLineMesh {
 				{
 					for (j=0;j<3; j++)
 					{
+						
 						triangle[0][j] = allContours.get(iPoint-1).get(i).getFloatPosition(j);
-						triangle[1][j]=allContours.get(iPoint).get(i).getFloatPosition(j);
-						triangle[2][j]=allContours.get(iPoint-1).get(i+1).getFloatPosition(j);
-
+						triangle[1][j] = allContours.get(iPoint-1).get(i+1).getFloatPosition(j);
+						triangle[2][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
+						
 					}	
 					nmesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2]);
 					for (j=0;j<3; j++)
 					{
-						//triangle[0][j] = allContours.get(iPoint-1).get(i).getFloatPosition(j);
-						triangle[0][j]=allContours.get(iPoint).get(i).getFloatPosition(j);
-						triangle[1][j]=allContours.get(iPoint).get(i+1).getFloatPosition(j);
-						triangle[2][j]=allContours.get(iPoint-1).get(i+1).getFloatPosition(j);
-
+						
+						triangle[0][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
+						triangle[1][j] = allContours.get(iPoint-1).get(i+1).getFloatPosition(j);
+						triangle[2][j] = allContours.get(iPoint).get(i+1).getFloatPosition(j);
+						
 					}	
 					nmesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2]);
 				}
+				i=nSectorN-1;
+				//last one closing the sector
+				for (j=0;j<3; j++)
+				{
+					
+					triangle[0][j] = allContours.get(iPoint-1).get(i).getFloatPosition(j);
+					triangle[1][j] = allContours.get(iPoint-1).get(0).getFloatPosition(j);
+					triangle[2][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
+					
+				}	
+				nmesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2]);
+				for (j=0;j<3; j++)
+				{
+					
+					triangle[0][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
+					triangle[1][j] = allContours.get(iPoint-1).get(0).getFloatPosition(j);
+					triangle[2][j] = allContours.get(iPoint).get(0).getFloatPosition(j);
+					
+				}	
+				nmesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2]);
+				
 
 			}
 		}
@@ -415,9 +436,9 @@ public class VisPolyLineMesh {
 //				gl.glEnable( GL.GL_CULL_FACE );
 //				gl.glCullFace( GL.GL_BACK );
 //				gl.glFrontFace( GL.GL_CCW );
+				//gl.glEnable(GL.GL_BLEND);
 				//gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);  
 				gl.glDepthFunc( GL.GL_ALWAYS);
-				//gl.glEnable(GL.GL_BLEND);
 				//gl.glDepthFunc( GL.GL_LESS);
 				
 				gl.glDrawElements( GL_TRIANGLES, ( int ) nMeshTrianglesSize * 3, GL_UNSIGNED_INT, 0 );

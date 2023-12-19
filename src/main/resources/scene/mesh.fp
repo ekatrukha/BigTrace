@@ -3,13 +3,12 @@ out vec4 fragColor;
 uniform vec4 colorin;
 in vec3 Normal;
 in vec3 FragPos;
-//flat in int disc;
 
 //const vec3 ObjectColor = vec3(1, 1, 1);
 
 
 //const vec3 lightColor1 = 0.5 * vec3(0.9, 0.9, 1);
-const vec3 lightColor1 = vec3(1.0, 0.0, 0.0);
+const vec3 lightColor1 = vec3(1.0, 1.0, 1.0);
 const vec3 lightDir1 = normalize(vec3(0, -0.2, -1));
 
 const vec3 lightColor2 = 0.5 * vec3(0.1, 0.1, 1);
@@ -34,13 +33,6 @@ vec3 phong(vec3 norm, vec3 viewDir, vec3 lightDir, vec3 lightColor, float shinin
 void main()
 {
 
-	//if(disc == 1)
-	//{
-	//	fragColor = vec4(0,0,0,0);
-	//}
-	//else
-	//{
-	//	fragColor = vec4(colorin, 1);
 		vec3 norm = normalize(Normal);
 		vec3 viewDir = normalize(-FragPos);
 	
@@ -49,14 +41,13 @@ void main()
 		//float alphax = min(1.0, 1.0-abs(dot(norm,viewDir)));
 		//float alphax = min(1.0, cos(3.14*0.5*abs(dot(norm,viewDir))));
 		float alphax = min(1.0, 1.0-pow(abs(dot(norm,viewDir)),1.0));
-	//	if(alphax>0.1)
-	//		alphax=0.0;
+
 	
-		//fragColor = vec4((ambient + l1 + l2) * colorin, 1.0);
-		//fragColor = vec4((ambient + l1 ) * colorin, 1.0);
+		//fragColor = vec4((ambient + l1 + l2) * colorin.rgb, colorin.a);
+		//fragColor = vec4((ambient + l1 ) * colorin.rgb, colorin.a);
 		 
-		//fragColor = vec4(colorin.rgb*vec3(alphax,alphax,alphax), alphax);
-		fragColor = vec4(colorin.rgb, alphax);
+		
+		fragColor = vec4(colorin.rgb, colorin.a*alphax);
 		gl_FragDepth = 1.0;
 	//}
 }
