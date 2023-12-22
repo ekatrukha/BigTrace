@@ -358,11 +358,11 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	}
 	public void dialSettings()
 	{
-		JPanel pViewSettings = new JPanel(new GridLayout(0,2,0,0));
+		JPanel pViewSettings = new JPanel();
 		
 		GridBagConstraints cd = new GridBagConstraints();
 	
-
+		pViewSettings.setLayout(new GridBagLayout());
 		
 		NumberField nfClickArea = new NumberField(4);
 		nfClickArea.setIntegersOnly(true);
@@ -396,6 +396,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	
 		cd.gridx=0;
 		cd.gridy=0;	
+		GBCHelper.alighLoose(cd);
 		pViewSettings.add(new JLabel("Snap area size on click (screen px): "),cd);
 		cd.gridx++;
 		pViewSettings.add(nfClickArea,cd);
@@ -405,6 +406,14 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		pViewSettings.add(new JLabel("Transform animation duration (ms): "),cd);
 		cd.gridx++;
 		pViewSettings.add(nfAnimationDuration,cd);
+
+		cd.gridx=0;
+		cd.gridy++;
+		cd.gridwidth=2;
+		cd.anchor = GridBagConstraints.CENTER;
+		pViewSettings.add(new JLabel("<html>----  <B>Zoom</B>  ----</html>"),cd);
+		cd.gridwidth=1;
+		cd.anchor = GridBagConstraints.WEST;
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -423,6 +432,16 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		pViewSettings.add(new JLabel("Zoom box screen fraction (0-1): "),cd);
 		cd.gridx++;
 		pViewSettings.add(nfZoomBoxScreenFraction,cd);
+		
+		
+		cd.gridx=0;
+		cd.gridy++;
+		cd.gridwidth=2;
+		cd.anchor = GridBagConstraints.CENTER;
+		pViewSettings.add(new JLabel("<html>----  <B>Perspective</B>  ----</html>"),cd);
+		cd.gridwidth=1;
+		cd.anchor = GridBagConstraints.WEST;
+		
 		
 		cd.gridx=0;
 		cd.gridy++;

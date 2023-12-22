@@ -389,8 +389,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 			return null;
 		}
 		return out;
-	}
-	
+	}	
 	
 	@Override
 	public void updateRenderVertices() {
@@ -405,7 +404,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 		{
 			if(vertices.size()==1)
 			{
-				segmentsVis.nPointsN=0;	
+				segmentsVis.nPointsN = 0;	
 			}
 		}
 	

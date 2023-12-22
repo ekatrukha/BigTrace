@@ -119,7 +119,7 @@ public class VisPolyLineMesh {
 			//build a pipe in scaled space
 			ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points_, tangents_, BigTraceData.sectorN, 0.5*fLineThickness*BigTraceData.dMinVoxelSize);
 			//return to voxel space	for the render		
-			for(int i=0;i<point_contours.size();i++)
+			for(int i=0; i<point_contours.size(); i++)
 			{
 				point_contours.set(i, Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
 			}
@@ -131,8 +131,14 @@ public class VisPolyLineMesh {
 			else
 			//(renderType == Roi3D.SURFACE)
 			{
-				//setVerticesSurface(point_contours);
-				initMesh(point_contours);
+				if(BigTraceData.surfaceRender == BigTraceData.SURFACE_PLAIN)
+				{
+					setVerticesSurface(point_contours);
+				}
+				else
+				{
+					initMesh(point_contours);
+				}
 			}
 		}
 		
@@ -247,7 +253,7 @@ public class VisPolyLineMesh {
 	
 	private boolean init( final GL3 gl )
 	{
-		if(renderType == Roi3D.SURFACE)
+		if(renderType == Roi3D.SURFACE && BigTraceData.surfaceRender!= BigTraceData.SURFACE_PLAIN)
 		{
 			//initMesh();
 			return initMeshShader(gl);
@@ -356,6 +362,7 @@ public class VisPolyLineMesh {
 		Meshes.calculateNormals( nmesh, mesh );
 		nMeshTrianglesSize = mesh.triangles().size();
 	}
+	
 	private boolean initMeshShader( GL3 gl )
 	{
 		initialized = true;
@@ -421,7 +428,7 @@ public class VisPolyLineMesh {
 			JoglGpuContext context = JoglGpuContext.get( gl );
 			
 			
-			if(renderType == Roi3D.SURFACE)
+			if(renderType == Roi3D.SURFACE && BigTraceData.surfaceRender!=BigTraceData.SURFACE_PLAIN)
 			{
 				final Matrix4f itvm = vm.invert( new Matrix4f() ).transpose();
 
@@ -429,6 +436,7 @@ public class VisPolyLineMesh {
 				progMesh.getUniformMatrix4f( "vm" ).set( vm );
 				progMesh.getUniformMatrix3f( "itvm" ).set( itvm.get3x3( new Matrix3f() ) );
 				progMesh.getUniform4f("colorin").set(l_color);
+				progMesh.getUniform1i("surfaceRender").set(BigTraceData.surfaceRender);
 				progMesh.setUniforms( context );
 				progMesh.use( context );
 
@@ -437,23 +445,26 @@ public class VisPolyLineMesh {
 //				gl.glCullFace( GL.GL_BACK );
 //				gl.glFrontFace( GL.GL_CCW );
 				//gl.glEnable(GL.GL_BLEND);
-				//gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);  
-				gl.glDepthFunc( GL.GL_ALWAYS);
-				//gl.glDepthFunc( GL.GL_LESS);
+				//gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA); 
+				if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE)
+				{
+					gl.glDepthFunc( GL.GL_ALWAYS);
+				}
+				else
+				{
+					gl.glDepthFunc( GL.GL_LESS);
+				}
 				
 				gl.glDrawElements( GL_TRIANGLES, ( int ) nMeshTrianglesSize * 3, GL_UNSIGNED_INT, 0 );
 				gl.glBindVertexArray( 0 );
 			}
 			else
 			{
-			
-			
+	
 				prog.getUniformMatrix4f( "pvm" ).set( pvm );
 				prog.getUniform4f("colorin").set(l_color);
 				prog.setUniforms( context );
-				prog.use( context );
-	
-		
+				prog.use( context );		
 				gl.glBindVertexArray( vao );
 		
 	
@@ -491,6 +502,14 @@ public class VisPolyLineMesh {
 					{
 						gl.glDrawArrays( GL.GL_LINE_STRIP, nShift+nPointIt*nPointsN, nPointsN);
 						//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
+					}
+				}
+				if(renderType == Roi3D.SURFACE)
+				{
+					gl.glLineWidth(1.0f);
+					for(nPointIt=0;nPointIt<(nPointsN-1);nPointIt+=1)
+					{
+						gl.glDrawArrays( GL.GL_TRIANGLE_STRIP, nPointIt*(nSectorN+1)*2, (nSectorN+1)*2);
 					}
 				}
 	

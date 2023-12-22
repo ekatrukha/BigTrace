@@ -14,19 +14,5 @@ void main()
 	gl_Position = pvm * vec4( aPos, 1.0 );
 	FragPos = vec3(vm * vec4(aPos, 1.0));
 	Normal = itvm * aNormal;
-	//vec3 norm = normalize(Normal);
-	//vec3 viewDir = normalize(-FragPos);
-	//float alphax = min(1.0, 1.0-pow(abs(dot(norm,viewDir)),0.5));
-	//if(alphax<0.1)
-	//{
-		//disc = 1;
-		//gl_Position.x = 0.0;
-		//gl_Position.y = 0.0;
-		//gl_Position.z = 10000.0;
-	//}
-	//else
-	//{
-		//disc = 0;
-//	}
 	
 }

@@ -19,7 +19,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -28,7 +27,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
-import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -58,367 +56,392 @@ import bigtrace.measure.RoiMeasure3D;
 public class RoiManager3D extends JPanel implements ListSelectionListener, ActionListener {
 	
 
-	 @SuppressWarnings("rawtypes")
-	 BigTrace bt;
+	@SuppressWarnings("rawtypes")
+	BigTrace bt;
 
-	 private static final long serialVersionUID = -2843907862066423151L;
-	 public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2, ADD_POINT_ONECLICKLINE=3, ADD_POINT_PLANE=4;
-	 ///public static final int SECTORS_DEF=16;
-	 
-	 public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
-	 public int activeRoi = -1;
-	 
-	 public ArrayList<Roi3DGroup> groups = new ArrayList<Roi3DGroup>();
-	 
-	 final static String sUndefinedGroupName = "*undefined*";
-	 
-	 public int nActiveGroup = 0;
-	 	 
-	 public Color activePointColor = Color.YELLOW;
-	 public Color activeLineColor = Color.RED;
-	 
-	 public ColorUserSettings selectColors = new ColorUserSettings(); 
-	 public static int mode = (int) Prefs.get("BigTrace.RoiManagerMode", ADD_POINT_LINE);
-	 public boolean bShowAll = true;
+	private static final long serialVersionUID = -2843907862066423151L;
+	public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2, ADD_POINT_ONECLICKLINE=3, ADD_POINT_PLANE=4;
+	///public static final int SECTORS_DEF=16;
 
-	 //MEASURE OBJECT
-	 @SuppressWarnings("rawtypes")
+	public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
+	public int activeRoi = -1;
+
+	public ArrayList<Roi3DGroup> groups = new ArrayList<Roi3DGroup>();
+
+	final static String sUndefinedGroupName = "*undefined*";
+
+	public int nActiveGroup = 0;
+
+	public Color activePointColor = Color.YELLOW;
+	public Color activeLineColor = Color.RED;
+
+	public ColorUserSettings selectColors = new ColorUserSettings(); 
+	public static int mode = (int) Prefs.get("BigTrace.RoiManagerMode", ADD_POINT_LINE);
+	public boolean bShowAll = true;
+
+	//dialogs
+	@SuppressWarnings("rawtypes")
+	final RoiManager3DDialogs rmDiag;
+
+	//MEASURE OBJECT
+	@SuppressWarnings("rawtypes")
 	public RoiMeasure3D roiMeasure = null;
-	 
-	 //GUI
-	 public DefaultListModel<String> listModel; 
-	 public JList<String> jlist;
-	 JScrollPane listScroller;
-	 public static interface Listener {
+
+	//GUI
+	public DefaultListModel<String> listModel; 
+	public JList<String> jlist;
+	JScrollPane listScroller;
+	public static interface Listener {
 		public void activeRoiChanged(int nRoi);				
-	 }
-	 JButton butDelete;
-	 JButton butRename;
-	 JButton butDeselect;
-	 JButton butProperties;
-	 JToggleButton butShowAll;
-	 JButton butSaveROIs;
-	 JButton butLoadROIs;
-	 JButton butROIGroups;
-	 JButton butApplyGroup;
-	 JButton butDisplayGroup;
-	 
-	 public JComboBox<String> cbActiveChannel;
-	 JComboBox<String> cbActiveGroup;
-	 
-	 JToggleButton roiPointMode;
-	 JToggleButton roiPolyLineMode;
-	 JToggleButton roiPolySemiAMode;
-	 JToggleButton roiPolyOneClickMode;
-	 JToggleButton roiPlaneMode;
-	 JButton roiImport;
-	 JButton roiSettings;
-	 
-	 
-	 private ArrayList<Listener> listeners = new ArrayList<Listener>();
+	}
+	JButton butDelete;
+	JButton butRename;
+	JButton butDeselect;
+	JButton butProperties;
+	JToggleButton butShowAll;
+	JButton butSaveROIs;
+	JButton butLoadROIs;
+	JButton butROIGroups;
+	JButton butApplyGroup;
+	JButton butDisplayGroup;
+
+	public JComboBox<String> cbActiveChannel;
+	JComboBox<String> cbActiveGroup;
+
+	JToggleButton roiPointMode;
+	JToggleButton roiPolyLineMode;
+	JToggleButton roiPolySemiAMode;
+	JToggleButton roiPolyOneClickMode;
+	JToggleButton roiPlaneMode;
+	JButton roiImport;
+	JButton roiSettings;
+
+
+	private ArrayList<Listener> listeners = new ArrayList<Listener>();
 
 		
-	 public RoiManager3D(BigTrace<?> bt)
-	 {
-		 	 
-		 this.bt = bt;
-		 
-		
-		 int nButtonSize = 40;
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public RoiManager3D(BigTrace<?> bt)
+	{
 
-		 JPanel panTracing = new JPanel(new GridBagLayout());  
-		 panTracing.setBorder(new PanelTitle(" Tracing type "));
-		 
-		 ButtonGroup roiTraceMode = new ButtonGroup();
-		 
-	     //initialize new *undefined* ROI group
-	     groups.add(new Roi3DGroup(sUndefinedGroupName, 6.0f, Color.GREEN, 4.0f, Color.BLUE, Roi3D.WIRE) );
-	     nActiveGroup = 0;
-	     
-		 URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
-		 ImageIcon tabIcon = new ImageIcon(icon_path);
-		 roiPointMode = new JToggleButton(tabIcon);
-		 roiPointMode.setToolTipText("Trace single point");
-		 roiPointMode.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
-		 if(mode==RoiManager3D.ADD_POINT)
-		 	{roiPointMode.setSelected(true);}
-			 
+		this.bt = bt;
+		rmDiag = new RoiManager3DDialogs(bt);
 
-		 icon_path =bigtrace.BigTrace.class.getResource("/icons/polyline.png");
-		 tabIcon = new ImageIcon(icon_path);
-		 roiPolyLineMode = new JToggleButton(tabIcon);
-		 roiPolyLineMode.setToolTipText("Trace polyline");
-		 roiPolyLineMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 if(mode==RoiManager3D.ADD_POINT_LINE)
-			 {roiPolyLineMode.setSelected(true);}
-	     
-		 icon_path = bigtrace.BigTrace.class.getResource("/icons/semiauto.png");
-		 tabIcon = new ImageIcon(icon_path);
-		 roiPolySemiAMode = new JToggleButton(tabIcon);
-		 roiPolySemiAMode.setToolTipText("Semi auto trace");
-		 roiPolySemiAMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 if(mode==RoiManager3D.ADD_POINT_SEMIAUTOLINE)
-		 	{roiPolySemiAMode.setSelected(true);}
+		int nButtonSize = 40;
 
-		 icon_path = bigtrace.BigTrace.class.getResource("/icons/oneclicktrace.png");
-		 tabIcon = new ImageIcon(icon_path);
-		 roiPolyOneClickMode = new JToggleButton(tabIcon);
-		 roiPolyOneClickMode.setToolTipText("One click trace");
-		 roiPolyOneClickMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 if(mode==RoiManager3D.ADD_POINT_ONECLICKLINE)
-		 	{roiPolyOneClickMode.setSelected(true);}
-		 
-		 icon_path = bigtrace.BigTrace.class.getResource("/icons/plane.png");
-		 tabIcon = new ImageIcon(icon_path);
-		 roiPlaneMode = new JToggleButton(tabIcon);
-		 roiPlaneMode.setToolTipText("Cross-section");
-		 roiPlaneMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 if(mode==RoiManager3D.ADD_POINT_PLANE)
-		 	{roiPlaneMode.setSelected(true);}
-		 
-		 icon_path = bigtrace.BigTrace.class.getResource("/icons/file_import.png");
-		 tabIcon = new ImageIcon(icon_path);
-		 roiImport = new JButton(tabIcon);
-		 roiImport.setToolTipText("Import ROIs");
-		 roiImport.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 
-		 icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
-		 tabIcon = new ImageIcon(icon_path);
-		 roiSettings = new JButton(tabIcon);
-		 roiSettings.setToolTipText("Settings");
-		 roiSettings.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		JPanel panTracing = new JPanel(new GridBagLayout());  
+		panTracing.setBorder(new PanelTitle(" Tracing type "));
 
-		 //button group	 
-		 roiTraceMode.add(roiPointMode);
-		 roiTraceMode.add(roiPolyLineMode);
-		 roiTraceMode.add(roiPolySemiAMode);
-		 roiTraceMode.add(roiPolyOneClickMode);
-		 roiTraceMode.add(roiPlaneMode);
-		 
-		 roiPointMode.addActionListener(this);
-		 roiPolyLineMode.addActionListener(this);
-		 roiPolySemiAMode.addActionListener(this);
-		 roiPolyOneClickMode.addActionListener(this);
-		 roiPlaneMode.addActionListener(this);
-		 
-		 roiImport.addActionListener(this);
-		 roiSettings.addActionListener(this);
-		 //add to the panel
-		 GridBagConstraints ct = new GridBagConstraints();
-		 ct.gridx=0;
-		 ct.gridy=0;
-		 panTracing.add(roiPointMode,ct);
-		 ct.gridx++;
-		 panTracing.add(roiPolyLineMode,ct);
-		 ct.gridx++;
-		 panTracing.add(roiPolySemiAMode,ct);
-		 ct.gridx++;
-		 panTracing.add(roiPolyOneClickMode,ct);
-		 ct.gridx++;
-		 panTracing.add(roiPlaneMode,ct);
-		 ct.gridx++;
-		 JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
-		 sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
-		 panTracing.add(sp,ct);
-		 ct.gridx++;
-		 
-		 //filler
-		 //ct.gridx++;
-		 ct.weightx = 0.01;
-		 panTracing.add(new JLabel(), ct);
-		 ct.gridx++;
-		 panTracing.add(roiImport,ct);
-		 ct.gridx++;
-		 panTracing.add(roiSettings,ct);
+		ButtonGroup roiTraceMode = new ButtonGroup();
 
+		//initialize new *undefined* ROI group
+		groups.add(new Roi3DGroup(sUndefinedGroupName, 6.0f, Color.GREEN, 4.0f, Color.BLUE, Roi3D.WIRE) );
+		nActiveGroup = 0;
+
+		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
+		ImageIcon tabIcon = new ImageIcon(icon_path);
+		roiPointMode = new JToggleButton(tabIcon);
+		roiPointMode.setToolTipText("Trace single point");
+		roiPointMode.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
+		if(mode==RoiManager3D.ADD_POINT)
+		{roiPointMode.setSelected(true);}
+
+
+		icon_path =bigtrace.BigTrace.class.getResource("/icons/polyline.png");
+		tabIcon = new ImageIcon(icon_path);
+		roiPolyLineMode = new JToggleButton(tabIcon);
+		roiPolyLineMode.setToolTipText("Trace polyline");
+		roiPolyLineMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		if(mode==RoiManager3D.ADD_POINT_LINE)
+		{roiPolyLineMode.setSelected(true);}
+
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/semiauto.png");
+		tabIcon = new ImageIcon(icon_path);
+		roiPolySemiAMode = new JToggleButton(tabIcon);
+		roiPolySemiAMode.setToolTipText("Semi auto trace");
+		roiPolySemiAMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		if(mode == RoiManager3D.ADD_POINT_SEMIAUTOLINE)
+		{roiPolySemiAMode.setSelected(true);}
+		//add properties listener
+		roiPolySemiAMode.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent evt) {
+				if (evt.getClickCount() == 2) {
+
+					// Double-click detected
+					rmDiag.dialSemiAutoProperties();
+				} 
+			}
+		});
 		
 
-		 ///RoiLIST and buttons
-		 listModel = new  DefaultListModel<String>();
-		 jlist = new JList<String>(listModel);
-		 jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		 jlist.setLayoutOrientation(JList.VERTICAL);
-		 jlist.setVisibleRowCount(-1);
-		 jlist.addListSelectionListener(this);
-		 jlist.addMouseListener(new MouseAdapter() {
-			    public void mouseClicked(MouseEvent evt) {
-			        if (evt.getClickCount() == 2) {
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/oneclicktrace.png");
+		tabIcon = new ImageIcon(icon_path);
+		roiPolyOneClickMode = new JToggleButton(tabIcon);
+		roiPolyOneClickMode.setToolTipText("One click trace");
+		roiPolyOneClickMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		if(mode==RoiManager3D.ADD_POINT_ONECLICKLINE)
+		{roiPolyOneClickMode.setSelected(true);}		
+		roiPolyOneClickMode.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent evt) {
+				if (evt.getClickCount() == 2) {
 
-			            // Double-click detected
-			            int index = jlist.locationToIndex(evt.getPoint());
-			          focusOnRoi(rois.get(index));
-			        } 
-			    }
-			});
-		 
-		 listScroller = new JScrollPane(jlist);
+					// Double-click detected
+					rmDiag.dialOneClickProperties();
+				} 
+			}
+		});
+
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/plane.png");
+		tabIcon = new ImageIcon(icon_path);
+		roiPlaneMode = new JToggleButton(tabIcon);
+		roiPlaneMode.setToolTipText("Cross-section");
+		roiPlaneMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		if(mode==RoiManager3D.ADD_POINT_PLANE)
+		{roiPlaneMode.setSelected(true);}
+
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/file_import.png");
+		tabIcon = new ImageIcon(icon_path);
+		roiImport = new JButton(tabIcon);
+		roiImport.setToolTipText("Import ROIs");
+		roiImport.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
+		tabIcon = new ImageIcon(icon_path);
+		roiSettings = new JButton(tabIcon);
+		roiSettings.setToolTipText("Settings");
+		roiSettings.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+
+		//button group	 
+		roiTraceMode.add(roiPointMode);
+		roiTraceMode.add(roiPolyLineMode);
+		roiTraceMode.add(roiPolySemiAMode);
+		roiTraceMode.add(roiPolyOneClickMode);
+		roiTraceMode.add(roiPlaneMode);
+
+		roiPointMode.addActionListener(this);
+		roiPolyLineMode.addActionListener(this);
+		roiPolySemiAMode.addActionListener(this);
+		roiPolyOneClickMode.addActionListener(this);
+		roiPlaneMode.addActionListener(this);
+
+		roiImport.addActionListener(this);
+		roiSettings.addActionListener(this);
+		//add to the panel
+		GridBagConstraints ct = new GridBagConstraints();
+		ct.gridx=0;
+		ct.gridy=0;
+		panTracing.add(roiPointMode,ct);
+		ct.gridx++;
+		panTracing.add(roiPolyLineMode,ct);
+		ct.gridx++;
+		panTracing.add(roiPolySemiAMode,ct);
+		ct.gridx++;
+		panTracing.add(roiPolyOneClickMode,ct);
+		ct.gridx++;
+		panTracing.add(roiPlaneMode,ct);
+		ct.gridx++;
+		JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
+		sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
+		panTracing.add(sp,ct);
+		ct.gridx++;
+
+		//filler
+		//ct.gridx++;
+		ct.weightx = 0.01;
+		panTracing.add(new JLabel(), ct);
+		ct.gridx++;
+		panTracing.add(roiImport,ct);
+		ct.gridx++;
+		panTracing.add(roiSettings,ct);
+
+
+
+		///RoiLIST and buttons
+		listModel = new  DefaultListModel<String>();
+		jlist = new JList<String>(listModel);
+		jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		jlist.setLayoutOrientation(JList.VERTICAL);
+		jlist.setVisibleRowCount(-1);
+		jlist.addListSelectionListener(this);
+		jlist.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent evt) {
+				if (evt.getClickCount() == 2) {
+
+					// Double-click detected
+					int index = jlist.locationToIndex(evt.getPoint());
+					focusOnRoi(rois.get(index));
+				} 
+			}
+		});
+
+		listScroller = new JScrollPane(jlist);
 		// listScroller.setPreferredSize(new Dimension(400, 500));
-		 listScroller.setMinimumSize(new Dimension(170, 250));
-		 
-		 JPanel roiList = new JPanel(new GridBagLayout());
-		 roiList.setBorder(new PanelTitle(" ROI Manager "));
+		listScroller.setMinimumSize(new Dimension(170, 250));
 
-		 GridBagConstraints cr = new GridBagConstraints();
-		 cr.gridx=0;
-		 cr.gridy=0;
-		 
-		 cr.gridheight = GridBagConstraints.REMAINDER;
+		JPanel roiList = new JPanel(new GridBagLayout());
+		roiList.setBorder(new PanelTitle(" ROI Manager "));
 
-		 cr.fill  = GridBagConstraints.BOTH;
-		 cr.weightx=0.99;
-		 cr.weighty=0.99;
+		GridBagConstraints cr = new GridBagConstraints();
+		cr.gridx=0;
+		cr.gridy=0;
 
-		 roiList.add(listScroller,cr);
+		cr.gridheight = GridBagConstraints.REMAINDER;
 
-		 cr.weightx=0.0;
-		 cr.weighty=0.0;
-		 cr.fill = GridBagConstraints.NONE;
-		 //cr.weighty=0.0;
-		 butDelete = new JButton("Delete");
-		 butDelete.addActionListener(this);
-		 cr.gridx++;
-		 cr.gridy++;
-		 cr.gridheight=1;
-		 //cr.fill = GridBagConstraints.NONE;
-		 roiList.add(butDelete,cr);
-		 butRename = new JButton("Rename");
-		 butRename.addActionListener(this);
-		 cr.gridy++;
-		 roiList.add(butRename,cr);
-		 
-		 butDeselect = new JButton("Deselect");
-		 butDeselect.addActionListener(this);
-		 cr.gridy++;
-		 roiList.add(butDeselect,cr);
-		 
-		 butProperties = new JButton("Properties");
-		 butProperties.addActionListener(this);
-		 cr.gridy++;
-		 roiList.add(butProperties ,cr);
-		 
-		 butShowAll = new JToggleButton("Show all");
-		 butShowAll.addActionListener(this);
-		 butShowAll.setSelected(true);
-		 cr.gridy++;
-		 roiList.add(butShowAll ,cr);
-	
-		 butSaveROIs = new JButton("Save ROIs");
-		 butSaveROIs.addActionListener(this);
-		 cr.gridy++;
-		 roiList.add(butSaveROIs ,cr);
-		 
-		 butLoadROIs = new JButton("Load ROIs");
-		 butLoadROIs.addActionListener(this);
-		 cr.gridy++;
-		 roiList.add(butLoadROIs ,cr);
-		 
-		 butROIGroups = new JButton("Groups");
-		 butROIGroups.addActionListener(this);
-		 cr.gridy++;
-		 roiList.add(butROIGroups ,cr);
-		 
-		 
-		 
+		cr.fill  = GridBagConstraints.BOTH;
+		cr.weightx=0.99;
+		cr.weighty=0.99;
 
-	     // Blank/filler component
-		 cr.gridx++;
-		 cr.gridy++;
-		 cr.weightx = 0.01;
-	     cr.weighty = 0.01;
-	     roiList.add(new JLabel(), cr);		 
-		 
-		 
-		 // a solution for now
-		 butDelete.setMinimumSize(butProperties.getPreferredSize());
-		 butDelete.setPreferredSize(butProperties.getPreferredSize());
-		 butRename.setMinimumSize(butProperties.getPreferredSize());		 
-		 butRename.setPreferredSize(butProperties.getPreferredSize());
-		 butDeselect.setMinimumSize(butProperties.getPreferredSize());		 
-		 butDeselect.setPreferredSize(butProperties.getPreferredSize());
-		 butShowAll.setMinimumSize(butProperties.getPreferredSize());		 
-		 butShowAll.setPreferredSize(butProperties.getPreferredSize());
-		 butROIGroups.setMinimumSize(butProperties.getPreferredSize());
-		 butROIGroups.setPreferredSize(butProperties.getPreferredSize());
+		roiList.add(listScroller,cr);
 
-		 JPanel panChannel = new JPanel(new GridBagLayout());
-		 panChannel.setBorder(new PanelTitle(""));
-		 
-		 String[] nCh = new String[bt.btdata.nTotalChannels];
-		 for(int i=0;i<nCh.length;i++)
-		 {
-			 nCh[i] = "channel "+Integer.toString(i+1);
-		 }
-		 cbActiveChannel = new JComboBox<>(nCh);
-		 cbActiveChannel.setSelectedIndex(0);
-		 cbActiveChannel.addActionListener(this);
-		 
-		 
-		 cr = new GridBagConstraints();
-	     cr.gridx=0;
-		 cr.gridy=0;
-		 panChannel.add(new JLabel("Active"),cr);
-		 cr.gridx++;
-		 panChannel.add(cbActiveChannel,cr);
+		cr.weightx=0.0;
+		cr.weighty=0.0;
+		cr.fill = GridBagConstraints.NONE;
+		//cr.weighty=0.0;
+		butDelete = new JButton("Delete");
+		butDelete.addActionListener(this);
+		cr.gridx++;
+		cr.gridy++;
+		cr.gridheight=1;
+		//cr.fill = GridBagConstraints.NONE;
+		roiList.add(butDelete,cr);
+		butRename = new JButton("Rename");
+		butRename.addActionListener(this);
+		cr.gridy++;
+		roiList.add(butRename,cr);
 
-		 JPanel panGroup = new JPanel(new GridBagLayout());
-		 panGroup.setBorder(new PanelTitle(" Groups "));
-		 
-		 String[] nGroupNames = new String[groups.size()];
-		 for(int i=0;i<nGroupNames.length;i++)
-		 {
-			 nGroupNames[i] = groups.get(i).getName();
-		 }
-		 cbActiveGroup = new JComboBox<>(nGroupNames);
-		 cbActiveGroup.setSelectedIndex(0);
-		 cbActiveGroup.setPrototypeDisplayValue("tyrosinated");
-		 cbActiveGroup.addActionListener(this);
-		 butApplyGroup = new JButton("Apply");
-		 butApplyGroup.addActionListener(this);
-		 icon_path =bigtrace.BigTrace.class.getResource("/icons/group_visibility.png");
-		 tabIcon = new ImageIcon(icon_path);
-		 butDisplayGroup = new JButton(tabIcon);
-		 butDisplayGroup.setToolTipText("Toggle ROI groups visibility");
-		 butDisplayGroup.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		 butDisplayGroup.addActionListener(this);
+		butDeselect = new JButton("Deselect");
+		butDeselect.addActionListener(this);
+		cr.gridy++;
+		roiList.add(butDeselect,cr);
 
-		 
-		 cr = new GridBagConstraints();
-	     cr.gridx=0;
-		 cr.gridy=0;
-		 panGroup.add(butDisplayGroup,cr);
-		 cr.gridx++;
-		 panGroup.add(cbActiveGroup,cr);
-		 cr.gridx++;
-		 panGroup.add(butApplyGroup,cr);
- 
-		 GridBagConstraints c = new GridBagConstraints();
-		 setLayout(new GridBagLayout());
-		 c.insets=new Insets(4,4,2,2);
-	     c.gridx=0;
-		 c.gridy=0;
+		butProperties = new JButton("Properties");
+		butProperties.addActionListener(this);
+		cr.gridy++;
+		roiList.add(butProperties ,cr);
 
-		 c.fill = GridBagConstraints.HORIZONTAL;
+		butShowAll = new JToggleButton("Show all");
+		butShowAll.addActionListener(this);
+		butShowAll.setSelected(true);
+		cr.gridy++;
+		roiList.add(butShowAll ,cr);
 
-		 //tracing
-		 add(panTracing,c);
-		 //roi list
-		 c.gridy++;
-		 c.weighty = 0.99;
-		 c.fill = GridBagConstraints.BOTH;
-		 add(roiList,c);
-		 c.gridy++;
-		 c.weighty = 0.0;
-		 c.fill = GridBagConstraints.HORIZONTAL;
-		 add(panChannel,c);
-		 c.gridy++;
-		 add(panGroup,c);
-	      // Blank/filler component
-		 c.gridy++;
-		 c.weightx = 0.01;
-	     c.weighty = 0.01;
-	     add(new JLabel(), c);    
-		 
-	 }
+		butSaveROIs = new JButton("Save ROIs");
+		butSaveROIs.addActionListener(this);
+		cr.gridy++;
+		roiList.add(butSaveROIs ,cr);
+
+		butLoadROIs = new JButton("Load ROIs");
+		butLoadROIs.addActionListener(this);
+		cr.gridy++;
+		roiList.add(butLoadROIs ,cr);
+
+		butROIGroups = new JButton("Groups");
+		butROIGroups.addActionListener(this);
+		cr.gridy++;
+		roiList.add(butROIGroups ,cr);
+
+
+
+
+		// Blank/filler component
+		cr.gridx++;
+		cr.gridy++;
+		cr.weightx = 0.01;
+		cr.weighty = 0.01;
+		roiList.add(new JLabel(), cr);		 
+
+
+		// a solution for now
+		butDelete.setMinimumSize(butProperties.getPreferredSize());
+		butDelete.setPreferredSize(butProperties.getPreferredSize());
+		butRename.setMinimumSize(butProperties.getPreferredSize());		 
+		butRename.setPreferredSize(butProperties.getPreferredSize());
+		butDeselect.setMinimumSize(butProperties.getPreferredSize());		 
+		butDeselect.setPreferredSize(butProperties.getPreferredSize());
+		butShowAll.setMinimumSize(butProperties.getPreferredSize());		 
+		butShowAll.setPreferredSize(butProperties.getPreferredSize());
+		butROIGroups.setMinimumSize(butProperties.getPreferredSize());
+		butROIGroups.setPreferredSize(butProperties.getPreferredSize());
+
+		JPanel panChannel = new JPanel(new GridBagLayout());
+		panChannel.setBorder(new PanelTitle(""));
+
+		String[] nCh = new String[bt.btdata.nTotalChannels];
+		for(int i=0;i<nCh.length;i++)
+		{
+			nCh[i] = "channel "+Integer.toString(i+1);
+		}
+		cbActiveChannel = new JComboBox<>(nCh);
+		cbActiveChannel.setSelectedIndex(0);
+		cbActiveChannel.addActionListener(this);
+
+
+		cr = new GridBagConstraints();
+		cr.gridx=0;
+		cr.gridy=0;
+		panChannel.add(new JLabel("Active"),cr);
+		cr.gridx++;
+		panChannel.add(cbActiveChannel,cr);
+
+		JPanel panGroup = new JPanel(new GridBagLayout());
+		panGroup.setBorder(new PanelTitle(" Groups "));
+
+		String[] nGroupNames = new String[groups.size()];
+		for(int i=0;i<nGroupNames.length;i++)
+		{
+			nGroupNames[i] = groups.get(i).getName();
+		}
+		cbActiveGroup = new JComboBox<>(nGroupNames);
+		cbActiveGroup.setSelectedIndex(0);
+		cbActiveGroup.setPrototypeDisplayValue("tyrosinated");
+		cbActiveGroup.addActionListener(this);
+		butApplyGroup = new JButton("Apply");
+		butApplyGroup.addActionListener(this);
+		icon_path =bigtrace.BigTrace.class.getResource("/icons/group_visibility.png");
+		tabIcon = new ImageIcon(icon_path);
+		butDisplayGroup = new JButton(tabIcon);
+		butDisplayGroup.setToolTipText("Toggle ROI groups visibility");
+		butDisplayGroup.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		butDisplayGroup.addActionListener(this);
+
+
+		cr = new GridBagConstraints();
+		cr.gridx=0;
+		cr.gridy=0;
+		panGroup.add(butDisplayGroup,cr);
+		cr.gridx++;
+		panGroup.add(cbActiveGroup,cr);
+		cr.gridx++;
+		panGroup.add(butApplyGroup,cr);
+
+		GridBagConstraints c = new GridBagConstraints();
+		setLayout(new GridBagLayout());
+		c.insets=new Insets(4,4,2,2);
+		c.gridx=0;
+		c.gridy=0;
+
+		c.fill = GridBagConstraints.HORIZONTAL;
+
+		//tracing
+		add(panTracing,c);
+		//roi list
+		c.gridy++;
+		c.weighty = 0.99;
+		c.fill = GridBagConstraints.BOTH;
+		add(roiList,c);
+		c.gridy++;
+		c.weighty = 0.0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		add(panChannel,c);
+		c.gridy++;
+		add(panGroup,c);
+		// Blank/filler component
+		c.gridy++;
+		c.weightx = 0.01;
+		c.weighty = 0.01;
+		add(new JLabel(), c);    
+
+	}
 	 /** makes an empty initial ROI of specific type **/
 	 public synchronized void addRoi(Roi3D newRoi)
 	 {		
@@ -968,7 +991,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		//SETTINGS
 		if(e.getSource() == roiSettings)
 		{
-			dialSettings();
+			rmDiag.dialRenderSettings();
 		}
 		//ACTIVE CHANNEL
 		if(e.getSource() == cbActiveChannel)
@@ -1109,382 +1132,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 		
 	}
-	
-	/** show ROI Properties dialog**/
-	@SuppressWarnings("unchecked")
-	public void dialSettings()
-	{
-		
-		JTabbedPane tabPane = new JTabbedPane();
-		GridBagConstraints cd = new GridBagConstraints();
-	
-		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
-		decimalFormatSymbols.setDecimalSeparator('.');
-		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
-		////////////ROI RENDER OPTIONS
-		JPanel pROIrender = new JPanel(new GridBagLayout());
-		JButton butPointActiveColor = new JButton( new ColorIcon( activePointColor ) );	
-		butPointActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active point color", activePointColor );
-			if (newColor!=null)
-			{
-				selectColors.setColor(newColor, 0);
-				//setNewPointColor(newColor);
-				butPointActiveColor.setIcon(new ColorIcon(newColor));
-			}
-			
-		});
-		
-		JButton butLineActiveColor = new JButton( new ColorIcon( activeLineColor ) );	
-		butLineActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active line color", activeLineColor );
-			if (newColor!=null)
-			{
-				selectColors.setColor(newColor, 1);
-
-				butLineActiveColor.setIcon(new ColorIcon(newColor));
-			}
-			
-		});
-		
-		String[] sShapeInterpolationType = { "Voxel", "Smooth", "Spline"};
-		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
-		shapeInterpolationList.setSelectedIndex(BigTraceData.shapeInterpolation);
-		
-		NumberField nfSmoothWindow = new NumberField(2);
-		nfSmoothWindow.setIntegersOnly(true);
-		nfSmoothWindow.setText(Integer.toString(BigTraceData.nSmoothWindow));
-		
-		
-		NumberField nfSectorNLines = new NumberField(4);
-		nfSectorNLines.setIntegersOnly(true);
-		nfSectorNLines.setText(Integer.toString(BigTraceData.sectorN));
-		
-		NumberField nfWireContourStep = new NumberField(4);
-		nfWireContourStep.setIntegersOnly(true);
-		nfWireContourStep.setText(Integer.toString(BigTraceData.wireCountourStep));
-		
-		NumberField nfCrossSectionGridStep = new NumberField(4);
-		nfCrossSectionGridStep.setIntegersOnly(true);
-		nfCrossSectionGridStep.setText(Integer.toString(BigTraceData.crossSectionGridStep));
-		
-		String[] sTimeRenderROIs = { "current timepoint", "backward in time", "forward in time"};
-		JComboBox<String> sTimeRenderROIsList = new JComboBox<String>(sTimeRenderROIs);
-		sTimeRenderROIsList.setSelectedIndex(BigTraceData.timeRender);
-		
-		NumberField nfTimeFadeROIs = new NumberField(4);
-		nfTimeFadeROIs.setIntegersOnly(true);
-		nfTimeFadeROIs.setText(Integer.toString((int)Math.abs(BigTraceData.timeFade)));
-		
-		
-		
-		cd.gridx=0;
-		cd.gridy=0;
-		pROIrender.add(new JLabel("Selected ROI point color: "),cd);
-		cd.gridx++;
-		pROIrender.add(butPointActiveColor,cd);
-		cd.gridx=0;
-		cd.gridy++;
-		pROIrender.add(new JLabel("Selected ROI line color: "),cd);
-		cd.gridx++;
-		pROIrender.add(butLineActiveColor,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pROIrender.add(new JLabel("ROI Shape interpolation: "),cd);
-		cd.gridx++;
-		pROIrender.add(shapeInterpolationList,cd);	
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pROIrender.add(new JLabel("Trace smoothing window (points): "),cd);
-		cd.gridx++;
-		pROIrender.add(nfSmoothWindow,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pROIrender.add(new JLabel("# sectors line render: "),cd);
-		cd.gridx++;
-		pROIrender.add(nfSectorNLines,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pROIrender.add(new JLabel("Curve contours distance (px): "),cd);
-		cd.gridx++;
-		pROIrender.add(nfWireContourStep,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pROIrender.add(new JLabel("Cross-section grid step (px): "),cd);
-		cd.gridx++;
-		pROIrender.add(nfCrossSectionGridStep,cd);
-
-		if(BigTraceData.nNumTimepoints>0)
-		{
-			cd.gridx=0;
-			cd.gridy++;
-			pROIrender.add(new JLabel("Show ROI over time: "),cd);
-			cd.gridx++;
-			pROIrender.add(sTimeRenderROIsList,cd);
-			cd.gridx=0;
-			cd.gridy++;
-			pROIrender.add(new JLabel("Time fade range (frames): "),cd);
-			cd.gridx++;
-			pROIrender.add(nfTimeFadeROIs,cd);
-		}
-
-		
-		////////////TRACING OPTIONS
-		JPanel pTrace = new JPanel(new GridBagLayout());
-
-		
-
-		NumberField nfSigmaX = new NumberField(4);
-		NumberField nfSigmaY = new NumberField(4);
-		NumberField nfSigmaZ = new NumberField(4);
-		JCheckBox cbTraceOnlyCrop = new JCheckBox();
-
-		
-		nfSigmaX.setText(df.format(bt.btdata.sigmaTrace[0]));
-		nfSigmaY.setText(df.format(bt.btdata.sigmaTrace[1]));
-		nfSigmaZ.setText(df.format(bt.btdata.sigmaTrace[2]));
-
-		//nfSigmaX.setText(Double.toString(bt.btdata.sigmaTrace[0]));
-		//nfSigmaY.setText(Double.toString(bt.btdata.sigmaTrace[1]));
-		//nfSigmaZ.setText(Double.toString(bt.btdata.sigmaTrace[2]));
-		cbTraceOnlyCrop.setSelected(bt.btdata.bTraceOnlyCrop);
-		
-		cd.gridx=0;
-		cd.gridy=0;
-		//cd.anchor=GridBagConstraints.WEST;
-		pTrace.add(new JLabel("Curve thickness X axis (SD, px): "),cd);
-		cd.gridx++;
-		pTrace.add(nfSigmaX,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pTrace.add(new JLabel("Curve thickness Y axis (SD, px): "),cd);
-		cd.gridx++;
-		pTrace.add(nfSigmaY,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pTrace.add(new JLabel("Curve thickness Z axis (SD, px): "),cd);
-		cd.gridx++;
-		pTrace.add(nfSigmaZ,cd);
-
-		
-		cd.gridx=0;
-		cd.gridy++;
-		//cd.anchor=GridBagConstraints.WEST;
-		pTrace.add(new JLabel("Trace only cropped volume: "),cd);
-		cd.gridx++;
-		pTrace.add(cbTraceOnlyCrop,cd);
-		
-		////////////SEMI-AUTO TRACING OPTIONS
-		JPanel pSemiAuto = new JPanel(new GridBagLayout());
-		
-		NumberField nfGammaTrace = new NumberField(4);
-		NumberField nfTraceBoxSize = new NumberField(4);
-		NumberField nfTraceBoxScreenFraction = new NumberField(4);
-		NumberField nfTBAdvance = new NumberField(4);
-		
-		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btdata.lTraceBoxSize)));
-		nfTraceBoxScreenFraction.setText(df.format(bt.btdata.dTraceBoxScreenFraction));
-		nfGammaTrace.setText(df.format(bt.btdata.gammaTrace));
-		nfTBAdvance.setText(df.format(bt.btdata.fTraceBoxAdvanceFraction));
-			
-		cd.gridx=0;
-		cd.gridy=0;
-		//cd.anchor=GridBagConstraints.WEST;
-		pSemiAuto.add(new JLabel("Trace box size (px): "),cd);
-		cd.gridx++;
-		pSemiAuto.add(nfTraceBoxSize,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		//cd.anchor=GridBagConstraints.WEST;
-		pSemiAuto.add(new JLabel("Trace box screen fraction (0-1): "),cd);
-		cd.gridx++;
-		pSemiAuto.add(nfTraceBoxScreenFraction,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		//cd.anchor=GridBagConstraints.WEST;
-		pSemiAuto.add(new JLabel("Trace box advance [0-center..1-edge]: "),cd);
-		cd.gridx++;
-		pSemiAuto.add(nfTBAdvance,cd);	
-
-		cd.gridx=0;		
-		cd.gridy++;
-		pSemiAuto.add(new JLabel("Orientation weight(0-1): "),cd);
-		cd.gridx++;
-		pSemiAuto.add(nfGammaTrace,cd);
-		
-		////////////ONE-CLICK TRACING OPTIONS
-		JPanel pOneCLick = new JPanel(new GridBagLayout());
-		
-		NumberField nfPlaceVertex = new NumberField(4);
-		NumberField nfDirectionalityOneClick = new NumberField(4);
-		
-		nfPlaceVertex.setIntegersOnly(true);
-		nfPlaceVertex.setText(Integer.toString((int)(bt.btdata.nVertexPlacementPointN)));
-		nfDirectionalityOneClick.setText(df.format(bt.btdata.dDirectionalityOneClick));
-		
-		cd.gridx=0;
-		cd.gridy=0;		
-		pOneCLick.add(new JLabel("Intermediate vertex placement (px, >=3): "),cd);
-		cd.gridx++;
-		pOneCLick.add(nfPlaceVertex,cd);
-		
-		cd.gridx=0;		
-		cd.gridy++;
-		pOneCLick.add(new JLabel("Constrain directionality (0-1): "),cd);
-		cd.gridx++;
-		pOneCLick.add(nfDirectionalityOneClick,cd);
-		
-		//assemble pane
-		tabPane.addTab("ROI render",pROIrender);
-		tabPane.addTab("Tracing",pTrace);
-		tabPane.addTab("Semi auto",pSemiAuto);
-		tabPane.addTab("One click trace",pOneCLick);
-		
-
-		int reply = JOptionPane.showConfirmDialog(null, tabPane, "ROI Manager Settings", 
-        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-
-		if (reply == JOptionPane.OK_OPTION) 
-		{
-		
-			
-			//ROI appearance
-			boolean bUpdateROIs = false;
-			
-			Color tempC;
-			
-			tempC=selectColors.getColor(0);
-			if(tempC!=null)
-			{
-				activePointColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
-				selectColors.setColor(null, 0);
-			}
-			tempC=selectColors.getColor(1);
-			if(tempC!=null)
-			{
-				activeLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
-				selectColors.setColor(null, 1);
-			}
-			
-			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
-			
-			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
-			
-			if(BigTraceData.sectorN!= Integer.parseInt(nfSectorNLines.getText()))
-			{
-				BigTraceData.sectorN= Integer.parseInt(nfSectorNLines.getText());
-				Prefs.set("BigTrace.nSectorN", BigTraceData.sectorN);
-				bUpdateROIs  = true;
-			}
-			if(BigTraceData.wireCountourStep!= Integer.parseInt(nfWireContourStep.getText()))
-			{
-				BigTraceData.wireCountourStep= Integer.parseInt(nfWireContourStep.getText());
-				Prefs.set("BigTrace.wireCountourStep", BigTraceData.wireCountourStep);
-				bUpdateROIs  = true;
-			}
-			
-			if(BigTraceData.crossSectionGridStep!= Integer.parseInt(nfCrossSectionGridStep.getText()))
-			{
-				BigTraceData.crossSectionGridStep= Integer.parseInt(nfCrossSectionGridStep.getText());
-				Prefs.set("BigTrace.crossSectionGridStep", BigTraceData.crossSectionGridStep);
-				bUpdateROIs  = true;
-			}
-			
-			//INTERPOLATION
-			
-			if(BigTraceData.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText())||BigTraceData.shapeInterpolation!= shapeInterpolationList.getSelectedIndex())
-			{
-				BigTraceData.nSmoothWindow = Integer.parseInt(nfSmoothWindow.getText());
-				Prefs.set("BigTrace.nSmoothWindow", BigTraceData.nSmoothWindow);
-				BigTraceData.shapeInterpolation= shapeInterpolationList.getSelectedIndex();
-				Prefs.set("BigTrace.ShapeInterpolation",BigTraceData.shapeInterpolation);
-				bUpdateROIs  = true;				
-			}
-			
-			//TIME RENDER
-			if(BigTraceData.nNumTimepoints>0)
-			{
-				if(BigTraceData.timeFade != Integer.parseInt(nfTimeFadeROIs.getText())||BigTraceData.timeRender!= sTimeRenderROIsList.getSelectedIndex())
-				{
-					BigTraceData.timeRender= sTimeRenderROIsList.getSelectedIndex();
-					Prefs.set("BigTrace.timeRender",BigTraceData.timeRender);
-					if(BigTraceData.timeRender==0)
-					{
-						BigTraceData.timeFade = 0;
-					}
-					else
-					{
-						if(BigTraceData.timeRender == 1)
-						{
-							BigTraceData.timeFade = (-1)*Integer.parseInt(nfTimeFadeROIs.getText());
-						}
-						else
-						{
-							BigTraceData.timeFade = Integer.parseInt(nfTimeFadeROIs.getText());
-						}
-						Prefs.set("BigTrace.timeFade", BigTraceData.timeFade);
-					}
-					
-					
-
-					bUpdateROIs  = true;	
-				}
-			}
-			
-			
-			if(bUpdateROIs)
-			{
-					updateROIsDisplay();
-			}
-			
-			//TRACING OPTIONS
-			
-			bt.btdata.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
-			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btdata.sigmaTrace[0]));
-			
-			bt.btdata.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
-			Prefs.set("BigTrace.sigmaTraceY", (double)(bt.btdata.sigmaTrace[1]));
-			
-			bt.btdata.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
-			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btdata.sigmaTrace[2]));
-			
-			bt.btdata.bTraceOnlyCrop = cbTraceOnlyCrop.isSelected();
-			Prefs.set("BigTrace.bTraceOnlyCrop", bt.btdata.bTraceOnlyCrop);			
-			
-			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
-			
-			bt.btdata.dTraceBoxScreenFraction = Double.parseDouble(nfTraceBoxScreenFraction.getText());
-			Prefs.set("BigTrace.dTraceBoxScreenFraction", (double)(bt.btdata.dTraceBoxScreenFraction));
-			
-			bt.btdata.fTraceBoxAdvanceFraction = Float.parseFloat(nfTBAdvance.getText());
-			Prefs.set("BigTrace.fTraceBoxAdvanceFraction", (double)(bt.btdata.fTraceBoxAdvanceFraction));
-			
-			bt.btdata.gammaTrace = Double.parseDouble(nfGammaTrace.getText());
-			Prefs.set("BigTrace.gammaTrace", (double)(bt.btdata.gammaTrace));
-			
-			bt.btdata.nVertexPlacementPointN=(int)(Math.max(3, Integer.parseInt(nfPlaceVertex.getText())));
-			Prefs.set("BigTrace.nVertexPlacementPointN", (double)(bt.btdata.nVertexPlacementPointN));
-			
-			bt.btdata.dDirectionalityOneClick=Math.min(1.0, (Math.max(0, Double.parseDouble(nfDirectionalityOneClick.getText()))));
-			Prefs.set("BigTrace.dDirectionalityOneClick",bt.btdata.dDirectionalityOneClick);
-			
-			
-		}
-	}
-	
 	
 	/** show ROI Properties dialog**/
 	public void dialProperties()

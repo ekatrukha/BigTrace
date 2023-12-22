@@ -145,12 +145,18 @@ public class BigTraceData < T extends RealType< T > > {
 	 *  The more the number, more smooth is surface **/
 	public static int sectorN = (int) Prefs.get("BigTrace.nSectorN", 16);
 	
-	/** approximate distance between contrours along the pipe visualizing a curve
+	/** approximate distance between contours along the pipe visualizing a curve
 	 *  in minimum voxel size units **/
-	public static int wireCountourStep = (int) Prefs.get("BigTrace.wireCountourStep",1);
+	public static int wireCountourStep = (int) Prefs.get("BigTrace.wireCountourStep",50);
 	
 	/** step of gridline displaying cross-section ROI in wired mode (in voxels)**/
-	public static int crossSectionGridStep = (int) Prefs.get("BigTrace.crossSectionGridStep", 20);
+	public static int crossSectionGridStep = (int) Prefs.get("BigTrace.crossSectionGridStep", 50);
+	
+	/** available surface render types **/
+	public static final int SURFACE_PLAIN=0, SURFACE_SILHOUETTE=1, SURFACE_SHADE=2, SURFACE_SHINY=3; 
+	
+	/** current surface render type **/
+	public static int surfaceRender = (int) Prefs.get("BigTrace.surfaceRender", SURFACE_SHADE);
 	
 	//////rendering ROI over time
 	
