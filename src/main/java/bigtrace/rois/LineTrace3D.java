@@ -18,7 +18,7 @@ import bigtrace.geometry.Line3D;
 import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineMesh;
-import bigtrace.scene.VisPolyLineScaled;
+
 
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;

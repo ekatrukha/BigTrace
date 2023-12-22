@@ -50,7 +50,7 @@ public class VisPolygonFlat {
 	public VisPolygonFlat()
 	{
 		final Segment pointVp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color.fp" ).instantiate();
+		final Segment pointFp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color_depth.fp" ).instantiate();
 	
 		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
@@ -327,7 +327,17 @@ public class VisPolygonFlat {
 			JoglGpuContext context = JoglGpuContext.get( gl );
 	
 			prog.getUniformMatrix4f( "pvm" ).set( pvm );
-			prog.getUniform4f("colorin").set(l_color);
+			if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE)
+			{
+				Vector4f l_color_t = new Vector4f(l_color);
+				l_color_t.w = 0.6f;
+				prog.getUniform4f("colorin").set(l_color_t);
+			}
+			else
+			{
+				prog.getUniform4f("colorin").set(l_color);
+			}
+			prog.getUniform1i("surfaceRender").set(BigTraceData.surfaceRender);
 			prog.setUniforms( context );
 			prog.use( context );
 
@@ -335,7 +345,8 @@ public class VisPolygonFlat {
 			
 			gl.glBindVertexArray( vao );
 
-
+			gl.glDepthFunc( GL.GL_LESS);
+			
 			if(renderType == Roi3D.OUTLINE)
 			{
 				gl.glLineWidth(fLineThickness);
@@ -355,11 +366,16 @@ public class VisPolygonFlat {
 
 			if(renderType == Roi3D.SURFACE)
 			{
+				if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE)
+				{
+					gl.glDepthFunc( GL.GL_ALWAYS);
+				}
 				gl.glLineWidth(1.0f);
 				gl.glDrawArrays( GL.GL_TRIANGLE_FAN, 0, nPointsN);
 				
 			}
 			gl.glBindVertexArray( 0 );
+			gl.glDepthFunc( GL.GL_LESS);
 		}
 	}
 	

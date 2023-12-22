@@ -427,6 +427,7 @@ public class VisPolyLineMesh {
 			final int nSectorN = BigTraceData.sectorN;
 			JoglGpuContext context = JoglGpuContext.get( gl );
 			
+			gl.glDepthFunc( GL.GL_LESS);
 			
 			if(renderType == Roi3D.SURFACE && BigTraceData.surfaceRender!=BigTraceData.SURFACE_PLAIN)
 			{
@@ -439,6 +440,10 @@ public class VisPolyLineMesh {
 				progMesh.getUniform1i("surfaceRender").set(BigTraceData.surfaceRender);
 				progMesh.setUniforms( context );
 				progMesh.use( context );
+				if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE)
+				{
+					gl.glDepthFunc( GL.GL_ALWAYS);
+				}
 
 				gl.glBindVertexArray( vao );
 //				gl.glEnable( GL.GL_CULL_FACE );
@@ -446,14 +451,7 @@ public class VisPolyLineMesh {
 //				gl.glFrontFace( GL.GL_CCW );
 				//gl.glEnable(GL.GL_BLEND);
 				//gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA); 
-				if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE)
-				{
-					gl.glDepthFunc( GL.GL_ALWAYS);
-				}
-				else
-				{
-					gl.glDepthFunc( GL.GL_LESS);
-				}
+
 				
 				gl.glDrawElements( GL_TRIANGLES, ( int ) nMeshTrianglesSize * 3, GL_UNSIGNED_INT, 0 );
 				gl.glBindVertexArray( 0 );
@@ -514,6 +512,7 @@ public class VisPolyLineMesh {
 				}
 	
 				gl.glBindVertexArray( 0 );
+				gl.glDepthFunc( GL.GL_LESS);
 			}
 		}
 	}
