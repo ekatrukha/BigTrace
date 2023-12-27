@@ -33,7 +33,6 @@ public class VisPolygonFlat {
 
 	private int vao;
 	
-	
 	private float vertices[]; 
 	private int nPointsN=0;
 	private int nGridEdges=0;
@@ -327,7 +326,7 @@ public class VisPolygonFlat {
 			JoglGpuContext context = JoglGpuContext.get( gl );
 	
 			prog.getUniformMatrix4f( "pvm" ).set( pvm );
-			if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE)
+			if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE && renderType == Roi3D.SURFACE)
 			{
 				Vector4f l_color_t = new Vector4f(l_color);
 				l_color_t.w = 0.6f;
@@ -337,7 +336,14 @@ public class VisPolygonFlat {
 			{
 				prog.getUniform4f("colorin").set(l_color);
 			}
-			prog.getUniform1i("surfaceRender").set(BigTraceData.surfaceRender);
+			if(renderType != Roi3D.SURFACE)
+			{
+				prog.getUniform1i("surfaceRender").set(0);
+			}
+			else
+			{
+				prog.getUniform1i("surfaceRender").set(BigTraceData.surfaceRender);
+			}
 			prog.setUniforms( context );
 			prog.use( context );
 

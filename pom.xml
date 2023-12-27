@@ -141,7 +141,7 @@
 		<dependency>
 			<groupId>ch.epfl.biop</groupId>
 			<artifactId>bigdataviewer-image-loaders</artifactId>
-			<version>0.6.3</version> 
+			<version>0.6.4</version> 
 		</dependency>
   		
 		<!-- ImgLib2 dependencies -->

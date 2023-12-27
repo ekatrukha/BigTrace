@@ -6,12 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import javax.swing.JOptionPane;
 
-import bigtrace.io.OpenerSettingsBT;
-import bigtrace.io.SpimDataByteToShortOpener;
-import bigtrace.volume.VolumeMisc;
 
-import ch.epfl.biop.bdv.img.OpenersToSpimData;
-import ch.epfl.biop.bdv.img.opener.OpenerSettings;
 
 import ij.CompositeImage;
 import ij.IJ;
@@ -31,6 +26,9 @@ import loci.formats.services.OMEXMLService;
 import loci.plugins.util.ImageProcessorReader;
 import loci.plugins.util.LociPrefs;
 
+import ch.epfl.biop.bdv.img.OpenersToSpimData;
+import ch.epfl.biop.bdv.img.opener.OpenerSettings;
+
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.XmlIoSpimData;
@@ -45,6 +43,8 @@ import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
+
+import bigtrace.volume.VolumeMisc;
 
 public class BigTraceLoad < T extends RealType< T > >
 {
@@ -211,8 +211,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		}
 		
 
-		
-		if(seriesBitDepth[nOpenSeries] == FormatTools.UINT16)
+		if (seriesBitDepth[nOpenSeries] == FormatTools.UINT16)
 		{
 			OpenerSettings settings = OpenerSettings.BioFormats()
 					.location(new File(btdata.sFileNameFullImg))
@@ -222,14 +221,16 @@ public class BigTraceLoad < T extends RealType< T > >
 			bt.spimData = (SpimData) OpenersToSpimData.getSpimData(settings);
 			
 		}
-		else if (seriesBitDepth[nOpenSeries] == FormatTools.UINT8)
+		else
+		if(seriesBitDepth[nOpenSeries] == FormatTools.UINT8 )		
 		{
-			OpenerSettingsBT settings = OpenerSettingsBT.BioFormats()
+			OpenerSettings settings = OpenerSettings.BioFormats()
 					.location(new File(btdata.sFileNameFullImg))
 					.unit("MICROMETER")
 					.setSerie(nOpenSeries)
+					.to16bits(true)
 					.positionConvention("TOP LEFT");
-			bt.spimData = (SpimData) SpimDataByteToShortOpener.getSpimData(settings);
+			bt.spimData = (SpimData) OpenersToSpimData.getSpimData(settings);
 		}
 		else
 		{
@@ -239,7 +240,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		final SequenceDescription seq = bt.spimData.getSequenceDescription();
 
 		//get voxel size
-		for (int d =0;d<3;d++)
+		for (int d=0;d<3;d++)
 		{
 			BigTraceData.globCal[d] = seq.getViewDescription(0,0).getViewSetup().getVoxelSize().dimension(d);
 		}
