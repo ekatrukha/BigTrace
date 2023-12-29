@@ -72,10 +72,10 @@ public class RenderMethodPanel < T extends RealType< T > > extends JPanel implem
 			{
 				BigTraceData.surfaceRender = cbSurfaceRenderList.getSelectedIndex();
 				Prefs.set("BigTrace.surfaceRender", BigTraceData.surfaceRender);
-				long start1 = System.currentTimeMillis();
+				//long start1 = System.currentTimeMillis();
 				bt.roiManager.updateROIsDisplay();
-				long end1 = System.currentTimeMillis();
-				System.out.println("Mesh update in milli seconds: "+ (end1-start1));
+				//long end1 = System.currentTimeMillis();
+				//System.out.println("Mesh update in milli seconds: "+ (end1-start1));
 			}
 		}
 	}

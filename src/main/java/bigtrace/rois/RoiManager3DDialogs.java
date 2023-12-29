@@ -493,6 +493,7 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 			{
 				BigTraceData.surfaceRender = sSurfaceRenderList.getSelectedIndex();
 				Prefs.set("BigTrace.surfaceRender", BigTraceData.surfaceRender);
+				bt.btpanel.renderMethodPanel.cbSurfaceRenderList.setSelectedIndex(BigTraceData.surfaceRender);
 				bUpdateROIs  = true;
 			}
 			

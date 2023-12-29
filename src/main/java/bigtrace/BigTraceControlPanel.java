@@ -41,7 +41,6 @@ import bigtrace.measure.RoiMeasure3D;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.volume.ExtractCrop;
-import bigtrace.BigTraceData;
 import btbvv.vistools.BvvStackSource;
 import ij.Prefs;
 import net.imglib2.FinalInterval;
