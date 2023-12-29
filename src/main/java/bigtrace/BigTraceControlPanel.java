@@ -97,7 +97,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/cube_icon.png");
 	    ImageIcon tabIcon = new ImageIcon(icon_path);
 
-	    tabPane.addTab("",tabIcon,panelNavigation(), "View/Crop");
+	    tabPane.addTab("",tabIcon,panelView(), "View/Crop");
 
 	    //ROI MANAGER
 	    icon_path = bigtrace.BigTrace.class.getResource("/icons/node.png");
@@ -165,7 +165,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	}
 	
 
-	public JPanel panelNavigation()
+	public JPanel panelView()
 	{
 		
 		JPanel panNavigation = new JPanel(new GridBagLayout());
@@ -282,7 +282,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		
 		//Render method panel
 	    JPanel panRender=new JPanel(new GridBagLayout()); 
-	    panRender.setBorder(new PanelTitle(" Render method "));
+	    panRender.setBorder(new PanelTitle(" Render "));
 		
 	    c.gridx=0;
 	    c.gridy=0;

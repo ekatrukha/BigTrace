@@ -6,10 +6,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import bigtrace.BigTrace;
-
+import bigtrace.BigTraceData;
+import ij.Prefs;
 import net.imglib2.type.numeric.RealType;
 
 
@@ -21,17 +23,18 @@ public class RenderMethodPanel < T extends RealType< T > > extends JPanel implem
 	 */
 	private static final long serialVersionUID = 7367842640615289454L;
 	public JComboBox<String> cbRenderMethod;
+	public JComboBox<String> cbSurfaceRenderList; 
 	BigTrace<T> bt;
 	
 	public RenderMethodPanel(BigTrace<T> bt_)
 	{
 		super();
-		bt =bt_;
+		bt = bt_;
 		
 		GridBagLayout gridbag = new GridBagLayout();
-		GridBagConstraints c = new GridBagConstraints();
+		GridBagConstraints cd = new GridBagConstraints();
 		String[] sMethods = new String[2];
-		sMethods[0]="Maximum intensity";
+		sMethods[0]="Max intensity";
 		sMethods[1]="Volumetric";
 	
 		cbRenderMethod = new JComboBox<>(sMethods);
@@ -39,16 +42,41 @@ public class RenderMethodPanel < T extends RealType< T > > extends JPanel implem
 		cbRenderMethod.addActionListener(this);
 		
 		setLayout(gridbag);
-		c.gridx=0;
-		c.gridy=0;
-		this.add(cbRenderMethod,c);
+		
+		cd.gridx=0;
+		cd.gridy=0;
+		GBCHelper.alighLoose(cd);
+		this.add(new JLabel("Data:"),cd);
+		cd.gridx++;
+		this.add(cbRenderMethod,cd);
+		
+		String[] sSurfaceRenderType = { "plain", "silhouette", "shaded", "shiny"};
+		cbSurfaceRenderList = new JComboBox<String>(sSurfaceRenderType);
+		cbSurfaceRenderList.setSelectedIndex(BigTraceData.surfaceRender);
+		cbSurfaceRenderList.addActionListener(this);
+		cd.gridx=0;
+		cd.gridy++;
+		this.add(new JLabel("ROI surface:"),cd);
+		cd.gridx++;
+		this.add(cbSurfaceRenderList,cd);	
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == cbRenderMethod)
 		{
-			bt.btpanel.setRenderMethod(cbRenderMethod.getSelectedIndex());
-		
+			bt.btpanel.setRenderMethod(cbRenderMethod.getSelectedIndex());		
+		}
+		if(e.getSource() == cbSurfaceRenderList)
+		{
+			if(BigTraceData.surfaceRender != cbSurfaceRenderList.getSelectedIndex())
+			{
+				BigTraceData.surfaceRender = cbSurfaceRenderList.getSelectedIndex();
+				Prefs.set("BigTrace.surfaceRender", BigTraceData.surfaceRender);
+				long start1 = System.currentTimeMillis();
+				bt.roiManager.updateROIsDisplay();
+				long end1 = System.currentTimeMillis();
+				System.out.println("Mesh update in milli seconds: "+ (end1-start1));
+			}
 		}
 	}
 

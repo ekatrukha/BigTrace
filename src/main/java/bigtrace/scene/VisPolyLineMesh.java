@@ -26,7 +26,7 @@ import btbvv.core.shadergen.Shader;
 import btbvv.core.shadergen.generate.Segment;
 import btbvv.core.shadergen.generate.SegmentTemplate;
 import net.imagej.mesh.Meshes;
-import net.imagej.mesh.naive.NaiveDoubleMesh;
+import net.imagej.mesh.naive.NaiveFloatMesh;
 import net.imagej.mesh.nio.BufferMesh;
 import net.imglib2.RealPoint;
 
@@ -296,16 +296,19 @@ public class VisPolyLineMesh {
 	}
 	private void initMesh(final ArrayList<ArrayList< RealPoint >> allContours )
 	{
-		NaiveDoubleMesh nmesh = new NaiveDoubleMesh();
+	
 		int i,j, iPoint;
 		nMeshTrianglesSize = 0;
 
 		final int nSectorN = BigTraceData.sectorN;
 		nPointsN = allContours.size();
 		float [][] triangle = new float[3][3];
-
+		int nMeshTrianglesN = (nPointsN-1)*nSectorN*2;
 		if(nPointsN>1)
 		{
+			//calculate total number of triangles
+			mesh = new BufferMesh( nMeshTrianglesN*3, nMeshTrianglesN, true );
+	
 			//all vertices
 			//vertices = new float [2*(nSectorN+1)*3*nPointsN];
 			for (iPoint=1;iPoint<nPointsN;iPoint++)
@@ -322,7 +325,8 @@ public class VisPolyLineMesh {
 						triangle[2][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
 						
 					}	
-					nmesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2]);
+					
+					addTriangle(mesh, triangle);
 					for (j=0;j<3; j++)
 					{
 						
@@ -331,7 +335,7 @@ public class VisPolyLineMesh {
 						triangle[2][j] = allContours.get(iPoint).get(i+1).getFloatPosition(j);
 						
 					}	
-					nmesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2]);
+					addTriangle(mesh, triangle);
 				}
 				i=nSectorN-1;
 				//last one closing the sector
@@ -343,7 +347,7 @@ public class VisPolyLineMesh {
 					triangle[2][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
 					
 				}	
-				nmesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2]);
+				addTriangle(mesh, triangle);
 				for (j=0;j<3; j++)
 				{
 					
@@ -351,16 +355,12 @@ public class VisPolyLineMesh {
 					triangle[1][j] = allContours.get(iPoint-1).get(0).getFloatPosition(j);
 					triangle[2][j] = allContours.get(iPoint).get(0).getFloatPosition(j);
 					
-				}	
-				nmesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2]);
-				
+				}
+				addTriangle(mesh, triangle);
 
 			}
+			nMeshTrianglesSize = mesh.triangles().size();
 		}
-
-		mesh = new BufferMesh( ( int ) nmesh.vertices().size(), ( int ) nmesh.triangles().size(), true );
-		Meshes.calculateNormals( nmesh, mesh );
-		nMeshTrianglesSize = mesh.triangles().size();
 	}
 	
 	private boolean initMeshShader( GL3 gl )
@@ -516,6 +516,50 @@ public class VisPolyLineMesh {
 			}
 		}
 	}
-	
+	public static float[] getNormal(float [][] triangle)
+	{
+        final float v10x = triangle[1][0] - triangle[0][0];
+        final float v10y = triangle[1][1] - triangle[0][1];
+        final float v10z = triangle[1][2] - triangle[0][2];
 
+        final float v20x = triangle[2][0] - triangle[0][0];
+        final float v20y = triangle[2][1] - triangle[0][1];
+        final float v20z = triangle[2][2] - triangle[0][2];
+
+        final float nx = v10y * v20z - v10z * v20y;
+        final float ny = v10z * v20x - v10x * v20z;
+        final float nz = v10x * v20y - v10y * v20x;
+        final float nmag = (float) Math.sqrt(Math.pow(nx, 2) + Math.pow(ny, 2) + Math.pow(nz, 2));
+
+        return new float[]{nx / nmag, ny / nmag, nz / nmag};
+	}
+	
+	public static float[][] getCumNormal(float [] normale)
+	{
+		float [][] out = new float [3][3];
+		for (int i=0;i<3;i++)
+		{
+			for(int d = 0; d<3;d++)
+			{
+				out[i][d] = (i+1)*normale[d]; 
+			}
+		}
+		return out;
+	}
+	public void addTriangle(final BufferMesh mesh, final float[][] triangle)
+	{
+		final float [] normale = getNormal(triangle);
+		final float [][] cumNormal = getCumNormal(normale);
+		long [] index = new long[3];
+		double vNormalMag ;
+		for (int i=0;i<3;i++)
+		{
+			vNormalMag =  Math.sqrt(Math.pow(cumNormal[i][0], 2) + Math.pow(cumNormal[i][1], 2) + Math.pow(cumNormal[i][2], 2));
+			index[i] = mesh.vertices().add((double)triangle[i][0],(double)triangle[i][1],(double)triangle[i][2],
+					cumNormal[i][0] / vNormalMag, cumNormal[i][1] / vNormalMag, cumNormal[i][2] / vNormalMag,0.0,0.0);
+		}
+		mesh.triangles().add(index[0], index[1], index[2], normale[0], normale[1], normale[2]);
+		//mesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2],
+			//	normale[0],normale[1],normale[2]);
+	}
 }
