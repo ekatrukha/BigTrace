@@ -50,14 +50,14 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		NumberField nfSigmaX = new NumberField(4);
 		NumberField nfSigmaY = new NumberField(4);
 		NumberField nfSigmaZ = new NumberField(4);
-		JCheckBox cbTraceOnlyCrop = new JCheckBox();
+		JCheckBox cbTraceOnlyClipped = new JCheckBox();
 
 		
 		nfSigmaX.setText(df.format(bt.btdata.sigmaTrace[0]));
 		nfSigmaY.setText(df.format(bt.btdata.sigmaTrace[1]));
 		nfSigmaZ.setText(df.format(bt.btdata.sigmaTrace[2]));
 
-		cbTraceOnlyCrop.setSelected(bt.btdata.bTraceOnlyCrop);
+		cbTraceOnlyClipped.setSelected(bt.btdata.bTraceOnlyClipped);
 		
 		cd.gridx=0;
 		cd.gridy=0;
@@ -82,9 +82,9 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		cd.gridx=0;
 		cd.gridy++;
 		//cd.anchor=GridBagConstraints.WEST;
-		pTrace.add(new JLabel("Trace only cropped volume: "),cd);
+		pTrace.add(new JLabel("Trace only clipped volume: "),cd);
 		cd.gridx++;
-		pTrace.add(cbTraceOnlyCrop,cd);
+		pTrace.add(cbTraceOnlyClipped,cd);
 		
 		////////////SEMI-AUTO TRACING OPTIONS
 		JPanel pSemiAuto = new JPanel(new GridBagLayout());
@@ -153,8 +153,8 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 			bt.btdata.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
 			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btdata.sigmaTrace[2]));
 			
-			bt.btdata.bTraceOnlyCrop = cbTraceOnlyCrop.isSelected();
-			Prefs.set("BigTrace.bTraceOnlyCrop", bt.btdata.bTraceOnlyCrop);			
+			bt.btdata.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
+			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btdata.bTraceOnlyClipped);			
 			
 			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
 			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
@@ -188,14 +188,14 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		NumberField nfSigmaX = new NumberField(4);
 		NumberField nfSigmaY = new NumberField(4);
 		NumberField nfSigmaZ = new NumberField(4);
-		JCheckBox cbTraceOnlyCrop = new JCheckBox();
+		JCheckBox cbTraceOnlyClipped = new JCheckBox();
 
 		
 		nfSigmaX.setText(df.format(bt.btdata.sigmaTrace[0]));
 		nfSigmaY.setText(df.format(bt.btdata.sigmaTrace[1]));
 		nfSigmaZ.setText(df.format(bt.btdata.sigmaTrace[2]));
 
-		cbTraceOnlyCrop.setSelected(bt.btdata.bTraceOnlyCrop);
+		cbTraceOnlyClipped.setSelected(bt.btdata.bTraceOnlyClipped);
 		
 		cd.gridx=0;
 		cd.gridy=0;
@@ -220,9 +220,9 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		cd.gridx=0;
 		cd.gridy++;
 		//cd.anchor=GridBagConstraints.WEST;
-		pTrace.add(new JLabel("Trace only cropped volume: "),cd);
+		pTrace.add(new JLabel("Trace only clipped volume: "),cd);
 		cd.gridx++;
-		pTrace.add(cbTraceOnlyCrop,cd);
+		pTrace.add(cbTraceOnlyClipped,cd);
 		
 		
 		////////////ONE-CLICK TRACING OPTIONS
@@ -268,8 +268,8 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 			bt.btdata.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
 			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btdata.sigmaTrace[2]));
 			
-			bt.btdata.bTraceOnlyCrop = cbTraceOnlyCrop.isSelected();
-			Prefs.set("BigTrace.bTraceOnlyCrop", bt.btdata.bTraceOnlyCrop);			
+			bt.btdata.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
+			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btdata.bTraceOnlyClipped);			
 			
 			bt.btdata.nVertexPlacementPointN=(int)(Math.max(3, Integer.parseInt(nfPlaceVertex.getText())));
 			Prefs.set("BigTrace.nVertexPlacementPointN", (double)(bt.btdata.nVertexPlacementPointN));

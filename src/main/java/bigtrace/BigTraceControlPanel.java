@@ -30,7 +30,7 @@ import javax.swing.SwingConstants;
 
 import bdv.util.Affine3DHelpers;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
-import bigtrace.gui.CropPanel;
+import bigtrace.gui.ClipPanel;
 import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
@@ -40,7 +40,7 @@ import bigtrace.gui.VoxelSizePanel;
 import bigtrace.measure.RoiMeasure3D;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.RoiManager3D;
-import bigtrace.volume.ExtractCrop;
+import bigtrace.volume.ExtractClip;
 import btbvv.vistools.BvvStackSource;
 import ij.Prefs;
 import net.imglib2.FinalInterval;
@@ -64,7 +64,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	BigTrace<T> bt;
 	BigTraceData<T> btdata;	
 	
-	public CropPanel cropPanel;	
+	public ClipPanel clipPanel;	
 	public VoxelSizePanel voxelSizePanel;
 	public RenderMethodPanel<T> renderMethodPanel;
 	
@@ -96,7 +96,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/cube_icon.png");
 	    ImageIcon tabIcon = new ImageIcon(icon_path);
 
-	    tabPane.addTab("",tabIcon,panelView(), "View/Crop");
+	    tabPane.addTab("",tabIcon,panelView(), "View/Clip");
 
 	    //ROI MANAGER
 	    icon_path = bigtrace.BigTrace.class.getResource("/icons/node.png");
@@ -190,30 +190,30 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			voxelSizePanel.allowVoxelSizeChange(false);
 		}
 		
-		//CROP PANEL
-		cropPanel = new CropPanel(btdata.nDimIni[1]);
+		//CLIPPING PANEL
+		clipPanel = new ClipPanel(btdata.nDimIni[1]);
 		
-		cropPanel.addCropPanelListener(new CropPanel.Listener() {
+		clipPanel.addClipPanelListener(new ClipPanel.Listener() {
 			@Override
 			public void boundingBoxChanged(long [][] new_box) {
 				bbChanged(new_box);				
 				}
 		});
-		cropPanel.showCrop.addItemListener(new ItemListener() {
+		clipPanel.showClippedBox.addItemListener(new ItemListener() {
 			
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if(e.getStateChange()==ItemEvent.SELECTED){
-					btdata.bCropBox = true;
+					btdata.bClipBox = true;
 					bt.repaintBVV();
 				} else if(e.getStateChange()==ItemEvent.DESELECTED){
-					btdata.bCropBox = false;
+					btdata.bClipBox = false;
 					bt.repaintBVV();
 				}
 			}
 		});
 		
-		cropPanel.butExtractCrop.addActionListener(this);
+		clipPanel.butExtractClipped.addActionListener(this);
 		
 		
 		GridBagConstraints c = new GridBagConstraints();
@@ -307,15 +307,15 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	    panVoxel.add(voxelSizePanel,c);
 		
 		
-		//Cropping Panel
-		JPanel panCrop=new JPanel(new GridBagLayout()); 
-		panCrop.setBorder(new PanelTitle(" Crop "));
+		//Clipping Panel
+		JPanel panClip=new JPanel(new GridBagLayout()); 
+		panClip.setBorder(new PanelTitle(" Clipping "));
 
 	    c.gridx=0;
 	    c.gridy=0;
 	    c.weightx=1.0;
 	    c.fill=GridBagConstraints.HORIZONTAL;
-	    panCrop.add(cropPanel,c);
+	    panClip.add(clipPanel,c);
 	    
 	    
 
@@ -339,9 +339,9 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	    panNavigation.add(panVoxel,c);
 	    
 	    
-	    //Crop
+	    //Clipping
 	    c.gridy++;	
-	    panNavigation.add(panCrop,c);
+	    panNavigation.add(panClip,c);
 	    
 
 	    
@@ -371,8 +371,8 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		nfAnimationDuration.setIntegersOnly(true);
 		nfAnimationDuration.setText(Long.toString(bt.btdata.nAnimationDuration));
 		
-		JCheckBox cbZoomCrop = new JCheckBox();
-		cbZoomCrop.setSelected(bt.btdata.bZoomCrop);
+		JCheckBox cbZoomClip = new JCheckBox();
+		cbZoomClip.setSelected(bt.btdata.bZoomClip);
 		
 		
 		NumberField nfZoomBoxSize = new NumberField(4);
@@ -416,9 +416,9 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		
 		cd.gridx=0;
 		cd.gridy++;
-		pViewSettings.add(new JLabel("Crop volume when zooming in? "),cd);
+		pViewSettings.add(new JLabel("Clip volume when zooming in? "),cd);
 		cd.gridx++;
-		pViewSettings.add(cbZoomCrop,cd);
+		pViewSettings.add(cbZoomClip,cd);
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -474,8 +474,8 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			Prefs.set("BigTrace.nAnimationDuration", bt.btdata.nAnimationDuration);
 
 			//ZOOM BOX
-			bt.btdata.bZoomCrop = cbZoomCrop.isSelected();
-			Prefs.set("BigTrace.bZoomCrop", bt.btdata.bZoomCrop );
+			bt.btdata.bZoomClip = cbZoomClip.isSelected();
+			Prefs.set("BigTrace.bZoomClip", bt.btdata.bZoomClip );
 
 			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
 			Prefs.set("BigTrace.nZoomBoxSize", bt.btdata.nZoomBoxSize);
@@ -498,12 +498,12 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			bt.repaintBVV();
 		}
 	}
-	public void extractCrop()
+	public void extractClippedView()
 	{
 		
-		JPanel cropExtractSettings = new JPanel();
+		JPanel clipExtractSettings = new JPanel();
 		
-		cropExtractSettings.setLayout(new GridBagLayout());
+		clipExtractSettings.setLayout(new GridBagLayout());
 	
 		GridBagConstraints cd = new GridBagConstraints();
 
@@ -511,51 +511,51 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		
 		cd.gridx=0;
 		cd.gridy=0;	
-		String[] sExtractCropTime = { "current time point", "range (specify below)" };
-		JComboBox<String> extractCropTimeList = new JComboBox<String>(sExtractCropTime);
+		String[] sExtractClippedTime = { "current time point", "range (specify below)" };
+		JComboBox<String> extractClippedTimeList = new JComboBox<String>(sExtractClippedTime);
 		int [] nRange = new int [2];
 		nRange[0]=0;
 		nRange[1]=BigTraceData.nNumTimepoints-1;
 		RangeSliderTF timeRange = new RangeSliderTF(nRange, nRange);
 		if(BigTraceData.nNumTimepoints>1)
 		{
-			cropExtractSettings.add(new JLabel("Extract:"),cd);
-			extractCropTimeList.setSelectedIndex((int)Prefs.get("BigTrace.extractCropTime", 0));
+			clipExtractSettings.add(new JLabel("Extract:"),cd);
+			extractClippedTimeList.setSelectedIndex((int)Prefs.get("BigTrace.extractClippedTime", 0));
 			cd.gridx++;
-			cropExtractSettings.add(extractCropTimeList,cd);
+			clipExtractSettings.add(extractClippedTimeList,cd);
 			cd.gridy++;
 			cd.gridx=0;
 			//cd.gridx++;
 
 			cd.gridwidth=2;
-			cropExtractSettings.add(timeRange,cd);
+			clipExtractSettings.add(timeRange,cd);
 			cd.gridwidth=1;
 			cd.gridy++;
 		}
 		
 		cd.gridx=0;	
-		cropExtractSettings.add(new JLabel("Output:"),cd);
+		clipExtractSettings.add(new JLabel("Output:"),cd);
 		cd.gridx++;
-		String[] sExtractCropOutput = { "show in ImageJ", "save as TIF" };
-		JComboBox<String> extractCropOutputList = new JComboBox<String>(sExtractCropOutput);
-		extractCropOutputList.setSelectedIndex((int)Prefs.get("BigTrace.nExtractCropOutput", 0));
-		cropExtractSettings.add(extractCropOutputList,cd);
+		String[] sExtractClippedOutput = { "show in ImageJ", "save as TIF" };
+		JComboBox<String> extractClippedOutputList = new JComboBox<String>(sExtractClippedOutput);
+		extractClippedOutputList.setSelectedIndex((int)Prefs.get("BigTrace.nExtractClippedOutput", 0));
+		clipExtractSettings.add(extractClippedOutputList,cd);
 		
 		if(bt.bTestLLSTransform)
 		{
 			cd.gridy++;
 			cd.gridx=0;	
-			cropExtractSettings.add(new JLabel("Intensity interpolation:"),cd);
+			clipExtractSettings.add(new JLabel("Intensity interpolation:"),cd);
 			cd.gridx++;
 			String[] sIntInterpolationType = { "Nearest Neighbor", "Linear", "Lanczos" };
-			cropExtractSettings.add(new JLabel(sIntInterpolationType[BigTraceData.intensityInterpolation]),cd);
+			clipExtractSettings.add(new JLabel(sIntInterpolationType[BigTraceData.intensityInterpolation]),cd);
 		}
 		
-		int nExtractCropOutput = 0;
+		int nExtractClippedOutput = 0;
 		int nTimeRangeSetting = 0;
 		int nTimePointMin;
 		int nTimePointMax;
-		int reply = JOptionPane.showConfirmDialog(null, cropExtractSettings, "Extract crop volume", 
+		int reply = JOptionPane.showConfirmDialog(null, clipExtractSettings, "Extract clipped volume", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (reply == JOptionPane.OK_OPTION) 
 		{			
@@ -565,8 +565,8 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			
 			if(BigTraceData.nNumTimepoints>1)
 			{
-				nTimeRangeSetting = extractCropTimeList.getSelectedIndex();
-				Prefs.set("BigTrace.extractCropTime", nTimeRangeSetting);
+				nTimeRangeSetting = extractClippedTimeList.getSelectedIndex();
+				Prefs.set("BigTrace.extractClippedTime", nTimeRangeSetting);
 				
 				if(nTimeRangeSetting == 1)
 				{
@@ -576,14 +576,14 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		
 			}
 			
-			nExtractCropOutput = extractCropOutputList.getSelectedIndex();
-			Prefs.set("BigTrace.nExtractCropOutput", nExtractCropOutput);
+			nExtractClippedOutput = extractClippedOutputList.getSelectedIndex();
+			Prefs.set("BigTrace.nExtractClippedOutput", nExtractClippedOutput);
 			
 			//run in a separate thread
-			ExtractCrop<T> extractCropbBG = new ExtractCrop<T>(bt, nTimePointMin, nTimePointMax, nExtractCropOutput);
+			ExtractClip<T> extractClippedBG = new ExtractClip<T>(bt, nTimePointMin, nTimePointMax, nExtractClippedOutput);
 
-			extractCropbBG.addPropertyChangeListener(bt.btpanel);
-			extractCropbBG.execute();
+			extractClippedBG.addPropertyChangeListener(bt.btpanel);
+			extractClippedBG.execute();
 		
 		}
 	}
@@ -606,7 +606,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 					+"&nbsp;<b>S</b> or <b>P</b> - brightness/color/sources<br>"
 					+"&nbsp;<b>D</b> - zoom in to a point<br>"
 					+"&nbsp;<b>C</b> - center the view (zoom out)<br>"
-					+"&nbsp;<b>X</b> - reset crop<br>"
+					+"&nbsp;<b>X</b> - reset clipping<br>"
 					+"&nbsp;<b>P</b> - toggle render method<br>"
 					+"&nbsp;<b>1</b> - show centered XY view<br>"
 					+"&nbsp;<b>2</b> - show centered YZ view<br>"
@@ -698,25 +698,19 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	public void updateViewDataSources()
 	{
 		int i;
-		//update data sources
-//		for(i=0;i<bt.btdata.nTotalChannels;i++)
-//		{
-//				bt.sources.set(i,btdata.getDataSourceCropped(i, btdata.nCurrTimepoint));
-//		}
 
-
-		//update bvv sources crop
-		double [][] doubleCrop = new double [2][3];
+		//update bvv sources clipped view
+		double [][] doubleClip = new double [2][3];
 		for (i=0;i<3;i++)
 			for(int j=0;j<2;j++)
-			    doubleCrop[j][i] = (double)btdata.nDimCurr[j][i];
+				doubleClip[j][i] = (double)btdata.nDimCurr[j][i];
 
-		final FinalRealInterval cropInt = new FinalRealInterval(doubleCrop[0],doubleCrop[1]);
+		final FinalRealInterval clipInt = new FinalRealInterval(doubleClip[0],doubleClip[1]);
 		for(i=0;i<bt.bvv_sources.size();i++)
 		{
-			((BvvStackSource)bt.bvv_sources.get(i)).setCropInterval(cropInt);
+			((BvvStackSource)bt.bvv_sources.get(i)).setClipInterval(clipInt);
 		}	
-		bt.cropBox = new Box3D(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]),0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		bt.clipBox = new Box3D(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]),0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 		
 	}
 	
@@ -757,7 +751,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		}
 		newtransform.set(m);
 		
-		AffineTransform3D final_transform = bt.getCenteredViewTransform(newtransform, btdata.getDataCurrentSourceCropped(), 1.0);
+		AffineTransform3D final_transform = bt.getCenteredViewTransform(newtransform, btdata.getDataCurrentSourceClipped(), 1.0);
 		bt.viewer.setTransformAnimator(new AnisotropicTransformAnimator3D(transform,final_transform ,0,0,btdata.nAnimationDuration));
 		//recalculate ROI shapes
 		bt.roiManager.updateROIsDisplay();
@@ -785,10 +779,10 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		{
 			dialSettings();
 		}
-		//extractCrop
-		if(e.getSource() ==cropPanel.butExtractCrop)
+		//extract clipped view
+		if(e.getSource() ==clipPanel.butExtractClipped)
 		{
-			extractCrop();
+			extractClippedView();
 		}
 	}
 

@@ -122,7 +122,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public Box3D visBox = null;
 	
 	/** helper box to visualize one-click tracing things **/
-	public Box3D cropBox = null;
+	public Box3D clipBox = null;
 
 	/** object storing main data/variables **/
 	public BigTraceData<T> btdata;
@@ -242,7 +242,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			nDimBox[1][i]=(btdata.nDimIni[1][i]-1.0f);
 		}
 		volumeBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
-		cropBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		clipBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 	}
 	public void initSourcesCanvas(double origin_axis_length)
 	{
@@ -305,7 +305,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			RealPoint target = new RealPoint(3);
 			if(!bTraceMode)
 			{
-				if(findPointLocationFromClick(btdata.getDataCurrentSourceCropped(), btdata.nHalfClickSizeWindow,target))
+				if(findPointLocationFromClick(btdata.getDataCurrentSourceClipped(), btdata.nHalfClickSizeWindow,target))
 				{
 					
 //					System.out.println(target.getDoublePosition(0));
@@ -560,14 +560,14 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			RealPoint target = new RealPoint(3);
 			if(!bTraceMode)
 			{
-				if(findPointLocationFromClick(btdata.getDataCurrentSourceCropped(), btdata.nHalfClickSizeWindow,target))
+				if(findPointLocationFromClick(btdata.getDataCurrentSourceClipped(), btdata.nHalfClickSizeWindow,target))
 				{
 					
-					final FinalInterval zoomInterval = getTraceBoxCentered(getTraceInterval(!btdata.bZoomCrop),btdata.nZoomBoxSize, target);
+					final FinalInterval zoomInterval = getTraceBoxCentered(getTraceInterval(!btdata.bZoomClip),btdata.nZoomBoxSize, target);
 
-					if(btdata.bZoomCrop)
+					if(btdata.bZoomClip)
 					{
-						btpanel.cropPanel.setBoundingBox(zoomInterval);
+						btpanel.clipPanel.setBoundingBox(zoomInterval);
 					}
 	
 					//animate
@@ -599,7 +599,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			if(!bTraceMode)
 			{		
-					viewer.setTransformAnimator(getCenteredViewAnim(btdata.getDataCurrentSourceCropped(),1.0));
+					viewer.setTransformAnimator(getCenteredViewAnim(btdata.getDataCurrentSourceClipped(),1.0));
 			}
 			else
 			{
@@ -609,7 +609,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		}
 	}
 	
-	public void actionResetCrop()
+	public void actionResetClip()
 	{
 		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
 		//solution for now, to not interfere with typing
@@ -617,7 +617,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			if(!bTraceMode)
 			{
-				btpanel.cropPanel.setBoundingBox(btdata.nDimIni);				
+				btpanel.clipPanel.setBoundingBox(btdata.nDimIni);				
 			}
 		}
 	}
@@ -647,7 +647,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
 		actions.runnableAction(() -> actionZoomIn(),			"zoom in to click", "D" );
 		actions.runnableAction(() -> actionZoomOut(),				"center view (zoom out)", "C" );
-		actions.runnableAction(() -> actionResetCrop(),				"reset crop", "X" );
+		actions.runnableAction(() -> actionResetClip(),				"reset clipping", "X" );
 		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "O" );
 		actions.runnableAction(() -> actionSelectRoi(),	            "select ROI", "E" );
 				
@@ -703,7 +703,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		IntervalView<?> traceIV;
 		
-		traceIV = getTraceInterval(btdata.bTraceOnlyCrop);
+		traceIV = getTraceInterval(btdata.bTraceOnlyClipped);
 		
 		if(trace.numVertices()==1)
 		{
@@ -749,7 +749,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		IntervalView<?> traceIV;
 		
-		traceIV = getTraceInterval(btdata.bTraceOnlyCrop);	
+		traceIV = getTraceInterval(btdata.bTraceOnlyClipped);	
 //		System.out.println(pclick.getDoublePosition(0));
 //		System.out.println(pclick.getDoublePosition(1));
 //		System.out.println(pclick.getDoublePosition(2));
@@ -764,13 +764,13 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	}
 	
-	/** returns current Interval for the tracing. If bCroppedInterval is true,
-	 * returns cropped area, otherwise returns full original volume. **/
-	IntervalView<T> getTraceInterval(boolean bCroppedInterval)
+	/** returns current Interval for the tracing. If bClippedInterval is true,
+	 * returns clipped volume, otherwise returns full original volume. **/
+	IntervalView<T> getTraceInterval(boolean bClippedInterval)
 	{
-		if(bCroppedInterval)
+		if(bClippedInterval)
 		{
-			return btdata.getDataSourceCropped(btdata.nChAnalysis, btdata.nCurrTimepoint);
+			return btdata.getDataSourceClipped(btdata.nChAnalysis, btdata.nCurrTimepoint);
 		}
 		else
 		{
@@ -1086,9 +1086,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				volumeBox.draw(gl, pvm, camview, screen_size);
 			}
 			//render a box around  the volume 
-			if (btdata.bCropBox)
+			if (btdata.bClipBox)
 			{
-				cropBox.draw(gl, pvm, camview, screen_size);
+				clipBox.draw(gl, pvm, camview, screen_size);
 			}
 			
 			//one click tracing box
@@ -1239,7 +1239,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			
 			for(int i=0;i<bvv_sources.size();i++)
 			{
-				bvv_sources.get(i).setCropTransform(afDataTransform);
+				bvv_sources.get(i).setClipTransform(afDataTransform);
 
 			}
 			//check the alignment

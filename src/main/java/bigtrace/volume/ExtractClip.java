@@ -18,7 +18,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-public class ExtractCrop < T extends RealType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker{
+public class ExtractClip < T extends RealType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker{
 	
 	private String progressState;
 	public BigTrace<T> bt;
@@ -26,7 +26,7 @@ public class ExtractCrop < T extends RealType< T > > extends SwingWorker<Void, S
 	int nOutput;
 	public int nMinTimePoint, nMaxTimePoint;
 
-	public ExtractCrop( final BigTrace<T> bt_, final int nTimePointMin_, final int nTimePointMax_, final int nOutput_)
+	public ExtractClip( final BigTrace<T> bt_, final int nTimePointMin_, final int nTimePointMax_, final int nOutput_)
 	{
 		super();
 		

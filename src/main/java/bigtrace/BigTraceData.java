@@ -86,10 +86,10 @@ public class BigTraceData < T extends RealType< T > > {
 	
 	///////////////////////////// VOLUME RENDERING
 	
-	/** dimensions of the volume/image (without crop) **/
+	/** dimensions of the volume/image (without clipping) **/
 	public long [][] nDimIni = new long [2][3];
 	
-	/** current dimensions of the volume/image (after crop) **/
+	/** current dimensions of the volume/image (after clipping) **/
 	public long [][] nDimCurr = new long [2][3];
 
 	/** whether or not display color coded origin of coordinates **/
@@ -98,8 +98,8 @@ public class BigTraceData < T extends RealType< T > > {
 	/** whether or not display a box around volume/image **/
 	public boolean bVolumeBox = true;
 	
-	/** whether or not display a box for crop **/
-	public boolean bCropBox = false;
+	/** whether or not display a box for clipped view **/
+	public boolean bClipBox = false;
 	
 	/** camera position for BVV **/
 	public double dCam = Prefs.get("BigTrace.dCam",2000.0);
@@ -172,8 +172,8 @@ public class BigTraceData < T extends RealType< T > > {
 	 * used to find maximum intensity voxel **/
 	public int nHalfClickSizeWindow = (int)Prefs.get("BigTrace.nHalfClickSizeWindow",5.0);
 		
-	/** whether to crop volume when zooming **/
-	public boolean bZoomCrop = Prefs.get("BigTrace.bZoomCrop", false);
+	/** whether to clip volume when zooming **/
+	public boolean bZoomClip = Prefs.get("BigTrace.bZoomClip", false);
 	
 	/** characteristic size of zoom in area (in pixels of original volume) **/
 	public int nZoomBoxSize = 150;
@@ -200,8 +200,8 @@ public class BigTraceData < T extends RealType< T > > {
 	/** characteristic size (SD) of lines (for each dimension)**/
 	public double [] sigmaTrace = new double [3];
 	
-	/** whether to limit tracing to cropped area**/
-	public boolean bTraceOnlyCrop = false;
+	/** whether to limit tracing to clipped area**/
+	public boolean bTraceOnlyClipped = false;
 	
 	///////////////////////////// TRACING SETTINGS SEMI AUTO
 	
@@ -257,7 +257,7 @@ public class BigTraceData < T extends RealType< T > > {
 		sigmaTrace[0] = Prefs.get("BigTrace.sigmaTraceX", 3.0);
 		sigmaTrace[1] = Prefs.get("BigTrace.sigmaTraceY", 3.0);
 		sigmaTrace[2] = Prefs.get("BigTrace.sigmaTraceZ", 3.0);
-		bTraceOnlyCrop= Prefs.get("BigTrace.bTraceOnlyCrop", false);
+		bTraceOnlyClipped = Prefs.get("BigTrace.bTraceOnlyClipped", false);
 		
 		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);				
 		fTraceBoxAdvanceFraction = (float) Prefs.get("BigTrace.fTraceBoxAdvanceFraction", 0.9);
@@ -271,23 +271,23 @@ public class BigTraceData < T extends RealType< T > > {
 	}
 	
 	/** returns data sources for specific channel and time point,
-	 * limits output to the current cropped area **/
-	public IntervalView< T > getDataSourceCropped(final int nChannel, final int nTimePoint)
+	 * limits output to the current clipped area **/
+	public IntervalView< T > getDataSourceClipped(final int nChannel, final int nTimePoint)
 	{		
 		return Views.interval(getDataSourceFull(nChannel,nTimePoint),nDimCurr[0], nDimCurr[1]);
 
 	}
 	
 	/** returns data sources for specific channel and time point,
-	 * limits output to the current cropped area **/
-	public IntervalView< T > getDataCurrentSourceCropped()
+	 * limits output to the current clipped area **/
+	public IntervalView< T > getDataCurrentSourceClipped()
 	{		
 		return Views.interval(getDataSourceFull(nChAnalysis,nCurrTimepoint),nDimCurr[0], nDimCurr[1]);
 
 	}
 	
 	/** returns data sources for specific channel and time point,
-	 * does not limit output to the current cropped area **/
+	 * does not limit output to the current clipped area **/
 	@SuppressWarnings("unchecked")
 	public RandomAccessibleInterval<T> getDataSourceFull(final int nChannel, final int nTimePoint)
 	{

@@ -708,7 +708,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	void measureMeanIntensity(final Roi3D roi, final MeasureValues val)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceCropped(bt.btdata.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceClipped(bt.btdata.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile;
 		val.mean = Double.NaN;
 		switch (roi.getType())
@@ -743,7 +743,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	void measureSDIntensity(final Roi3D roi, final MeasureValues val)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceCropped(bt.btdata.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceClipped(bt.btdata.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile;
 		val.stdDev = Double.NaN;
 		switch (roi.getType())
@@ -851,7 +851,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	double [][] measureLineProfile(final Roi3D roi, final boolean bMakePlot)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceCropped(bt.btdata.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceClipped(bt.btdata.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile = null;
 		Plot plotProfile;
 		switch (roi.getType())

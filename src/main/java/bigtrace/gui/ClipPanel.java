@@ -17,7 +17,7 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import net.imglib2.Interval;
 
 
-public class CropPanel extends JPanel {
+public class ClipPanel extends JPanel {
 	
 	public static void main(String[] args) {
 	
@@ -28,7 +28,7 @@ public class CropPanel extends JPanel {
 		}
 		JFrame frame = new JFrame();
 
-		CropPanel slider = new CropPanel(new long[] {60,80,100});
+		ClipPanel slider = new ClipPanel(new long[] {60,80,100});
 		frame.getContentPane().add(slider);
 		frame.pack();
 		frame.setVisible(true);
@@ -43,8 +43,8 @@ public class CropPanel extends JPanel {
 	private RangeSliderTF bbZ;
 	private ArrayList<Listener> listeners =	new ArrayList<Listener>();
 	
-	public JButton butExtractCrop;
-	public JCheckBox showCrop;
+	public JButton butExtractClipped;
+	public JCheckBox showClippedBox;
 	
 	public static interface Listener {
 		public void boundingBoxChanged(long [][] box);
@@ -77,8 +77,8 @@ public class CropPanel extends JPanel {
 		return slider;
 	}
 	
-	//public CropPanel(int nW, int nH, int nSl) {
-	public CropPanel(long [] maxDim) {
+	//public ClipPanel(int nW, int nH, int nSl) {
+	public ClipPanel(long [] maxDim) {
 		super();
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
@@ -107,14 +107,14 @@ public class CropPanel extends JPanel {
 		c.weightx = 0.1;
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.WEST;
-		showCrop = new JCheckBox("Show box?", false);
+		showClippedBox = new JCheckBox("Show box?", false);
 		c.gridx=1;
 		//c.gridy++;
-		this.add(showCrop,c);
+		this.add(showClippedBox,c);
 		c.gridx=2;
 		c.anchor = GridBagConstraints.WEST;
-		butExtractCrop = new JButton("Extract");
-		this.add(butExtractCrop,c);
+		butExtractClipped = new JButton("Extract");
+		this.add(butExtractClipped,c);
 
 
 		RangeSliderTF.Listener bbListener = new RangeSliderTF.Listener() {
@@ -179,7 +179,7 @@ public class CropPanel extends JPanel {
 		bbZ.setMinAndMax((int)box[0][2], (int)box[1][2]);
 	}
 
-	public void addCropPanelListener(Listener l) {
+	public void addClipPanelListener(Listener l) {
         listeners.add(l);
     }
 
