@@ -90,7 +90,7 @@ public class BigTraceData < T extends RealType< T > > {
 	public long [][] nDimIni = new long [2][3];
 	
 	/** current dimensions of the volume/image (after clipping) **/
-	public long [][] nDimCurr = new long [2][3];
+	public static long [][] nDimCurr = new long [2][3];
 
 	/** whether or not display color coded origin of coordinates **/
 	public boolean bShowOrigin = true;
@@ -100,6 +100,9 @@ public class BigTraceData < T extends RealType< T > > {
 	
 	/** whether or not display a box for clipped view **/
 	public boolean bClipBox = false;
+	
+	/** also clip ROIs**/
+	public static int nClipROI = 0;
 	
 	/** camera position for BVV **/
 	public double dCam = Prefs.get("BigTrace.dCam",2000.0);

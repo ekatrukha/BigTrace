@@ -213,6 +213,20 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 			}
 		});
 		
+		clipPanel.clipROIBox.addItemListener(new ItemListener() {
+			
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if(e.getStateChange()==ItemEvent.SELECTED){
+					BigTraceData.nClipROI = 1;
+					bt.repaintBVV();
+				} else if(e.getStateChange()==ItemEvent.DESELECTED){
+					BigTraceData.nClipROI = 0;
+					bt.repaintBVV();
+				}
+			}
+		});
+		
 		clipPanel.butExtractClipped.addActionListener(this);
 		
 		
@@ -670,7 +684,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		{
 			for(int j=0;j<2;j++)
 			{
-				if(btdata.nDimCurr[j][i]!=box[j][i])
+				if(BigTraceData.nDimCurr[j][i]!=box[j][i])
 				{
 					bNewOne = true;
 					break;
@@ -684,8 +698,8 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		{
 				for(i=0;i<3;i++)
 				{
-					btdata.nDimCurr[0][i]=box[0][i];
-					btdata.nDimCurr[1][i]=box[1][i];
+					BigTraceData.nDimCurr[0][i]=box[0][i];
+					BigTraceData.nDimCurr[1][i]=box[1][i];
 				}
 				
 				updateViewDataSources();
@@ -703,14 +717,14 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		double [][] doubleClip = new double [2][3];
 		for (i=0;i<3;i++)
 			for(int j=0;j<2;j++)
-				doubleClip[j][i] = (double)btdata.nDimCurr[j][i];
+				doubleClip[j][i] = (double)BigTraceData.nDimCurr[j][i];
 
 		final FinalRealInterval clipInt = new FinalRealInterval(doubleClip[0],doubleClip[1]);
 		for(i=0;i<bt.bvv_sources.size();i++)
 		{
 			((BvvStackSource)bt.bvv_sources.get(i)).setClipInterval(clipInt);
 		}	
-		bt.clipBox = new Box3D(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]),0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		bt.clipBox = new Box3D(new FinalInterval(BigTraceData.nDimCurr[0],BigTraceData.nDimCurr[1]),0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 		
 	}
 	

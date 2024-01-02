@@ -4,6 +4,10 @@ uniform vec4 colorin;
 uniform int surfaceRender;
 in vec3 Normal;
 in vec3 FragPos;
+in vec3 posW;
+uniform vec3 clipmin;
+uniform vec3 clipmax;
+uniform int clipactive;
 
 //const vec3 ObjectColor = vec3(1, 1, 1);
 
@@ -19,20 +23,6 @@ const vec3 ambient = vec3(0.1, 0.1, 0.1);
 
 const float specularStrength = 1;
 
-//vec3 phong(vec3 norm, vec3 viewDir, vec3 lightDir, vec3 lightColor, float shininess, float specularStrength)
-//{
-//	float diff = max(dot(norm, lightDir), 0.0);
-//	vec3 diffuse = diff * lightColor;
-	
-
-//	vec3 reflectDir = reflect(-lightDir, norm);
-//	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-//	vec3 specular = specularStrength * spec * lightColor;
-	
-
-
-//	return diffuse + specular;
-//}
 
 vec3 diffuse(vec3 norm,  vec3 lightDir, vec3 lightColor)
 {	
@@ -53,6 +43,17 @@ void main()
 		vec3 norm = normalize(Normal);
 		vec3 viewDir = normalize(-FragPos);
 		vec4 colorOut;
+		
+		//ROI clipping
+		if(clipactive>0)
+		{
+			vec3 s = step(clipmin, posW) - step(clipmax, posW);
+			if(s.x * s.y * s.z == 0.0)
+			{
+				discard;
+			}
+		}							
+		
 		//"shiny" surface
 		if(surfaceRender>1)
 		{

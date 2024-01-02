@@ -1058,7 +1058,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		int [] screen_size = new int [] {(int)data.getScreenWidth(), (int) data.getScreenHeight()};
 		//handl.setRenderScene( ( gl, data ) -> {
 		
-		final Matrix4f pvm=new Matrix4f( data.getPv() );
+		final Matrix4f pvm = new Matrix4f( data.getPv() );
 		final Matrix4f view = MatrixMath.affine( data.getRenderTransformWorldToScreen(), new Matrix4f() );
 		final Matrix4f camview = MatrixMath.screen( btdata.dCam, screen_size[0], screen_size[1], new Matrix4f() ).mul( view );
 

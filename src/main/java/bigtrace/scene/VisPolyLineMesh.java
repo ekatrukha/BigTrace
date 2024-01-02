@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import com.jogamp.opengl.GL;
@@ -56,8 +57,7 @@ public class VisPolyLineMesh {
 	public VisPolyLineMesh()
 	{
 		final Segment pointVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color.fp" ).instantiate();
-		
+		final Segment pointFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color.fp" ).instantiate();		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 		
 		final Segment meshVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.vp" ).instantiate();
@@ -438,6 +438,9 @@ public class VisPolyLineMesh {
 				progMesh.getUniformMatrix3f( "itvm" ).set( itvm.get3x3( new Matrix3f() ) );
 				progMesh.getUniform4f("colorin").set(l_color);
 				progMesh.getUniform1i("surfaceRender").set(BigTraceData.surfaceRender);
+				progMesh.getUniform1i("clipactive").set(BigTraceData.nClipROI);
+				progMesh.getUniform3f("clipmin").set(new Vector3f((float)BigTraceData.nDimCurr[0][0],(float)BigTraceData.nDimCurr[0][1],(float)BigTraceData.nDimCurr[0][2]));
+				progMesh.getUniform3f("clipmax").set(new Vector3f((float)BigTraceData.nDimCurr[1][0],(float)BigTraceData.nDimCurr[1][1],(float)BigTraceData.nDimCurr[1][2]));
 				progMesh.setUniforms( context );
 				progMesh.use( context );
 				if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE)

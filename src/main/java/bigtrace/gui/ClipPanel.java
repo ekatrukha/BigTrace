@@ -45,6 +45,7 @@ public class ClipPanel extends JPanel {
 	
 	public JButton butExtractClipped;
 	public JCheckBox showClippedBox;
+	public JCheckBox clipROIBox;
 	
 	public static interface Listener {
 		public void boundingBoxChanged(long [][] box);
@@ -68,7 +69,7 @@ public class ClipPanel extends JPanel {
 			c.gridx++;
 		}
 		//c.gridx++;
-		c.gridwidth=2;
+		c.gridwidth=3;
 		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1.0;
 		layout.setConstraints(slider, c);
@@ -81,40 +82,44 @@ public class ClipPanel extends JPanel {
 	public ClipPanel(long [] maxDim) {
 		super();
 		GridBagLayout gridbag = new GridBagLayout();
-		GridBagConstraints c = new GridBagConstraints();
+		GridBagConstraints cd = new GridBagConstraints();
 
 		setLayout(gridbag);
 
-		c.gridy = 0;
-		
+		cd.gridy = 0;
+		//cd.gridwidth=3;
 
 		bbX = addRangeSlider(
 				"X",
 				new int[] {0, (int) maxDim[0]},
 				new int[] {0, (int) maxDim[0]},
-				c);
+				cd);
 		bbY = addRangeSlider(
 				"Y",
 				new int[] {0, (int) maxDim[1]},
 				new int[] {0, (int) maxDim[1]},
-				c);
+				cd);
 		bbZ = addRangeSlider(
 				"Z",
 				new int[] {0, (int) maxDim[2]},
 				new int[] {0, (int) maxDim[2]},
-				c);
-		c.gridwidth=1;
-		c.weightx = 0.1;
-		c.fill = GridBagConstraints.NONE;
-		c.anchor = GridBagConstraints.WEST;
+				cd);
+		cd.gridwidth=1;
+		cd.weightx = 0.1;
+		cd.fill = GridBagConstraints.NONE;
+		cd.anchor = GridBagConstraints.WEST;
 		showClippedBox = new JCheckBox("Show box?", false);
-		c.gridx=1;
+		
+		clipROIBox = new JCheckBox("Clip ROIs?", false);
+		cd.gridx=1;
 		//c.gridy++;
-		this.add(showClippedBox,c);
-		c.gridx=2;
-		c.anchor = GridBagConstraints.WEST;
+		this.add(showClippedBox,cd);
+		cd.gridx=2;
+		this.add(clipROIBox,cd);
+		cd.gridx=3;
+		cd.anchor = GridBagConstraints.EAST;
 		butExtractClipped = new JButton("Extract");
-		this.add(butExtractClipped,c);
+		this.add(butExtractClipped,cd);
 
 
 		RangeSliderTF.Listener bbListener = new RangeSliderTF.Listener() {

@@ -3,6 +3,7 @@ layout (location = 1) in vec3 aNormal;
 
 out vec3 FragPos;
 out vec3 Normal;
+out vec3 posW;
 //flat out int disc;
 
 uniform mat4 pvm;
@@ -14,5 +15,5 @@ void main()
 	gl_Position = pvm * vec4( aPos, 1.0 );
 	FragPos = vec3(vm * vec4(aPos, 1.0));
 	Normal = itvm * aNormal;
-	
+	posW = aPos;
 }
