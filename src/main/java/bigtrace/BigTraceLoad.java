@@ -90,8 +90,8 @@ public class BigTraceLoad < T extends RealType< T > >
 
 		rai_int.min( btdata.nDimIni[0] );
 		rai_int.max( btdata.nDimIni[1] );
-		rai_int.min( btdata.nDimCurr[0] );
-		rai_int.max( btdata.nDimCurr[1] );
+		rai_int.min( BigTraceData.nDimCurr[0] );
+		rai_int.max( BigTraceData.nDimCurr[1] );
 		
 		btdata.sVoxelUnit = seq.getViewSetupsOrdered().get(0).getVoxelSize().unit();
 		
@@ -283,8 +283,8 @@ public class BigTraceLoad < T extends RealType< T > >
 		
 		rai_int.min( btdata.nDimIni[0] );
 		rai_int.max( btdata.nDimIni[1] );
-		rai_int.min( btdata.nDimCurr[0] );
-		rai_int.max( btdata.nDimCurr[1] );
+		rai_int.min( BigTraceData.nDimCurr[0] );
+		rai_int.max( BigTraceData.nDimCurr[1] );
 		
 		btdata.sVoxelUnit = seq.getViewSetupsOrdered().get(0).getVoxelSize().unit();
 		
@@ -427,8 +427,8 @@ public class BigTraceLoad < T extends RealType< T > >
 		
 		testRAI.min( btdata.nDimIni[0] );
 		testRAI.max( btdata.nDimIni[1] );
-		testRAI.min( btdata.nDimCurr[0] );
-		testRAI.max( btdata.nDimCurr[1] );
+		testRAI.min( BigTraceData.nDimCurr[0] );
+		testRAI.max( BigTraceData.nDimCurr[1] );
 		
 		return true;
 	}

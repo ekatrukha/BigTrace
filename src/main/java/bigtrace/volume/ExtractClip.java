@@ -56,24 +56,24 @@ public class ExtractClip < T extends RealType< T > > extends SwingWorker<Void, S
 		long[] cropMax = cropInt.maxAsLongArray();
 		for(int d=0;d<3;d++)
 		{
-			cropMin[d]=bt.btdata.nDimCurr[0][d];
-			cropMax[d]=bt.btdata.nDimCurr[1][d];
+			cropMin[d] = BigTraceData.nDimCurr[0][d];
+			cropMax[d] = BigTraceData.nDimCurr[1][d];
 		}
-		cropMin[3]= nMinTimePoint;
-		cropMax[3]= nMaxTimePoint;
+		cropMin[3] = nMinTimePoint;
+		cropMax[3] = nMaxTimePoint;
 		cropInt = new FinalInterval(cropMin,cropMax);
 			
 		//output calibration
 		cal.setUnit(bt.btdata.sVoxelUnit);
 		cal.setTimeUnit(bt.btdata.sTimeUnit);
-		cal.pixelWidth= BigTraceData.dMinVoxelSize;
-		cal.pixelHeight= BigTraceData.dMinVoxelSize;
-		cal.pixelDepth= BigTraceData.dMinVoxelSize;
+		cal.pixelWidth = BigTraceData.dMinVoxelSize;
+		cal.pixelHeight = BigTraceData.dMinVoxelSize;
+		cal.pixelDepth = BigTraceData.dMinVoxelSize;
 		
 		Path p = Paths.get(bt.btdata.sFileNameFullImg);
 		String filename = p.getFileName().toString();
 		ImagePlus ip = VolumeMisc.wrapImgImagePlusCal(Views.interval(full_RAI, cropInt), filename + "_crop",cal);
-		if(nOutput ==0)
+		if(nOutput == 0)
 		{
 			ip.show();
 		}

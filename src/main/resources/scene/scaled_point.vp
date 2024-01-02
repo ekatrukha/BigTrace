@@ -5,6 +5,7 @@ uniform float pointScale;
 uniform mat4 pvm;
 uniform vec2 windowSize;
 uniform vec3 voxelScale;
+out vec3 posW;
 
 void main()
 {
@@ -53,5 +54,6 @@ void main()
  	//final point size,
  	//let's make sure it is not zero
     gl_PointSize =  max(dRadius/pointScale,1.0);
+    posW = aPos;
 
 }

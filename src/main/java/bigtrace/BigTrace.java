@@ -1260,7 +1260,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t.rotate(1, (-1)*Math.PI/6.0);
 		t.rotate(0, Math.PI/9.0);
 		viewer.state().setViewerTransform(t);
-		t = getCenteredViewTransform(new FinalInterval(btdata.nDimCurr[0],btdata.nDimCurr[1]), 0.9);
+		t = getCenteredViewTransform(new FinalInterval(BigTraceData.nDimCurr[0],BigTraceData.nDimCurr[1]), 0.9);
 		viewer.state().setViewerTransform(t);
 	}
 
@@ -1272,7 +1272,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		long [][] nBox;
 		if(!bTraceMode)
 		{
-			nBox = btdata.nDimCurr;
+			nBox = BigTraceData.nDimCurr;
 		}
 		else
 		{
@@ -1317,7 +1317,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		long [][] nBox;
 		if(!bTraceMode)
 		{
-			nBox = btdata.nDimCurr;
+			nBox = BigTraceData.nDimCurr;
 		}
 		else
 		{
@@ -1362,7 +1362,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		long [][] nBox;
 		if(!bTraceMode)
 		{
-			nBox = btdata.nDimCurr;
+			nBox = BigTraceData.nDimCurr;
 		}
 		else
 		{

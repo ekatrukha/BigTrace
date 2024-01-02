@@ -26,8 +26,6 @@ import btbvv.core.shadergen.DefaultShader;
 import btbvv.core.shadergen.Shader;
 import btbvv.core.shadergen.generate.Segment;
 import btbvv.core.shadergen.generate.SegmentTemplate;
-import net.imagej.mesh.Meshes;
-import net.imagej.mesh.naive.NaiveFloatMesh;
 import net.imagej.mesh.nio.BufferMesh;
 import net.imglib2.RealPoint;
 
@@ -56,8 +54,8 @@ public class VisPolyLineMesh {
 
 	public VisPolyLineMesh()
 	{
-		final Segment pointVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color.fp" ).instantiate();		
+		final Segment pointVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.vp" ).instantiate();
+		final Segment pointFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.fp" ).instantiate();		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 		
 		final Segment meshVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.vp" ).instantiate();
@@ -464,6 +462,9 @@ public class VisPolyLineMesh {
 	
 				prog.getUniformMatrix4f( "pvm" ).set( pvm );
 				prog.getUniform4f("colorin").set(l_color);
+				prog.getUniform1i("clipactive").set(BigTraceData.nClipROI);
+				prog.getUniform3f("clipmin").set(new Vector3f((float)BigTraceData.nDimCurr[0][0],(float)BigTraceData.nDimCurr[0][1],(float)BigTraceData.nDimCurr[0][2]));
+				prog.getUniform3f("clipmax").set(new Vector3f((float)BigTraceData.nDimCurr[1][0],(float)BigTraceData.nDimCurr[1][1],(float)BigTraceData.nDimCurr[1][2]));
 				prog.setUniforms( context );
 				prog.use( context );		
 				gl.glBindVertexArray( vao );

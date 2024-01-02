@@ -7,6 +7,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 import org.joml.Matrix4fc;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import com.jogamp.opengl.GL;
@@ -48,7 +49,7 @@ public class VisPolygonFlat {
 
 	public VisPolygonFlat()
 	{
-		final Segment pointVp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color.vp" ).instantiate();
+		final Segment pointVp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color_clip.vp" ).instantiate();
 		final Segment pointFp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color_depth.fp" ).instantiate();
 	
 		
@@ -326,6 +327,11 @@ public class VisPolygonFlat {
 			JoglGpuContext context = JoglGpuContext.get( gl );
 	
 			prog.getUniformMatrix4f( "pvm" ).set( pvm );
+			prog.getUniform1i("clipactive").set(BigTraceData.nClipROI);
+			prog.getUniform3f("clipmin").set(new Vector3f((float)BigTraceData.nDimCurr[0][0],(float)BigTraceData.nDimCurr[0][1],(float)BigTraceData.nDimCurr[0][2]));
+			prog.getUniform3f("clipmax").set(new Vector3f((float)BigTraceData.nDimCurr[1][0],(float)BigTraceData.nDimCurr[1][1],(float)BigTraceData.nDimCurr[1][2]));
+
+			
 			if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE && renderType == Roi3D.SURFACE)
 			{
 				Vector4f l_color_t = new Vector4f(l_color);

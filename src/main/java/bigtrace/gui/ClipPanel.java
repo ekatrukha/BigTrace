@@ -108,9 +108,9 @@ public class ClipPanel extends JPanel {
 		cd.weightx = 0.1;
 		cd.fill = GridBagConstraints.NONE;
 		cd.anchor = GridBagConstraints.WEST;
-		showClippedBox = new JCheckBox("Show box?", false);
+		showClippedBox = new JCheckBox("Box", false);
 		
-		clipROIBox = new JCheckBox("Clip ROIs?", false);
+		clipROIBox = new JCheckBox("Clip ROIs", false);
 		cd.gridx=1;
 		//c.gridy++;
 		this.add(showClippedBox,cd);

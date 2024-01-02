@@ -1,14 +1,12 @@
 uniform vec4 colorin;
 out vec4 fragColor;
-uniform int surfaceRender;
 in vec3 posW;
 uniform vec3 clipmin;
 uniform vec3 clipmax;
 uniform int clipactive;
 
 void main()
-{
-
+{    
     //ROI clipping
 	if(clipactive>0)
 	{
@@ -18,15 +16,7 @@ void main()
 			discard;
 		}
 	}
-	//"silhouette" surface
-	if(surfaceRender==1)
-	{
-		gl_FragDepth = 1.0;										
-	}
-	else
-	{
-		gl_FragDepth = gl_FragCoord.z;
-	}
+	
 	fragColor = colorin;
-    
+	
 }

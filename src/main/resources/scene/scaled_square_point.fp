@@ -3,12 +3,25 @@ out vec4 fragColor;
 uniform vec4 colorin;
 uniform vec2 ellipseAxes;
 uniform int renderType;
+in vec3 posW;
+uniform vec3 clipmin;
+uniform vec3 clipmax;
+uniform int clipactive;
 
 void main()
 {
     
-    //transform coordinates to NDC
+    //ROI clipping
+	if(clipactive>0)
+	{
+		vec3 s = step(clipmin, posW) - step(clipmax, posW);
+		if(s.x * s.y * s.z == 0.0)
+		{
+			discard;
+		}
+	}
 	
+    //transform coordinates to NDC
 	vec2 coord = 2.0 * gl_PointCoord - 1.0;
 	
 	

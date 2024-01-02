@@ -26,7 +26,6 @@ import btbvv.core.shadergen.generate.SegmentTemplate;
 import static com.jogamp.opengl.GL.GL_FLOAT;
 
 
-
 public class VisPolyLineScaled
 {	
 	
