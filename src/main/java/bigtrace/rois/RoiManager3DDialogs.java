@@ -287,7 +287,9 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		JTabbedPane tabPane = new JTabbedPane();
 		GridBagConstraints cd = new GridBagConstraints();
 
-		
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
 		////////////ROI RENDER OPTIONS
 		JPanel pROIrender = new JPanel(new GridBagLayout());
 		
@@ -400,6 +402,13 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		JComboBox<String> sSurfaceRenderList = new JComboBox<String>(sSurfaceRenderType);
 		sSurfaceRenderList.setSelectedIndex(BigTraceData.surfaceRender);
 		
+		String[] sSilhouetteRenderType = { "transparent", "front culling"};
+		JComboBox<String> sSilhouetteRenderList = new JComboBox<String>(sSilhouetteRenderType);
+		sSilhouetteRenderList.setSelectedIndex(BigTraceData.silhouetteRender);
+		
+		NumberField nfSilhouetteDecay = new NumberField(4);
+		nfSilhouetteDecay.setText(df.format(BigTraceData.silhouetteDecay));
+		
 		cd.gridx=0;
 		cd.gridy=0;
 		pROIsurface.add(new JLabel("# edges at curve cross-section:"),cd);
@@ -436,9 +445,21 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		
 		cd.gridx=0;
 		cd.gridy++;
-		pROIsurface.add(new JLabel("ROI surface render type: "),cd);
+		pROIsurface.add(new JLabel("ROI surface render type:"),cd);
 		cd.gridx++;
 		pROIsurface.add(sSurfaceRenderList,cd);	
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIsurface.add(new JLabel("Silhouette render:"),cd);
+		cd.gridx++;
+		pROIsurface.add(sSilhouetteRenderList,cd);	
+		
+		cd.gridx=0;		
+		cd.gridy++;
+		pROIsurface.add(new JLabel("Silhouette decay: "),cd);
+		cd.gridx++;
+		pROIsurface.add(nfSilhouetteDecay,cd);
 				
 		//assemble pane
 		tabPane.addTab("ROI render", pROIrender);
@@ -497,6 +518,19 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 				bUpdateROIs  = true;
 			}
 			
+			if(BigTraceData.silhouetteRender != sSilhouetteRenderList.getSelectedIndex())
+			{
+				BigTraceData.silhouetteRender = sSilhouetteRenderList.getSelectedIndex();
+				Prefs.set("BigTrace.silhouetteRender", BigTraceData.silhouetteRender);
+				bUpdateROIs  = true;
+			}
+			
+			if(Math.abs(BigTraceData.silhouetteDecay - Double.parseDouble(nfSilhouetteDecay.getText()))>0.0001)
+			{
+				BigTraceData.silhouetteDecay = Double.parseDouble(nfSilhouetteDecay.getText());
+				Prefs.set("BigTrace.silhouetteDecay",BigTraceData.silhouetteDecay);
+				bUpdateROIs  = true;
+			}
 			//INTERPOLATION
 			
 			if(BigTraceData.nSmoothWindow != Integer.parseInt(nfSmoothWindow.getText())||BigTraceData.shapeInterpolation!= shapeInterpolationList.getSelectedIndex())

@@ -439,17 +439,20 @@ public class VisPolyLineMesh {
 				progMesh.getUniform1i("clipactive").set(BigTraceData.nClipROI);
 				progMesh.getUniform3f("clipmin").set(new Vector3f((float)BigTraceData.nDimCurr[0][0],(float)BigTraceData.nDimCurr[0][1],(float)BigTraceData.nDimCurr[0][2]));
 				progMesh.getUniform3f("clipmax").set(new Vector3f((float)BigTraceData.nDimCurr[1][0],(float)BigTraceData.nDimCurr[1][1],(float)BigTraceData.nDimCurr[1][2]));
+				progMesh.getUniform1i("silType").set(BigTraceData.silhouetteRender);
+				progMesh.getUniform1f("silDecay").set((float)BigTraceData.silhouetteDecay);
 				progMesh.setUniforms( context );
 				progMesh.use( context );
-				if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE)
+				if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE && BigTraceData.silhouetteRender == BigTraceData.silhouette_TRANSPARENT)
 				{
 					gl.glDepthFunc( GL.GL_ALWAYS);
 				}
 
 				gl.glBindVertexArray( vao );
-//				gl.glEnable( GL.GL_CULL_FACE );
-//				gl.glCullFace( GL.GL_BACK );
-//				gl.glFrontFace( GL.GL_CCW );
+				//gl.glEnable( GL.GL_CULL_FACE );
+				//gl.glCullFace( GL.GL_BACK );
+				//gl.glCullFace( GL.GL_FRONT );
+				//gl.glFrontFace( GL.GL_CW );
 				//gl.glEnable(GL.GL_BLEND);
 				//gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA); 
 

@@ -160,6 +160,15 @@ public class BigTraceData < T extends RealType< T > > {
 	
 	/** current surface render type **/
 	public static int surfaceRender = (int) Prefs.get("BigTrace.surfaceRender", SURFACE_SHADE);
+
+	/** available silhouette render types **/
+	public static final int silhouette_TRANSPARENT=0, silhouette_CULLED=1; 
+
+	/** current silhouette render type **/
+	public static int silhouetteRender = (int) Prefs.get("BigTrace.silhouetteRender", silhouette_CULLED);
+	
+	/** current silhouette render type **/
+	public static double silhouetteDecay = Prefs.get("BigTrace.silhouetteDecay", 1.0);
 	
 	//////rendering ROI over time
 	

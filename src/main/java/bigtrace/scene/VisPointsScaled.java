@@ -174,8 +174,13 @@ public class VisPointsScaled
 
 	public void draw(final GL3 gl,final Matrix4fc pvm,final int [] screen_size )
 	{
+		
+		if (fPointSize<0.0001)
+			return;
 		if ( !initialized )
 			init( gl );
+		
+		
 		Vector2f window_sizef;
 		Vector2f ellipse_axes;
 

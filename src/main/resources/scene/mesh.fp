@@ -8,6 +8,8 @@ in vec3 posW;
 uniform vec3 clipmin;
 uniform vec3 clipmax;
 uniform int clipactive;
+uniform float silDecay;
+uniform int silType;
 
 //const vec3 ObjectColor = vec3(1, 1, 1);
 
@@ -53,28 +55,37 @@ void main()
 				discard;
 			}
 		}							
-		
-		//"shiny" surface
+		gl_FragDepth = gl_FragCoord.z;
+		//shaded or shiny surface
 		if(surfaceRender>1)
 		{
+			//old code from Tobias
 			//vec3 l1 = phong( norm, viewDir, lightDir1, lightColor1, 1.0, 1.0 );
 			//vec3 l2 = phong( norm, viewDir, lightDir2, lightColor2, 32, 0.5 );
 			//fragColor = vec4((ambient + l1 + l2) * colorin.rgb, colorin.a);
-			//simple light for now
-			//fragColor = vec4((ambient + l1 ) * colorin.rgb, colorin.a);
-						
-			gl_FragDepth = gl_FragCoord.z;
-			
+					
 			vec3 diff = diffuse(norm,  lightDir1, lightColor1);
 			vec3 spec = specular( norm, viewDir, lightDir1, lightColor1, 16.0, 1.0 )*(surfaceRender-2);
 			fragColor = vec4((ambient + diff ) * colorin.rgb+spec, colorin.a);
+				
 		}
-		//"silhouette" surface
+		//silhouette surface
 		else
 		{
-			float alphax = min(1.0, 1.0-pow(abs(dot(norm,viewDir)),1.0));
-			fragColor = vec4(colorin.rgb, colorin.a*alphax);
-			gl_FragDepth = 1.0;
+			float alphax = min(1.0, 1.0-pow(abs(dot(norm,viewDir)),silDecay));
+			if(silType<1)
+			{
+				//all transparent
+				fragColor = vec4(colorin.rgb, colorin.a*alphax);
+				gl_FragDepth = 1.0;
+			}
+			else
+			{			
+				//front culling
+				if(dot(norm,viewDir)>0)
+					discard;
+				fragColor = vec4(colorin.rgb*alphax, 1.0);	
+			}
 		}
 		
 }
