@@ -50,7 +50,7 @@ public class RenderMethodPanel < T extends RealType< T > > extends JPanel implem
 		cd.gridx++;
 		this.add(cbRenderMethod,cd);
 		
-		String[] sSurfaceRenderType = { "plain", "silhouette", "shaded", "shiny"};
+		String[] sSurfaceRenderType = {"plain", "shaded", "shiny", "silhouette"};
 		cbSurfaceRenderList = new JComboBox<String>(sSurfaceRenderType);
 		cbSurfaceRenderList.setSelectedIndex(BigTraceData.surfaceRender);
 		cbSurfaceRenderList.addActionListener(this);
@@ -70,10 +70,12 @@ public class RenderMethodPanel < T extends RealType< T > > extends JPanel implem
 		{
 			if(BigTraceData.surfaceRender != cbSurfaceRenderList.getSelectedIndex())
 			{
+//	
 				BigTraceData.surfaceRender = cbSurfaceRenderList.getSelectedIndex();
 				Prefs.set("BigTrace.surfaceRender", BigTraceData.surfaceRender);
 				//long start1 = System.currentTimeMillis();
-				bt.roiManager.updateROIsDisplay();
+				bt.repaintBVV();
+				
 				//long end1 = System.currentTimeMillis();
 				//System.out.println("Mesh update in milli seconds: "+ (end1-start1));
 			}

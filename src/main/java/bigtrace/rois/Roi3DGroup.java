@@ -11,9 +11,9 @@ public class Roi3DGroup {
 	 public Color lineColor = Color.BLUE;
 	 public String sName;
 
-	 public float lineThickness = 4.0f;
-	 public float pointSize = 6.0f;
-	 public int renderType = Roi3D.WIRE;
+	 public float lineThickness = 6.0f;
+	 public float pointSize = 3.0f;
+	 public int renderType = Roi3D.SURFACE;
 	 public boolean bVisible = true;
 	 
 	 public Roi3DGroup(String sGroupName_,  float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_)

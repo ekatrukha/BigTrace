@@ -398,10 +398,6 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		nfCrossSectionGridStep.setIntegersOnly(true);
 		nfCrossSectionGridStep.setText(Integer.toString(BigTraceData.crossSectionGridStep));
 		
-		String[] sSurfaceRenderType = { "plain", "silhouette", "shaded", "shiny"};
-		JComboBox<String> sSurfaceRenderList = new JComboBox<String>(sSurfaceRenderType);
-		sSurfaceRenderList.setSelectedIndex(BigTraceData.surfaceRender);
-		
 		String[] sSilhouetteRenderType = { "transparent", "front culling"};
 		JComboBox<String> sSilhouetteRenderList = new JComboBox<String>(sSilhouetteRenderType);
 		sSilhouetteRenderList.setSelectedIndex(BigTraceData.silhouetteRender);
@@ -439,15 +435,10 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		cd.gridy++;
 		cd.gridwidth=2;
 		cd.anchor = GridBagConstraints.CENTER;
-		pROIsurface.add(new JLabel("<html>----  <B>Surface</B> mode  ----</html>"),cd);
+		pROIsurface.add(new JLabel("<html>----  <B>Silhouette</B> surface ----</html>"),cd);
 		cd.gridwidth=1;
 		cd.anchor = GridBagConstraints.WEST;
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pROIsurface.add(new JLabel("ROI surface render type:"),cd);
-		cd.gridx++;
-		pROIsurface.add(sSurfaceRenderList,cd);	
+	
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -473,6 +464,7 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 	
 			//ROI appearance
 			boolean bUpdateROIs = false;
+			boolean bUpdateBVV = false;
 			
 			Color tempC;
 			
@@ -510,26 +502,21 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 				bUpdateROIs  = true;
 			}
 			
-			if(BigTraceData.surfaceRender != sSurfaceRenderList.getSelectedIndex())
-			{
-				BigTraceData.surfaceRender = sSurfaceRenderList.getSelectedIndex();
-				Prefs.set("BigTrace.surfaceRender", BigTraceData.surfaceRender);
-				bt.btpanel.renderMethodPanel.cbSurfaceRenderList.setSelectedIndex(BigTraceData.surfaceRender);
-				bUpdateROIs  = true;
-			}
 			
 			if(BigTraceData.silhouetteRender != sSilhouetteRenderList.getSelectedIndex())
 			{
 				BigTraceData.silhouetteRender = sSilhouetteRenderList.getSelectedIndex();
 				Prefs.set("BigTrace.silhouetteRender", BigTraceData.silhouetteRender);
-				bUpdateROIs  = true;
+				bUpdateBVV = true;
+				//bUpdateROIs  = true;
 			}
 			
 			if(Math.abs(BigTraceData.silhouetteDecay - Double.parseDouble(nfSilhouetteDecay.getText()))>0.0001)
 			{
 				BigTraceData.silhouetteDecay = Double.parseDouble(nfSilhouetteDecay.getText());
 				Prefs.set("BigTrace.silhouetteDecay",BigTraceData.silhouetteDecay);
-				bUpdateROIs  = true;
+				bUpdateBVV = true;
+				//bUpdateROIs  = true;
 			}
 			//INTERPOLATION
 			
@@ -565,8 +552,8 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 						}
 						Prefs.set("BigTrace.timeFade", BigTraceData.timeFade);
 					}
-
-					bUpdateROIs  = true;	
+					bUpdateBVV = true;	
+					//bUpdateROIs  = true;	
 				}
 			}
 			
@@ -574,6 +561,13 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 			if(bUpdateROIs)
 			{
 				rm.updateROIsDisplay();
+			}
+			else
+			{
+				if(bUpdateBVV)
+				{
+					bt.repaintBVV();
+				}
 			}
 			
 		}

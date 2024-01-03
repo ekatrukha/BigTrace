@@ -146,7 +146,7 @@ public class BigTraceData < T extends RealType< T > > {
 	/** number of segments in the cylinder cross-section (for polyline/trace ROIs),
 	 *  3 = prism, 4 = cuboid, etc.
 	 *  The more the number, more smooth is surface **/
-	public static int sectorN = (int) Prefs.get("BigTrace.nSectorN", 16);
+	public static int sectorN = (int) Prefs.get("BigTrace.nSectorN", 32);
 	
 	/** approximate distance between contours along the pipe visualizing a curve
 	 *  in minimum voxel size units **/
@@ -156,7 +156,7 @@ public class BigTraceData < T extends RealType< T > > {
 	public static int crossSectionGridStep = (int) Prefs.get("BigTrace.crossSectionGridStep", 50);
 	
 	/** available surface render types **/
-	public static final int SURFACE_PLAIN=0, SURFACE_SILHOUETTE=1, SURFACE_SHADE=2, SURFACE_SHINY=3; 
+	public static final int SURFACE_PLAIN=0, SURFACE_SHADE=1, SURFACE_SHINY=2, SURFACE_SILHOUETTE=3; 
 	
 	/** current surface render type **/
 	public static int surfaceRender = (int) Prefs.get("BigTrace.surfaceRender", SURFACE_SHADE);
@@ -168,7 +168,7 @@ public class BigTraceData < T extends RealType< T > > {
 	public static int silhouetteRender = (int) Prefs.get("BigTrace.silhouetteRender", silhouette_CULLED);
 	
 	/** current silhouette render type **/
-	public static double silhouetteDecay = Prefs.get("BigTrace.silhouetteDecay", 1.0);
+	public static double silhouetteDecay = Prefs.get("BigTrace.silhouetteDecay", 2.0);
 	
 	//////rendering ROI over time
 	

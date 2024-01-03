@@ -129,14 +129,8 @@ public class VisPolyLineMesh {
 			else
 			//(renderType == Roi3D.SURFACE)
 			{
-				if(BigTraceData.surfaceRender == BigTraceData.SURFACE_PLAIN)
-				{
-					setVerticesSurface(point_contours);
-				}
-				else
-				{
+
 					initMesh(point_contours);
-				}
 			}
 		}
 		
@@ -251,7 +245,7 @@ public class VisPolyLineMesh {
 	
 	private boolean init( final GL3 gl )
 	{
-		if(renderType == Roi3D.SURFACE && BigTraceData.surfaceRender!= BigTraceData.SURFACE_PLAIN)
+		if(renderType == Roi3D.SURFACE)
 		{
 			//initMesh();
 			return initMeshShader(gl);
@@ -427,7 +421,7 @@ public class VisPolyLineMesh {
 			
 			gl.glDepthFunc( GL.GL_LESS);
 			
-			if(renderType == Roi3D.SURFACE && BigTraceData.surfaceRender!=BigTraceData.SURFACE_PLAIN)
+			if(renderType == Roi3D.SURFACE)
 			{
 				final Matrix4f itvm = vm.invert( new Matrix4f() ).transpose();
 
@@ -509,14 +503,14 @@ public class VisPolyLineMesh {
 						//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
 					}
 				}
-				if(renderType == Roi3D.SURFACE)
-				{
-					gl.glLineWidth(1.0f);
-					for(nPointIt=0;nPointIt<(nPointsN-1);nPointIt+=1)
-					{
-						gl.glDrawArrays( GL.GL_TRIANGLE_STRIP, nPointIt*(nSectorN+1)*2, (nSectorN+1)*2);
-					}
-				}
+//				if(renderType == Roi3D.SURFACE)
+//				{
+//					gl.glLineWidth(1.0f);
+//					for(nPointIt=0;nPointIt<(nPointsN-1);nPointIt+=1)
+//					{
+//						gl.glDrawArrays( GL.GL_TRIANGLE_STRIP, nPointIt*(nSectorN+1)*2, (nSectorN+1)*2);
+//					}
+//				}
 	
 				gl.glBindVertexArray( 0 );
 				gl.glDepthFunc( GL.GL_LESS);

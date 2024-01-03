@@ -56,18 +56,26 @@ void main()
 			}
 		}							
 		gl_FragDepth = gl_FragCoord.z;
-		//shaded or shiny surface
-		if(surfaceRender>1)
+		//plain, shaded or shiny surface
+		if(surfaceRender<3)
 		{
 			//old code from Tobias
 			//vec3 l1 = phong( norm, viewDir, lightDir1, lightColor1, 1.0, 1.0 );
 			//vec3 l2 = phong( norm, viewDir, lightDir2, lightColor2, 32, 0.5 );
 			//fragColor = vec4((ambient + l1 + l2) * colorin.rgb, colorin.a);
-					
-			vec3 diff = diffuse(norm,  lightDir1, lightColor1);
-			vec3 spec = specular( norm, viewDir, lightDir1, lightColor1, 16.0, 1.0 )*(surfaceRender-2);
-			fragColor = vec4((ambient + diff ) * colorin.rgb+spec, colorin.a);
-				
+			//plain
+			if(surfaceRender==0)
+			{
+			
+				fragColor = colorin;
+			}	
+			else
+			{
+			//shaded/shiny
+				vec3 diff = diffuse(norm,  lightDir1, lightColor1);
+				vec3 spec = specular( norm, viewDir, lightDir1, lightColor1, 16.0, 1.0 )*(surfaceRender-1);
+				fragColor = vec4((ambient + diff ) * colorin.rgb+spec, colorin.a);
+			}	
 		}
 		//silhouette surface
 		else
