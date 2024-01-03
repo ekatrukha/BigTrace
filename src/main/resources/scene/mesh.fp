@@ -92,7 +92,7 @@ void main()
 				//front culling
 				if(dot(norm,viewDir)>0)
 					discard;
-				fragColor = vec4(colorin.rgb*alphax, 1.0);	
+				fragColor = vec4(colorin.rgb*alphax, colorin.a);	
 			}
 		}
 		
