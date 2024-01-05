@@ -1391,8 +1391,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			scale = sH/nD;
 		}
+		
 		scale = 0.9*scale;
-		AffineTransform3D t = new AffineTransform3D();
+		final AffineTransform3D t = new AffineTransform3D();
 	
 		t.identity();
 		
@@ -1400,7 +1401,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t.rotate(0, Math.PI/2.0);
 		t.translate(0.5*(sW-scale*(nW+nWoff)),0.5*(sH+scale*(nD+nDoff)),(-0.5)*scale*nHoff);
 			
-		AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(viewer.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
+		final AnisotropicTransformAnimator3D anim = new AnisotropicTransformAnimator3D(viewer.state().getViewerTransform(),t,0,0,(long)(btdata.nAnimationDuration*0.5));
 		
 		viewer.setTransformAnimator(anim);
 

@@ -135,7 +135,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		ButtonGroup roiTraceMode = new ButtonGroup();
 
 		//initialize new *undefined* ROI group
-		groups.add(new Roi3DGroup(sUndefinedGroupName, 3.0f, Color.GREEN, 6.0f, Color.BLUE, Roi3D.SURFACE) );
+		groups.add(new Roi3DGroup(sUndefinedGroupName, 4.0f, Color.GREEN, 7.0f, Color.BLUE, Roi3D.WIRE) );
 		nActiveGroup = 0;
 
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
