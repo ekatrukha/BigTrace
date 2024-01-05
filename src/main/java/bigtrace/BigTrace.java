@@ -39,7 +39,6 @@ import net.imglib2.Point;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.algorithm.region.BresenhamLine;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -48,7 +47,6 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
-import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
@@ -1463,7 +1461,16 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		// ??? maybe move these functions to BVV to speed up?? 
 		if(btdata.nRenderMethod == BigTraceData.DATA_RENDER_MAX_INT)
 		{
-			return findPointLocationMaxIntensity(viewclick, point_mouse, target);
+			//long start1, end1;
+			//start1 = System.currentTimeMillis();
+			//findPointLocationMaxIntensity(viewclick, point_mouse, target);
+			//end1 = System.currentTimeMillis();
+			//System.out.println("alg1: "+ (end1-start1));
+			//start1 = System.currentTimeMillis();
+			boolean bRes =findPointLocationMaxIntensityNEW(viewclick, point_mouse, target);
+			//end1 = System.currentTimeMillis();
+			//System.out.println("alg2: "+ (end1-start1));
+			return bRes;
 		}
 		else
 		if(btdata.nRenderMethod == BigTraceData.DATA_RENDER_VOLUMETRIC)
@@ -1605,7 +1612,90 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		return true;	
 	}
+	
+	public <X extends RealType< X >>boolean findPointLocationMaxIntensityNEW(final IntervalView< X > viewclick, java.awt.Point point_mouse_in, final RealPoint target)
+	{
+		//view line
+		Line3D viewLine;
+		//current dataset
+		final Cuboid3D dataCube = new Cuboid3D(viewclick);
+		ArrayList<RealPoint> intersectionPoints; 
+		
+		double [] closeP = new double [3];
+		double [] farP = new double [3];
+		double [] vect = new double [3];
+		double totLength;
+		final int nHalfWindowSize = btdata.nHalfClickSizeWindow;
+
+		RandomAccess<X> raZ = Views.extendZero(viewclick).randomAccess();
+		double curr_v = 0.0;
+
+		final double dStep = 0.5;// seems like a good step
+		double dCurrStep = 0.0;
+		Point finalP = new Point(3);
+		
+		Point foundMaxPosition = new Point(3);
+		double foundMaxValue = (-1)*Double.MAX_VALUE;
+		
+		//init stuff
+
+		dataCube.iniFaces();
+		java.awt.Point point_mouse = new java.awt.Point();
+		
+		for (int dx = -nHalfWindowSize;dx<(nHalfWindowSize+1); dx++)
+			for (int dy = -nHalfWindowSize;dy<(nHalfWindowSize+1); dy++)
+			{
+				point_mouse.x = point_mouse_in.x + dx;
+				point_mouse.y = point_mouse_in.y + dy;
+				viewLine = findClickLine(point_mouse);
+		
+				intersectionPoints = Intersections3D.cuboidLinesIntersect(dataCube, viewLine);
+				
+				if(intersectionPoints.size()!=2)
+				{
+					return false;
+				}
+				//we have 2 intersection points
+					
+				for(int d=0;d<3; d++)
+				{
+					closeP[d] = intersectionPoints.get(0).getDoublePosition(d);
+					farP[d] = intersectionPoints.get(1).getDoublePosition(d);
+				}
+				
+				//find the vector between two points	
+				LinAlgHelpers.subtract(farP, closeP, vect);
+				totLength = LinAlgHelpers.length(vect);
+				LinAlgHelpers.normalize(vect);
+				curr_v = -1.0;
+				
+				for(dCurrStep = 0.0; dCurrStep < totLength; dCurrStep+=dStep)
+				{
+					//set position
+					LinAlgHelpers.scale(vect, dCurrStep, farP);
+					LinAlgHelpers.add(farP, closeP, farP);
+					for(int d=0;d<3;d++)
+					{
+						finalP.setPosition(Math.round(farP[d]), d);
+					}
+					//closeP.setPosition(viewSegment.get(i));
+					raZ.setPosition(finalP);
+					curr_v = raZ.get().getRealDouble();
+					if(curr_v > foundMaxValue)
+					{
+						foundMaxValue = curr_v;
+						foundMaxPosition.setPosition(finalP);
+					}
+				}
+			}
+		target.setPosition(foundMaxPosition);
+		System.out.println("al2 val:"+Double.toString(foundMaxValue));
+		System.out.println("al2:"+Integer.toString(foundMaxPosition.getIntPosition(0))+" "+Integer.toString(foundMaxPosition.getIntPosition(1))+" "+Integer.toString(foundMaxPosition.getIntPosition(2)));
+		
+		return true;	
+	}
 	/** find click location in 3D when using maximum intensity render **/
+	@Deprecated
 	public <X extends RealType< X >>boolean findPointLocationMaxIntensity(final IntervalView< X > viewclick, java.awt.Point point_mouse, final RealPoint target)
 	{
 		int i,j;

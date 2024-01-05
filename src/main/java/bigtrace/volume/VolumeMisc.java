@@ -124,6 +124,10 @@ public class VolumeMisc {
 					}
 				}
 		}
+		
+		//System.out.println("al1 val:"+max.toString());
+		//System.out.println("al1:"+Float.toString(maxLocation.getFloatPosition(0))+" "+Float.toString(maxLocation.getFloatPosition(1))+" "+Float.toString(maxLocation.getFloatPosition(2)));
+		
 		return bFound;
 	}
 	/** maximum intensity finding function, but without cuboid **/
