@@ -31,11 +31,16 @@ import ij.plugin.PlugIn;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
 import net.imglib2.AbstractInterval;
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
+import net.imglib2.Point;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.algorithm.region.BresenhamLine;
+import net.imglib2.algorithm.region.hypersphere.HyperSphere;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
@@ -43,6 +48,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
+import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
@@ -60,6 +66,7 @@ import btbvv.vistools.BvvStackSource;
 import btbvv.core.render.RenderData;
 import btbvv.core.render.VolumeRenderer.RepaintType;
 import btbvv.btuitools.BvvGamma;
+import btbvv.btuitools.GammaConverterSetup;
 import btbvv.core.VolumeViewerPanel;
 import btbvv.core.util.MatrixMath;
 
@@ -305,7 +312,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			RealPoint target = new RealPoint(3);
 			if(!bTraceMode)
 			{
-				if(findPointLocationFromClick(btdata.getDataCurrentSourceClipped(), btdata.nHalfClickSizeWindow,target))
+				if(findPointLocationFromClick(btdata.getDataCurrentSourceClipped(),target))
 				{
 					
 //					System.out.println(target.getDoublePosition(0));
@@ -362,7 +369,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			{
 				if(RoiManager3D.mode==RoiManager3D.ADD_POINT_SEMIAUTOLINE)
 				{
-					if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+					if(findPointLocationFromClick(btdata.trace_weights, target))
 					{
 						//run trace finding in a separate thread
 						getSemiAutoTrace(target);
@@ -404,7 +411,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			RealPoint target = new RealPoint(3);
 			if(bTraceMode)
 			{
-				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+				if(findPointLocationFromClick(btdata.trace_weights, target))
 				{
 					roiManager.unselect();
 					roiManager.addSegment(target, null);																
@@ -536,7 +543,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			{
 				//make a straight line
 				RealPoint target = new RealPoint(3);							
-				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow, target))
+				if(findPointLocationFromClick(btdata.trace_weights, target))
 				{								
 					roiManager.addSegment(target, 
 							VolumeMisc.BresenhamWrap(roiManager.getLastTracePoint(),target));
@@ -560,7 +567,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			RealPoint target = new RealPoint(3);
 			if(!bTraceMode)
 			{
-				if(findPointLocationFromClick(btdata.getDataCurrentSourceClipped(), btdata.nHalfClickSizeWindow,target))
+				if(findPointLocationFromClick(btdata.getDataCurrentSourceClipped(),target))
 				{
 					
 					final FinalInterval zoomInterval = getTraceBoxCentered(getTraceInterval(!btdata.bZoomClip),btdata.nZoomBoxSize, target);
@@ -576,7 +583,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			}
 			else
 			{
-				if(findPointLocationFromClick(btdata.trace_weights, btdata.nHalfClickSizeWindow,target))
+				if(findPointLocationFromClick(btdata.trace_weights,target))
 				{
 					//FinalInterval zoomInterval = getTraceBoxCentered(btdata.trace_weights,(long)(btdata.lTraceBoxSize*0.8), target);
 					FinalInterval zoomInterval = getZoomBoxCentered((long)(btdata.lTraceBoxSize*0.5), target);
@@ -624,14 +631,14 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	
 	public void actionToggleRender()
 	{
-		if(btdata.nRenderMethod==0)
+		if(btdata.nRenderMethod == BigTraceData.DATA_RENDER_MAX_INT)
 		{
-			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(1);
+			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(BigTraceData.DATA_RENDER_VOLUMETRIC);
 			viewer.showMessage("volumetric");
 		}
 		else
 		{
-			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(0);
+			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(BigTraceData.DATA_RENDER_MAX_INT);
 			viewer.showMessage("maximum intensity");
 		}
 	}
@@ -1400,17 +1407,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		viewer.setTransformAnimator(anim);
 
 	}
-	
-	public Line3D findClickLine()
+	/** givem mouse click coordinates, returns the line along the view ray **/
+	public Line3D findClickLine(final java.awt.Point point_mouse)
 	{
-
-		java.awt.Point point_mouse  = viewer.getMousePosition();
-
-		if(point_mouse ==null)
-		{
-			return null;
-		}
-														
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
 		viewer.state().getViewerTransform(transform);
@@ -1437,23 +1436,184 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 
 		return clickLine;
 	}
+	public Line3D findClickLine()
+	{
+
+		java.awt.Point point_mouse  = viewer.getMousePosition();
+
+		if(point_mouse ==null)
+		{
+			return null;
+		}
+														
+		return findClickLine(point_mouse);
+	}
 	
 	/** function that locates user mouse click (in RealPoint target) inside viewclick IntervalView
 	 * using frustum of nHalfWindowSize **/
-	public <X extends RealType< X >>boolean findPointLocationFromClick(final IntervalView< X > viewclick, final int nHalfWindowSize, final RealPoint target)
+	//public <X extends RealType< X >>boolean findPointLocationFromClick(final IntervalView< X > viewclick, final int nHalfWindowSize, final RealPoint target)
+	public <X extends RealType< X >>boolean findPointLocationFromClick(final IntervalView< X > viewclick, final RealPoint target)
 	{
-		int i,j;
-
+		
 		java.awt.Point point_mouse  = viewer.getMousePosition();
 		if(point_mouse ==null)
 		{
 			return false;
 		}
+		// ??? maybe move these functions to BVV to speed up?? 
+		if(btdata.nRenderMethod == BigTraceData.DATA_RENDER_MAX_INT)
+		{
+			return findPointLocationMaxIntensity(viewclick, point_mouse, target);
+		}
+		else
+		if(btdata.nRenderMethod == BigTraceData.DATA_RENDER_VOLUMETRIC)
+		{
+			return findPointLocationVolumetric(viewclick, point_mouse, target);
+		}
 		
+		return false;		
+		
+	}
+	/** find click location in 3D when using volumetric render 
+	 **/
+	public <X extends RealType< X >>boolean findPointLocationVolumetric(final IntervalView< X > viewclick, java.awt.Point point_mouse_in, final RealPoint target)
+	{
+		//view line
+		Line3D viewLine;
+		//current dataset
+		final Cuboid3D dataCube = new Cuboid3D(viewclick);
+		ArrayList<RealPoint> intersectionPoints; 
+		final AffineTransform3D transform = new AffineTransform3D();
+		final RealPoint firstP = new RealPoint (3);
+		final RealPoint lastP = new RealPoint (3);
+		
+		double [] closeP = new double [3];
+		double [] farP = new double [3];
+		double [] vect = new double [3];
+		double totLength;
+		final int nHalfWindowSize = btdata.nHalfClickSizeWindow;
+		int indC = 0;
+		int indF = 1;
+		boolean bFound;
+		//get current settings of the channel
+		GammaConverterSetup setup = (GammaConverterSetup) bvv_main.getConverterSetups().get(btdata.nChAnalysis);
+		final double aOffset = setup.getAlphaRangeMin();
+		final double aScale = Math.max(setup.getAlphaRangeMax() - aOffset,1.0);
+		final double aGamma = 1.0/setup.getAlphaGamma();
+		RandomAccess<X> raZ = Views.extendZero(viewclick).randomAccess();
+		double alpha = 0;
+		double curr_a = 0.0;
+		double curr_v = 0.0;
+
+		final double dStep = 0.5;// seems like a good step
+		double dCurrStep = 0.0;
+		Point finalP = new Point(3);
+		
+		ArrayList<Point> foundPositions = new ArrayList<Point>();
+		ArrayList<Double> foundValues = new ArrayList<Double>();
+		
+		//init stuff
+		viewer.state().getViewerTransform(transform);
+		dataCube.iniFaces();
+		java.awt.Point point_mouse = new java.awt.Point();
+		
+		for (int dx = -nHalfWindowSize;dx<(nHalfWindowSize+1); dx++)
+			for (int dy = -nHalfWindowSize;dy<(nHalfWindowSize+1); dy++)
+			{
+				point_mouse.x = point_mouse_in.x + dx;
+				point_mouse.y = point_mouse_in.y + dy;
+				viewLine = findClickLine(point_mouse);
+		
+				intersectionPoints = Intersections3D.cuboidLinesIntersect(dataCube, viewLine);
+				
+				if(intersectionPoints.size()!=2)
+				{
+					return false;
+				}
+				//we have 2 intersection points
+				//let's figure out which one is closer to the viewer
+				transform.apply(intersectionPoints.get(0), firstP);
+				transform.apply(intersectionPoints.get(1), lastP);
+				
+				indC = 0;
+				indF = 1;
+				
+				if(firstP.getFloatPosition(2)>lastP.getFloatPosition(2))
+				{
+					indF = 0;
+					indC = 1;
+				}
+					
+				for(int d=0;d<3; d++)
+				{
+					closeP[d] = intersectionPoints.get(indC).getDoublePosition(d);
+					farP[d] = intersectionPoints.get(indF).getDoublePosition(d);
+				}
+				
+				//find the vector between two points	
+				LinAlgHelpers.subtract(farP, closeP, vect);
+				totLength = LinAlgHelpers.length(vect);
+				LinAlgHelpers.normalize(vect);
+		
+				bFound = false;
+		
+				alpha = 0;
+				curr_a = 0.0;
+				curr_v = -1.0;
+				
+				for(dCurrStep = 0.0; dCurrStep < totLength &&!bFound; dCurrStep+=dStep)
+				{
+					//set position
+					LinAlgHelpers.scale(vect, dCurrStep, farP);
+					LinAlgHelpers.add(farP, closeP, farP);
+					for(int d=0;d<3;d++)
+					{
+						finalP.setPosition(Math.round(farP[d]), d);
+					}
+					//closeP.setPosition(viewSegment.get(i));
+					raZ.setPosition(finalP);
+					curr_v = raZ.get().getRealDouble();
+					curr_a = Math.pow(VolumeMisc.clamp((curr_v-aOffset)/aScale, 0.0, 1.0), aGamma);
+					//curr_v = Math.pow(VolumeMisc.clamp(vOffset+vScale*curr_v, 0.0, 1.0), vGamma);
+					//value += (1-alpha)*curr_v*curr_a;
+					alpha += (1-alpha)*curr_a;
+					if(alpha>0.99)
+						bFound = true;
+				}
+				foundPositions.add(finalP.positionAsPoint());
+				foundValues.add(curr_v);
+			}
+		int finInd = 0;
+		double maxVal = (-1)*Double.MAX_VALUE;
+		for(int i=0;i<foundValues.size();i++)
+		{
+			if(foundValues.get(i)>maxVal)
+			{
+				maxVal = foundValues.get(i);
+				finInd = i;
+			}
+			
+		}
+		//find max around it
+		HyperSphere< X > hyperSphere =
+				new HyperSphere<>( Views.extendZero(viewclick), foundPositions.get(finInd), 3);
+		//RealPoint outP = new RealPoint(3);
+		VolumeMisc.findMaxLocation(hyperSphere, target);
+		
+		//target.setPosition(foundPositions.get(finInd));
+		
+		
+		return true;	
+	}
+	/** find click location in 3D when using maximum intensity render **/
+	public <X extends RealType< X >>boolean findPointLocationMaxIntensity(final IntervalView< X > viewclick, java.awt.Point point_mouse, final RealPoint target)
+	{
+		int i,j;
 		//check if mouse position it is inside bvv window
 		//java.awt.Rectangle windowBVVbounds = btpanel.bvv_frame.getContentPane().getBounds();		
 		//System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
-														
+			
+		final int nHalfWindowSize = btdata.nHalfClickSizeWindow;
 		//get perspective matrix:
 		AffineTransform3D transform = new AffineTransform3D();
 		viewer.state().getViewerTransform(transform);
@@ -1550,9 +1710,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		{
 			return false;
 		}	
-		
 	}
-
+	
 	@Override
 	public void timePointChanged(int timePointIndex) {
 					
@@ -1649,9 +1808,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		testI.run("");
+		//testI.run("");
 		
-		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
 		
 		/*
 		testI.roiManager.setLockMode(true);

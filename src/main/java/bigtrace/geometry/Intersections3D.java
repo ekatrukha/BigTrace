@@ -99,6 +99,14 @@ public class Intersections3D {
 
 		
 	}
+	
+	public static ArrayList<RealPoint> cuboidLinesIntersect(final Cuboid3D cuboid, final Line3D line)
+	{
+		ArrayList<Line3D> input = new ArrayList<Line3D>();
+		input.add(line);
+		return cuboidLinesIntersect(cuboid, input);
+	}
+	
 	/** given a set of input lines, generates points of intersection
 	 * between them a plane **/
 	public static ArrayList<RealPoint> planeLinesIntersect(final Plane3D plane, final ArrayList<Line3D> lines)

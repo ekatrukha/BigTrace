@@ -80,7 +80,6 @@ public class BigTraceData < T extends RealType< T > > {
 	/** Intensity interpolation types **/
 	public static final int INT_NearestNeighbor=0, INT_NLinear=1, INT_Lanczos=2; 
 	
-	
 	/** current intensity interpolation type **/	
 	public static int intensityInterpolation = (int)Prefs.get("BigTrace.IntInterpolation",INT_NLinear);
 	
@@ -121,10 +120,11 @@ public class BigTraceData < T extends RealType< T > > {
 	/** object to store brightness/alpha range of the tracebox **/
 	public BCsettings bcTraceBox = new BCsettings();	
 	
+	public static final int DATA_RENDER_MAX_INT=0, DATA_RENDER_VOLUMETRIC=1; 
 	/** dataset rendering method 
 	 * 0 maximum intensity, 
 	 * 1 volumetric **/
-	public int nRenderMethod = (int)Prefs.get("BigTrace.nRenderMethod",0.0);
+	public int nRenderMethod = (int)Prefs.get("BigTrace.nRenderMethod", DATA_RENDER_MAX_INT);
 	
 	/////////////////////////////////GLOBAL ROI APPEARANCE SETTINGS
 	
