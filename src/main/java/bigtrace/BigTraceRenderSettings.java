@@ -8,7 +8,7 @@ import bigtrace.gui.RenderSettings;
 import ij.Prefs;
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>BigTrace 0.3.7>Render Settings")
+@Plugin(type = Command.class, menuPath = "Plugins>BigTrace 0.3.8>Render Settings")
 public class BigTraceRenderSettings implements Command {
 
 	
