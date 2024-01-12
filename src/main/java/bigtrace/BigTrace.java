@@ -632,12 +632,10 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		if(btdata.nRenderMethod == BigTraceData.DATA_RENDER_MAX_INT)
 		{
 			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(BigTraceData.DATA_RENDER_VOLUMETRIC);
-			viewer.showMessage("volumetric");
 		}
 		else
 		{
-			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(BigTraceData.DATA_RENDER_MAX_INT);
-			viewer.showMessage("maximum intensity");
+			btpanel.renderMethodPanel.cbRenderMethod.setSelectedIndex(BigTraceData.DATA_RENDER_MAX_INT);			
 		}
 	}
 	public void installActions(final Actions actions)
@@ -1690,8 +1688,8 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 				}
 			}
 		target.setPosition(foundMaxPosition);
-		System.out.println("al2 val:"+Double.toString(foundMaxValue));
-		System.out.println("al2:"+Integer.toString(foundMaxPosition.getIntPosition(0))+" "+Integer.toString(foundMaxPosition.getIntPosition(1))+" "+Integer.toString(foundMaxPosition.getIntPosition(2)));
+		//System.out.println("al2 val:"+Double.toString(foundMaxValue));
+		//System.out.println("al2:"+Integer.toString(foundMaxPosition.getIntPosition(0))+" "+Integer.toString(foundMaxPosition.getIntPosition(1))+" "+Integer.toString(foundMaxPosition.getIntPosition(2)));
 		
 		return true;	
 	}

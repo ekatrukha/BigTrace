@@ -24,6 +24,7 @@ public class RenderMethodPanel < T extends RealType< T > > extends JPanel implem
 	private static final long serialVersionUID = 7367842640615289454L;
 	public JComboBox<String> cbRenderMethod;
 	public JComboBox<String> cbSurfaceRenderList; 
+	String[] sSurfaceRenderType = {"plain", "shaded", "shiny", "silhouette"};
 	BigTrace<T> bt;
 	
 	public RenderMethodPanel(BigTrace<T> bt_)
@@ -50,7 +51,7 @@ public class RenderMethodPanel < T extends RealType< T > > extends JPanel implem
 		cd.gridx++;
 		this.add(cbRenderMethod,cd);
 		
-		String[] sSurfaceRenderType = {"plain", "shaded", "shiny", "silhouette"};
+		
 		cbSurfaceRenderList = new JComboBox<String>(sSurfaceRenderType);
 		cbSurfaceRenderList.setSelectedIndex(BigTraceData.surfaceRender);
 		cbSurfaceRenderList.addActionListener(this);
@@ -73,6 +74,7 @@ public class RenderMethodPanel < T extends RealType< T > > extends JPanel implem
 //	
 				BigTraceData.surfaceRender = cbSurfaceRenderList.getSelectedIndex();
 				Prefs.set("BigTrace.surfaceRender", BigTraceData.surfaceRender);
+				bt.viewer.showMessage("ROI surface: "+ sSurfaceRenderType[BigTraceData.surfaceRender]);
 				//long start1 = System.currentTimeMillis();
 				bt.repaintBVV();
 				

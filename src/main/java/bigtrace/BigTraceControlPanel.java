@@ -782,6 +782,14 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 		}	
 		if(bt.bvv_trace!=null)
 			bt.bvv_trace.setRenderType(nRenderType);
+		if(nRenderType == BigTraceData.DATA_RENDER_VOLUMETRIC)
+		{
+			bt.viewer.showMessage("volumetric");
+		}
+		if(nRenderType == BigTraceData.DATA_RENDER_MAX_INT)
+		{
+			bt.viewer.showMessage("maximum intensity");
+		}
 		
 		
 	}
