@@ -1192,9 +1192,9 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			Prefs.set("BigTrace.nStraightROIList", nROIList);
 			nRadiusType = straightenRadiusList.getSelectedIndex();
 			Prefs.set("BigTrace.nRadiusType", nRadiusType);
-			if(nRadiusType==0)
+			if(nRadiusType == 0)
 			{
-				fRadiusStraighted = Math.round(0.5*curveLine.getLineThickness());
+				fRadiusStraighted = -1.0f;
 			}
 			else
 			{
