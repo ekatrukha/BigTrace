@@ -262,7 +262,7 @@ public class BigTraceLoad < T extends RealType< T > >
 						+ "(if it is already deskewed, click No)", "Loading option",
 				        JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 				    // yes option
-					bt.bTestLLSTransform = true;
+					bt.bApplyLLSTransform = true;
 				} 
 			}
 
@@ -271,7 +271,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		FinalInterval rai_int;
 		RandomAccessibleInterval<T> raitest = (RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0);
 		
-		if(bt.bTestLLSTransform)
+		if(bt.bApplyLLSTransform)
 		{
 			//build LLS transform
 			rai_int = makeLLS7Transform(BigTraceData.globCal,raitest);

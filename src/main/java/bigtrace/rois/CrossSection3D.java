@@ -423,8 +423,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	}
 	*/
 	@Override
-	public Interval getBoundingBoxVisual() {
-
+	public Interval getBoundingBox() {
 		ArrayList<RealPoint> allvertices;
 		//in VOXEL coordinates
 		if(this.polygonVert==null)
@@ -459,7 +458,12 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 			}
 		}
 		return new FinalInterval(bBox[0],bBox[1]);
-
+	}
+	
+	@Override
+	public Interval getBoundingBoxVisual() {
+		
+		return getBoundingBox();
 
 	}
 

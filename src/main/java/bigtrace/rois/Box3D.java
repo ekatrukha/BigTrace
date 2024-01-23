@@ -289,9 +289,9 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 		// TODO change to proper calculation
 		return Double.MAX_VALUE;
 	}
+	
 	@Override
-	public Interval getBoundingBoxVisual() {
-		
+	public Interval getBoundingBox() {
 		if(vertices.size()==0)
 			return null;
 	
@@ -320,5 +320,11 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 			}
 		}
 		return new FinalInterval(bBox[0],bBox[1]);
+	}
+	
+	@Override
+	public Interval getBoundingBoxVisual() {
+		
+		return getBoundingBox();	
 	}
 }

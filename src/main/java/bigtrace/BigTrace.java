@@ -104,7 +104,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public RandomAccessibleInterval<T> all_ch_RAI;
 	
 	/** whether LLS transform was applied **/	
-	public boolean bTestLLSTransform = false;
+	public boolean bApplyLLSTransform = false;
 	
 	/** LLS transform **/
 	public AffineTransform3D afDataTransform = new AffineTransform3D();
@@ -1219,7 +1219,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			//(( TransformedSource< ? > ) source.getSpimSource() ).getSourceTransform(0, 0, transformfin);
 		}
 
-		if(bTestLLSTransform)
+		if(bApplyLLSTransform)
 		{
 			//remove translation
 			for ( SourceAndConverter< ? > source : viewer.state().getSources() )

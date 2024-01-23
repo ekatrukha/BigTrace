@@ -306,7 +306,7 @@ public class BigTraceData < T extends RealType< T > > {
 		if(bSpimSource)
 		{
 			RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
-			if(bt.bTestLLSTransform)
+			if(bt.bApplyLLSTransform)
 			{
 				RealRandomAccessible<T> rra = Views.interpolate(Views.extendZero(full_int), nInterpolatorFactory);
 				RealRandomAccessible<T> rra_tr = RealViews.affine(rra, bt.afDataTransform);
@@ -323,7 +323,7 @@ public class BigTraceData < T extends RealType< T > > {
 			
 		}
 	}
-	
+	/** output is XYZTC **/
 	public RandomAccessibleInterval<T> getAllDataRAI()
 	{
 		//output should be XYZTC

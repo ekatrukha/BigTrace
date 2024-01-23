@@ -1,6 +1,7 @@
 package bigtrace.volume;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingWorker;
 
@@ -29,25 +30,21 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 
 	private String progressState;
 	public BigTrace<T> bt;
-	float nRadiusIn;
+	float fRadiusIn;
 	/** 0 - single time point, 1 - all time points **/
 	int nTimeRange;
-	ArrayList<AbstractCurve3D> curveROIArr;
-	String sTimeFormat;
+	ArrayList<AbstractCurve3D> curveROIArr;	
 	int nOutput;
 	String sSaveFolderPath;
 	Calibration cal;
 		
-	public StraightenCurve(final ArrayList<AbstractCurve3D> curveROIArr_, final BigTrace<T> bt_, final float nRadius_, final int nTimePoint_, final int nOutput_, final String sSaveFolderPath_)
+	public StraightenCurve(final ArrayList<AbstractCurve3D> curveROIArr_, final BigTrace<T> bt_, final float fRadius_, final int nTimePoint_, final int nOutput_, final String sSaveFolderPath_)
 	{
 		super();
 		curveROIArr = curveROIArr_;
 		bt = bt_;
 		nTimeRange = nTimePoint_;
-		//round it up
-		nRadiusIn = nRadius_;
-		//nRadiusIn = (float)Math.ceil(nRadius_);
-		sTimeFormat = Integer.toString(String.valueOf(BigTraceData.nNumTimepoints).length());
+		fRadiusIn = fRadius_;
 		nOutput = nOutput_;
 		sSaveFolderPath = sSaveFolderPath_;
 		cal = new Calibration();
@@ -95,9 +92,8 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		String sRoiName;
 		if(nTotROIs == 1)
 		{
-			sRoiName = getROIName(curveROIArr.get(0));
+			sRoiName = bt.roiManager.getTimeGroupPrefixRoiName(curveROIArr.get(0));
 			Img<T> extractedRAI = extractCurveRAI(curveROIArr.get(0),  full_RAI, true);
-			//VolumeMisc.wrapImgImagePlusCal(extractedRAI, curveROIArr.get(0).getName() + "_straight",cal).show();
 			outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
 		}
 		else
@@ -105,17 +101,18 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 			
 			for(int nRoi=0; nRoi<nTotROIs; nRoi++)
 			{
-				sRoiName = getROIName(curveROIArr.get(nRoi));
+				sRoiName = bt.roiManager.getTimeGroupPrefixRoiName(curveROIArr.get(nRoi));
 				try {
 					  Thread.sleep(1);
 				  } catch (InterruptedException ignore) {}
-				setProgress(100*nRoi/(nTotROIs-1));
+				setProgress(100*nRoi/(nTotROIs));
 				setProgressState("extracting ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
 				Img<T> extractedRAI = extractCurveRAI(curveROIArr.get(nRoi),  full_RAI, false);
-				setProgressState("saving ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
+				setProgressState("storing ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
 				outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
-				//VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal).show();
 			}
+			setProgressState("ROI straightening finished.");
+			setProgress(100);
 		}
 			
 
@@ -124,7 +121,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 	
 	void outputImagePlus(ImagePlus ip)
 	{
-		if(nOutput ==0)
+		if(nOutput == 0)
 		{
 			ip.show();
 		}
@@ -133,21 +130,9 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 			IJ.saveAsTiff(ip, sSaveFolderPath+ip.getTitle());
 		}
 	}
-	String getROIName (Roi3D roi)
-	{
-		//single time point
-		if(nTimeRange>=0)
-		{
-			return "T"+String.format("%0"+sTimeFormat+"d", roi.getTimePoint())+"_"+bt.roiManager.getGroupPrefixRoiName(roi);
-		}
-		// all timepoints
-		else
-		{
-			return bt.roiManager.getGroupPrefixRoiName(roi);
-		}
-	}
+
 	
-	Img<T> extractCurveRAI(AbstractCurve3D curveROI, RandomAccessibleInterval<T> all_RAI, boolean bUpdateProgressBar)
+	Img<T> extractCurveRAI(final AbstractCurve3D curveROI, final RandomAccessibleInterval<T> all_RAI, boolean bUpdateProgressBar)
 	{
 		//get the curve and tangent vectors
 		//curve points in SPACE units
@@ -159,13 +144,13 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		int nRadius;
 		
 		//take radius from ROI
-		if(nRadiusIn < 0)
+		if(fRadiusIn < 0)
 		{
 			nRadius = (int) Math.round(0.5*curveROI.getLineThickness());			
 		}
 		else
 		{
-			nRadius = (int) Math.round(nRadiusIn);
+			nRadius = (int) Math.round(fRadiusIn);
 		}
 		int dimXY = (int)(nRadius*2+1);
 		
@@ -176,7 +161,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		dimS[1]=dimXY;
 		dimS[2]=dimXY;
 		long nChannelN = 1;
-		//boolean nMultCh = false;
+		
 		int nMinTimePoint, nMaxTimePoint;
 		double [] currXYmCh = new double[nTotDim];
 		//single time point
@@ -305,6 +290,18 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
     @Override
     public void done() 
     {
+    	//see if we have some errors
+    	try {
+    		get();
+    	} 
+    	catch (ExecutionException e) {
+    		e.getCause().printStackTrace();
+    		String msg = String.format("Unexpected problem during straightening: %s", 
+    				e.getCause().toString());
+    		System.out.println(msg);
+    	} catch (InterruptedException e) {
+    		// Process e here
+    	}
 		//unlock user interaction
     	bt.bInputLock = false;
         bt.roiManager.setLockMode(false);

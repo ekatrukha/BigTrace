@@ -67,6 +67,7 @@ public interface Roi3D
 	public double getMinDist(final Line3D line);
 	
 	public Interval getBoundingBoxVisual();
+	public Interval getBoundingBox();
 	
 	public static String intTypeToString(int nType)
 	{

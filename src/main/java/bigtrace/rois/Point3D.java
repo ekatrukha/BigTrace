@@ -242,8 +242,9 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	public double getMinDist(Line3D line) {
 		return Line3D.distancePointLine(vertex, line);
 	}
+	
 	@Override
-	public Interval getBoundingBoxVisual() 
+	public Interval getBoundingBox() 
 	{
 		
 		double [] pos = vertex.positionAsDoubleArray();
@@ -254,6 +255,12 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 			lPos[1][d] = Math.round(pos[d] + pointSize);
 		}
 		return new FinalInterval(lPos[0],lPos[1]);
+
+	}
+	@Override
+	public Interval getBoundingBoxVisual() 
+	{	
+		return getBoundingBox();
 
 	}
 }
