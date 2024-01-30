@@ -11,7 +11,7 @@
 
 	<groupId>sc.fiji</groupId>
 	<artifactId>bigtrace</artifactId>
-	<version>0.3.8</version>
+	<version>0.3.9-SNAPSHOT</version>
 
 	<name>BigTrace</name>
 	<description>Tracing of curvilinear structures in 3D</description>

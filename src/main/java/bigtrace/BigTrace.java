@@ -31,7 +31,6 @@ import ij.plugin.PlugIn;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
 import net.imglib2.AbstractInterval;
-import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;

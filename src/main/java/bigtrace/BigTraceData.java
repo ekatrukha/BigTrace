@@ -26,7 +26,7 @@ import net.imglib2.view.Views;
 public class BigTraceData < T extends RealType< T > > {
 
 	/** current plugin version **/
-	public static String sVersion = "0.3.8";
+	public static String sVersion = "0.3.9";
 	
 	/** plugin instance **/
 	BigTrace<T> bt;
