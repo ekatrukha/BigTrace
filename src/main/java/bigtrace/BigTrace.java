@@ -50,6 +50,7 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 import bdv.tools.InitializeViewerState;
+import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
 import bdv.util.Bounds;
 import bdv.viewer.Source;
@@ -63,6 +64,7 @@ import btbvv.vistools.BvvStackSource;
 import btbvv.core.render.RenderData;
 import btbvv.core.render.VolumeRenderer.RepaintType;
 import btbvv.btuitools.BvvGamma;
+import btbvv.btuitools.ConverterSetupsBT;
 import btbvv.btuitools.GammaConverterSetup;
 import btbvv.core.VolumeViewerPanel;
 import btbvv.core.util.MatrixMath;
@@ -1535,8 +1537,19 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		int indC = 0;
 		int indF = 1;
 		boolean bFound;
-		//get current settings of the channel
-		GammaConverterSetup setup = (GammaConverterSetup) bvv_main.getConverterSetups().get(btdata.nChAnalysis);
+
+		// not sure it is the best way, but it works
+		GammaConverterSetup setup = null;
+		int nChCount = 0;
+		for ( SourceAndConverter< ? > source : viewer.state().getSources() )
+		{
+			if(nChCount == btdata.nChAnalysis )
+			{
+				setup = (GammaConverterSetup) viewer.getConverterSetups().getConverterSetup(source);
+			}
+			nChCount++;
+		}
+
 		final double aOffset = setup.getAlphaRangeMin();
 		final double aScale = Math.max(setup.getAlphaRangeMax() - aOffset,1.0);
 		final double aGamma = 1.0/setup.getAlphaGamma();
@@ -1931,9 +1944,9 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		//testI.run("");
+		testI.run("");
 		
-		testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
 		
 		/*
 		testI.roiManager.setLockMode(true);
