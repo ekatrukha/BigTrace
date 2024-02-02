@@ -13,6 +13,7 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.volume.VolumeMisc;
 import bigtrace.rois.Box3D;
+import bigtrace.rois.LineTrace3D;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
@@ -56,6 +57,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	
 	int nNeighborsMethods = 0;
 	
+	/** after this amount of points new segment will be added to LineTrace ROI **/
 	int nPointPerSegment;
 	
 	int [][] nNeighborsIndexes = new int[26][3];
@@ -64,6 +66,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	
 	private HashMap<String, ArrayList<int[]>> neighborsMap = new HashMap<String, ArrayList<int[]>>();
 	
+	/** vector of curve direction for the last point **/
 	double [] lastDirectionVector;
 	
 	ArrayList<double[]> allPointsIntersection;
@@ -84,7 +87,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	RandomAccess<FloatType> raV;
 	RandomAccess<FloatType> raW;
 
-	
+	/** whether we are starting a new trace or continue with existing **/
+	public boolean bNewTrace;
 	//IntervalView<UnsignedByteType> salWeightsUB;
 	
 	ArrayImg<FloatType, FloatArray> gradFloat;
@@ -103,6 +107,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	@Override
 	protected Void doInBackground() throws Exception {
 		
+		LineTrace3D existingTracing = null;
 		setProgress(0);
 		
 		init();
@@ -111,9 +116,18 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		
 		start1 = System.currentTimeMillis();
 		
+		//in case we continue
+		if(!bNewTrace)
+		{
+			existingTracing  = (LineTrace3D)bt.roiManager.rois.get(bt.roiManager.activeRoi);
+			startPoint = new RealPoint(bt.roiManager.getLastTracePoint());
+		}
 		//init math
 		getMathForCurrentPoint(startPoint);
-		startPoint = refinePointUsingSaliency(startPoint);
+		if(bNewTrace)
+		{
+			startPoint = refinePointUsingSaliency(startPoint);
+		}
 		
 		double [] startDirectionVector = getVectorAtLocation(startPoint);
 		lastDirectionVector = new double [3];
@@ -121,23 +135,62 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		{
 			lastDirectionVector[d] = startDirectionVector[d];
 		}
-	
+		
 		allPointsIntersection = new ArrayList<double[]>();
-		
-		//trace in one direction
-		int nTotPoints = traceOneDirection(true, 0);
-		setProgress(50);
-		setProgressState(Integer.toString(nTotPoints)+"points found.");
-		//look for another direction
-		for (int d=0; d<3; d++)
+		int nTotPoints = 0;
+		//we continue tracing, let's setup environment for that
+		if(!bNewTrace)
 		{
-			lastDirectionVector[d]=(-1)*startDirectionVector[d];
+			//see so we do not trace in the same direction as existing curve
+			//get the vector of the last direction at the end of the curve
+			if(existingTracing.vertices.size()>1)
+			{
+				final int lastSegmIndex = existingTracing.segments.size()-1;
+				double [] prevDirection = new double[3];
+				if(existingTracing.segments.get(lastSegmIndex).size()>1)
+				{
+					final int prevPointIndex = existingTracing.segments.get(lastSegmIndex).size()-2;
+					existingTracing.segments.get(lastSegmIndex).get(prevPointIndex).localize(prevDirection);
+				}
+				else
+				{
+					existingTracing.vertices.get(existingTracing.vertices.size()-2).localize(prevDirection);
+				}
+				LinAlgHelpers.subtract(startPoint.positionAsDoubleArray(), prevDirection, prevDirection);
+				LinAlgHelpers.normalize(prevDirection);
+				final double sameDir = LinAlgHelpers.dot(prevDirection, lastDirectionVector);
+				LinAlgHelpers.scale(prevDirection, -1.0, prevDirection);
+				final double oppDir = LinAlgHelpers.dot(prevDirection, lastDirectionVector);
+				//flip the lastDirectionVector
+				if(oppDir>sameDir)
+				{
+					LinAlgHelpers.scale(lastDirectionVector, -1.0, lastDirectionVector);
+				}				
+			}
+			//fill array of previous point
+			allPointsIntersection = existingTracing.makeJointSegmentDouble();
+			nTotPoints = allPointsIntersection.size();
 		}
-		//reverse ROI
-		bt.roiManager.rois.get(bt.roiManager.activeRoi).reversePoints();
-		
-		//init math
-		getMathForCurrentPoint(startPoint);
+	
+
+		if(bNewTrace)
+		{
+			allPointsIntersection = new ArrayList<double[]>();
+			//trace in one direction
+			nTotPoints = traceOneDirection(true, 0);
+			setProgress(50);
+			setProgressState(Integer.toString(nTotPoints)+"points found.");
+			//look for another direction
+			for (int d=0; d<3; d++)
+			{
+				lastDirectionVector[d]=(-1)*startDirectionVector[d];
+			}
+			//reverse ROI
+			bt.roiManager.rois.get(bt.roiManager.activeRoi).reversePoints();
+			//init math at new point
+			getMathForCurrentPoint(startPoint);
+		}
+		//trace in the other direction
 		nTotPoints = traceOneDirection(false, nTotPoints);
 		
 		end1 = System.currentTimeMillis();
@@ -150,7 +203,11 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		return null;
 	}
 	
-	
+	/** traces line in one direction.
+	 * @param bFirstTrace 
+	 *        if it is a first trace or continuation of existing 
+	 * @param nCountIn
+	 *        if it is a continuation, how many vertices in ROI already **/
 	public int traceOneDirection(boolean bFirstTrace, int nCountIn)
 	{
 		
@@ -213,7 +270,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 					nextPoint = null;
 					System.out.println("one-click tracing stopped, self intersection found.");
 				}
-//				double [] nextPointD = nextPoint.positionAsDoubleArray();
+//				double [] nextPointD = nextPoint.positifillArrayOfTracedPointsonAsDoubleArray();
 //				double [] prevPointD = points.get(points.size()-1).positionAsDoubleArray();
 //				LinAlgHelpers.subtract(nextPointD, prevPointD, nextPointD);
 //				LinAlgHelpers.scale(nextPointD, 1.0/LinAlgHelpers.length(nextPointD), nextPointD);				
@@ -230,6 +287,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		return nCountPoints;
 	}
 	
+	/** initialization of parameters **/
+	@SuppressWarnings("deprecation")
 	public void init()
 	{
 		
@@ -292,6 +351,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 			}
 		}
 	}
+
 	/** checks if the point intersects already traced part of the curve**/
 	boolean checkIntersection(RealPoint currpoint)
 	{
@@ -532,6 +592,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		return getVectorAtLocation(out);
 	
 	}
+	/** returns orientation vector at the provided location **/
 	public double[] getVectorAtLocation(RealPoint point)
 	{
 		int d;
@@ -721,20 +782,24 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
          	} 
     	 catch (ExecutionException e) {
              e.getCause().printStackTrace();
-             String msg = String.format("Unexpected problem during Hessian calculations: %s", 
+             String msg = String.format("Unexpected problem during one-click tracing: %s", 
                             e.getCause().toString());
              System.out.println(msg);
          } catch (InterruptedException e) {
              // Process e here
          }
-    	 es.shutdown();
-    	//bt.showTraceBox();
-    	//bt.setTraceBoxMode(false);
+    	es.shutdown();
+
     	bt.visBox = null;
     	bt.roiManager.setLockMode(false);
     	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
 		//unlock user interaction
     	bt.bInputLock = false;
+    	//deselect the trace if we just made it
+    	if(bNewTrace)
+    	{
+    		bt.roiManager.unselect();
+    	}
     }
     
     /*
@@ -763,7 +828,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	{
 		cu.fwd();
 		for(i=0;i<3;i++)
-		{
+		{bNewTrace
 			pos[i]=cu.getLongPosition(i);
 		}
 		rasW.setPosition(pos);

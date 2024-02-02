@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -9,7 +9,7 @@
 		<relativePath />
 	</parent>
 
-	<groupId>sc.fiji</groupId>
+	<groupId>nl.uu.science.cellbiology</groupId>
 	<artifactId>bigtrace</artifactId>
 	<version>0.3.9-SNAPSHOT</version>
 
@@ -18,12 +18,14 @@
 	<url>https://github.com/ekatrukha/bigtrace</url>
 	<inceptionYear>2021</inceptionYear>
 	<organization>
-		<name>BigTrace</name>
-		<url>https://katpyxa.info</url>
+		<name>Cell Biology, Neurobiology and Biophysics Department of Utrecht University</name>
+		<url>https://cellbiology.science.uu.nl/</url>
 	</organization>
+	
 	<licenses>
 		<license>
 			<name>Simplified BSD License</name>
+			<url>https://opensource.org/licenses/BSD-2-Clause</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -32,23 +34,25 @@
         <developer>
             <id>ekatrukha</id>
             <name>Eugene Katrukha</name>
-            <url>http://imagej.net/User:Ekatrukha</url>
+            <url>https://imagej.net/people/ekatrukha</url>
             <roles>
-       		<role>founder</role>
-		<role>lead</role>
-		<role>developer</role>
-		<role>debugger</role>
-		<role>reviewer</role>
-		<role>support</role>
-		<role>maintainer</role>
+       			<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
             </roles>
         </developer>
     </developers>
+    
 	<contributors>
 		<contributor>
 			<name>TODO</name>
 		</contributor>
 	</contributors>	
+	
 	<mailingLists>
 		<mailingList>
 			<name>Image.sc Forum</name>
@@ -67,38 +71,23 @@
         <url>http://github.com/ekatrukha/bigtrace/issues</url>
     </issueManagement>
     <ciManagement>
-        <system>None</system>
+		<system>GitHub Actions</system>
+		<url>https://github.com/ekatrukha/bigtrace/actions</url>
     </ciManagement>
 
 	<properties>
 		<package-name>BigTrace</package-name>    
 		<license.licenseName>bsd_2</license.licenseName>
-        <license.copyrightOwners>Eugene Katrukha</license.copyrightOwners>  			
+        <license.copyrightOwners>Cell Biology, Neurobiology and Biophysics Department of Utrecht University.</license.copyrightOwners>  			
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<!--  releaseProfiles>sign,deploy-to-scijava</releaseProfiles -->
 	</properties>
 
-	<repositories>
-		
-		<repository>
-			<id>scijava.public</id>
-			<url>https://maven.scijava.org/content/groups/public</url>
-		</repository>
-		
-		<repository>
-    		<id>github</id>
-    		<name>GitHub Packages</name>
-    		<url>https://maven.pkg.github.com/ekatrukha/bvv-playground</url>
-		</repository>
-
-	</repositories>
-
 	<dependencies>
-
 		<dependency>
-		  <groupId>fiji.experimental</groupId>
+		  <groupId>nl.uu.science.cellbiology</groupId>
 		  <artifactId>bvv-playground</artifactId>
-		  <version>0.1.3</version>
+		  <version>0.1.4</version>
 		</dependency>
 		
 		<!-- BIOFORMATS -->
@@ -169,7 +158,6 @@
 			<artifactId>imglib2-ij</artifactId>
 		</dependency>
 
-
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>ui-behaviour</artifactId>
@@ -194,6 +182,13 @@
         	<groupId>gov.nist.math</groupId>
         	<artifactId>jama</artifactId>
         </dependency>
-
 	</dependencies>
+	
+	<repositories>		
+		<repository>
+			<id>scijava.public</id>
+			<url>https://maven.scijava.org/content/groups/public</url>
+		</repository>
+	</repositories>
+	
 </project>

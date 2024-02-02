@@ -334,7 +334,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 							}
 							else
 							{
-								int nRoiType = roiManager.getActiveRoi().getType();
+								final int nRoiType = roiManager.getActiveRoi().getType();
 								//continue tracing for the selected tracing
 								if(nRoiType == Roi3D.LINE_TRACE)
 								{
@@ -349,10 +349,24 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 							}
 							break;
 						case RoiManager3D.ADD_POINT_ONECLICKLINE:
-							roiManager.unselect();
-							//setTraceBoxMode(true);
+							
+							boolean bMakeNewTrace = false;
+							
+							if(roiManager.activeRoi==-1)
+							{
+								bMakeNewTrace = true;
+							}
+							else
+							{
+								if(roiManager.getActiveRoi().getType() != Roi3D.LINE_TRACE)
+								{
+									roiManager.unselect();
+									bMakeNewTrace = true;
+								}
+							}	
+							
 							roiManager.setLockMode(true);
-							runOneClickTrace(target);
+							runOneClickTrace(target, bMakeNewTrace);
 							break;
 						default:
 							roiManager.addPoint(target);
@@ -546,6 +560,26 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 							VolumeMisc.BresenhamWrap(roiManager.getLastTracePoint(),target));
 					btdata.nPointsInTraceBox++;
 				}
+			}
+			else
+			{	
+				if(RoiManager3D.mode == RoiManager3D.ADD_POINT_ONECLICKLINE)
+				{
+					if(roiManager.activeRoi>=0)
+					{
+						if(roiManager.getActiveRoi().getType() == Roi3D.LINE_TRACE)
+						{
+							RealPoint target = new RealPoint(3);							
+							if(findPointLocationFromClick(btdata.getDataCurrentSourceClipped(), target))
+							{								
+								roiManager.addSegment(target, 
+										VolumeMisc.BresenhamWrap(roiManager.getLastTracePoint(),target));
+							}
+						}
+					}
+				}
+				
+				//add a straight line if it is a trace
 			}
 		}
 	}
@@ -746,7 +780,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	 * if bRefine is true, it will refine the position of the dot
 	 * and add it to the ROI manager **/
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void runOneClickTrace(final RealPoint pclick)
+	public void runOneClickTrace(final RealPoint pclick, final boolean bNewTrace_)
 	{
 		
 		IntervalView<?> traceIV;
@@ -761,6 +795,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		calcTask.fullInput = traceIV;
 		calcTask.bt = this;
 		calcTask.startPoint = pclick;
+		calcTask.bNewTrace = bNewTrace_;
 		calcTask.addPropertyChangeListener(btpanel);
 		calcTask.execute();
 	
