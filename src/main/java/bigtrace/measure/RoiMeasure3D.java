@@ -214,7 +214,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			        if (evt.getClickCount() == 2) {
 			            // Double-click detected
 			            int index = jlist.locationToIndex(evt.getPoint());
-			          bt.roiManager.focusOnRoi(bt.roiManager.rois.get(index));
+			            bt.roiManager.focusOnRoi(bt.roiManager.rois.get(index));
 			        } 
 			    }
 			});

@@ -316,6 +316,13 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 			
 		});
 		
+		JCheckBox cbRoiDoubleClickClip = new JCheckBox();
+		cbRoiDoubleClickClip.setSelected(BigTraceData.bROIDoubleClickClip);
+		
+		NumberField nfRoiDoubleClickExpand = new NumberField(2);
+		nfRoiDoubleClickExpand.setIntegersOnly(true);
+		nfRoiDoubleClickExpand.setText(Integer.toString(BigTraceData.nROIDoubleClickClipExpand));
+		
 		String[] sShapeInterpolationType = { "Voxel", "Smooth", "Spline"};
 		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
 		shapeInterpolationList.setSelectedIndex(BigTraceData.shapeInterpolation);
@@ -346,6 +353,18 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 		pROIrender.add(new JLabel("Selected ROI line color: "),cd);
 		cd.gridx++;
 		pROIrender.add(butLineActiveColor,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("Clip volume on ROI double-click: "),cd);
+		cd.gridx++;
+		pROIrender.add(cbRoiDoubleClickClip,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIrender.add(new JLabel("Expand clipping by (voxels): "),cd);
+		cd.gridx++;
+		pROIrender.add(nfRoiDoubleClickExpand,cd);
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -480,7 +499,14 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 				rm.activeLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
 				rm.selectColors.setColor(null, 1);
 			}
+			BigTraceData.bROIDoubleClickClip = cbRoiDoubleClickClip.isSelected();
+			Prefs.set("BigTrace.bROIDoubleClickClip", BigTraceData.bROIDoubleClickClip );
 			
+			if(BigTraceData.nROIDoubleClickClipExpand != Integer.parseInt(nfRoiDoubleClickExpand.getText()))
+			{
+				BigTraceData.nROIDoubleClickClipExpand = Integer.parseInt(nfRoiDoubleClickExpand.getText());
+				Prefs.set("BigTrace.nROIDoubleClickClipExpand", BigTraceData.sectorN);
+			}
 			
 			if(BigTraceData.sectorN!= Integer.parseInt(nfSectorNLines.getText()))
 			{

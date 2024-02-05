@@ -43,7 +43,7 @@ import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import net.imglib2.Interval;
 import net.imglib2.RealPoint;
-
+import net.imglib2.util.Intervals;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
@@ -455,10 +455,16 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 
 	 public void focusOnRoi(Roi3D roi)
 	 {	
-		 Interval roiBoundingBox = roi.getBoundingBoxVisual(); 
-		 if(roiBoundingBox!=null)
+		 final Interval roiBoundingBox = roi.getBoundingBoxVisual(); 
+		 if(roiBoundingBox != null)
 		 {
-			 bt.focusOnInterval(roiBoundingBox);
+			 final Interval zoomInterval = Intervals.intersect(Intervals.expand(roiBoundingBox, BigTraceData.nROIDoubleClickClipExpand), bt.btdata.getDataCurrentSourceFull());
+			 bt.focusOnInterval(zoomInterval);
+			 if(BigTraceData.bROIDoubleClickClip)
+			 {
+				 bt.btpanel.clipPanel.setBoundingBox(zoomInterval);
+			 }			 
+			 
 		 }
 		 else
 		 {

@@ -14,6 +14,7 @@ import bigtrace.BigTraceBGWorker;
 import bigtrace.volume.VolumeMisc;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
+import bigtrace.rois.Roi3D;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
@@ -86,6 +87,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 	IntervalView<FloatType> salWeights;
 	RandomAccess<FloatType> raV;
 	RandomAccess<FloatType> raW;
+	int nRenderTypeSave = 0;
 
 	/** whether we are starting a new trace or continue with existing **/
 	public boolean bNewTrace;
@@ -120,6 +122,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		if(!bNewTrace)
 		{
 			existingTracing  = (LineTrace3D)bt.roiManager.rois.get(bt.roiManager.activeRoi);
+			nRenderTypeSave = existingTracing.getRenderType();
+			existingTracing.setRenderType(Roi3D.WIRE);
 			startPoint = new RealPoint(bt.roiManager.getLastTracePoint());
 		}
 		//init math
@@ -221,6 +225,8 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
 		if(bFirstTrace)
 		{
 			bt.roiManager.addSegment(points.get(0),null);
+			nRenderTypeSave = bt.roiManager.getActiveRoi().getRenderType();
+			bt.roiManager.getActiveRoi().setRenderType(Roi3D.WIRE);
 		}
 		else
 		{
@@ -791,6 +797,7 @@ public class OneClickTrace < T extends RealType< T > > extends SwingWorker<Void,
     	es.shutdown();
 
     	bt.visBox = null;
+    	bt.roiManager.getActiveRoi().setRenderType(nRenderTypeSave);
     	bt.roiManager.setLockMode(false);
     	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
 		//unlock user interaction

@@ -195,6 +195,12 @@ public class BigTraceData < T extends RealType< T > > {
 	
 	/** animation speed, i.e. duration of transform **/
 	public long nAnimationDuration =  (int)Prefs.get("BigTrace.nAnimationDuration",400);
+	
+	/** whether to clip volume when double clicking on ROI **/
+	public static boolean bROIDoubleClickClip = Prefs.get("BigTrace.bROIDoubleClickClip", false);
+	
+	/** whether to clip volume when double clicking on ROI **/
+	public static int nROIDoubleClickClipExpand = (int)Prefs.get("BigTrace.nROIDoubleClickClipExpand", 0.0);
 		
 	///////////////////////////// SEMI-AUTO TRACING DATA
 	
@@ -290,11 +296,19 @@ public class BigTraceData < T extends RealType< T > > {
 
 	}
 	
-	/** returns data sources for specific channel and time point,
+	/** returns data sources for the current channel and time point,
 	 * limits output to the current clipped area **/
 	public IntervalView< T > getDataCurrentSourceClipped()
 	{		
 		return Views.interval(getDataSourceFull(nChAnalysis,nCurrTimepoint),nDimCurr[0], nDimCurr[1]);
+
+	}
+	
+	/** returns data sources for the current channel and time point,
+	 * does not limit output to the current clipped area **/
+	public RandomAccessibleInterval<T> getDataCurrentSourceFull()
+	{		
+		return getDataSourceFull(nChAnalysis, nCurrTimepoint);
 
 	}
 	
