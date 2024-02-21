@@ -455,7 +455,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	 
 	 public void focusOnRoi(Roi3D roi)
 	 {	
-		 final Interval roiBoundingBox = roi.getBoundingBoxVisual(); 
+		 final Interval roiBoundingBox = roi.getBoundingBox(); 
 		 if(roiBoundingBox != null)
 		 {
 			 final Interval zoomInterval = Intervals.intersect(Intervals.expand(roiBoundingBox, BigTraceData.nROIDoubleClickClipExpand), bt.btdata.getDataCurrentSourceFull());

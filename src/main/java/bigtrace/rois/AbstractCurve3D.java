@@ -54,6 +54,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 			
 	}
 	
+	
 	/** puts ends coordinates to the val **/
 	public void getEnds(final MeasureValues val, final double [] globCal)
 	{
@@ -61,11 +62,11 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		val.ends[0]= new RealPoint(Roi3D.scaleGlob(vertices.get(0),globCal));
 		if(vertices.size()>1)
 		{
-			val.ends[1]= new RealPoint(Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal));
+			val.ends[1] = new RealPoint(Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal));
 		}
 		else
 		{
-			val.ends[1] =Roi3D.getNaNPoint();
+			val.ends[1] = Roi3D.getNaNPoint();
 		}
 		return;
 	}
