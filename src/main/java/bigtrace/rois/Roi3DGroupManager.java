@@ -664,7 +664,7 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 						sGroupDeleteOptions, // Array of choices
 						sGroupDeleteOptions[(int)Prefs.get("BigTrace.DeleteGroup", 0)]);
 
-				if(input.isEmpty())
+				if(input == null)
 					return;
 				if(input.equals("Mark these ROIs as *undefined*"))
 				{

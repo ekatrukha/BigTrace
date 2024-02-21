@@ -1377,7 +1377,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
                 sRoiLoadOptions, // Array of choices
                 sRoiLoadOptions[(int)Prefs.get("BigTrace.LoadRoisMode", 0)]);
         
-        if(input.isEmpty())
+        if(input == null)
         	 return;
         int nLoadMode;
         if(input.equals("Clean load ROIs and groups"))
