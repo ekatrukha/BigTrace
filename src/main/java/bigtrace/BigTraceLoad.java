@@ -98,8 +98,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		btdata.nTotalChannels = seq.getViewSetupsOrdered().size();
 
 		
-		//TODO FOR NOW, get it from the class
-		//not really needed later, but anyway
+		//in the end always 16-bit
 		btdata.nBitDepth = 16;
 		colorsCh = new Color[btdata.nTotalChannels];
 		channelRanges = new double [2][btdata.nTotalChannels];
@@ -109,16 +108,13 @@ public class BigTraceLoad < T extends RealType< T > >
 		
 	}
 	
-	@SuppressWarnings({ "unchecked", "resource" })
+	@SuppressWarnings({ "unchecked" })
 	public String initDataSourcesBioFormats() 
 	{
 		DebugTools.setRootLevel("INFO");
 	
 		//analyze file a bit
 		int nSeriesCount = 0;
-		
-		ImageProcessorReader r = new ImageProcessorReader(
-			      new ChannelSeparator(LociPrefs.makeImageReader()));
 	    
 		String[] seriesName = null;
 		
@@ -126,30 +122,29 @@ public class BigTraceLoad < T extends RealType< T > >
 	    int[] seriesBitDepth = null;
 	    
 		// check if multiple files inside, like LIF
-	    try {
+	    try (ImageProcessorReader r = new ImageProcessorReader(
+			      new ChannelSeparator(LociPrefs.makeImageReader()));)
+	    {
 	        ServiceFactory factory = new ServiceFactory();
 	        OMEXMLService service = factory.getInstance(OMEXMLService.class);
-	        r.setMetadataStore(service.createOMEXMLMetadata());
-	      }
-	      catch (DependencyException de) { }
-	      catch (ServiceException se) { }
-		try {
+	        
+	        r.setMetadataStore(service.createOMEXMLMetadata());      
+	        r.setId(btdata.sFileNameFullImg);
+	        
+	        nSeriesCount = r.getSeriesCount();
+	        seriesName = new String[nSeriesCount];
+	        seriesZsize = new int[nSeriesCount];
+	        seriesBitDepth = new int[nSeriesCount];
 
-		      r.setId(btdata.sFileNameFullImg);
-		      nSeriesCount = r.getSeriesCount();
-		      seriesName = new String[nSeriesCount];
-		      seriesZsize = new int[nSeriesCount];
-		      seriesBitDepth = new int[nSeriesCount];
-		     
-		      MetadataRetrieve retrieve = (MetadataRetrieve) r.getMetadataStore();
-		      for (int nS=0;nS<nSeriesCount;nS++)
-		      {
-		    	  r.setSeries(nS);
-		    	  seriesZsize[nS] = r.getSizeZ();
-		    	  seriesName[nS] = retrieve.getImageName(nS);
-		    	  seriesBitDepth[nS] = r.getPixelType();
-		      }
-		      r.close();
+	        MetadataRetrieve retrieve = (MetadataRetrieve) r.getMetadataStore();
+	        for (int nS=0;nS<nSeriesCount;nS++)
+	        {
+	        	r.setSeries(nS);
+	        	seriesZsize[nS] = r.getSizeZ();
+	        	seriesName[nS] = retrieve.getImageName(nS);
+	        	seriesBitDepth[nS] = r.getPixelType();
+	        }
+
 		  }
 	    catch (FormatException exc) {
 	      return "Sorry, an error occurred: " + exc.getMessage();
@@ -158,6 +153,13 @@ public class BigTraceLoad < T extends RealType< T > >
 	    catch (IOException exc) {
 	      return "Sorry, an error occurred: " + exc.getMessage();
 	    }
+	    catch (DependencyException de) { 
+	    	 return "Sorry, an error occurred: " + de.getMessage();
+	    }
+	    catch (ServiceException se) { 
+	    	return "Sorry, an error occurred: " + se.getMessage();
+	    }
+	    
 		int nOpenSeries = 0;
 		if(nSeriesCount==1)
 		{
@@ -296,8 +298,7 @@ public class BigTraceLoad < T extends RealType< T > >
 		btdata.nBitDepth = 16;
 		colorsCh = new Color[btdata.nTotalChannels];
 		channelRanges = new double [2][btdata.nTotalChannels];
-		
-		
+	
 		return null;
 		
 	}
