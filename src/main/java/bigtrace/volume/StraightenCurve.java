@@ -24,27 +24,30 @@ import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Util;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker{
 
 	private String progressState;
-	public BigTrace<T> bt;
-	float fRadiusIn;
+	final public BigTrace<T> bt;
+	final float fRadiusIn;
+	final int nStraightenAxis;
 	/** 0 - single time point, 1 - all time points **/
-	int nTimeRange;
-	ArrayList<AbstractCurve3D> curveROIArr;	
-	int nOutput;
-	String sSaveFolderPath;
-	Calibration cal;
+	final int nTimeRange;
+	final ArrayList<AbstractCurve3D> curveROIArr;	
+	final int nOutput;
+	final String sSaveFolderPath;
+	final Calibration cal;
 		
-	public StraightenCurve(final ArrayList<AbstractCurve3D> curveROIArr_, final BigTrace<T> bt_, final float fRadius_, final int nTimePoint_, final int nOutput_, final String sSaveFolderPath_)
+	public StraightenCurve(final ArrayList<AbstractCurve3D> curveROIArr_, final BigTrace<T> bt_, final float fRadius_, final int nStraightenAxis_, final int nTimePoint_, final int nOutput_, final String sSaveFolderPath_)
 	{
 		super();
 		curveROIArr = curveROIArr_;
 		bt = bt_;
 		nTimeRange = nTimePoint_;
 		fRadiusIn = fRadius_;
+		nStraightenAxis = nStraightenAxis_;
 		nOutput = nOutput_;
 		sSaveFolderPath = sSaveFolderPath_;
 		cal = new Calibration();
@@ -93,7 +96,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		if(nTotROIs == 1)
 		{
 			sRoiName = bt.roiManager.getTimeGroupPrefixRoiName(curveROIArr.get(0));
-			Img<T> extractedRAI = extractCurveRAI(curveROIArr.get(0),  full_RAI, true);
+			IntervalView<T> extractedRAI = extractCurveRAI(curveROIArr.get(0),  full_RAI, true);
 			outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
 		}
 		else
@@ -107,7 +110,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 				  } catch (InterruptedException ignore) {}
 				setProgress(100*nRoi/(nTotROIs));
 				setProgressState("extracting ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
-				Img<T> extractedRAI = extractCurveRAI(curveROIArr.get(nRoi),  full_RAI, false);
+				IntervalView<T> extractedRAI = extractCurveRAI(curveROIArr.get(nRoi),  full_RAI, false);
 				setProgressState("storing ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
 				outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
 			}
@@ -132,7 +135,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 	}
 
 	
-	Img<T> extractCurveRAI(final AbstractCurve3D curveROI, final RandomAccessibleInterval<T> all_RAI, boolean bUpdateProgressBar)
+	IntervalView<T> extractCurveRAI(final AbstractCurve3D curveROI, final RandomAccessibleInterval<T> all_RAI, boolean bUpdateProgressBar)
 	{
 		//get the curve and tangent vectors
 		//curve points in SPACE units
@@ -157,7 +160,7 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 		int nTotDim = all_RAI.numDimensions();
 		long [] dimS =new long[nTotDim];
 		all_RAI.dimensions(dimS);
-		dimS[0]=points_space.size(); //length along the line becomes Z
+		dimS[0]=points_space.size(); //length along the line becomes X
 		dimS[1]=dimXY;
 		dimS[2]=dimXY;
 		long nChannelN = 1;
@@ -243,7 +246,16 @@ public class StraightenCurve < T extends RealType< T > > extends SwingWorker<Voi
 			setProgressState("ROI straightening finished.");
 			setProgress(100);
 		}
-		return out1;
+		/** in case line is along Y or Z**/
+		if(nStraightenAxis>0)
+		{
+			return Views.permute(out1, 0, nStraightenAxis);
+		}
+		else
+		{
+			return Views.interval(out1,out1);
+		}
+		
 	}
 	
 	/** generates initial square XY plane sampling with data from -nRadius till nRadius values (in dPixSize units) in XY 

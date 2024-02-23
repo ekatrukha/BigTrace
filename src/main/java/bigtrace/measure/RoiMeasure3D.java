@@ -1100,12 +1100,13 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	}
 	
 	/** dialog for the Straighten procedure **/
-	public void straightenCurve(final AbstractCurve3D curveLine)
+	public void straightenCurveDialog(final AbstractCurve3D curveLine)
 	{
 		
 		float fRadiusStraighted = 0.0f;
 		int nRadiusType = 0;
 		int nTimeRange = -1;
+		int nStraightenAxis = 0;
 		int nROIList = 0;
 		int nStraightenOutput = 0;
 		
@@ -1148,6 +1149,15 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 		straightenSettings.add(new JLabel("Override radius (px):"),cd);
 		cd.gridx++;
 		straightenSettings.add(nfRadius,cd);
+
+		String[] sStraightenAxis = { "X", "Y", "Z" };
+		JComboBox<String> cbStraightenAxis = new JComboBox<String>(sStraightenAxis);
+		cd.gridy++;
+		cd.gridx=0;
+		straightenSettings.add(new JLabel("Line becomes output axis:"),cd);
+		cd.gridx++;
+		cbStraightenAxis.setSelectedIndex((int)Prefs.get("BigTrace.nStraightenAxis", 0));
+		straightenSettings.add(cbStraightenAxis,cd);
 		
 		String[] sStraightenTime = { "Single ROI's time point", "All time points" };
 		JComboBox<String> straightenTimeList = new JComboBox<String>(sStraightenTime);
@@ -1201,6 +1211,10 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 				fRadiusStraighted = Float.parseFloat(nfRadius.getText());
 				Prefs.set("BigTrace.fRadiusStraighted", fRadiusStraighted);				
 			}
+			
+			nStraightenAxis = cbStraightenAxis.getSelectedIndex();
+			Prefs.set("BigTrace.nStraightenAxis", nStraightenAxis);
+			
 			nTimeRange = 0;
 			if(BigTraceData.nNumTimepoints>1)
 			{
@@ -1254,7 +1268,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			if(curvesOut.size()>0)
 			{			
 				//run in a separate thread
-				StraightenCurve<T> straightBG = new StraightenCurve<T>(curvesOut, bt, fRadiusStraighted, nTimeRange, nStraightenOutput, sSaveDir);
+				StraightenCurve<T> straightBG = new StraightenCurve<T>(curvesOut, bt, fRadiusStraighted, nStraightenAxis, nTimeRange, nStraightenOutput, sSaveDir);
 				straightBG.addPropertyChangeListener(bt.btpanel);
 				straightBG.execute();
 			}
@@ -1269,7 +1283,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	}
 	
 	/** given cross-section ROI, splits provided volume in two and shows them (dialog) **/
-	public void sliceVolume(final CrossSection3D crossSection)
+	public void sliceVolumeDialog(final CrossSection3D crossSection)
 	{
 		int nSliceType = 0;
 		JPanel sliceSettings = new JPanel();
@@ -1389,7 +1403,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			{
 					if(bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.LINE_TRACE||bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.POLYLINE)
 					{
-						straightenCurve((AbstractCurve3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
+						straightenCurveDialog((AbstractCurve3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					}
 			}
 		}
@@ -1400,7 +1414,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 			{
 					if(bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.PLANE)
 					{
-						sliceVolume((CrossSection3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
+						sliceVolumeDialog((CrossSection3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					}
 			}
 		}
