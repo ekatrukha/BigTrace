@@ -385,7 +385,8 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		}
 		else
 		{
-			img_ImageJ = (Img<T>) VolumeMisc.convertFloatToUnsignedShort(ImageJFunctions.wrapReal(imp));
+			
+			img_ImageJ =   VolumeMisc.convertFloatToUnsignedShort(ImageJFunctions.wrapReal(imp));
 		}
 		//long[] test = img_ImageJ.dimensionsAsLongArray();
 		

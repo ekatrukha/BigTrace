@@ -31,8 +31,10 @@ import net.imglib2.img.basictypeaccess.array.ByteArray;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.img.imageplus.ImagePlusImg;
 import net.imglib2.img.imageplus.ImagePlusImgFactory;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.NumericType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -254,7 +256,8 @@ public class VolumeMisc {
 		
 	}
 	
-	public static Img<UnsignedShortType> convertFloatToUnsignedShort(Img<FloatType> input)
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
+	public static < T extends RealType< T > & NativeType< T > > Img< T > convertFloatToUnsignedShort(Img<FloatType> input)
 	{
 		double minVal = Float.MAX_VALUE;
 		double maxVal = -Float.MAX_VALUE;
@@ -269,7 +272,7 @@ public class VolumeMisc {
 		//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
 		final RealUnsignedShortConverter<FloatType> conv = new RealUnsignedShortConverter<FloatType>(minVal,maxVal);
 
-		final ImagePlusImg< UnsignedShortType, ? > output = new ImagePlusImgFactory<>( new UnsignedShortType() ).create( input );
+		final ImagePlusImg output = new ImagePlusImgFactory<>( new UnsignedShortType() ).create( input );
 		
 		
 		final Cursor< FloatType > in = input.cursor();
