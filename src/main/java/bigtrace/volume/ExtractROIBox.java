@@ -14,12 +14,13 @@ import ij.ImagePlus;
 import ij.measure.Calibration;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
-public class ExtractROIBox < T extends RealType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker{
+public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker{
 
 	private String progressState;
 	public BigTrace<T> bt;

@@ -12,10 +12,11 @@ import javax.swing.JPanel;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import ij.Prefs;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
 
-public class RenderMethodPanel < T extends RealType< T > > extends JPanel implements ActionListener{
+public class RenderMethodPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ActionListener{
 	
 
 	/**

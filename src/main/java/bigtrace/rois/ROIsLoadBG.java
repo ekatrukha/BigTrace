@@ -14,11 +14,13 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
 import net.imglib2.RealPoint;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 
-public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGWorker{
+public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker{
 
 	private String progressState;
-	public BigTrace<?> bt;
+	public BigTrace<T> bt;
 	public String sFilename;
 	public int nLoadMode;
 	String sFinalOut = "";
@@ -65,7 +67,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
         
         
        
-        Roi3DGroupManager roiGM;
+        Roi3DGroupManager<T> roiGM;
 	
         bt.bInputLock = true;
         bt.roiManager.setLockMode(true);
@@ -77,7 +79,7 @@ public class ROIsLoadBG extends SwingWorker<Void, String> implements BigTraceBGW
 	        //read Groups first
 	        if(nLoadMode == 0)
 	        {
-	        	roiGM = new Roi3DGroupManager(bt.roiManager);
+	        	roiGM = new Roi3DGroupManager<T>(bt.roiManager);
 	        	if(roiGM.loadGroups(br)<0)
 	        	{
 	        		 System.err.println("Not a BigTrace ROI Group file format or plugin/file version mismatch,\nloading Groups failed.\n"+

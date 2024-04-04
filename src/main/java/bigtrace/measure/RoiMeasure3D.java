@@ -51,11 +51,12 @@ import ij.gui.Plot;
 import ij.io.SaveDialog;
 import ij.measure.ResultsTable;
 import net.imglib2.RealPoint;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 
-public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements ListSelectionListener, ActionListener, Measurements { 
+public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener, Measurements { 
 	
 	/**
 	 * 
@@ -91,6 +92,7 @@ public class RoiMeasure3D < T extends RealType< T > > extends JPanel implements 
 	private static ResultsTable systemRT = new ResultsTable();
 	private ResultsTable rt;
 	
+
 
 	public RoiMeasure3D(BigTrace<T> bt)
 	{

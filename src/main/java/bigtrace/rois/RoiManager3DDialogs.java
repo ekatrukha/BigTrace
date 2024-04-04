@@ -21,16 +21,17 @@ import bigtrace.BigTraceData;
 import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
 import ij.Prefs;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
-public class RoiManager3DDialogs < T extends RealType< T > > {
+public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 	final BigTrace<T> bt;
 	
 	
 
 	public RoiManager3DDialogs(BigTrace<T> bt_)
 	{
-		bt=bt_;
+		bt = bt_;
 		
 	}
 	
@@ -283,7 +284,7 @@ public class RoiManager3DDialogs < T extends RealType< T > > {
 	/** show ROI Appearance dialog**/
 	public void dialRenderSettings()
 	{
-		final RoiManager3D rm = bt.roiManager;
+		final RoiManager3D<T> rm = bt.roiManager;
 		JTabbedPane tabPane = new JTabbedPane();
 		GridBagConstraints cd = new GridBagConstraints();
 

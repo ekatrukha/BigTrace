@@ -24,6 +24,7 @@ import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
@@ -179,7 +180,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 	}
 	
 	/** get intensity values in Sphere around the point **/
-	public < T extends RealType< T > > double[] getIntensityValuesTEST(BigTrace<T> bt, final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
+	public < T extends RealType< T > & NativeType< T > > double[] getIntensityValuesTEST(BigTrace<T> bt, final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
 	{
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
 		RealRandomAccess<T> ra =   interpolate.realRandomAccess();

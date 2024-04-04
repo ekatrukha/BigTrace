@@ -37,10 +37,12 @@ import bigtrace.gui.NumberField;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 
 
 
-public class Roi3DGroupManager implements ListSelectionListener, ActionListener {
+public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > implements ListSelectionListener, ActionListener {
 
 	private JDialog dialog;
 	private JOptionPane optionPane;
@@ -58,11 +60,11 @@ public class Roi3DGroupManager implements ListSelectionListener, ActionListener 
 	JButton butLoad;
 	
 	
-	RoiManager3D roiManager;
+	RoiManager3D <T> roiManager;
 	
 	public ColorUserSettings selectColors = new ColorUserSettings();
 	
-	public Roi3DGroupManager(RoiManager3D roiManager_)	
+	public Roi3DGroupManager(RoiManager3D<T> roiManager_)	
 	{
 		 roiManager  = roiManager_;	 
     }

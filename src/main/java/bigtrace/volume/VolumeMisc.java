@@ -173,8 +173,8 @@ public class VolumeMisc {
 			Cursor< UnsignedByteType > inC=input.cursor();
 			Cursor< UnsignedByteType > ouC=output.cursor();
 			Cursor< UnsignedByteType > neibC;
-			int nMaxDet = 0;
-			int nMaxNDet = 0;
+			//int nMaxDet = 0;
+			//int nMaxNDet = 0;
 			int currVal;
 			boolean isMax;
 			while ( inC.hasNext() )
@@ -200,13 +200,13 @@ public class VolumeMisc {
 					if(isMax)
 					{
 						ouC.get().set(100);
-						nMaxDet++;
+						//nMaxDet++;
 						
 					}
 					else
 					{
 						ouC.get().set(0);
-						nMaxNDet++;
+						//nMaxNDet++;
 					}
 				}
 			}

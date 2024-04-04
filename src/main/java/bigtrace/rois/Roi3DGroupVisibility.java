@@ -14,9 +14,12 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 
 
-public class Roi3DGroupVisibility implements  ActionListener {
+
+public class Roi3DGroupVisibility < T extends RealType< T > & NativeType< T > > implements  ActionListener {
 
 	private JDialog dialog;
 	private JOptionPane optionPane;
@@ -24,10 +27,10 @@ public class Roi3DGroupVisibility implements  ActionListener {
 	ArrayList<JLabel> groupNames;
 	ArrayList<JCheckBox> groupCheckbox;
 	
-	RoiManager3D roiManager;
+	RoiManager3D<T> roiManager;
 	
 	
-	public Roi3DGroupVisibility(RoiManager3D roiManager_)	
+	public Roi3DGroupVisibility(RoiManager3D<T> roiManager_)	
 	{
 		 roiManager  = roiManager_;
 		 

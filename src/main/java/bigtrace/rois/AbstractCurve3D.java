@@ -15,6 +15,7 @@ import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
@@ -117,7 +118,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	 * 2 x coordinate (in scaled units) 
 	 * 3 y coordinate (in scaled units) 
 	 * 4 z coordinate (in scaled units) **/
-	public < T extends RealType< T > >  double [][] getIntensityProfilePipe(final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
+	public < T extends RealType< T > & NativeType< T > >  double [][] getIntensityProfilePipe(final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
 	
 		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
@@ -201,7 +202,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		return out;
 	}
 	/** TEST voxel placement**/
-	public < T extends RealType< T > >  double [][] getIntensityProfilePipeTEST(final BigTrace<T> bt, final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
+	public < T extends RealType< T > & NativeType< T > >  double [][] getIntensityProfilePipeTEST(final BigTrace<T> bt, final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
 	{
 	
 		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
@@ -219,7 +220,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	 * the interpolate RRA 
 	 * it is assumes that allPoints are sampled with the same length step,
 	 * equal to dMinVoxelSize **/
-	public < T extends RealType< T > >  double [][] getIntensityProfilePointsPipe(final ArrayList<RealPoint> points, final ArrayList<double[]> tangents, final int nRadius, RealRandomAccessible<T> interpolate, final double [] globCal)
+	public < T extends RealType< T > & NativeType< T > >  double [][] getIntensityProfilePointsPipe(final ArrayList<RealPoint> points, final ArrayList<double[]> tangents, final int nRadius, RealRandomAccessible<T> interpolate, final double [] globCal)
 	{
 		double [][] out = new double [5][points.size()];
 		
@@ -274,7 +275,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	}
 	
 	/** TEST voxel placement **/
-	public < T extends RealType< T > >  double [][] getIntensityProfilePointsPipeTEST(final BigTrace<T> bt, final ArrayList<RealPoint> points, final ArrayList<double[]> tangents, final int nRadius, RealRandomAccessible<T> interpolate, final double [] globCal)
+	public < T extends RealType< T > & NativeType< T > >  double [][] getIntensityProfilePointsPipeTEST(final BigTrace<T> bt, final ArrayList<RealPoint> points, final ArrayList<double[]> tangents, final int nRadius, RealRandomAccessible<T> interpolate, final double [] globCal)
 	{
 		double [][] out = new double [5][points.size()];
 		

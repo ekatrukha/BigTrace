@@ -43,6 +43,8 @@ import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import net.imglib2.Interval;
 import net.imglib2.RealPoint;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Intervals;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
@@ -53,17 +55,16 @@ import bigtrace.gui.PanelTitle;
 import bigtrace.measure.RoiMeasure3D;
 
 
-public class RoiManager3D extends JPanel implements ListSelectionListener, ActionListener {
+public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener {
 	
 
-	@SuppressWarnings("rawtypes")
-	BigTrace bt;
+	BigTrace <T> bt;
 
 	private static final long serialVersionUID = -2843907862066423151L;
 	public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2, ADD_POINT_ONECLICKLINE=3, ADD_POINT_PLANE=4;
 	///public static final int SECTORS_DEF=16;
 
-	public ArrayList<Roi3D> rois =  new ArrayList<Roi3D >();
+	public ArrayList<Roi3D> rois =  new ArrayList<Roi3D>();
 	public int activeRoi = -1;
 
 	public ArrayList<Roi3DGroup> groups = new ArrayList<Roi3DGroup>();
@@ -121,7 +122,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 
 		
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public RoiManager3D(BigTrace<?> bt)
+	public RoiManager3D(BigTrace<T> bt)
 	{
 
 		this.bt = bt;
@@ -924,7 +925,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 			l.activeRoiChanged(nRoi);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void valueChanged(ListSelectionEvent e) 
 	{
@@ -958,7 +958,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
     }
 
 	//buttons
-	@SuppressWarnings("unchecked")
 	@Override
 	public void actionPerformed(ActionEvent e) 
 	{
@@ -1062,7 +1061,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 		//Groups Manager
 		if(e.getSource() == butROIGroups)
 		{
-			Roi3DGroupManager dialGroup = new Roi3DGroupManager(this);
+			Roi3DGroupManager<T> dialGroup = new Roi3DGroupManager<T>(this);
 			dialGroup.initGUI();
 			dialGroup.show();
 			int nGroupSave = nActiveGroup;
@@ -1329,7 +1328,6 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	}
 	
 	/** Save ROIS dialog and saving **/
-	@SuppressWarnings("unchecked")
 	public void diagSaveROIs()
 	{
 		String filename;
@@ -1344,7 +1342,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         bt.bInputLock = true;
         
         //this.setLockMode(true);
-        ROIsSaveBG saveTask = new ROIsSaveBG();
+        ROIsSaveBG<T> saveTask = new ROIsSaveBG<T>();
         saveTask.sFilename=filename;
         saveTask.bt=this.bt;
         saveTask.addPropertyChangeListener(bt.btpanel);
@@ -1394,11 +1392,11 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         
         Prefs.set("BigTrace.LoadRoisMode", nLoadMode);
 
-        ROIsLoadBG loadTask = new ROIsLoadBG();
+        ROIsLoadBG<T> loadTask = new ROIsLoadBG<T>();
         
-        loadTask.sFilename=filename;
+        loadTask.sFilename = filename;
         loadTask.nLoadMode = nLoadMode;
-        loadTask.bt=this.bt;
+        loadTask.bt = this.bt;
         loadTask.addPropertyChangeListener(bt.btpanel);
         loadTask.execute();
         
@@ -1412,9 +1410,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
         String [] sRoiImportOptions = new String [] {"Points from TrackMate XML (Export)","Points from CSV (coming soon)"};
 		
         String input = (String) JOptionPane.showInputDialog(this, "Importing ROIs",
-                "Import:", JOptionPane.QUESTION_MESSAGE, null, // Use
-                                                                                // default
-                                                                                // icon
+                "Import:", JOptionPane.QUESTION_MESSAGE, null, // Use default icon
                 sRoiImportOptions, // Array of choices
                 sRoiImportOptions[(int)Prefs.get("BigTrace.ImportRoisMode", 0)]);
 
@@ -1569,7 +1565,7 @@ public class RoiManager3D extends JPanel implements ListSelectionListener, Actio
 	/** show Group visibility dialog **/
 	public void dialGroupVisibility()
 	{
-		Roi3DGroupVisibility groupVis = new Roi3DGroupVisibility(this);
+		Roi3DGroupVisibility<T> groupVis = new Roi3DGroupVisibility<T>(this);
 		groupVis.show();
 	}
 	

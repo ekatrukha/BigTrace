@@ -27,6 +27,9 @@ import com.jogamp.opengl.GL3;
 
 import ij.IJ;
 import ij.ImageJ;
+import ij.macro.ExtensionDescriptor;
+import ij.macro.Functions;
+import ij.macro.MacroExtension;
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
@@ -39,8 +42,8 @@ import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -50,7 +53,6 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 import bdv.tools.InitializeViewerState;
-import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
 import bdv.util.Bounds;
 import bdv.viewer.Source;
@@ -64,7 +66,6 @@ import btbvv.vistools.BvvStackSource;
 import btbvv.core.render.RenderData;
 import btbvv.core.render.VolumeRenderer.RepaintType;
 import btbvv.btuitools.BvvGamma;
-import btbvv.btuitools.ConverterSetupsBT;
 import btbvv.btuitools.GammaConverterSetup;
 import btbvv.core.VolumeViewerPanel;
 import btbvv.core.util.MatrixMath;
@@ -84,7 +85,7 @@ import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
 
 
-public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListener, TimePointListener
+public class BigTrace < T extends RealType< T > & NativeType< T > > implements PlugIn, MacroExtension, WindowListener, TimePointListener
 {
 	/** main instance of BVV **/
 	public  BvvStackSource< ? > bvv_main = null;
@@ -140,12 +141,30 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	public BigTraceControlPanel<T> btpanel;
 	
 	/** ROI manager + list tab **/
-	public RoiManager3D roiManager;
+	public RoiManager3D<T> roiManager;
+	
+	/**macro extensions **/
+	private ExtensionDescriptor[] extensions = {
+			
+			ExtensionDescriptor.newDescriptor("testBigTrace", this, ARG_OUTPUT+ARG_NUMBER),
+			//ExtensionDescriptor.newDescriptor("getFrame", this, ARG_OUTPUT+ARG_NUMBER),
+			//ExtensionDescriptor.newDescriptor("setChannel", this, ARG_NUMBER ),
+			//ExtensionDescriptor.newDescriptor("setFrame", this, ARG_NUMBER ),
+			//ExtensionDescriptor.newDescriptor("getDisplayMode", this),
+			//ExtensionDescriptor.newDescriptor("setDisplayMode", this, ARG_STRING),
+	};
 		
 	public void run(String arg)
 	{
-		//switch to FlatLaf theme
 		
+		//register IJ macro extensions
+		if (IJ.macroRunning())
+		{
+			Functions.registerExtensions(this);
+		}
+
+		
+		//switch to FlatLaf theme		
 		try {
 		    UIManager.setLookAndFeel( new FlatIntelliJLaf() );
 		    FlatLaf.registerCustomDefaultsSource( "flatlaf" );
@@ -156,7 +175,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 		btdata = new BigTraceData<T>(this);
 		btload = new BigTraceLoad<T>(this);
-		
 		if(arg.equals(""))
 		{
 			btdata.sFileNameFullImg = IJ.getFilePath("Open TIF/BDV/Bioformats file (3D, composite, time)...");
@@ -206,7 +224,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			}
 		}	
 
-		roiManager = new RoiManager3D(this);
+		roiManager = new RoiManager3D<T>(this);
 		
 		initSourcesCanvas(0.25*Math.min(btdata.nDimIni[1][0], Math.min(btdata.nDimIni[1][1],btdata.nDimIni[1][2])));
 		
@@ -818,9 +836,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 			return Views.interval(full_int, full_int);
 		}
 	}
-	
-
-	
+		
 	/** calculate optimal path **/
 	public void getSemiAutoTrace(RealPoint target)
 	{
@@ -835,8 +851,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		
 	}
 
-	
-	
 	public void showCorners(ArrayList<long []> corners)
 	{
 		RoiManager3D.mode=RoiManager3D.ADD_POINT;
@@ -1302,7 +1316,6 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		t = getCenteredViewTransform(new FinalInterval(BigTraceData.nDimCurr[0],BigTraceData.nDimCurr[1]), 0.9);
 		viewer.state().setViewerTransform(t);
 	}
-
 	
 	public void resetViewXY()
 	{
@@ -1440,7 +1453,7 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 		viewer.setTransformAnimator(anim);
 
 	}
-	/** givem mouse click coordinates, returns the line along the view ray **/
+	/** given mouse click coordinates, returns the line along the view ray **/
 	public Line3D findClickLine(final java.awt.Point point_mouse)
 	{
 		//get perspective matrix:
@@ -1937,8 +1950,22 @@ public class BigTrace < T extends RealType< T > > implements PlugIn, WindowListe
 	}
 
 	
+	public ExtensionDescriptor[] getExtensionFunctions() {
+		return extensions;
+	}
+	
+	public String handleExtension(String name, Object[] args) {
+	
+
+		if (name.equals("testBigTrace")) {
+			IJ.log("test ok");
+			} 
+
+		return null;
+	}
+	
 	@SuppressWarnings("rawtypes")
-	public static void main( String... args) throws Exception
+	public static void main(String... args) throws Exception
 	{
 		
 		new ImageJ();

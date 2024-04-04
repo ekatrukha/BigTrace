@@ -16,6 +16,7 @@ import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -23,10 +24,10 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 /** class that stores settings and main data from BigTrace **/
-public class BigTraceData < T extends RealType< T > > {
+public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 
 	/** current plugin version **/
-	public static String sVersion = "0.3.9";
+	public static String sVersion = "0.4.0";
 	
 	/** plugin instance **/
 	BigTrace<T> bt;

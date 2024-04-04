@@ -12,11 +12,13 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
 import ij.IJ;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 
-public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGWorker{
+public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker{
 
 	private String progressState;
-	public BigTrace<?> bt;
+	public BigTrace<T> bt;
 	public String sFilename;
 	
 	@Override
@@ -38,7 +40,7 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
     	bt.roiManager.setLockMode(true);
     	
     	//get the group manager to save groups
-    	Roi3DGroupManager roiGM = new Roi3DGroupManager(bt.roiManager);
+    	Roi3DGroupManager<T> roiGM = new Roi3DGroupManager<T>(bt.roiManager);
     	
         try {
 			final File file = new File(sFilename);
@@ -68,7 +70,7 @@ public class ROIsSaveBG extends SwingWorker<Void, String> implements BigTraceBGW
 				} catch (InterruptedException ignore) {}
 				setProgress(nRoi*100/nRoiN);
 				writer.write("BT_Roi,"+Integer.toString(nRoi+1)+"\n");
-				bt.roiManager.rois.get(nRoi).saveRoi(writer);
+				((Roi3D) bt.roiManager.rois.get(nRoi)).saveRoi(writer);
 			}
 			writer.write("End of BigTrace ROIs\n");
 			writer.close();

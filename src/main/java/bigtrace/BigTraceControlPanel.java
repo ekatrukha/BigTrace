@@ -46,11 +46,12 @@ import ij.Prefs;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 
 
-public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
+public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > extends JPanel
 //public class BigTraceControlPanel extends JFrame
 								implements ActionListener, 
 									PropertyChangeListener {
@@ -68,7 +69,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	public VoxelSizePanel voxelSizePanel;
 	public RenderMethodPanel<T> renderMethodPanel;
 	
-	RoiManager3D roiManager;
+	RoiManager3D<T> roiManager;
 	RoiMeasure3D<T> roiMeasure;
 	
 
@@ -80,7 +81,7 @@ public class BigTraceControlPanel< T extends RealType< T > > extends JPanel
 	JButton butSettings;
 
 	
-	public BigTraceControlPanel(final BigTrace<T> bt_,final BigTraceData<T> btd_, final RoiManager3D roiManager_)//, int locx, int locy) 
+	public BigTraceControlPanel(final BigTrace<T> bt_,final BigTraceData<T> btd_, final RoiManager3D<T> roiManager_)//, int locx, int locy) 
 	{
 		//finalPanel = new JPanel(new GridBagLayout());
 		super(new GridBagLayout());
