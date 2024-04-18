@@ -19,6 +19,7 @@ import net.imglib2.algorithm.convolution.kernel.SeparableKernelConvolution;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.FloatArray;
+import net.imglib2.parallel.Parallelization;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -41,6 +42,7 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 	{
 		progressState=state_;
 	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	protected Void doInBackground() throws Exception {
 	
@@ -64,14 +66,12 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 		
 		int count = 0;
 		int [] nDerivOrder;
-		Convolution convObj;
-		//start1 = System.currentTimeMillis();
-		final int nThreads = Runtime.getRuntime().availableProcessors();
-		ExecutorService es = Executors.newFixedThreadPool( nThreads );
-		setProgress(0);
 		
+		setProgress(0);
+		//start1 = System.currentTimeMillis();
+
 		//second derivatives
-		for (int d1=0;d1<3;d1++)
+		for (int d1=0; d1<3; d1++)
 		{
 			for ( int d2 = d1; d2 < 3; d2++ )
 			{
@@ -89,16 +89,19 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 				nDerivOrder[d2]++;
 				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btdata.sigmaTrace, nDerivOrder );
 				derivKernel = Kernel1D.centralAsymmetric(kernels);
-				convObj = SeparableKernelConvolution.convolution( derivKernel );
-				convObj.setExecutor(es);
-				convObj.process(Views.extendBorder(input), hs2 );
-				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
+				final Convolution convObjx = SeparableKernelConvolution.convolution( derivKernel );
+
+				Parallelization.runMultiThreaded( () -> {
+					convObjx.process(Views.extendBorder(input), hs2 );
+				} );
+				SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
 				count++;
 				//System.out.println(count);
 			}
 		}
 		//end1 = System.currentTimeMillis();
-		//System.out.println("THREADED Elapsed Time in milli seconds: "+ (end1-start1));
+		//System.out.println("impl new Elapsed Time in milli seconds: "+ (end1-start1));
+		
 
 		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
 		ArrayImg<FloatType, FloatArray> dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
@@ -114,8 +117,10 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 			Thread.sleep(1);
 		} catch (InterruptedException ignore) {}
 		setProgress(6*100/7);
-
-		mEV.computeVWCRAI(hessian, directionVectors,salWeights, lineCorners,nThreads,es);
+		
+		final int nThreads =  Runtime.getRuntime().availableProcessors();
+		ExecutorService es = Executors.newFixedThreadPool( nThreads );
+		mEV.computeVWCRAI(hessian, directionVectors, salWeights, lineCorners, nThreads, es);
 		es.shutdown();
 
 		setProgress(100);

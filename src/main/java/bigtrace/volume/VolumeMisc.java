@@ -336,8 +336,8 @@ public class VolumeMisc {
 				}
 			}
 		}
-		System.out.println("max det:"+Integer.toString(nMaxDet));
-		System.out.println("max not det:"+Integer.toString(nMaxNDet));
+		//System.out.println("max det:"+Integer.toString(nMaxDet));
+		//System.out.println("max not det:"+Integer.toString(nMaxNDet));
 		return finList;
 	}
 	

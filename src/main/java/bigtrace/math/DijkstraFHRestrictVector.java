@@ -220,7 +220,7 @@ public class DijkstraFHRestrictVector {
 						dirsRA.setPosition(iniPoint);
 						//middle of neighborhood
 						dirsRA.get().set(ININODE);
-						System.out.println("Dijkstra not full");
+						//System.out.println("Dijkstra not full");
 						return true;
 					}
 					//check if it is "emptyness"
@@ -296,7 +296,7 @@ public class DijkstraFHRestrictVector {
 
 	
 		}//queue end 
-		System.out.println("max queue:"+Integer.toString(nMaxQ));
+		//System.out.println("max queue:"+Integer.toString(nMaxQ));
 
 		//mark initial node with zero cost
 		ccostRA.setPosition(iniPoint);
@@ -437,7 +437,7 @@ public class DijkstraFHRestrictVector {
 				nCornNum++;
 			}
 		}
-		System.out.println("Corners found:"+Integer.toString(nCornNum));
+		//System.out.println("Corners found:"+Integer.toString(nCornNum));
 		return markedCorners;
 	}
 
