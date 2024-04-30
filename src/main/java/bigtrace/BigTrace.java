@@ -701,7 +701,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );
 		actions.runnableAction(() -> actionAdvanceTraceBox(),       "advance trace box", "T" );
 		actions.runnableAction(() -> actionSemiTraceStraightLine(),	"straight line semitrace", "R" );
-		actions.runnableAction(() -> actionZoomIn(),			"zoom in to click", "D" );
+		actions.runnableAction(() -> actionZoomIn(),			    "zoom in to click", "D" );
 		actions.runnableAction(() -> actionZoomOut(),				"center view (zoom out)", "C" );
 		actions.runnableAction(() -> actionResetClip(),				"reset clipping", "X" );
 		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "O" );

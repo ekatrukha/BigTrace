@@ -506,7 +506,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 			if(BigTraceData.nROIDoubleClickClipExpand != Integer.parseInt(nfRoiDoubleClickExpand.getText()))
 			{
 				BigTraceData.nROIDoubleClickClipExpand = Integer.parseInt(nfRoiDoubleClickExpand.getText());
-				Prefs.set("BigTrace.nROIDoubleClickClipExpand", BigTraceData.sectorN);
+				Prefs.set("BigTrace.nROIDoubleClickClipExpand", BigTraceData.nROIDoubleClickClipExpand);
 			}
 			
 			if(BigTraceData.sectorN!= Integer.parseInt(nfSectorNLines.getText()))
