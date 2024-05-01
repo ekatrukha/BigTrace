@@ -3,7 +3,7 @@
 BigTrace
 ===
 
-<img src="https://katpyxa.info/software/BigTrace.png" align="right" style="padding:100px"/> This is <a href="http://www.gnu.org/licenses/gpl.html">open-source</a> <a href="https://fiji.sc/">FIJI</a> plugin for tracing and analysis of curvilinear structures in large (and small) volumetric microscopy datasets using <a href="https://forum.image.sc/t/bigvolumeviewer-tech-demo/12104">BigVolumeViewer</a> for visualization (actually <a href="https://github.com/ekatrukha/bvv-playground">bvv-playground</a> is used). 
+<img src="https://katpyxa.info/software/BigTrace.png" align="right" style="padding:100px"/> <a href="https://fiji.sc/">FIJI</a> plugin for tracing and analysis of curvilinear structures in large (and small) volumetric microscopy datasets using <a href="https://forum.image.sc/t/bigvolumeviewer-tech-demo/12104">BigVolumeViewer</a> for visualization (actually <a href="https://github.com/ekatrukha/bvv-playground">bvv-playground</a> is used). 
 <br />
 <br />
 For full description and manual refer to <a href="https://github.com/ekatrukha/BigTrace/wiki"><strong>Wiki page</strong></a>.  
