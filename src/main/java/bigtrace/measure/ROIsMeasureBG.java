@@ -32,7 +32,7 @@ public class ROIsMeasureBG extends SwingWorker<Void, String> implements BigTrace
 		bt.bInputLock = true;
     	bt.roiManager.setLockMode(true);
     	final int nRoiN = rois.size();
-    	vals = new ArrayList<MeasureValues>();
+    	vals = new ArrayList<>();
     	setProgressState("measuring ROIs...");
     	setProgress(0);
 		for(int i = 0; i<nRoiN;i++)

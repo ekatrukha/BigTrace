@@ -205,14 +205,15 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		cr = new GridBagConstraints();
 		
 		//synchronized ROI list
-		jlist = new JList<String>(bt.roiManager.listModel);
+		jlist = new JList<>(bt.roiManager.listModel);
 		listScroller = new JScrollPane(jlist);
 		jlist.addListSelectionListener(this);
 		listScroller.setPreferredSize(new Dimension(300, 400));
 		listScroller.setMinimumSize(new Dimension(170, 250));
 		
 		 jlist.addMouseListener(new MouseAdapter() {
-			    public void mouseClicked(MouseEvent evt) {
+			    @Override
+				public void mouseClicked(MouseEvent evt) {
 			        if (evt.getClickCount() == 2) {
 			            // Double-click detected
 			            int index = jlist.locationToIndex(evt.getPoint());
@@ -314,7 +315,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		
 		JPanel pMeasureSettings = new JPanel(new GridLayout(0,2,6,0));
 	
-		ArrayList<JCheckBox> measureStates = new ArrayList<JCheckBox>();
+		ArrayList<JCheckBox> measureStates = new ArrayList<>();
 		
 
 		String[] labels = new String[7];
@@ -337,14 +338,14 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		}
 		
 		String[] sIntInterpolationType = { "Nearest Neighbor", "Linear", "Lanczos" };
-		JComboBox<String> intensityInterpolationList = new JComboBox<String>(sIntInterpolationType);
+		JComboBox<String> intensityInterpolationList = new JComboBox<>(sIntInterpolationType);
 		pMeasureSettings.add(new JLabel(" "));
 		pMeasureSettings.add(new JLabel("Intensity interpolation: "));
 		intensityInterpolationList.setSelectedIndex(BigTraceData.intensityInterpolation);
 		pMeasureSettings.add(intensityInterpolationList);
 		
 		String[] sShapeInterpolationType = { "Voxel", "Smooth", "Spline"};
-		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
+		JComboBox<String> shapeInterpolationList = new JComboBox<>(sShapeInterpolationType);
 		shapeInterpolationList.setSelectedIndex(BigTraceData.shapeInterpolation);
 		pMeasureSettings.add(new JLabel("ROI Shape interpolation: "));
 		pMeasureSettings.add(shapeInterpolationList);
@@ -356,7 +357,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		pMeasureSettings.add(nfSmoothWindow);	
 		
 		String[] sRotationFrame = { "Wang et al 2008", "Experimental"};
-		JComboBox<String> rotationFrameList = new JComboBox<String>(sRotationFrame);
+		JComboBox<String> rotationFrameList = new JComboBox<>(sRotationFrame);
 		rotationFrameList.setSelectedIndex(BigTraceData.rotationMinFrame);
 		pMeasureSettings.add(new JLabel("Rotation minimizing frame: "));
 		pMeasureSettings.add(rotationFrameList);
@@ -431,7 +432,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	{
 		JPanel pCoalignVector = new JPanel(new GridLayout(0,2,6,0));
 		
-		ArrayList<NumberField> nfCoalignVector = new ArrayList<NumberField>();
+		ArrayList<NumberField> nfCoalignVector = new ArrayList<>();
 		int d;
 		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
 		decimalFormatSymbols.setDecimalSeparator('.');
@@ -474,9 +475,13 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		return false;
 		
 	}
+	
 	MeasureValues measureRoi(final Roi3D roi)
 	{
 
+		if (roi == null)
+			return null;
+		
 		MeasureValues val = new MeasureValues();
 		val.setRoiName(roi.getName());
 		val.setRoiType(roi.getType());
@@ -484,37 +489,34 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		val.setTimePoint(roi.getTimePoint());
 		if(systemMeasurements>0)
 		{
-			if (roi!=null)//should not be, but just in case
-			{
-				if((systemMeasurements&LENGTH)!=0) 
-				{
-					measureLength(roi,val);
-				}
-				if((systemMeasurements&DIST_ENDS)!=0) 
-				{
-					measureEndsDistance(roi,val);
-				}
-				if((systemMeasurements&MEAN)!=0) 
-				{
-					measureMeanIntensity(roi,val);
-				}
-				if((systemMeasurements&STD_DEV)!=0) 
-				{
-					measureSDIntensity(roi,val);
-				}
-				if((systemMeasurements&STRAIGHTNESS)!=0) 
-				{
-					measureStraightness(roi,val);
-				}
-				if((systemMeasurements&ENDS_COORDS)!=0) 
-				{
-					measureEndsCoords(roi,val);
-				}
-				if((systemMeasurements&ENDS_DIR)!=0) 
-				{
-					measureEndsDirection(roi,val);
-				}
 
+			if((systemMeasurements&LENGTH)!=0) 
+			{
+				measureLength(roi,val);
+			}
+			if((systemMeasurements&DIST_ENDS)!=0) 
+			{
+				measureEndsDistance(roi,val);
+			}
+			if((systemMeasurements&MEAN)!=0) 
+			{
+				measureMeanIntensity(roi,val);
+			}
+			if((systemMeasurements&STD_DEV)!=0) 
+			{
+				measureSDIntensity(roi,val);
+			}
+			if((systemMeasurements&STRAIGHTNESS)!=0) 
+			{
+				measureStraightness(roi,val);
+			}
+			if((systemMeasurements&ENDS_COORDS)!=0) 
+			{
+				measureEndsCoords(roi,val);
+			}
+			if((systemMeasurements&ENDS_DIR)!=0) 
+			{
+				measureEndsDirection(roi,val);
 			}
 			
 			//update Results Table
@@ -570,11 +572,10 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
         filename = path+sd.getFileName();
         bt.roiManager.setLockMode(true);
         bt.bInputLock = true;
-        try 
+        final File file = new File(filename);
+        
+        try (FileWriter writer = new FileWriter(file);)
         {
-			final File file = new File(filename);
-			
-			final FileWriter writer = new FileWriter(file);
 			double [][] profile;
 			String sPrefix;
 			String out;
@@ -723,7 +724,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	void measureMeanIntensity(final Roi3D roi, final MeasureValues val)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source = bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile;
 		val.mean = Double.NaN;
 		switch (roi.getType())
@@ -758,7 +759,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	void measureSDIntensity(final Roi3D roi, final MeasureValues val)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source = bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile;
 		val.stdDev = Double.NaN;
 		switch (roi.getType())
@@ -866,7 +867,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	double [][] measureLineProfile(final Roi3D roi, final boolean bMakePlot)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source = bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile = null;
 		Plot plotProfile;
 		switch (roi.getType())
@@ -974,7 +975,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		extractROISettings.add(new JLabel("Extract box around:"),cd);
 		cd.gridx++;
 		final String[] sExtractBoxROIsRange = { "Selected ROI", "All visible ROIs" };
-		JComboBox<String> extractBoxRoiList = new JComboBox<String>(sExtractBoxROIsRange);
+		JComboBox<String> extractBoxRoiList = new JComboBox<>(sExtractBoxROIsRange);
 		extractBoxRoiList.setSelectedIndex((int)Prefs.get("BigTrace.nExtractBoxROIList", 0));
 		extractROISettings.add(extractBoxRoiList, cd);	
 		
@@ -983,7 +984,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		extractROISettings.add(new JLabel("Box size:"),cd);
 		cd.gridx++;
 		String[] sExtractRoiType = { "Tight", "Enlarge/shrink below" };
-		JComboBox<String> extractBoxTypeList = new JComboBox<String>(sExtractRoiType);
+		JComboBox<String> extractBoxTypeList = new JComboBox<>(sExtractRoiType);
 		extractBoxTypeList.setSelectedIndex((int)Prefs.get("BigTrace.nExtractRoiType", 0));
 		extractROISettings.add(extractBoxTypeList,cd);
 		
@@ -995,7 +996,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		extractROISettings.add(nfBoxExpand,cd);
 		
 		String[] sExtractBoxTime = { "Single ROI's time point", "All time points" };
-		JComboBox<String> extractBoxTimeList = new JComboBox<String>(sExtractBoxTime);
+		JComboBox<String> extractBoxTimeList = new JComboBox<>(sExtractBoxTime);
 		if(BigTraceData.nNumTimepoints>1)
 		{
 			cd.gridy++;
@@ -1011,7 +1012,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		extractROISettings.add(new JLabel("Output:"),cd);
 		cd.gridx++;
 		String[] sExtractBoxOutput = { "show in ImageJ", "save as TIF" };
-		JComboBox<String> extractBoxOutputList = new JComboBox<String>(sExtractBoxOutput);
+		JComboBox<String> extractBoxOutputList = new JComboBox<>(sExtractBoxOutput);
 		extractBoxOutputList.setSelectedIndex((int)Prefs.get("BigTrace.nExtractBoxOutput", 0));
 		extractROISettings.add(extractBoxOutputList,cd);
 		
@@ -1065,7 +1066,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			}
 			
 			//build list of ROIs
-			final ArrayList<Roi3D> roiOut = new ArrayList<Roi3D>();
+			final ArrayList<Roi3D> roiOut = new ArrayList<>();
 			//single ROI
 			if(nExtractBoxROIList == 0)
 			{
@@ -1088,7 +1089,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			if(roiOut.size()>0)
 			{			
 				//run in a separate thread
-				ExtractROIBox<T> extractBoxBG = new ExtractROIBox<T>(roiOut, bt, nExpandROIBox, nTimeRange, nExtractBoxOutput, sSaveDir);				
+				ExtractROIBox<T> extractBoxBG = new ExtractROIBox<>(roiOut, bt, nExpandROIBox, nTimeRange, nExtractBoxOutput, sSaveDir);				
 				extractBoxBG.addPropertyChangeListener(bt.btPanel);
 				extractBoxBG.execute();
 			}
@@ -1128,7 +1129,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		straightenSettings.add(new JLabel("Straighten:"),cd);
 		cd.gridx++;
 		String[] sStraightenROIsRange = { "Selected ROI", "All visible ROIs" };
-		JComboBox<String> straightenRoiList = new JComboBox<String>(sStraightenROIsRange);
+		JComboBox<String> straightenRoiList = new JComboBox<>(sStraightenROIsRange);
 		straightenRoiList.setSelectedIndex((int)Prefs.get("BigTrace.nStraightROIList", 0));
 		straightenSettings.add(straightenRoiList,cd);	
 	
@@ -1137,7 +1138,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		straightenSettings.add(new JLabel("Curve thickness:"),cd);
 		cd.gridx++;
 		String[] sStraightenType = { "Use ROI settings", "Override here" };
-		JComboBox<String> straightenRadiusList = new JComboBox<String>(sStraightenType);
+		JComboBox<String> straightenRadiusList = new JComboBox<>(sStraightenType);
 		straightenRadiusList.setSelectedIndex((int)Prefs.get("BigTrace.nRadiusType", 0));
 		straightenSettings.add(straightenRadiusList,cd);
 		
@@ -1153,7 +1154,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		straightenSettings.add(nfRadius,cd);
 
 		String[] sStraightenAxis = { "X", "Y", "Z" };
-		JComboBox<String> cbStraightenAxis = new JComboBox<String>(sStraightenAxis);
+		JComboBox<String> cbStraightenAxis = new JComboBox<>(sStraightenAxis);
 		cd.gridy++;
 		cd.gridx=0;
 		straightenSettings.add(new JLabel("Line becomes output axis:"),cd);
@@ -1162,7 +1163,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		straightenSettings.add(cbStraightenAxis,cd);
 		
 		String[] sStraightenTime = { "Single ROI's time point", "All time points" };
-		JComboBox<String> straightenTimeList = new JComboBox<String>(sStraightenTime);
+		JComboBox<String> straightenTimeList = new JComboBox<>(sStraightenTime);
 		if(BigTraceData.nNumTimepoints>1)
 		{
 			cd.gridy++;
@@ -1178,7 +1179,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		straightenSettings.add(new JLabel("Output:"),cd);
 		cd.gridx++;
 		String[] sStraightenOutput = { "show in ImageJ", "save as TIF" };
-		JComboBox<String> straightenOutputList = new JComboBox<String>(sStraightenOutput);
+		JComboBox<String> straightenOutputList = new JComboBox<>(sStraightenOutput);
 		straightenOutputList.setSelectedIndex((int)Prefs.get("BigTrace.nStraightenOutput", 0));
 		straightenSettings.add(straightenOutputList,cd);
 		
@@ -1239,7 +1240,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			}
 			
 			//build list of ROIs
-			final ArrayList<AbstractCurve3D> curvesOut = new ArrayList<AbstractCurve3D>();
+			final ArrayList<AbstractCurve3D> curvesOut = new ArrayList<>();
 			//single ROI
 			if(nROIList == 0)
 			{
@@ -1270,7 +1271,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			if(curvesOut.size()>0)
 			{			
 				//run in a separate thread
-				StraightenCurve<T> straightBG = new StraightenCurve<T>(curvesOut, bt, fRadiusStraighted, nStraightenAxis, nTimeRange, nStraightenOutput, sSaveDir);
+				StraightenCurve<T> straightBG = new StraightenCurve<>(curvesOut, bt, fRadiusStraighted, nStraightenAxis, nTimeRange, nStraightenOutput, sSaveDir);
 				straightBG.addPropertyChangeListener(bt.btPanel);
 				straightBG.execute();
 			}
@@ -1292,7 +1293,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		sliceSettings.setLayout(new BoxLayout(sliceSettings, BoxLayout.PAGE_AXIS));
 		
 		String[] sSliceType = { "As original", "Tight crop" };
-		JComboBox<String> sliceTypeList = new JComboBox<String>(sSliceType);
+		JComboBox<String> sliceTypeList = new JComboBox<>(sSliceType);
 		
 		sliceSettings.add(new JLabel("Output volumes size: "));
 		sliceTypeList.setSelectedIndex((int)Prefs.get("BigTrace.nSliceType", 0));
@@ -1305,7 +1306,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			nSliceType = sliceTypeList.getSelectedIndex();
 			Prefs.set("BigTrace.nSliceType", nSliceType);
 			//run in a separate thread
-			SplitVolumePlane<T> splitBG = new SplitVolumePlane<T>(crossSection, bt, nSliceType);		
+			SplitVolumePlane<T> splitBG = new SplitVolumePlane<>(crossSection, bt, nSliceType);		
 	        splitBG.addPropertyChangeListener(bt.btPanel);
 	        splitBG.execute();
 		}
@@ -1427,7 +1428,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			{
 				if(systemMeasurements>0)
 				{
-					ArrayList<Roi3D> temp = new ArrayList<Roi3D>();
+					ArrayList<Roi3D> temp = new ArrayList<>();
 					temp.add(bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					measureROIs(temp, false);
 				}

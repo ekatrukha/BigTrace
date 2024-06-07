@@ -78,8 +78,8 @@ public class VolumeMisc {
 		}
 		for (j=0;j<ndim;j++)
 		{
-				newMinMax[0][j]=Math.max(bigBox[0][j],(long)Math.round(newMinMaxF[0][j]));
-				newMinMax[1][j]=Math.min(bigBox[1][j],(long)Math.round(newMinMaxF[1][j]));
+				newMinMax[0][j]=Math.max(bigBox[0][j],Math.round(newMinMaxF[0][j]));
+				newMinMax[1][j]=Math.min(bigBox[1][j],Math.round(newMinMaxF[1][j]));
 				if(newMinMax[1][j]<=newMinMax[0][j])
 					return false;
 		}
@@ -236,11 +236,11 @@ public class VolumeMisc {
 		final RealUnsignedByteConverter<FloatType> cvU;
 		if (inverse)
 		{
-			cvU = new RealUnsignedByteConverter<FloatType>(maxVal,minVal);
+			cvU = new RealUnsignedByteConverter<>(maxVal,minVal);
 		}
 		else
 		{
-			cvU = new RealUnsignedByteConverter<FloatType>(minVal, maxVal);
+			cvU = new RealUnsignedByteConverter<>(minVal, maxVal);
 		}
 		
 		
@@ -270,7 +270,7 @@ public class VolumeMisc {
 
 		
 		//final RealUnsignedByteConverter<FloatType> cvU = new RealUnsignedByteConverter<FloatType>(minVal,maxVal);
-		final RealUnsignedShortConverter<FloatType> conv = new RealUnsignedShortConverter<FloatType>(minVal,maxVal);
+		final RealUnsignedShortConverter<FloatType> conv = new RealUnsignedShortConverter<>(minVal,maxVal);
 
 		final ImagePlusImg output = new ImagePlusImgFactory<>( new UnsignedShortType() ).create( input );
 		
@@ -293,15 +293,15 @@ public class VolumeMisc {
 	{
 		Shape voxShape = new RectangleShape( 1, true);
 		
-		ArrayList<long []> finList= new ArrayList<long []> (); 
+		ArrayList<long []> finList= new ArrayList<> (); 
 		final RandomAccessible< Neighborhood< UnsignedByteType > > inputNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.extendZero(input) );		
 		final RandomAccess< Neighborhood< UnsignedByteType > > inRA = inputNeighborhoods.randomAccess();
 		
 		
 		Cursor< UnsignedByteType > inC=input.cursor();
 		Cursor< UnsignedByteType > neibC;
-		int nMaxDet = 0;
-		int nMaxNDet = 0;
+		//int nMaxDet = 0;
+		//int nMaxNDet = 0;
 		int currVal;
 		boolean isMax;
 		while ( inC.hasNext() )
@@ -325,14 +325,14 @@ public class VolumeMisc {
 				}
 				if(isMax)
 				{
-					nMaxDet++;
+					//nMaxDet++;
 					long [] position = new long[3];
 					inC.localize(position);
 					finList.add(position);					
 				}
 				else
 				{
-					nMaxNDet++;
+					//nMaxNDet++;
 				}
 			}
 		}
@@ -345,7 +345,7 @@ public class VolumeMisc {
 	 * array lists **/
 	public static ArrayList<long []> findClosestPoints(final ArrayList<long []> begCorners, final ArrayList<long []> endCorners)
 	{
-		ArrayList<long []> pair = new ArrayList<long []> ();
+		ArrayList<long []> pair = new ArrayList<> ();
 		
 		long minDist = Long.MAX_VALUE;
 		long currDist,dL;
@@ -397,7 +397,7 @@ public class VolumeMisc {
 	}
 	public static ArrayList<RealPoint> BresenhamWrap(final RealPoint RP1, final RealPoint RP2)
 	{
-		ArrayList<RealPoint> linepx= new ArrayList<RealPoint>();
+		ArrayList<RealPoint> linepx= new ArrayList<>();
 		ArrayList<long []> br_line;
 		long[] lp1, lp2;
 		Point P1, P2;
@@ -409,8 +409,8 @@ public class VolumeMisc {
 		lp2 = new long [nDim];
 		for (i=0;i<nDim;i++)
 		{
-			lp1[i]=(long)Math.round(RP1.getFloatPosition(i));
-			lp2[i]=(long)Math.round(RP2.getFloatPosition(i));
+			lp1[i] = Math.round(RP1.getFloatPosition(i));
+			lp2[i] = Math.round(RP2.getFloatPosition(i));
 		}
 			
 		P1= new Point(lp1);
@@ -447,8 +447,7 @@ public class VolumeMisc {
 		return new FinalInterval(minL, maxL);
 	}
 	
-	/** assume the input image format is in XYZTC
-	 * @param <T>**/
+	/** assume the input image format is in XYZTC **/
 	public static <T extends NumericType<T> > ImagePlus wrapImgImagePlusCal(RandomAccessibleInterval< T > img, String sTitle, Calibration cal)
 	{
 		ImagePlus outIP;// = ImageJFunctions.wrap(img,sTitle);

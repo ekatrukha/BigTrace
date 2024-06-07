@@ -80,7 +80,7 @@ public class VisPolygonFlat {
 
 
 
-	public void setParams(final ArrayList< RealPoint > points, final float fLineThickness_, final int nSectorN_, final Color color_in)
+	public void setParams(final ArrayList< RealPoint > points, final float fLineThickness_, final Color color_in)
 	{
 		
 		fLineThickness= fLineThickness_;		
@@ -182,7 +182,7 @@ public class VisPolygonFlat {
 			
 		}
 		//array holding grid lines as pairs of RealPoints
-		ArrayList<ArrayList< RealPoint >> gridLines = new ArrayList<ArrayList< RealPoint >>(); 
+		ArrayList<ArrayList< RealPoint >> gridLines = new ArrayList<>(); 
 		double [] interSect = new double [3];
 		
 		//shift grid plane and chop the polygon (find intersection points)
@@ -194,7 +194,7 @@ public class VisPolygonFlat {
 			LinAlgHelpers.scale(gridPlane.n, dShift, lineP2);
 			LinAlgHelpers.add(lineP2, lineP1, lineP2);
 			gridPlane.setVectors(lineP2, gridPlane.n);
-			ArrayList< RealPoint > gridEdge = new ArrayList< RealPoint >(); 
+			ArrayList< RealPoint > gridEdge = new ArrayList< >(); 
 			//again, can skip the first edge, since it is already in the plane
 			for(j=1;j<edges.size();j++)
 			{
@@ -237,7 +237,7 @@ public class VisPolygonFlat {
 			LinAlgHelpers.scale(gridPlane.n, dShift, lineP2);
 			LinAlgHelpers.add(lineP2, lineP1, lineP2);
 			gridPlane.setVectors(lineP2, gridPlane.n);
-			ArrayList< RealPoint > gridEdge = new ArrayList< RealPoint >(); 
+			ArrayList< RealPoint > gridEdge = new ArrayList< >(); 
 			for(j=0;j<edges.size();j++)
 			{
 				if( Intersections3D.planeEdgeIntersect(gridPlane, edges.get(j).get(0), edges.get(j).get(1), interSect))
@@ -328,8 +328,8 @@ public class VisPolygonFlat {
 	
 			prog.getUniformMatrix4f( "pvm" ).set( pvm );
 			prog.getUniform1i("clipactive").set(BigTraceData.nClipROI);
-			prog.getUniform3f("clipmin").set(new Vector3f((float)BigTraceData.nDimCurr[0][0],(float)BigTraceData.nDimCurr[0][1],(float)BigTraceData.nDimCurr[0][2]));
-			prog.getUniform3f("clipmax").set(new Vector3f((float)BigTraceData.nDimCurr[1][0],(float)BigTraceData.nDimCurr[1][1],(float)BigTraceData.nDimCurr[1][2]));
+			prog.getUniform3f("clipmin").set(new Vector3f(BigTraceData.nDimCurr[0][0],BigTraceData.nDimCurr[0][1],BigTraceData.nDimCurr[0][2]));
+			prog.getUniform3f("clipmax").set(new Vector3f(BigTraceData.nDimCurr[1][0],BigTraceData.nDimCurr[1][1],BigTraceData.nDimCurr[1][2]));
 
 			
 			if(BigTraceData.surfaceRender == BigTraceData.SURFACE_SILHOUETTE && renderType == Roi3D.SURFACE)
@@ -393,16 +393,16 @@ public class VisPolygonFlat {
 	
 	public static ArrayList<ArrayList< RealPoint >> getPolygonEdgesPairPoints(final ArrayList< RealPoint > points)
 	{
-		ArrayList<ArrayList< RealPoint >> out = new ArrayList<ArrayList< RealPoint >>();
-		ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
+		ArrayList<ArrayList< RealPoint >> out = new ArrayList<>();
+		ArrayList< RealPoint > point_coords = new ArrayList< >();
 		for(int i =1;i<points.size();i++)
 		{
-			point_coords = new ArrayList< RealPoint >();
+			point_coords = new ArrayList< >();
 			point_coords.add(new RealPoint(points.get(i-1)));
 			point_coords.add(new RealPoint(points.get(i)));
 			out.add(point_coords);
 		}
-		point_coords = new ArrayList< RealPoint >();
+		point_coords = new ArrayList< >();
 		point_coords.add(points.get(points.size()-1));
 		point_coords.add(points.get(0));
 		out.add(point_coords);

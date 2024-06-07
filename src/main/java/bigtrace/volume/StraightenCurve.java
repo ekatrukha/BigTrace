@@ -154,9 +154,9 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		}
 		else
 		{
-			nRadius = (int) Math.round(fRadiusIn);
+			nRadius = Math.round(fRadiusIn);
 		}
-		int dimXY = (int)(nRadius*2+1);
+		int dimXY = nRadius*2+1;
 		
 		int nTotDim = all_RAI.numDimensions();
 		long [] dimS =new long[nTotDim];
@@ -209,7 +209,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		{
 			
 			points_space.get(nPoint).localize(current_point); 
-			planeNorm = getNormPlaneGridXY((int)nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);
+			planeNorm = getNormPlaneGridXY(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);
 			
 			for (int i=0;i<dimXY;i++)
 				for (int j=0;j<dimXY;j++)
@@ -252,10 +252,8 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		{
 			return Views.permute(out1, 0, nStraightenAxis);
 		}
-		else
-		{
-			return Views.interval(out1,out1);
-		}
+		
+		return Views.interval(out1,out1);
 		
 	}
 	
@@ -263,7 +261,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 	 * centered around (0,0)**/
 	public static ArrayList< RealPoint > iniNormPlane(final int nRadius,final double dPixSize)
 	{
-		 ArrayList< RealPoint > planeXY = new  ArrayList< RealPoint > ();
+		 ArrayList< RealPoint > planeXY = new  ArrayList< > ();
 		 		 
 		 for (int i=-nRadius;i<=nRadius;i++)
 		 {
@@ -279,7 +277,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 	 * defined by two normalized perpendicular vectors X and Y and with center at c **/
 	public static ArrayList< RealPoint > getNormPlaneGridXY(final int nRadius,final double dPixSize,final double [] x,final double [] y, final double [] c)
 	{
-		 ArrayList< RealPoint > planeXY = new  ArrayList< RealPoint > ();
+		 ArrayList< RealPoint > planeXY = new  ArrayList< > ();
 		 double [] xp = new double[3];
 		 double [] yp = new double[3];
 		 

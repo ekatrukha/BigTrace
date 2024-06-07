@@ -146,8 +146,8 @@ public class SplitVolumePlane < T extends RealType< T > & NativeType< T > > exte
 		else
 		{
 			//make arrays of points for each subvolume
-			ArrayList<RealPoint> vertOut1 = new ArrayList<RealPoint>();
-			ArrayList<RealPoint> vertOut2 = new ArrayList<RealPoint>();
+			ArrayList<RealPoint> vertOut1 = new ArrayList<>();
+			ArrayList<RealPoint> vertOut2 = new ArrayList<>();
 			
 			//add cross-section polygon vertices
 			for (i=0;i<crossSection.polygonVert.size();i++)

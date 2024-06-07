@@ -85,7 +85,7 @@ public class VisPolyLineMesh {
 	}
 
 
-	public void setParams(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final int nSectorN_, final Color color_in)
+	public void setParams(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final Color color_in)
 	{
 		
 		fLineThickness= fLineThickness_;		
@@ -251,11 +251,8 @@ public class VisPolyLineMesh {
 			return initMeshShader(gl);
 	
 		}
-		else
-		{
-			initLineShader( gl );
-			return true;
-		}
+		initLineShader( gl );
+		return true;
 	}
 	
 	/** OpenGL buffer binding, etc thing **/
@@ -371,10 +368,10 @@ public class VisPolyLineMesh {
 			if (mesh.vertices()==null)
 				return false;
 
-		final FloatBuffer vertices = mesh.vertices().verts();
-		vertices.rewind();
+		final FloatBuffer vertBuff = mesh.vertices().verts();
+		vertBuff.rewind();
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, meshPosVbo );
-		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.limit() * Float.BYTES, vertices, GL.GL_STATIC_DRAW );
+		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertBuff.limit() * Float.BYTES, vertBuff, GL.GL_STATIC_DRAW );
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
 
 		final FloatBuffer normals = mesh.vertices().normals();
@@ -431,8 +428,8 @@ public class VisPolyLineMesh {
 				progMesh.getUniform4f("colorin").set(l_color);
 				progMesh.getUniform1i("surfaceRender").set(BigTraceData.surfaceRender);
 				progMesh.getUniform1i("clipactive").set(BigTraceData.nClipROI);
-				progMesh.getUniform3f("clipmin").set(new Vector3f((float)BigTraceData.nDimCurr[0][0],(float)BigTraceData.nDimCurr[0][1],(float)BigTraceData.nDimCurr[0][2]));
-				progMesh.getUniform3f("clipmax").set(new Vector3f((float)BigTraceData.nDimCurr[1][0],(float)BigTraceData.nDimCurr[1][1],(float)BigTraceData.nDimCurr[1][2]));
+				progMesh.getUniform3f("clipmin").set(new Vector3f(BigTraceData.nDimCurr[0][0],BigTraceData.nDimCurr[0][1],BigTraceData.nDimCurr[0][2]));
+				progMesh.getUniform3f("clipmax").set(new Vector3f(BigTraceData.nDimCurr[1][0],BigTraceData.nDimCurr[1][1],BigTraceData.nDimCurr[1][2]));
 				progMesh.getUniform1i("silType").set(BigTraceData.silhouetteRender);
 				progMesh.getUniform1f("silDecay").set((float)BigTraceData.silhouetteDecay);
 				progMesh.setUniforms( context );
@@ -460,8 +457,8 @@ public class VisPolyLineMesh {
 				prog.getUniformMatrix4f( "pvm" ).set( pvm );
 				prog.getUniform4f("colorin").set(l_color);
 				prog.getUniform1i("clipactive").set(BigTraceData.nClipROI);
-				prog.getUniform3f("clipmin").set(new Vector3f((float)BigTraceData.nDimCurr[0][0],(float)BigTraceData.nDimCurr[0][1],(float)BigTraceData.nDimCurr[0][2]));
-				prog.getUniform3f("clipmax").set(new Vector3f((float)BigTraceData.nDimCurr[1][0],(float)BigTraceData.nDimCurr[1][1],(float)BigTraceData.nDimCurr[1][2]));
+				prog.getUniform3f("clipmin").set(new Vector3f(BigTraceData.nDimCurr[0][0],BigTraceData.nDimCurr[0][1],BigTraceData.nDimCurr[0][2]));
+				prog.getUniform3f("clipmax").set(new Vector3f(BigTraceData.nDimCurr[1][0],BigTraceData.nDimCurr[1][1],BigTraceData.nDimCurr[1][2]));
 				prog.setUniforms( context );
 				prog.use( context );		
 				gl.glBindVertexArray( vao );
@@ -547,7 +544,7 @@ public class VisPolyLineMesh {
 		}
 		return out;
 	}
-	public void addTriangle(final BufferMesh mesh, final float[][] triangle)
+	public void addTriangle(final BufferMesh mesh_in, final float[][] triangle)
 	{
 		final float [] normale = getNormal(triangle);
 		final float [][] cumNormal = getCumNormal(normale);
@@ -556,10 +553,10 @@ public class VisPolyLineMesh {
 		for (int i=0;i<3;i++)
 		{
 			vNormalMag =  Math.sqrt(Math.pow(cumNormal[i][0], 2) + Math.pow(cumNormal[i][1], 2) + Math.pow(cumNormal[i][2], 2));
-			index[i] = mesh.vertices().add((double)triangle[i][0],(double)triangle[i][1],(double)triangle[i][2],
+			index[i] = mesh_in.vertices().add(triangle[i][0],triangle[i][1],triangle[i][2],
 					cumNormal[i][0] / vNormalMag, cumNormal[i][1] / vNormalMag, cumNormal[i][2] / vNormalMag,0.0,0.0);
 		}
-		mesh.triangles().add(index[0], index[1], index[2], normale[0], normale[1], normale[2]);
+		mesh_in.triangles().add(index[0], index[1], index[2], normale[0], normale[1], normale[2]);
 		//mesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2],
 			//	normale[0],normale[1],normale[2]);
 	}

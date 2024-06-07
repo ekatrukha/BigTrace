@@ -40,40 +40,42 @@ public class LineProfileBG extends SwingWorker<Void, String> implements BigTrace
         {
 			final File file = new File(sFilename);
 			
-			final FileWriter writer = new FileWriter(file);
-			double [][] profile;
-			String sPrefix;
-			String out;
-			Roi3D roi;
-			final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
-			symbols.setDecimalSeparator('.');
-			final DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
-			
-
-			writer.write("ROI_Name,ROI_Type,ROI_Group,ROI_TimePoint,Length,Intensity,X_coord,Y_coord,Z_coord\n");
-			for(int i = 0; i<nRoiN;i++)
+			try (FileWriter writer = new FileWriter(file))
 			{
-				setProgress((i+1)*100/nRoiN);
-				setProgressState("line profile ROI #"+Integer.toString(i+1)+" of "+Integer.toString(nRoiN)+"...");
-				roi = bt.roiManager.rois.get(i);
-				sPrefix = roi.getName() + ","+Roi3D.intTypeToString(roi.getType())+","+bt.roiManager.getGroupName(roi)+","+Integer.toString(roi.getTimePoint());
-				profile=bt.roiManager.roiMeasure.measureLineProfile(roi, false);
-				if(profile!=null)
+				double [][] profile;
+				String sPrefix;
+				String out;
+				Roi3D roi;
+				final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+				symbols.setDecimalSeparator('.');
+				final DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+				
+
+				writer.write("ROI_Name,ROI_Type,ROI_Group,ROI_TimePoint,Length,Intensity,X_coord,Y_coord,Z_coord\n");
+				for(int i = 0; i<nRoiN;i++)
 				{
-					for(j=0;j<profile[0].length;j++)
+					setProgress((i+1)*100/nRoiN);
+					setProgressState("line profile ROI #"+Integer.toString(i+1)+" of "+Integer.toString(nRoiN)+"...");
+					roi = bt.roiManager.rois.get(i);
+					sPrefix = roi.getName() + ","+Roi3D.intTypeToString(roi.getType())+","+bt.roiManager.getGroupName(roi)+","+Integer.toString(roi.getTimePoint());
+					profile=bt.roiManager.roiMeasure.measureLineProfile(roi, false);
+					if(profile!=null)
 					{
-						out="".concat(sPrefix);
-						
-						for(k=0;k<5;k++)
+						for(j=0;j<profile[0].length;j++)
 						{
-							out = out.concat(","+df3.format(profile[k][j]));
+							out="".concat(sPrefix);
+							
+							for(k=0;k<5;k++)
+							{
+								out = out.concat(","+df3.format(profile[k][j]));
+							}
+							out = out.concat("\n");
+							writer.write(out);
 						}
-						out = out.concat("\n");
-						writer.write(out);
 					}
 				}
+				writer.close();
 			}
-			writer.close();
     	
         } catch (IOException e) {	
 			IJ.log(e.getMessage());

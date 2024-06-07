@@ -76,7 +76,7 @@ public class VisPolyLineScaled
 	}
 
 
-	public void setParams(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final int nSectorN_, final Color color_in)
+	public void setParams(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final Color color_in)
 	{
 		
 		fLineThickness= fLineThickness_;		
@@ -87,19 +87,15 @@ public class VisPolyLineScaled
 	public void setRenderType(int nRenderType_)
 	{
 		renderType = nRenderType_;
-		
 	}
+	
 	public int getRenderType()
 	{
-		return renderType;
-		
+		return renderType;		
 	}
 	
 	public void setVertices( final ArrayList< RealPoint > points_, final ArrayList<double[]> tangents_)
 	{
-		
-		//ArrayList< RealPoint > points;
-		
 		
 		if(renderType == Roi3D.OUTLINE)
 		{
@@ -128,7 +124,6 @@ public class VisPolyLineScaled
 		}
 		initialized=false;
 	}
-
 	
 	
 	/** simple polyline, not cylindrical **/
