@@ -40,7 +40,7 @@ public class RenderMethodPanel < T extends RealType< T > & NativeType< T > > ext
 		sMethods[1]="Volumetric";
 	
 		cbRenderMethod = new JComboBox<>(sMethods);
-		cbRenderMethod.setSelectedIndex(bt.btdata.nRenderMethod);
+		cbRenderMethod.setSelectedIndex(bt.btData.nRenderMethod);
 		cbRenderMethod.addActionListener(this);
 		
 		setLayout(gridbag);
@@ -53,7 +53,7 @@ public class RenderMethodPanel < T extends RealType< T > & NativeType< T > > ext
 		this.add(cbRenderMethod,cd);
 		
 		
-		cbSurfaceRenderList = new JComboBox<String>(sSurfaceRenderType);
+		cbSurfaceRenderList = new JComboBox<>(sSurfaceRenderType);
 		cbSurfaceRenderList.setSelectedIndex(BigTraceData.surfaceRender);
 		cbSurfaceRenderList.addActionListener(this);
 		cd.gridx=0;
@@ -66,7 +66,7 @@ public class RenderMethodPanel < T extends RealType< T > & NativeType< T > > ext
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == cbRenderMethod)
 		{
-			bt.btpanel.setRenderMethod(cbRenderMethod.getSelectedIndex());		
+			bt.btPanel.setRenderMethod(cbRenderMethod.getSelectedIndex());		
 		}
 		if(e.getSource() == cbSurfaceRenderList)
 		{

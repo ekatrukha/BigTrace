@@ -73,7 +73,7 @@ public class SplitVolumePlane < T extends RealType< T > & NativeType< T > > exte
 	
 		//get the all data RAI
 		//XYZTC
-		RandomAccessibleInterval<T> all_RAI = bt.btdata.getAllDataRAI();
+		RandomAccessibleInterval<T> all_RAI = bt.btData.getAllDataRAI();
 		
 		//(for now)
 		//make two copies
@@ -126,12 +126,12 @@ public class SplitVolumePlane < T extends RealType< T > & NativeType< T > > exte
 			setProgress((int)(100.0*nCount/nTotPixCount));
 		}
 		Calibration cal = new Calibration();
-		cal.setUnit(bt.btdata.sVoxelUnit);
-		cal.setTimeUnit(bt.btdata.sTimeUnit);
+		cal.setUnit(bt.btData.sVoxelUnit);
+		cal.setTimeUnit(bt.btData.sTimeUnit);
 		cal.pixelWidth= BigTraceData.globCal[0];
 		cal.pixelHeight= BigTraceData.globCal[1];
 		cal.pixelDepth= BigTraceData.globCal[2];
-		Path p = Paths.get(bt.btdata.sFileNameFullImg);
+		Path p = Paths.get(bt.btData.sFileNameFullImg);
 		String fileName = p.getFileName().toString()+"_"+crossSection.getName();
 		
 		//original volume size

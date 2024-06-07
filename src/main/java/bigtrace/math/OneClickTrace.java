@@ -299,8 +299,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	public void init()
 	{
 		
-		nPointPerSegment = bt.btdata.nVertexPlacementPointN;
-		dAngleThreshold = bt.btdata.dDirectionalityOneClick;
+		nPointPerSegment = bt.btData.nVertexPlacementPointN;
+		dAngleThreshold = bt.btData.dDirectionalityOneClick;
 		
 		//nCountReset = Math.max(Math.max(bt.btdata.sigmaTrace[0], bt.btdata.sigmaTrace[1]),bt.btdata.sigmaTrace[2]);
 		boxFullHalfRange = new long[3];
@@ -310,9 +310,9 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 		for (int d=0;d<3;d++)
 		{
-			boxFullHalfRange[d]=(long) (Math.ceil(rangeFullBoxDim*bt.btdata.sigmaTrace[d])); 
-			boxInnerHalfRange[d]=(long) (Math.ceil(rangeInnerBoxDim*bt.btdata.sigmaTrace[d])); 
-			boxFullRange[d] = (long) (Math.ceil(rangeFullBoxDim*bt.btdata.sigmaTrace[d])*2+1); 		
+			boxFullHalfRange[d]=(long) (Math.ceil(rangeFullBoxDim*bt.btData.sigmaTrace[d])); 
+			boxInnerHalfRange[d]=(long) (Math.ceil(rangeInnerBoxDim*bt.btData.sigmaTrace[d])); 
+			boxFullRange[d] = (long) (Math.ceil(rangeFullBoxDim*bt.btData.sigmaTrace[d])*2+1); 		
 		}
 		//IntervalView<T> input = Views.interval(fullInput, getLocalTraceBox(fullInput,boxFullHalfRange,startPoint));
 		//dim = Intervals.dimensionsAsLongArray( input );
@@ -350,7 +350,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 				nDerivOrder = new int [3];
 				nDerivOrder[d1]++;
 				nDerivOrder[d2]++;
-				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btdata.sigmaTrace, nDerivOrder);
+				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btData.sigmaTrace, nDerivOrder);
 				derivKernel = Kernel1D.centralAsymmetric(kernels);
 				convObjects[count] = SeparableKernelConvolution.convolution( derivKernel );
 				convObjects[count].setExecutor(es);
@@ -578,8 +578,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		float dSDN = 2.0f;
 		for(int d=0;d<3;d++)
 		{
-			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d)-dSDN*bt.btdata.sigmaTrace[d]);
-			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+dSDN*bt.btdata.sigmaTrace[d]);
+			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d)-dSDN*bt.btData.sigmaTrace[d]);
+			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+dSDN*bt.btData.sigmaTrace[d]);
 		}
 		//get an box around the target
 		FinalInterval maxSearchArea = new FinalInterval(rangeMax[0],rangeMax[1]);

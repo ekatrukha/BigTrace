@@ -82,11 +82,11 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		
 		//get the all data RAI
 		//XYZTC
-		RandomAccessibleInterval<T> full_RAI = bt.btdata.getAllDataRAI();
+		RandomAccessibleInterval<T> full_RAI = bt.btData.getAllDataRAI();
 		
 		//output calibration
-		cal.setUnit(bt.btdata.sVoxelUnit);
-		cal.setTimeUnit(bt.btdata.sTimeUnit);
+		cal.setUnit(bt.btData.sVoxelUnit);
+		cal.setTimeUnit(bt.btData.sTimeUnit);
 		cal.pixelWidth= BigTraceData.dMinVoxelSize;
 		cal.pixelHeight= BigTraceData.dMinVoxelSize;
 		cal.pixelDepth= BigTraceData.dMinVoxelSize;
@@ -195,7 +195,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		ArrayList< RealPoint > planeNorm;
 
 		double [] current_point = new double [3];
-		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(all_RAI), bt.btdata.nInterpolatorFactory);
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(all_RAI), bt.btData.nInterpolatorFactory);
 		RealRandomAccess<T> ra = interpolate.realRandomAccess();
 		RandomAccess<T> ra_out = out1.randomAccess();
 	

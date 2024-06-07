@@ -54,11 +54,11 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		JCheckBox cbTraceOnlyClipped = new JCheckBox();
 
 		
-		nfSigmaX.setText(df.format(bt.btdata.sigmaTrace[0]));
-		nfSigmaY.setText(df.format(bt.btdata.sigmaTrace[1]));
-		nfSigmaZ.setText(df.format(bt.btdata.sigmaTrace[2]));
+		nfSigmaX.setText(df.format(bt.btData.sigmaTrace[0]));
+		nfSigmaY.setText(df.format(bt.btData.sigmaTrace[1]));
+		nfSigmaZ.setText(df.format(bt.btData.sigmaTrace[2]));
 
-		cbTraceOnlyClipped.setSelected(bt.btdata.bTraceOnlyClipped);
+		cbTraceOnlyClipped.setSelected(bt.btData.bTraceOnlyClipped);
 		
 		cd.gridx=0;
 		cd.gridy=0;
@@ -95,10 +95,10 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		NumberField nfTraceBoxScreenFraction = new NumberField(4);
 		NumberField nfTBAdvance = new NumberField(4);
 		
-		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btdata.lTraceBoxSize)));
-		nfTraceBoxScreenFraction.setText(df.format(bt.btdata.dTraceBoxScreenFraction));
-		nfGammaTrace.setText(df.format(bt.btdata.gammaTrace));
-		nfTBAdvance.setText(df.format(bt.btdata.fTraceBoxAdvanceFraction));
+		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btData.lTraceBoxSize)));
+		nfTraceBoxScreenFraction.setText(df.format(bt.btData.dTraceBoxScreenFraction));
+		nfGammaTrace.setText(df.format(bt.btData.gammaTrace));
+		nfTBAdvance.setText(df.format(bt.btData.fTraceBoxAdvanceFraction));
 			
 		cd.gridx=0;
 		cd.gridy=0;
@@ -137,37 +137,37 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		if (reply == JOptionPane.OK_OPTION) 
 		{
 				
-			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
+			bt.btData.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
+			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btData.lTraceBoxSize));
 			
-			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
+			bt.btData.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
+			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btData.lTraceBoxSize));
 		
 			//TRACING OPTIONS
 			
-			bt.btdata.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
-			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btdata.sigmaTrace[0]));
+			bt.btData.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
+			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btData.sigmaTrace[0]));
 			
-			bt.btdata.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
-			Prefs.set("BigTrace.sigmaTraceY", (double)(bt.btdata.sigmaTrace[1]));
+			bt.btData.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
+			Prefs.set("BigTrace.sigmaTraceY", (double)(bt.btData.sigmaTrace[1]));
 			
-			bt.btdata.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
-			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btdata.sigmaTrace[2]));
+			bt.btData.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
+			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btData.sigmaTrace[2]));
 			
-			bt.btdata.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
-			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btdata.bTraceOnlyClipped);			
+			bt.btData.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
+			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btData.bTraceOnlyClipped);			
 			
-			bt.btdata.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btdata.lTraceBoxSize));
+			bt.btData.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
+			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btData.lTraceBoxSize));
 			
-			bt.btdata.dTraceBoxScreenFraction = Double.parseDouble(nfTraceBoxScreenFraction.getText());
-			Prefs.set("BigTrace.dTraceBoxScreenFraction", (double)(bt.btdata.dTraceBoxScreenFraction));
+			bt.btData.dTraceBoxScreenFraction = Double.parseDouble(nfTraceBoxScreenFraction.getText());
+			Prefs.set("BigTrace.dTraceBoxScreenFraction", (double)(bt.btData.dTraceBoxScreenFraction));
 			
-			bt.btdata.fTraceBoxAdvanceFraction = Float.parseFloat(nfTBAdvance.getText());
-			Prefs.set("BigTrace.fTraceBoxAdvanceFraction", (double)(bt.btdata.fTraceBoxAdvanceFraction));
+			bt.btData.fTraceBoxAdvanceFraction = Float.parseFloat(nfTBAdvance.getText());
+			Prefs.set("BigTrace.fTraceBoxAdvanceFraction", (double)(bt.btData.fTraceBoxAdvanceFraction));
 			
-			bt.btdata.gammaTrace = Double.parseDouble(nfGammaTrace.getText());
-			Prefs.set("BigTrace.gammaTrace", (double)(bt.btdata.gammaTrace));
+			bt.btData.gammaTrace = Double.parseDouble(nfGammaTrace.getText());
+			Prefs.set("BigTrace.gammaTrace", (double)(bt.btData.gammaTrace));
 			
 			
 		}
@@ -192,11 +192,11 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		JCheckBox cbTraceOnlyClipped = new JCheckBox();
 
 		
-		nfSigmaX.setText(df.format(bt.btdata.sigmaTrace[0]));
-		nfSigmaY.setText(df.format(bt.btdata.sigmaTrace[1]));
-		nfSigmaZ.setText(df.format(bt.btdata.sigmaTrace[2]));
+		nfSigmaX.setText(df.format(bt.btData.sigmaTrace[0]));
+		nfSigmaY.setText(df.format(bt.btData.sigmaTrace[1]));
+		nfSigmaZ.setText(df.format(bt.btData.sigmaTrace[2]));
 
-		cbTraceOnlyClipped.setSelected(bt.btdata.bTraceOnlyClipped);
+		cbTraceOnlyClipped.setSelected(bt.btData.bTraceOnlyClipped);
 		
 		cd.gridx=0;
 		cd.gridy=0;
@@ -233,8 +233,8 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		NumberField nfDirectionalityOneClick = new NumberField(4);
 		
 		nfPlaceVertex.setIntegersOnly(true);
-		nfPlaceVertex.setText(Integer.toString((int)(bt.btdata.nVertexPlacementPointN)));
-		nfDirectionalityOneClick.setText(df.format(bt.btdata.dDirectionalityOneClick));
+		nfPlaceVertex.setText(Integer.toString((int)(bt.btData.nVertexPlacementPointN)));
+		nfDirectionalityOneClick.setText(df.format(bt.btData.dDirectionalityOneClick));
 		
 		cd.gridx=0;
 		cd.gridy=0;		
@@ -260,23 +260,23 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 	
 			//TRACING OPTIONS
 			
-			bt.btdata.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
-			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btdata.sigmaTrace[0]));
+			bt.btData.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
+			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btData.sigmaTrace[0]));
 			
-			bt.btdata.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
-			Prefs.set("BigTrace.sigmaTraceY", (double)(bt.btdata.sigmaTrace[1]));
+			bt.btData.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
+			Prefs.set("BigTrace.sigmaTraceY", (double)(bt.btData.sigmaTrace[1]));
 			
-			bt.btdata.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
-			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btdata.sigmaTrace[2]));
+			bt.btData.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
+			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btData.sigmaTrace[2]));
 			
-			bt.btdata.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
-			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btdata.bTraceOnlyClipped);			
+			bt.btData.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
+			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btData.bTraceOnlyClipped);			
 			
-			bt.btdata.nVertexPlacementPointN=(int)(Math.max(3, Integer.parseInt(nfPlaceVertex.getText())));
-			Prefs.set("BigTrace.nVertexPlacementPointN", (double)(bt.btdata.nVertexPlacementPointN));
+			bt.btData.nVertexPlacementPointN=(int)(Math.max(3, Integer.parseInt(nfPlaceVertex.getText())));
+			Prefs.set("BigTrace.nVertexPlacementPointN", (double)(bt.btData.nVertexPlacementPointN));
 			
-			bt.btdata.dDirectionalityOneClick=Math.min(1.0, (Math.max(0, Double.parseDouble(nfDirectionalityOneClick.getText()))));
-			Prefs.set("BigTrace.dDirectionalityOneClick",bt.btdata.dDirectionalityOneClick);
+			bt.btData.dDirectionalityOneClick=Math.min(1.0, (Math.max(0, Double.parseDouble(nfDirectionalityOneClick.getText()))));
+			Prefs.set("BigTrace.dDirectionalityOneClick",bt.btData.dDirectionalityOneClick);
 			
 			
 		}
@@ -296,7 +296,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		
 		JButton butPointActiveColor = new JButton( new ColorIcon( rm.activePointColor ) );	
 		butPointActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active point color", rm.activePointColor );
+			Color newColor = JColorChooser.showDialog(bt.btPanel.finFrame, "Choose active point color", rm.activePointColor );
 			if (newColor!=null)
 			{
 				rm.selectColors.setColor(newColor, 0);
@@ -307,7 +307,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		
 		JButton butLineActiveColor = new JButton( new ColorIcon( rm.activeLineColor ) );	
 		butLineActiveColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose active line color", rm.activeLineColor );
+			Color newColor = JColorChooser.showDialog(bt.btPanel.finFrame, "Choose active line color", rm.activeLineColor );
 			if (newColor!=null)
 			{
 				rm.selectColors.setColor(newColor, 1);

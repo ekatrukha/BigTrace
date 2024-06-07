@@ -50,7 +50,7 @@ public class ExtractClip < T extends RealType< T > & NativeType< T > > extends S
 		
 		//get the all data RAI
 		//XYZTC
-		RandomAccessibleInterval<T> full_RAI = bt.btdata.getAllDataRAI();
+		RandomAccessibleInterval<T> full_RAI = bt.btData.getAllDataRAI();
 		
 		FinalInterval cropInt = new FinalInterval (full_RAI);
 		long[] cropMin = cropInt.minAsLongArray();
@@ -65,13 +65,13 @@ public class ExtractClip < T extends RealType< T > & NativeType< T > > extends S
 		cropInt = new FinalInterval(cropMin,cropMax);
 			
 		//output calibration
-		cal.setUnit(bt.btdata.sVoxelUnit);
-		cal.setTimeUnit(bt.btdata.sTimeUnit);
+		cal.setUnit(bt.btData.sVoxelUnit);
+		cal.setTimeUnit(bt.btData.sTimeUnit);
 		cal.pixelWidth = BigTraceData.dMinVoxelSize;
 		cal.pixelHeight = BigTraceData.dMinVoxelSize;
 		cal.pixelDepth = BigTraceData.dMinVoxelSize;
 		
-		Path p = Paths.get(bt.btdata.sFileNameFullImg);
+		Path p = Paths.get(bt.btData.sFileNameFullImg);
 		String filename = p.getFileName().toString();
 		ImagePlus ip = VolumeMisc.wrapImgImagePlusCal(Views.interval(full_RAI, cropInt), filename + "_crop",cal);
 		if(nOutput == 0)

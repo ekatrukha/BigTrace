@@ -97,7 +97,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	public RoiMeasure3D(BigTrace<T> bt)
 	{
 		this.bt = bt;
-		this.btdata = bt.btdata;
+		this.btdata = bt.btData;
 		int nButtonSize = 40;
 			
 		coalignVector = new double [3];
@@ -263,7 +263,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		JPanel panChannel = new JPanel(new GridBagLayout());
 		panChannel.setBorder(new PanelTitle(""));
 
-		String[] nCh = new String[bt.btdata.nTotalChannels];
+		String[] nCh = new String[bt.btData.nTotalChannels];
 		for(int i=0;i<nCh.length;i++)
 		{
 			nCh[i] = "channel "+Integer.toString(i+1);
@@ -533,7 +533,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			measureBG.rois = rois;
 			measureBG.bt=bt;
 			measureBG.resetTable = resetTable;
-			measureBG.addPropertyChangeListener(bt.btpanel);
+			measureBG.addPropertyChangeListener(bt.btPanel);
 			measureBG.execute();
 			
 		}
@@ -543,7 +543,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	{
 		String filename;
 		
-		filename = bt.btdata.sFileNameFullImg + "_int_profiles";
+		filename = bt.btData.sFileNameFullImg + "_int_profiles";
 		SaveDialog sd = new SaveDialog("Save ROI Plot Profiles ", filename, ".csv");
         String path = sd.getDirectory();
         if (path==null)
@@ -552,7 +552,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
         LineProfileBG profileBG = new LineProfileBG();
         profileBG.bt = bt;
         profileBG.sFilename = filename;
-        profileBG.addPropertyChangeListener(bt.btpanel);
+        profileBG.addPropertyChangeListener(bt.btPanel);
         profileBG.execute();
         
 	}
@@ -562,7 +562,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		String filename;
 		int j,k;
 		
-		filename = bt.btdata.sFileNameFullImg + "_coalign";
+		filename = bt.btData.sFileNameFullImg + "_coalign";
 		SaveDialog sd = new SaveDialog("Save ROI Plot Profiles ", filename, ".csv");
         String path = sd.getDirectory();
         if (path==null)
@@ -619,8 +619,8 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		}
         bt.roiManager.setLockMode(false);
         bt.bInputLock = false;
-        bt.btpanel.progressBar.setValue(100);
-        bt.btpanel.progressBar.setString("Measured and saved coalignment angles of "+Integer.toString(bt.roiManager.rois.size())+" ROIs");
+        bt.btPanel.progressBar.setValue(100);
+        bt.btPanel.progressBar.setString("Measured and saved coalignment angles of "+Integer.toString(bt.roiManager.rois.size())+" ROIs");
 	}
 	void updateTable(final MeasureValues val, final boolean bShow)
 	{
@@ -723,7 +723,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	void measureMeanIntensity(final Roi3D roi, final MeasureValues val)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceClipped(bt.btdata.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source =(IntervalView<T>) bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile;
 		val.mean = Double.NaN;
 		switch (roi.getType())
@@ -758,7 +758,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	void measureSDIntensity(final Roi3D roi, final MeasureValues val)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceClipped(bt.btdata.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source =(IntervalView<T>) bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile;
 		val.stdDev = Double.NaN;
 		switch (roi.getType())
@@ -866,7 +866,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	double [][] measureLineProfile(final Roi3D roi, final boolean bMakePlot)
 	{
 		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source =(IntervalView<T>) bt.btdata.getDataSourceClipped(bt.btdata.nChAnalysis, roi.getTimePoint());
+		IntervalView< T > source =(IntervalView<T>) bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
 		double [][] li_profile = null;
 		Plot plotProfile;
 		switch (roi.getType())
@@ -884,7 +884,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		}
 		if (li_profile!=null && bMakePlot)
 		{
-			plotProfile = new Plot("Profile ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btdata.sVoxelUnit+")","Intensity");
+			plotProfile = new Plot("Profile ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btData.sVoxelUnit+")","Intensity");
 			plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
 			plotProfile.show();
 		}
@@ -917,7 +917,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		if (li_profile!=null && bMakePlot)
 		{
 
-			plotProfile = new Plot("Alignment angles ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btdata.sVoxelUnit+")",sUnit);
+			plotProfile = new Plot("Alignment angles ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btData.sVoxelUnit+")",sUnit);
 			plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
 			plotProfile.show();
 		}
@@ -1059,7 +1059,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 				sSaveDir = IJ.getDirectory("Save straightened TIF to..");
 				if(sSaveDir == null)
 				{
-					bt.btpanel.progressBar.setString("curve straightening aborted.");
+					bt.btPanel.progressBar.setString("curve straightening aborted.");
 					return;
 				}
 			}
@@ -1089,13 +1089,13 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			{			
 				//run in a separate thread
 				ExtractROIBox<T> extractBoxBG = new ExtractROIBox<T>(roiOut, bt, nExpandROIBox, nTimeRange, nExtractBoxOutput, sSaveDir);				
-				extractBoxBG.addPropertyChangeListener(bt.btpanel);
+				extractBoxBG.addPropertyChangeListener(bt.btPanel);
 				extractBoxBG.execute();
 			}
 			else
 			{
 				IJ.log("Cannot find ROIs for box extraction.");
-				bt.btpanel.progressBar.setString("extract ROI box aborted.");
+				bt.btPanel.progressBar.setString("extract ROI box aborted.");
 			}
 
 		}
@@ -1233,7 +1233,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 				sSaveDir = IJ.getDirectory("Save straightened TIF to..");
 				if(sSaveDir == null)
 				{
-					bt.btpanel.progressBar.setString("curve straightening aborted.");
+					bt.btPanel.progressBar.setString("curve straightening aborted.");
 					return;
 				}
 			}
@@ -1246,7 +1246,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 				if(curveLine.vertices.size()<2)					
 				{
 					IJ.log("Curve ROI must have more then two vertices.");
-					bt.btpanel.progressBar.setString("curve straightening aborted.");
+					bt.btPanel.progressBar.setString("curve straightening aborted.");
 					return;
 				}
 				curvesOut.add(curveLine);
@@ -1271,13 +1271,13 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			{			
 				//run in a separate thread
 				StraightenCurve<T> straightBG = new StraightenCurve<T>(curvesOut, bt, fRadiusStraighted, nStraightenAxis, nTimeRange, nStraightenOutput, sSaveDir);
-				straightBG.addPropertyChangeListener(bt.btpanel);
+				straightBG.addPropertyChangeListener(bt.btPanel);
 				straightBG.execute();
 			}
 			else
 			{
 				IJ.log("Cannot find proper curve ROIs to straighten.");
-				bt.btpanel.progressBar.setString("curve straightening aborted.");
+				bt.btPanel.progressBar.setString("curve straightening aborted.");
 			}
 
 		}
@@ -1306,7 +1306,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			Prefs.set("BigTrace.nSliceType", nSliceType);
 			//run in a separate thread
 			SplitVolumePlane<T> splitBG = new SplitVolumePlane<T>(crossSection, bt, nSliceType);		
-	        splitBG.addPropertyChangeListener(bt.btpanel);
+	        splitBG.addPropertyChangeListener(bt.btPanel);
 	        splitBG.execute();
 		}
 
@@ -1327,8 +1327,8 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		// MEASUREMENT CHANNEL
 		if(e.getSource() == cbActiveChannel)
 		{
-			bt.btdata.nChAnalysis=cbActiveChannel.getSelectedIndex();
-			bt.roiManager.cbActiveChannel.setSelectedIndex(bt.btdata.nChAnalysis);
+			bt.btData.nChAnalysis=cbActiveChannel.getSelectedIndex();
+			bt.roiManager.cbActiveChannel.setSelectedIndex(bt.btData.nChAnalysis);
 		}
 		
 		//measurement mode for line profile and coalignment

@@ -10,9 +10,11 @@ public class GuiMisc {
 		
 		for(Component c : panel.getComponents())
 		{
-			if(c instanceof Component)
+			if(c != null)
+			{
 				setPanelStatusAllComponents((Container) c, bStatus);
-			c.setEnabled(bStatus);
+				c.setEnabled(bStatus);
+			}
 		}
 	}
 }

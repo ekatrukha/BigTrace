@@ -87,7 +87,7 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 				nDerivOrder = new int [3];
 				nDerivOrder[d1]++;
 				nDerivOrder[d2]++;
-				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btdata.sigmaTrace, nDerivOrder );
+				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btData.sigmaTrace, nDerivOrder );
 				derivKernel = Kernel1D.centralAsymmetric(kernels);
 				final Convolution convObjx = SeparableKernelConvolution.convolution( derivKernel );
 
@@ -126,12 +126,12 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 		setProgress(100);
 		setProgressState("trace box done.");
 
-		bt.btdata.trace_weights = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
+		bt.btData.trace_weights = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
 
 		
 		//bt.btdata.jump_points =VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 50);
-		bt.btdata.jump_points = VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
-		bt.btdata.trace_vectors = directionVectors;
+		bt.btData.jump_points = VolumeMisc.localMaxPointList(VolumeMisc.convertFloatToUnsignedByte(lineCorners,false), 10);
+		bt.btData.trace_vectors = directionVectors;
 		//bt.showCorners(bt.btdata.jump_points);
 		
 		//refine positions of the point
@@ -176,15 +176,15 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 		float dSDN = 2.0f;
 		for(int d=0;d<3;d++)
 		{
-			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d)-dSDN*bt.btdata.sigmaTrace[d]);
-			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+dSDN*bt.btdata.sigmaTrace[d]);
+			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d)-dSDN*bt.btData.sigmaTrace[d]);
+			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+dSDN*bt.btData.sigmaTrace[d]);
 		}
 		//get an box around the target
 		FinalInterval maxSearchArea = new FinalInterval(rangeMax[0],rangeMax[1]);
 		
 		RealPoint out = new RealPoint(3);
 		
-		VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(bt.btdata.trace_weights), maxSearchArea),out);
+		VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(bt.btData.trace_weights), maxSearchArea),out);
 		return out;
 		
 	}

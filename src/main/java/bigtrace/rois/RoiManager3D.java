@@ -64,10 +64,10 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2, ADD_POINT_ONECLICKLINE=3, ADD_POINT_PLANE=4;
 	///public static final int SECTORS_DEF=16;
 
-	public ArrayList<Roi3D> rois =  new ArrayList<Roi3D>();
+	public ArrayList<Roi3D> rois =  new ArrayList<>();
 	public int activeRoi = -1;
 
-	public ArrayList<Roi3DGroup> groups = new ArrayList<Roi3DGroup>();
+	public ArrayList<Roi3DGroup> groups = new ArrayList<>();
 
 	final static String sUndefinedGroupName = "*undefined*";
 
@@ -118,7 +118,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	JButton roiSettings;
 
 
-	private ArrayList<Listener> listeners = new ArrayList<Listener>();
+	private ArrayList<Listener> listeners = new ArrayList<>();
 
 		
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -165,6 +165,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		{roiPolySemiAMode.setSelected(true);}
 		//add properties listener
 		roiPolySemiAMode.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseClicked(MouseEvent evt) {
 				if (evt.getClickCount() == 2) {
 
@@ -183,6 +184,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		if(mode==RoiManager3D.ADD_POINT_ONECLICKLINE)
 		{roiPolyOneClickMode.setSelected(true);}		
 		roiPolyOneClickMode.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseClicked(MouseEvent evt) {
 				if (evt.getClickCount() == 2) {
 
@@ -367,7 +369,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		JPanel panChannel = new JPanel(new GridBagLayout());
 		panChannel.setBorder(new PanelTitle(""));
 
-		String[] nCh = new String[bt.btdata.nTotalChannels];
+		String[] nCh = new String[bt.btData.nTotalChannels];
 		for(int i=0;i<nCh.length;i++)
 		{
 			nCh[i] = "channel "+Integer.toString(i+1);
@@ -459,11 +461,11 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 final Interval roiBoundingBox = roi.getBoundingBox(); 
 		 if(roiBoundingBox != null)
 		 {
-			 final Interval zoomInterval = Intervals.intersect(Intervals.expand(roiBoundingBox, BigTraceData.nROIDoubleClickClipExpand), bt.btdata.getDataCurrentSourceFull());
+			 final Interval zoomInterval = Intervals.intersect(Intervals.expand(roiBoundingBox, BigTraceData.nROIDoubleClickClipExpand), bt.btData.getDataCurrentSourceFull());
 			 bt.focusOnInterval(zoomInterval);
 			 if(BigTraceData.bROIDoubleClickClip)
 			 {
-				 bt.btpanel.clipPanel.setBoundingBox(zoomInterval);
+				 bt.btPanel.clipPanel.setBoundingBox(zoomInterval);
 			 }			 
 			 
 		 }
@@ -518,7 +520,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			 newRoi = new LineTrace3D(groups.get(nActiveGroup),nTimePoint);
 			 break;
 		 case Roi3D.PLANE:
-			 newRoi = new CrossSection3D(groups.get(nActiveGroup),bt.btdata.nDimIni,nTimePoint);
+			 newRoi = new CrossSection3D(groups.get(nActiveGroup),bt.btData.nDimIni,nTimePoint);
 			 break;
 		 case Roi3D.BOX:
 			 newRoi = new Box3D(groups.get(nActiveGroup),nTimePoint);
@@ -646,7 +648,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	       for (i=0;i<rois.size();i++) 
 	       {
 	    	   roi = rois.get(i);
-	    	   nShift =  roi.getTimePoint() - bt.btdata.nCurrTimepoint;
+	    	   nShift =  roi.getTimePoint() - bt.btData.nCurrTimepoint;
 	    	   if(nShift >= nMinF && nShift <= nMaxF)
 	    	   {
 
@@ -726,7 +728,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 public void addPoint3D(RealPoint point_)
 	 {
 
-		 Point3D pointROI =(Point3D)makeRoi( Roi3D.POINT, bt.btdata.nCurrTimepoint); 
+		 Point3D pointROI =(Point3D)makeRoi( Roi3D.POINT, bt.btData.nCurrTimepoint); 
 		 pointROI.setVertex(point_);
 		 addRoi(pointROI);
 	 }
@@ -737,7 +739,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.LINE_TRACE)
 		 {
-			 tracing = (LineTrace3D) makeRoi(Roi3D.LINE_TRACE, bt.btdata.nCurrTimepoint);
+			 tracing = (LineTrace3D) makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
 			 tracing.addFirstPoint(point_);
 			 addRoi(tracing);
 			 //activeRoi = rois.size()-1; 
@@ -778,7 +780,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
 		 {
-			 polyline  = (PolyLine3D) makeRoi(Roi3D.POLYLINE, bt.btdata.nCurrTimepoint);
+			 polyline  = (PolyLine3D) makeRoi(Roi3D.POLYLINE, bt.btData.nCurrTimepoint);
 			 polyline.addPointToEnd(point_);
 			 addRoi(polyline);
 			 //activeRoi = rois.size()-1; 
@@ -805,7 +807,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 //new Plane
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.PLANE)
 		 {	
-			 plane  = (CrossSection3D) makeRoi(Roi3D.PLANE, bt.btdata.nCurrTimepoint);
+			 plane  = (CrossSection3D) makeRoi(Roi3D.PLANE, bt.btData.nCurrTimepoint);
 			 plane.addPoint(point_);
 			 addRoi(plane);
 			 //activeRoi = rois.size()-1; 
@@ -947,7 +949,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
             	//update the timepoint
             	if(rois.get(activeRoi).getTimePoint()!=bt.viewer.state().getCurrentTimepoint())
             	{
-            		bt.btdata.bDeselectROITime = false;
+            		bt.btData.bDeselectROITime = false;
             		bt.viewer.setTimepoint(rois.get(activeRoi).getTimePoint());
             	}
             	//jlist.setSelectedIndex(activeRoi);
@@ -1015,8 +1017,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		//ACTIVE CHANNEL
 		if(e.getSource() == cbActiveChannel)
 		{
-			bt.btdata.nChAnalysis=cbActiveChannel.getSelectedIndex();
-			roiMeasure.cbActiveChannel.setSelectedIndex(bt.btdata.nChAnalysis);
+			bt.btData.nChAnalysis=cbActiveChannel.getSelectedIndex();
+			roiMeasure.cbActiveChannel.setSelectedIndex(bt.btData.nChAnalysis);
 		}
 		
 		//ACTIVE PRESET
@@ -1181,7 +1183,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		JButton butPointColor = new JButton( new ColorIcon( currentROI.getPointColor() ) );
 		
 		butPointColor.addActionListener( e -> {
-			Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose point color", currentROI.getPointColor() );
+			Color newColor = JColorChooser.showDialog(bt.btPanel.finFrame, "Choose point color", currentROI.getPointColor() );
 			if (newColor!=null)
 			{
 				selectColors.setColor(newColor, 0);
@@ -1194,7 +1196,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 		
 		butLineColor.addActionListener( e -> {
-				Color newColor = JColorChooser.showDialog(bt.btpanel.finFrame, "Choose line color", currentROI.getPointColor() );
+				Color newColor = JColorChooser.showDialog(bt.btPanel.finFrame, "Choose line color", currentROI.getPointColor() );
 				if (newColor!=null)
 				{	
 					selectColors.setColor(newColor, 1);							
@@ -1332,7 +1334,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	{
 		String filename;
 		
-		filename = bt.btdata.sFileNameFullImg + "_btrois";
+		filename = bt.btData.sFileNameFullImg + "_btrois";
 		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
         String path = sd.getDirectory();
         if (path==null)
@@ -1345,7 +1347,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         ROIsSaveBG<T> saveTask = new ROIsSaveBG<T>();
         saveTask.sFilename=filename;
         saveTask.bt=this.bt;
-        saveTask.addPropertyChangeListener(bt.btpanel);
+        saveTask.addPropertyChangeListener(bt.btPanel);
         saveTask.execute();
         //this.setLockMode(false);
 	}
@@ -1397,7 +1399,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         loadTask.sFilename = filename;
         loadTask.nLoadMode = nLoadMode;
         loadTask.bt = this.bt;
-        loadTask.addPropertyChangeListener(bt.btpanel);
+        loadTask.addPropertyChangeListener(bt.btPanel);
         loadTask.execute();
         
 	}
@@ -1467,13 +1469,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         Prefs.set("BigTrace.ImportTMColorMode", nImportColor);
 		
 
-       	this.rois = new ArrayList<Roi3D >();
+       	this.rois = new ArrayList< >();
         listModel.clear();
         ROIsImportTrackMateBG importTask = new ROIsImportTrackMateBG();
         importTask.nImportColor = nImportColor;
         importTask.sFilename = filename;
         importTask.bt = this.bt;
-        importTask.addPropertyChangeListener(bt.btpanel);
+        importTask.addPropertyChangeListener(bt.btPanel);
         importTask.execute();
 	}
 
@@ -1509,14 +1511,14 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		int dInd = -1;
 		double dCurrDist = 0.0;
 	    
-		final int nMinF = (int)Math.min(0,BigTraceData.timeFade);
-	    final int nMaxF = (int)Math.max(0,BigTraceData.timeFade);
+		final int nMinF = Math.min(0,BigTraceData.timeFade);
+	    final int nMaxF = Math.max(0,BigTraceData.timeFade);
 		int nShift;
 		
 		for (int i=0;i<rois.size();i++)
 		{
 			//if ROI is visible at the current time frame
-			nShift =  rois.get(i).getTimePoint() - bt.btdata.nCurrTimepoint;
+			nShift =  rois.get(i).getTimePoint() - bt.btData.nCurrTimepoint;
 			if(nShift >= nMinF && nShift <= nMaxF)
 			{
 				dCurrDist= rois.get(i).getMinDist(clickLine);

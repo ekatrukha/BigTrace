@@ -26,7 +26,7 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 	private double [] vxAllSize;
 	public NumberField [] nfAllSize;
 	public JTextField tfUnits; 
-	private ArrayList<Listener> listeners =	new ArrayList<Listener>();
+	private ArrayList<Listener> listeners =	new ArrayList<>();
 	
 	public static interface Listener {
 		public void voxelSizeChanged(double [] newVoxelSize);
@@ -150,9 +150,10 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 			vxAllSize[i]=Double.parseDouble(nfAllSize[i].getText());
 		}
 		if(diff>0.001)
+		{
 			return true;
-		else 
-			return false;
+		}
+		return false;
 	}
 	
 	public void allowVoxelSizeChange(boolean allow)

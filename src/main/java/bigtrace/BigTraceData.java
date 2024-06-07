@@ -327,16 +327,9 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 				RealRandomAccessible<T> rra_tr = RealViews.affine(rra, bt.afDataTransform);
 				return Views.interval(Views.raster(rra_tr), new FinalInterval(nDimIni[0],nDimIni[1]));	
 			}
-			else
-			{
-				return (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
-			}
+			return (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
 		}
-		else
-		{
-			return Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,nChannel),3,nTimePoint);
-			
-		}
+		return Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,nChannel),3,nTimePoint);
 	}
 	/** output is XYZTC **/
 	public RandomAccessibleInterval<T> getAllDataRAI()
@@ -346,13 +339,13 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 		if(bSpimSource)
 		{
 			
-			List<RandomAccessibleInterval<T>> raiXYZTC = new ArrayList<RandomAccessibleInterval<T>> ();
+			List<RandomAccessibleInterval<T>> raiXYZTC = new ArrayList<> ();
 
 			List<RandomAccessibleInterval<T>> raiXYZT;// = new ArrayList<RandomAccessibleInterval<T>> ();
 			
 			for (int nCh=0; nCh < nTotalChannels; nCh++)
 			{
-				raiXYZT = new ArrayList<RandomAccessibleInterval<T>> ();
+				raiXYZT = new ArrayList<> ();
 				for(int nTimePoint = 0;nTimePoint<BigTraceData.nNumTimepoints;nTimePoint++)
 				{
 					raiXYZT.add(getDataSourceFull(nCh,nTimePoint));
@@ -362,10 +355,7 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 		
 			return Views.stack(raiXYZTC);
 		}
-		else
-		{
-			return bt.all_ch_RAI;
-		}
+		return bt.all_ch_RAI;
 	}
 	
 	public void setInterpolationFactory()
@@ -373,16 +363,16 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 		switch (intensityInterpolation)
 		{
 			case INT_NearestNeighbor:
-				nInterpolatorFactory = new NearestNeighborInterpolatorFactory<T>();
+				nInterpolatorFactory = new NearestNeighborInterpolatorFactory<>();
 				break;
 			case INT_NLinear:
-				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<T>();
+				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<>();
 				break;
 			case INT_Lanczos:
-				nInterpolatorFactory = new LanczosInterpolatorFactory<T>();
+				nInterpolatorFactory = new LanczosInterpolatorFactory<>();
 				break;
 			default:
-				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<T>();
+				nInterpolatorFactory = new ClampingNLinearInterpolatorFactory<>();
 				break;
 				
 		}

@@ -89,10 +89,10 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		btdata=btd_;
 		bt=bt_;		
 		roiManager=roiManager_;
-		roiMeasure = new RoiMeasure3D<T>(bt);
+		roiMeasure = new RoiMeasure3D<>(bt);
 		roiManager.setRoiMeasure3D(roiMeasure);
 		
-		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
+		JTabbedPane tabPane = new JTabbedPane(SwingConstants.LEFT);
 		
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/cube_icon.png");
 	    ImageIcon tabIcon = new ImageIcon(icon_path);
@@ -159,8 +159,8 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    
 	    //install actions from BVV
 	    
-	    this.setActionMap(bt.actions.getActionMap());
-	    this.setInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,bt.actions.getInputMap());
+	    this.setActionMap(bt.btActions.getActionMap());
+	    this.setInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,bt.btActions.getInputMap());
 	    
 	}
 	
@@ -173,7 +173,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		
 		//RENDER METHOD PANEL
 		
-		renderMethodPanel = new RenderMethodPanel<T>(bt);
+		renderMethodPanel = new RenderMethodPanel<>(bt);
 		
 		
 		//VOXEL SIZE PANEL		
@@ -380,33 +380,33 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		
 		NumberField nfClickArea = new NumberField(4);
 		nfClickArea.setIntegersOnly(true);
-		nfClickArea.setText(Integer.toString(bt.btdata.nHalfClickSizeWindow*2));
+		nfClickArea.setText(Integer.toString(bt.btData.nHalfClickSizeWindow*2));
 		
 		NumberField nfAnimationDuration = new NumberField(5);
 		nfAnimationDuration.setIntegersOnly(true);
-		nfAnimationDuration.setText(Long.toString(bt.btdata.nAnimationDuration));
+		nfAnimationDuration.setText(Long.toString(bt.btData.nAnimationDuration));
 		
 		JCheckBox cbZoomClip = new JCheckBox();
-		cbZoomClip.setSelected(bt.btdata.bZoomClip);
+		cbZoomClip.setSelected(bt.btData.bZoomClip);
 		
 		
 		NumberField nfZoomBoxSize = new NumberField(4);
 		nfZoomBoxSize.setIntegersOnly(true);
-		nfZoomBoxSize.setText(Integer.toString(bt.btdata.nZoomBoxSize));
+		nfZoomBoxSize.setText(Integer.toString(bt.btData.nZoomBoxSize));
 		nfZoomBoxSize.setMaximumSize(nfZoomBoxSize.getPreferredSize());
 
 		NumberField nfZoomBoxScreenFraction = new NumberField(4);
-		nfZoomBoxScreenFraction.setText(Double.toString(bt.btdata.dZoomBoxScreenFraction));
+		nfZoomBoxScreenFraction.setText(Double.toString(bt.btData.dZoomBoxScreenFraction));
 		nfZoomBoxScreenFraction.setMaximumSize(nfZoomBoxScreenFraction.getPreferredSize());
 		
 		NumberField nfCamera = new NumberField(4);
-		nfCamera.setText(Double.toString(bt.btdata.dCam));
+		nfCamera.setText(Double.toString(bt.btData.dCam));
 		
 		NumberField nfClipNear = new NumberField(4);
-		nfClipNear.setText(Double.toString(bt.btdata.dClipNear));
+		nfClipNear.setText(Double.toString(bt.btData.dClipNear));
 		
 		NumberField nfClipFar = new NumberField(4);
-		nfClipFar.setText(Double.toString(bt.btdata.dClipFar));
+		nfClipFar.setText(Double.toString(bt.btData.dClipFar));
 	
 		cd.gridx=0;
 		cd.gridy=0;	
@@ -482,33 +482,33 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		if (reply == JOptionPane.OK_OPTION) 
 		{
 			
-			bt.btdata.nHalfClickSizeWindow = (int)(0.5*Integer.parseInt(nfClickArea.getText()));
-			Prefs.set("BigTrace.nHalfClickSizeWindow",bt.btdata.nHalfClickSizeWindow);
+			bt.btData.nHalfClickSizeWindow = (int)(0.5*Integer.parseInt(nfClickArea.getText()));
+			Prefs.set("BigTrace.nHalfClickSizeWindow",bt.btData.nHalfClickSizeWindow);
 
-			bt.btdata.nAnimationDuration = Integer.parseInt(nfAnimationDuration.getText());
-			Prefs.set("BigTrace.nAnimationDuration", bt.btdata.nAnimationDuration);
+			bt.btData.nAnimationDuration = Integer.parseInt(nfAnimationDuration.getText());
+			Prefs.set("BigTrace.nAnimationDuration", bt.btData.nAnimationDuration);
 
 			//ZOOM BOX
-			bt.btdata.bZoomClip = cbZoomClip.isSelected();
-			Prefs.set("BigTrace.bZoomClip", bt.btdata.bZoomClip );
+			bt.btData.bZoomClip = cbZoomClip.isSelected();
+			Prefs.set("BigTrace.bZoomClip", bt.btData.bZoomClip );
 
-			bt.btdata.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
-			Prefs.set("BigTrace.nZoomBoxSize", bt.btdata.nZoomBoxSize);
+			bt.btData.nZoomBoxSize = Integer.parseInt(nfZoomBoxSize.getText());
+			Prefs.set("BigTrace.nZoomBoxSize", bt.btData.nZoomBoxSize);
 			
-			bt.btdata.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
-			Prefs.set("BigTrace.dZoomBoxScreenFraction", (double)(bt.btdata.dZoomBoxScreenFraction));
+			bt.btData.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
+			Prefs.set("BigTrace.dZoomBoxScreenFraction", bt.btData.dZoomBoxScreenFraction);
 			
-			bt.btdata.dCam = Math.abs(Double.parseDouble(nfCamera.getText()));
-			bt.btdata.dClipNear = Math.abs(Double.parseDouble(nfClipNear.getText()));
-			bt.btdata.dClipFar = Math.abs(Double.parseDouble(nfClipFar.getText()));
-			if(bt.btdata.dCam<=bt.btdata.dClipNear)
-				bt.btdata.dCam = bt.btdata.dClipNear+1;
+			bt.btData.dCam = Math.abs(Double.parseDouble(nfCamera.getText()));
+			bt.btData.dClipNear = Math.abs(Double.parseDouble(nfClipNear.getText()));
+			bt.btData.dClipFar = Math.abs(Double.parseDouble(nfClipFar.getText()));
+			if(bt.btData.dCam<=bt.btData.dClipNear)
+				bt.btData.dCam = bt.btData.dClipNear+1;
 			
-			Prefs.set("BigTrace.dCam", (double)(bt.btdata.dCam));
-			Prefs.set("BigTrace.dClipNear", (double)(bt.btdata.dClipNear));
-			Prefs.set("BigTrace.dClipFar", (double)(bt.btdata.dClipFar));
+			Prefs.set("BigTrace.dCam", bt.btData.dCam);
+			Prefs.set("BigTrace.dClipNear", bt.btData.dClipNear);
+			Prefs.set("BigTrace.dClipFar", bt.btData.dClipFar);
 
-			bt.viewer.setCamParams(bt.btdata.dCam, bt.btdata.dClipNear, bt.btdata.dClipFar);
+			bt.viewer.setCamParams(bt.btData.dCam, bt.btData.dClipNear, bt.btData.dClipFar);
 
 			bt.repaintBVV();
 		}
@@ -527,7 +527,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		cd.gridx=0;
 		cd.gridy=0;	
 		String[] sExtractClippedTime = { "current time point", "range (specify below)" };
-		JComboBox<String> extractClippedTimeList = new JComboBox<String>(sExtractClippedTime);
+		JComboBox<String> extractClippedTimeList = new JComboBox<>(sExtractClippedTime);
 		int [] nRange = new int [2];
 		nRange[0]=0;
 		nRange[1]=BigTraceData.nNumTimepoints-1;
@@ -552,7 +552,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		clipExtractSettings.add(new JLabel("Output:"),cd);
 		cd.gridx++;
 		String[] sExtractClippedOutput = { "show in ImageJ", "save as TIF" };
-		JComboBox<String> extractClippedOutputList = new JComboBox<String>(sExtractClippedOutput);
+		JComboBox<String> extractClippedOutputList = new JComboBox<>(sExtractClippedOutput);
 		extractClippedOutputList.setSelectedIndex((int)Prefs.get("BigTrace.nExtractClippedOutput", 0));
 		clipExtractSettings.add(extractClippedOutputList,cd);
 		
@@ -575,8 +575,8 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		if (reply == JOptionPane.OK_OPTION) 
 		{			
 			
-			nTimePointMin = bt.btdata.nCurrTimepoint;
-			nTimePointMax = bt.btdata.nCurrTimepoint;
+			nTimePointMin = bt.btData.nCurrTimepoint;
+			nTimePointMax = bt.btData.nCurrTimepoint;
 			
 			if(BigTraceData.nNumTimepoints>1)
 			{
@@ -595,9 +595,9 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			Prefs.set("BigTrace.nExtractClippedOutput", nExtractClippedOutput);
 			
 			//run in a separate thread
-			ExtractClip<T> extractClippedBG = new ExtractClip<T>(bt, nTimePointMin, nTimePointMax, nExtractClippedOutput);
+			ExtractClip<T> extractClippedBG = new ExtractClip<>(bt, nTimePointMin, nTimePointMax, nExtractClippedOutput);
 
-			extractClippedBG.addPropertyChangeListener(bt.btpanel);
+			extractClippedBG.addPropertyChangeListener(bt.btPanel);
 			extractClippedBG.execute();
 		
 		}
@@ -718,7 +718,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		double [][] doubleClip = new double [2][3];
 		for (i=0;i<3;i++)
 			for(int j=0;j<2;j++)
-				doubleClip[j][i] = (double)BigTraceData.nDimCurr[j][i];
+				doubleClip[j][i] = BigTraceData.nDimCurr[j][i];
 
 		final FinalRealInterval clipInt = new FinalRealInterval(doubleClip[0],doubleClip[1]);
 		for(i=0;i<bt.bvv_sources.size();i++)

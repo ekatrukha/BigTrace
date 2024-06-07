@@ -164,10 +164,10 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 					  globCalNew[2] = Double.parseDouble(line_array[1]);
 					  break;
 				  case "TimeUnits":
-					  bt.btdata.sTimeUnit = new String(line_array[1]);
+					  bt.btData.sTimeUnit = new String(line_array[1]);
 					  break;
 				  case "FrameInterval":
-					  bt.btdata.dFrameInterval = Double.parseDouble(line_array[1]);
+					  bt.btData.dFrameInterval = Double.parseDouble(line_array[1]);
 					  break;					  
 				  case "BT_Roi":
 					  //Sleep for up to one second.
@@ -313,8 +313,8 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 			if((!Double.isNaN(globCalNew[0]))&&(!Double.isNaN(globCalNew[1]))&&(!Double.isNaN(globCalNew[2]))&&(!sUnits.equals("")))
 			{
 
-					bt.btdata.sVoxelUnit = new String(sUnits);
-					bt.btpanel.voxelSizePanel.setVoxelSize(globCalNew, sUnits);
+					bt.btData.sVoxelUnit = new String(sUnits);
+					bt.btPanel.voxelSizePanel.setVoxelSize(globCalNew, sUnits);
 					sFinalOut = "loading ROIs done (+voxel calibration).";
 					
 					setProgressState(sFinalOut);		

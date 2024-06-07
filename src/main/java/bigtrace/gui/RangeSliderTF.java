@@ -47,7 +47,7 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 
 
 	
-	private ArrayList<Listener> listeners = new ArrayList<Listener>();
+	private ArrayList<Listener> listeners = new ArrayList<>();
 	
 	public RangeSliderTF(int[] realMinMax, int[] setMinMax) {
 		super();
@@ -126,8 +126,8 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 			// TODO Auto-generated method stub
 			try {
 				//slider.getMaximum();
-				int nMinV=(int)Math.min(Integer.parseInt(minTF.getText()),slider.getMaximum());
-				int nMaxV=Integer.parseInt(maxTF.getText());
+				int nMinV = Math.min(Integer.parseInt(minTF.getText()),slider.getMaximum());
+				int nMaxV = Integer.parseInt(maxTF.getText());
 			
 				slider.setLowValue(nMinV);
 				slider.setHighValue(nMaxV);

@@ -73,11 +73,11 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 		
 		//get the all data RAI
 		//XYZTC
-		RandomAccessibleInterval<T> full_RAI = bt.btdata.getAllDataRAI();
+		RandomAccessibleInterval<T> full_RAI = bt.btData.getAllDataRAI();
 		
 		//output calibration
-		cal.setUnit(bt.btdata.sVoxelUnit);
-		cal.setTimeUnit(bt.btdata.sTimeUnit);
+		cal.setUnit(bt.btData.sVoxelUnit);
+		cal.setTimeUnit(bt.btData.sTimeUnit);
 		cal.pixelWidth= BigTraceData.dMinVoxelSize;
 		cal.pixelHeight= BigTraceData.dMinVoxelSize;
 		cal.pixelDepth= BigTraceData.dMinVoxelSize;

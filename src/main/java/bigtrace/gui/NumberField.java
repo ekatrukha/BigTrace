@@ -12,7 +12,6 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-@SuppressWarnings("serial")
 public class NumberField extends JPanel {
 
 	private double min = Double.NEGATIVE_INFINITY;
@@ -22,7 +21,7 @@ public class NumberField extends JPanel {
 
 	private JTextField textfield;
 
-	private ArrayList<Listener> listener = new ArrayList<Listener>();
+	private ArrayList<Listener> listener = new ArrayList<>();
 
 	public static interface Listener {
 		public void valueChanged(double v);
@@ -275,7 +274,7 @@ public class NumberField extends JPanel {
 			public void keyTyped(KeyEvent e) {
 				char c = e.getKeyChar();
 				if((c == '-' && min < 0) || Character.isDigit(c) || (c == '.' && !integersOnly)) {
-					; // fireValueChanged(Double.parseDouble(getText() + c));
+					 // fireValueChanged(Double.parseDouble(getText() + c));
 				} else {
 					e.consume();
 				}

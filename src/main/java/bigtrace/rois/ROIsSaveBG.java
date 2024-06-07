@@ -54,12 +54,12 @@ public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends Sw
 			DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
 			
 			writer.write("BigTrace_ROIs,version," + BigTraceData.sVersion + "\n");
-			writer.write("ImageUnits,"+bt.btdata.sVoxelUnit+"\n");
+			writer.write("ImageUnits,"+bt.btData.sVoxelUnit+"\n");
 			writer.write("ImageVoxelWidth," + df3.format(BigTraceData.globCal[0]) + "\n");
 			writer.write("ImageVoxelHeight," + df3.format(BigTraceData.globCal[1]) + "\n");
 			writer.write("ImageVoxelDepth," + df3.format(BigTraceData.globCal[2]) + "\n");
-			writer.write("TimeUnits," + bt.btdata.sTimeUnit + "\n");
-			writer.write("FrameInterval," + df3.format(bt.btdata.dFrameInterval) + "\n");
+			writer.write("TimeUnits," + bt.btData.sTimeUnit + "\n");
+			writer.write("FrameInterval," + df3.format(bt.btData.dFrameInterval) + "\n");
 			nRoiN = bt.roiManager.rois.size();
 			writer.write("ROIsNumber," + Integer.toString(nRoiN)+"\n");
 			for(nRoi=0;nRoi<nRoiN;nRoi++)

@@ -41,7 +41,7 @@ public class ClipPanel extends JPanel {
 	private RangeSliderTF bbX;
 	private RangeSliderTF bbY;
 	private RangeSliderTF bbZ;
-	private ArrayList<Listener> listeners =	new ArrayList<Listener>();
+	private ArrayList<Listener> listeners =	new ArrayList<>();
 	
 	public JButton butExtractClipped;
 	public JCheckBox showClippedBox;

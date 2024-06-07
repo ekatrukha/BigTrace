@@ -65,10 +65,9 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 	{
 		
 		bt = bt_;
-		btdata = bt.btdata;
+		btdata = bt.btData;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public boolean initDataSourcesHDF5() throws SpimDataException
 	{
 					
@@ -87,7 +86,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		
-		FinalInterval rai_int = new FinalInterval((RandomAccessibleInterval<T>) seq.getImgLoader().getSetupImgLoader(0).getImage(0));
+		FinalInterval rai_int = new FinalInterval(seq.getImgLoader().getSetupImgLoader(0).getImage(0));
 
 		rai_int.min( btdata.nDimIni[0] );
 		rai_int.max( btdata.nDimIni[1] );
@@ -277,7 +276,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		if(bt.bApplyLLSTransform)
 		{
 			//build LLS transform
-			rai_int = makeLLS7Transform(BigTraceData.globCal,raitest);
+			rai_int = makeLLS7Transform(raitest);
 		}
 		else
 		{
@@ -306,7 +305,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 	
 	/** function assigns new LLS7 transform to bt.afDataTransform (using provided voxel size of original data) 
 	 * and returns the new interval of transformed source **/
-	FinalInterval makeLLS7Transform(final double [] voxelSize, final Interval orig_rai)
+	FinalInterval makeLLS7Transform(final Interval orig_rai)
 	{
 		bt.afDataTransform = new AffineTransform3D();
 		AffineTransform3D tShear = new AffineTransform3D();
@@ -346,7 +345,6 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		return new FinalInterval(lBounds[0],lBounds[1]);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public boolean initDataSourcesImageJ()
 	{
 				

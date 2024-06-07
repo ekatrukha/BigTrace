@@ -313,7 +313,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		String filename;
 		//int nGroupN, nGroup;
 		
-		filename = roiManager.bt.btdata.sFileNameFullImg + "_btgroups";
+		filename = roiManager.bt.btData.sFileNameFullImg + "_btgroups";
 		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
         String path = sd.getDirectory();
         if (path==null)

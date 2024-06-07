@@ -20,7 +20,7 @@ public class Cuboid3D {
 	public Cuboid3D()
 	{
 		vertices = new double [8][3];
-		faces = new ArrayList<Plane3D>(); 
+		faces = new ArrayList<>(); 
 	}
 	/**
 	 *    Creates a cube with vertices_in
@@ -61,8 +61,8 @@ public class Cuboid3D {
 		int i;
 		for(i=0;i<3;i++)
 		{
-			dMinMax[0][i]=(long)Math.round(nMinMax[0][i]);
-			dMinMax[1][i]=(long)Math.round(nMinMax[1][i]);
+			dMinMax[0][i] = Math.round(nMinMax[0][i]);
+			dMinMax[1][i] = Math.round(nMinMax[1][i]);
 		}
 		vertices = new double [8][3];
 		double [] temp = new double[3];
@@ -166,7 +166,7 @@ public class Cuboid3D {
 	/** initializes equation for faces **/
 	public void iniFaces()
 	{		
-		faces = new ArrayList<Plane3D>(); 
+		faces = new ArrayList<>(); 
 		//int i,j;
 		//front
 		faces.add(new Plane3D(vertices[3],vertices[0],vertices[1]));
