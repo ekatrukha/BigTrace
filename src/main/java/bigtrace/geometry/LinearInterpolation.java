@@ -73,10 +73,7 @@ public class LinearInterpolation {
 			if(ls==0)
 				return slope;
 			//return average slope
-			else
-			{
-				return (((y[ls]-y[ls-1])/(x[ls]-x[ls-1]))+slope)*0.5;
-			}
+			return (((y[ls]-y[ls-1])/(x[ls]-x[ls-1]))+slope)*0.5;
 		}
 		if(Math.abs(x[rs]-xp)<0.00000000001)
 		{
@@ -85,10 +82,7 @@ public class LinearInterpolation {
 				return slope;
 			}
 			//return average slope
-			else
-			{
-				return (((y[rs+1]-y[rs])/(x[rs+1]-x[rs]))+slope)*0.5;
-			}
+			return (((y[rs+1]-y[rs])/(x[rs+1]-x[rs]))+slope)*0.5;
 		}
 
 

@@ -16,7 +16,7 @@ public class HyperSphereTest {
 	{
 		
 		new ImageJ();
-		double [] pos = new double [2];
+		//double [] pos = new double [2];
 		long [] dim = new long[] {31,31,10};
 		Point center = new Point( 2 );
 		center.setPosition( 15 , 0 );

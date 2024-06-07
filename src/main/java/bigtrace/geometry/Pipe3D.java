@@ -17,7 +17,7 @@ public class Pipe3D {
 	{
 
 		ArrayList<double []> tangents;
-		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<ArrayList<RealPoint>>();
+		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<>();
 		double [] center = new double[3];
 	
 		int nPointsNum=points.size();
@@ -45,7 +45,7 @@ public class Pipe3D {
 	{
 
 	
-		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<ArrayList<RealPoint>>();
+		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<>();
 		double [] center = new double[3];
 	
 		int nPointsNum=points.size();
@@ -70,10 +70,7 @@ public class Pipe3D {
 		{
 			return rotationMinimizingFrameWang(points,tangents);
 		}
-		else
-		{
-			return rotationMinimizingFrameExp(points,tangents);
-		}
+		return rotationMinimizingFrameExp(points,tangents);
 	}
 
 	
@@ -188,7 +185,7 @@ public class Pipe3D {
 	/** returns a contour in a plane defined by two perpendicular vectors X and Y and with center at c**/
 	public static ArrayList< RealPoint > getContourInXY(final double dRadius, final int nSectorN, final double [] x,final double [] y, final double [] c)
 	{
-		 ArrayList< RealPoint > contourXY = new  ArrayList< RealPoint > ();
+		 ArrayList< RealPoint > contourXY = new  ArrayList< > ();
 		 
 		 final double dAngleInc = 2.0*Math.PI/(nSectorN);
 
@@ -252,7 +249,7 @@ public class Pipe3D {
 		int contour_curr;
 		int contour_next;
 		ArrayList<double []> tangents;
-		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<ArrayList<RealPoint>>();
+		ArrayList<ArrayList< RealPoint >> allCountours = new ArrayList<>();
 	
 		int nPointsNum=points.size();
 		if(nPointsNum>1)
@@ -306,7 +303,7 @@ public class Pipe3D {
 					// plane of segments cross-section
 					planeBetween.setVectors(path[1], plane_norm);
 					//make a set of lines emanating from the current contour
-					extrudeLines = new ArrayList<Line3D>();
+					extrudeLines = new ArrayList<>();
 					for(i=0;i<nSectorN;i++)
 					{
 						contLine=new Line3D();
@@ -353,7 +350,7 @@ public class Pipe3D {
 			
 			planeBetween.setVectors(path[1], plane_norm);
 			
-			extrudeLines = new ArrayList<Line3D>();
+			extrudeLines = new ArrayList<>();
 			for(i=0;i<nSectorN;i++)
 			{
 				contLine=new Line3D();
@@ -377,7 +374,7 @@ public class Pipe3D {
 	/** generates initial (first point) contour around path in XY plane **/
 	public static ArrayList< RealPoint > iniSectorContour(double dRadius, final int nSectorN)
 	{
-		 ArrayList< RealPoint > contourXY = new  ArrayList< RealPoint > ();
+		 ArrayList< RealPoint > contourXY = new  ArrayList< > ();
 		 
 		 double dAngleInc = 2.0*Math.PI/(nSectorN);
 		 double dAngle = 0.0;

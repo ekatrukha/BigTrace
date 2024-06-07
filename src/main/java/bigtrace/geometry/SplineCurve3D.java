@@ -75,7 +75,7 @@ public class SplineCurve3D {
 		
 		double [] curr_point = new double[3]; 
 		double currNodePos;
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> out = new ArrayList<>();
 		//just in case
 		if (xnodes == null)
 			return null;
@@ -99,7 +99,7 @@ public class SplineCurve3D {
 		int nP = xp.length;
 		double [] curr_point = new double[3];
 		double currNodePos;
-		ArrayList<double []> out = new ArrayList<double []>();
+		ArrayList<double []> out = new ArrayList<>();
 		for (int i=0;i<nP;i++)
 		{
 			for (int d=0;d<3;d++)
@@ -120,14 +120,11 @@ public class SplineCurve3D {
 		{
 			return Double.NaN;
 		}
-		else
-		{
-			//arclength integration verification
-			//double len1= verifyIntegration();
-			//double len2 = arclength[arclength.length-1];
-			//double diff =Math.abs(len1-len2);
-			return arclength[arclength.length-1];
-		}
+		//arclength integration verification
+		//double len1= verifyIntegration();
+		//double len2 = arclength[arclength.length-1];
+		//double diff =Math.abs(len1-len2);
+		return arclength[arclength.length-1];
 		
 	}
 	

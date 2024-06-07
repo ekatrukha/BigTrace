@@ -18,16 +18,14 @@ public class Intersections3D {
 		// maybe it is not a good idea, but ok for now
 		if (Math.abs(dln)< 2 * Double.MIN_VALUE )
 			{return false;}
-		else
+		
+		for(int i =0; i<3; i++)
 		{
-			for(int i =0; i<3; i++)
-			{
-				intersectionPoint[i]=plane.p0[i]-line.linev[0][i];
-			}
-			dln=LinAlgHelpers.dot(intersectionPoint, plane.n)/dln;
-			line.value(dln,intersectionPoint);
-			return true;
-		}												
+			intersectionPoint[i]=plane.p0[i]-line.linev[0][i];
+		}
+		dln=LinAlgHelpers.dot(intersectionPoint, plane.n)/dln;
+		line.value(dln,intersectionPoint);
+		return true;												
 		
 	}
 	
@@ -43,31 +41,25 @@ public class Intersections3D {
 		// maybe it is not a good idea, but ok for now
 		if (Math.abs(dln)< 2 * Double.MIN_VALUE )
 			{return false;}
-		else
+		for(int i=0; i<3; i++)
 		{
-			for(int i =0; i<3; i++)
-			{
-				intersectionPoint[i]=plane.p0[i]-line.linev[0][i];
-			}
-			dln=LinAlgHelpers.dot(intersectionPoint, plane.n)/dln;
-			double edgeLn = LinAlgHelpers.distance(RP1.positionAsDoubleArray(), RP2.positionAsDoubleArray());
-			if(dln>=0 && dln <=edgeLn)
-			{
-				line.value(dln,intersectionPoint);
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}												
+			intersectionPoint[i]=plane.p0[i]-line.linev[0][i];
+		}
+		dln=LinAlgHelpers.dot(intersectionPoint, plane.n)/dln;
+		double edgeLn = LinAlgHelpers.distance(RP1.positionAsDoubleArray(), RP2.positionAsDoubleArray());
+		if(dln>=0 && dln <=edgeLn)
+		{
+			line.value(dln,intersectionPoint);
+			return true;
+		}
+		return false;												
 		
 	}
 	/** given a set of input lines, generates points of intersection
 	 * between them and input cuboid **/
 	public static ArrayList<RealPoint> cuboidLinesIntersect(final Cuboid3D cuboid, final ArrayList<Line3D> lines)
 	{
-		ArrayList<RealPoint> int_points = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> int_points = new ArrayList<>();
 		int nIntersLineN;
 		double [] intersectionPoint = new double [3];
 
@@ -102,7 +94,7 @@ public class Intersections3D {
 	
 	public static ArrayList<RealPoint> cuboidLinesIntersect(final Cuboid3D cuboid, final Line3D line)
 	{
-		ArrayList<Line3D> input = new ArrayList<Line3D>();
+		ArrayList<Line3D> input = new ArrayList<>();
 		input.add(line);
 		return cuboidLinesIntersect(cuboid, input);
 	}
@@ -113,7 +105,7 @@ public class Intersections3D {
 	{
 		
 		
-		ArrayList<RealPoint> int_points = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> int_points = new ArrayList<>();
 		double [] intersectionPoint = new double [3];
 		
 		for (int i=0;i<lines.size();i++)
@@ -136,7 +128,7 @@ public class Intersections3D {
 		double dSign=0.0;
 		int i;
 		boolean bInside = true;
-		ArrayList<RealPoint> polygon = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> polygon = new ArrayList<>();
 		for( i=0;i<polygon_.size();i++)
 		{
 			polygon.add(polygon_.get(i));

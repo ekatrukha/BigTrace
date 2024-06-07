@@ -77,9 +77,9 @@ public class Plane3D {
 		double [] v32 = new double [3];
 		for(int i=0;i<3;i++)
 		{
-			v12[i] = (double)(v1.get(i)-v2.get(i));
-			v32[i] = (double)(v3.get(i)-v2.get(i));
-			p0[i] = (double)(v2.get(i));
+			v12[i] = v1.get(i)-v2.get(i);
+			v32[i] = v3.get(i)-v2.get(i);
+			p0[i] = v2.get(i);
 		}
 		//normal
 		LinAlgHelpers.cross(v12, v32, n);

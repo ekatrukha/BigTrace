@@ -52,7 +52,7 @@ public class CurveShapeInterpolation {
 		if(points.size()>1)
 		{
 				currInterpolation = nShapeInterpolation;
-				points_curve = new ArrayList<RealPoint>();
+				points_curve = new ArrayList<>();
 				switch (currInterpolation)
 				{
 					case BigTraceData.SHAPE_Voxel:
@@ -109,8 +109,8 @@ public class CurveShapeInterpolation {
 	/** function returns joint segment for polyline ROI building bresenham line between points **/
 	ArrayList<RealPoint> getJointSegmentBresenhamPolyLine(final ArrayList<RealPoint> points)
 	{
-		final ArrayList<RealPoint> out = new ArrayList<RealPoint>();
-		ArrayList<RealPoint> segment = new ArrayList<RealPoint>();
+		final ArrayList<RealPoint> out = new ArrayList<>();
+		ArrayList<RealPoint> segment = new ArrayList<>();
 		double [] pos1 = new double [3];
 		double [] pos2 = new double [3];
 		out.add(points.get(0));
@@ -133,7 +133,7 @@ public class CurveShapeInterpolation {
 	 * making curve pass through points**/
 	public static ArrayList<RealPoint> getJointSegmentSmoothPolyLine(final ArrayList<RealPoint> points)
 	{
-		final ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		final ArrayList<RealPoint> out = new ArrayList<>();
 
 		int nPoints;
 		double [] pos1 = new double [3];
@@ -185,7 +185,7 @@ public class CurveShapeInterpolation {
 	 * **/
 	public static ArrayList< RealPoint > getSmoothVals (final ArrayList< RealPoint > points)
 	{
-		ArrayList< RealPoint > out = new ArrayList< RealPoint >();
+		ArrayList< RealPoint > out = new ArrayList< >();
 		double [][] coords= new double[points.size()][3];
 		double [] aver = new double[3];
 		int i,j,k;
@@ -238,7 +238,7 @@ public class CurveShapeInterpolation {
 	public static ArrayList<double []> getTangentsAverage(final ArrayList< RealPoint > points)
 	{
 		int i,j;
-		ArrayList<double []> tangents = new ArrayList<double []>();
+		ArrayList<double []> tangents = new ArrayList<>();
 		double [][] path = new double [3][3];
 		double [] prev_segment = new double [3];
 		double [] next_segment = new double [3];
@@ -296,7 +296,7 @@ public class CurveShapeInterpolation {
 	 * (and in addition, mandatory boundary (end) points **/
 	public static ArrayList<RealPoint> getSplineSparsePoints(final ArrayList< RealPoint > points)
 	{
-		ArrayList< RealPoint > out = new ArrayList< RealPoint >();
+		ArrayList< RealPoint > out = new ArrayList< >();
 		int nPointsN = points.size();
 		int nStep, i;
 		out.add(new RealPoint(points.get(0)));
@@ -307,7 +307,7 @@ public class CurveShapeInterpolation {
 		else
 		{
 			nStep = (int)Math.ceil((float)nPointsN/(float)BigTraceData.nSmoothWindow);
-			nStep = (int)Math.round((float)nPointsN/(float)nStep);
+			nStep = Math.round((float)nPointsN/(float)nStep);
 		}
 		for(i = nStep;i<nPointsN;i+=nStep)
 		{
@@ -329,10 +329,7 @@ public class CurveShapeInterpolation {
 		{
 			return points_curve;
 		}
-		else
-		{
-			return getPointsSplineVisual();
-		}
+		return getPointsSplineVisual();
 		
 	}
 	
@@ -343,10 +340,7 @@ public class CurveShapeInterpolation {
 		{
 			return getTangentsAverage(points_curve);
 		}
-		else
-		{
-			return getTangentsSplineVisual();
-		}
+		return getTangentsSplineVisual();
 	}
 	
 
@@ -410,10 +404,7 @@ public class CurveShapeInterpolation {
 		{
 			return linInter.interpolate(xLSample);
 		}
-		else
-		{
-			return splineInter.interpolate(xLSample);
-		}
+		return splineInter.interpolate(xLSample);
 	}
 	public ArrayList<double[]> getTangentsResample()
 	{
@@ -440,10 +431,7 @@ public class CurveShapeInterpolation {
 		{
 			return linInter.interpolateSlopes(xLSample);
 		}
-		else
-		{
-			return splineInter.interpolateSlopes(xLSample);
-		}
+		return splineInter.interpolateSlopes(xLSample);
 	}
 	/** returns the length of the reference "generating" curve **/
 	public double getLength()
@@ -452,9 +440,6 @@ public class CurveShapeInterpolation {
 		{
 			return linInter.getMaxLength();
 		}
-		else
-		{
-			return splineInter.getMaxArcLength();
-		}
+		return splineInter.getMaxArcLength();
 	}
 }

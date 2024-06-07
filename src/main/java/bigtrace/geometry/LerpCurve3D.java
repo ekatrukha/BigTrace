@@ -42,7 +42,7 @@ public class LerpCurve3D {
 		
 		int nP = xp.length;
 		double [] curr_point = new double[3]; 
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> out = new ArrayList<>();
 		//just in case
 		if (xnodes == null)
 			return null;
@@ -63,7 +63,7 @@ public class LerpCurve3D {
 		
 		int nP = xp.length;
 		double [] curr_point = new double[3]; 
-		ArrayList<double []> out = new ArrayList<double []>();
+		ArrayList<double []> out = new ArrayList<>();
 		for (int i=0;i<nP;i++)
 		{
 			for (int d=0;d<3;d++)
@@ -83,10 +83,7 @@ public class LerpCurve3D {
 			return Double.NaN;
 			
 		}
-		else
-		{
-			return xnodes[xnodes.length-1];
-		}
+		return xnodes[xnodes.length-1];
 		
 	}
 	
