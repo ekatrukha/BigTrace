@@ -1344,7 +1344,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         bt.bInputLock = true;
         
         //this.setLockMode(true);
-        ROIsSaveBG<T> saveTask = new ROIsSaveBG<T>();
+        ROIsSaveBG<T> saveTask = new ROIsSaveBG<>();
         saveTask.sFilename=filename;
         saveTask.bt=this.bt;
         saveTask.addPropertyChangeListener(bt.btPanel);
@@ -1353,11 +1353,10 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	}
 	
 	/** Load ROIS dialog and saving **/
-	public void diagLoadROIs()
+    void diagLoadROIs()
 	{
 		String filename;
-
-   
+		
 		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs","", "*.csv");
 		
         String path = openDial.getDirectory();
@@ -1365,15 +1364,10 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         	return;
 
         filename = path+openDial.getFileName();
-        
-
-        
-        String [] sRoiLoadOptions = new String [] {"Clean load ROIs and groups","Append ROIs as undefined group"};
-		
+     
+        String [] sRoiLoadOptions = new String [] {"Clean load ROIs and groups","Append ROIs as undefined group"};	
         String input = (String) JOptionPane.showInputDialog(this, "Loading ROIs",
-                "Load mode:", JOptionPane.QUESTION_MESSAGE, null, // Use
-                                                                                // default
-                                                                                // icon
+                "Load mode:", JOptionPane.QUESTION_MESSAGE, null,
                 sRoiLoadOptions, // Array of choices
                 sRoiLoadOptions[(int)Prefs.get("BigTrace.LoadRoisMode", 0)]);
         
@@ -1383,9 +1377,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         if(input.equals("Clean load ROIs and groups"))
         {
         	nLoadMode = 0;
-        	this.groups = new ArrayList<Roi3DGroup>();
-        	this.rois = new ArrayList<Roi3D >();
-        	listModel.clear();
         }
         else
         {
@@ -1393,15 +1384,25 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         }
         
         Prefs.set("BigTrace.LoadRoisMode", nLoadMode);
-
-        ROIsLoadBG<T> loadTask = new ROIsLoadBG<T>();
+        loadROIs(filename, nLoadMode);        
+	}
+	
+	public void loadROIs(String filename, int nLoadMode)
+	{
+		if(nLoadMode == 0 )
+		{
+        	this.groups = new ArrayList<>();
+        	this.rois = new ArrayList< >();
+        	listModel.clear();
+		}
+		
+        ROIsLoadBG<T> loadTask = new ROIsLoadBG<>();
         
         loadTask.sFilename = filename;
         loadTask.nLoadMode = nLoadMode;
         loadTask.bt = this.bt;
         loadTask.addPropertyChangeListener(bt.btPanel);
-        loadTask.execute();
-        
+        loadTask.execute();	
 	}
 	
 	/** Import ROIs dialog **/

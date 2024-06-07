@@ -24,8 +24,6 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 	public String sFilename;
 	public int nLoadMode;
 	String sFinalOut = "";
-	double [] globCalNew;
-	String sUnits = "";
 	
 	@Override
 	public String getProgressState()
@@ -71,15 +69,15 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 	
         bt.bInputLock = true;
         bt.roiManager.setLockMode(true);
-		try {
-			
-	        BufferedReader br = new BufferedReader(new FileReader(sFilename));
+		try ( BufferedReader br = new BufferedReader(new FileReader(sFilename));) 
+		{
+			       
 
 	        String line = "";
 	        //read Groups first
 	        if(nLoadMode == 0)
 	        {
-	        	roiGM = new Roi3DGroupManager<T>(bt.roiManager);
+	        	roiGM = new Roi3DGroupManager<>(bt.roiManager);
 	        	if(roiGM.loadGroups(br)<0)
 	        	{
 	        		 System.err.println("Not a BigTrace ROI Group file format or plugin/file version mismatch,\nloading Groups failed.\n"+
@@ -103,20 +101,16 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 	        			br.close();
 	        			return null;
 	        		}
-	        		else
-	        		{
-		        		line_array = line.split(",");
-		        		
-		        		if(line_array.length==3 && line_array[0].equals("BigTrace_ROIs"))
-		        		{
-		        			bBeginROIpart = true;
-		        		}
-		        		else
-		        		{
-		        			line = br.readLine();
-		        		}
-	        			
-	        		}
+					line_array = line.split(",");
+					
+					if(line_array.length==3 && line_array[0].equals("BigTrace_ROIs"))
+					{
+						bBeginROIpart = true;
+					}
+					else
+					{
+						line = br.readLine();
+					}
 	        			
 	        	}
 	        			
@@ -135,15 +129,9 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 				 System.out.println("Version mismatch: ROI file "+line_array[2]+", plugin "+BigTraceData.sVersion+". It should be fine in theory, so loading ROIs anyway.");
 			 }
 			  
-
+		    line = br.readLine();
 			while (line != null) 
-			{
-				
-				  line = br.readLine();
-				  if(line == null)
-				  {
-					  break;
-				  }
+			{				
 				   // process the line.
 				  line_array = line.split(",");
 				  
@@ -223,7 +211,7 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 					  
 				  case "Vertices":
 					  nVertN = Integer.parseInt(line_array[1]);
-					  vertices =new ArrayList<RealPoint>(); 
+					  vertices =new ArrayList<>(); 
 					  for(i=0;i<nVertN;i++)
 					  {
 						  line = br.readLine();
@@ -274,7 +262,7 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 							  line = br.readLine();
 							  line_array = line.split(",");  
 							  nVertN = Integer.parseInt(line_array[3]);
-							  segment =new ArrayList<RealPoint>(); 
+							  segment = new ArrayList<>(); 
 							  for(j=0;j<nVertN;j++)
 							  {
 								  line = br.readLine();
@@ -300,7 +288,7 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 					  break;
 					  
 				  }
-				 
+				  line = br.readLine(); 
 				}
 
 	        br.close();
@@ -308,8 +296,8 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 			
 			sFinalOut="loading ROIs done.";
 			setProgressState(sFinalOut);
-			/** load voxel calibration **/
 			
+			/** load voxel calibration **/			
 			if((!Double.isNaN(globCalNew[0]))&&(!Double.isNaN(globCalNew[1]))&&(!Double.isNaN(globCalNew[2]))&&(!sUnits.equals("")))
 			{
 

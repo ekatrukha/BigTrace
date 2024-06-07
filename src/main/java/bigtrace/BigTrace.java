@@ -75,6 +75,7 @@ import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
+import bigtrace.rois.ROIsLoadBG;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;
@@ -110,7 +111,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	public VolumeViewerPanel viewer;
 	
 	/** flag to check if user interface is frozen **/
-	public boolean bInputLock = false;
+	public volatile boolean bInputLock = false;
 	
 	/** visualization of coordinates origin axes **/
 	ArrayList<VisPolyLineSimple> originVis = new ArrayList<>();
@@ -142,7 +143,11 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	/**macro extensions **/
 	private ExtensionDescriptor[] extensions = {
 			
-			ExtensionDescriptor.newDescriptor("testBigTrace", this, ARG_OUTPUT+ARG_NUMBER),
+			ExtensionDescriptor.newDescriptor("btLoadROIs", this, ARG_STRING, ARG_STRING),			
+			ExtensionDescriptor.newDescriptor("btClose", this),
+			ExtensionDescriptor.newDescriptor("btTest", this),
+
+			//ExtensionDescriptor.newDescriptor("testBigTrace", this, ARG_OUTPUT+ARG_NUMBER),
 			//ExtensionDescriptor.newDescriptor("getFrame", this, ARG_OUTPUT+ARG_NUMBER),
 			//ExtensionDescriptor.newDescriptor("setChannel", this, ARG_NUMBER ),
 			//ExtensionDescriptor.newDescriptor("setFrame", this, ARG_NUMBER ),
@@ -159,7 +164,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		{
 			Functions.registerExtensions(this);
 		}
-
+		bInputLock = true;
 		
 		//switch to FlatLaf theme		
 		try {
@@ -309,7 +314,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	    btPanel.finFrame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
 	    btPanel.finFrame.addWindowListener(this);
 	    btPanel.bvv_frame.addWindowListener(this);
-
+		bInputLock = false;
 	}
 	
 	
@@ -1525,12 +1530,71 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	@Override
 	public String handleExtension(String name, Object[] args) {
 	
-
-		if (name.equals("testBigTrace")) {
-			IJ.log("test ok");
+		try
+		{
+			if (name.equals("btLoadROIs")) 
+			{
+				macroLoadROIs((String)args[0],(String)args[1]);
+			}
+			if (name.equals("btClose")) 
+			{
+				macroCloseBT();
+				IJ.log("BigTrace closed.");
+			}
+			if (name.equals("btTest")) 
+			{
+				IJ.log("test ok right away");
+				macroTest();
 			} 
-
+		}
+		catch ( InterruptedException exc )
+		{
+			exc.printStackTrace();
+		}
 		return null;
+	}
+	void macroLoadROIs(String sFileName, String input) throws InterruptedException
+	{
+		while(bInputLock)
+		{
+			Thread.sleep(1000);
+		}
+        if(input == null)
+        	return;
+        int nLoadMode =0;
+        switch (input)
+        {
+        	case "Clean":
+            	nLoadMode = 0;
+        		break;
+        	case "Append":
+        		nLoadMode = 1;
+        		break;  
+        	default:
+        		IJ.log( "Error! ROIs loading mode should be either Clean or Append. Loading failed." );
+        		return;
+        }
+        roiManager.loadROIs( sFileName, nLoadMode );
+	}
+	
+	void macroCloseBT() throws InterruptedException
+	{
+		while(bInputLock)
+		{
+			Thread.sleep(1000);
+		}
+		closeWindows();
+	}
+	void macroTest() throws InterruptedException
+	{
+		while(bInputLock)
+		{
+		  IJ.log( "not unlocked" );
+		  Thread.sleep(1000);
+		}
+		IJ.log( "unlocked" );
+		resetViewXY();
+
 	}
 	
 	@SuppressWarnings("rawtypes")
