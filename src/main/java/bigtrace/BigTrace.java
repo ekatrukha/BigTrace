@@ -1604,9 +1604,9 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		testI.run("");
+		//testI.run("");
 		
-		//testI.run("/home/eugene/Desktop/BigTrace_data/ExM_MT_8bit.tif");
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BT_tracks/Snejana_small_example.tif");
 		
 		/*
 		testI.roiManager.setLockMode(true);

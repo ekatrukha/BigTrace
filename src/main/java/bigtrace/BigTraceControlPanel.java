@@ -104,11 +104,16 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    tabIcon = new ImageIcon(icon_path);
 	    tabPane.addTab("",tabIcon ,roiManager,"Tracing");
 	    
-	    //MEASUREMENTS
-	    
+	    //MEASUREMENTS	    
 	    icon_path = bigtrace.BigTrace.class.getResource("/icons/measure.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    tabPane.addTab("",tabIcon ,roiMeasure,"Measure");
+	    
+	    //TRACKS	    
+	    icon_path = bigtrace.BigTrace.class.getResource("/icons/tracks.png");
+	    tabIcon = new ImageIcon(icon_path);
+	    tabPane.addTab("",tabIcon ,null,"Tracking");
+
 	    
 	    icon_path = bigtrace.BigTrace.class.getResource("/icons/shortcut.png");
 	    tabIcon = new ImageIcon(icon_path);

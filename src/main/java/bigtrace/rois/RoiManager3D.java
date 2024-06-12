@@ -260,13 +260,14 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 
 		///RoiLIST and buttons
-		listModel = new  DefaultListModel<String>();
-		jlist = new JList<String>(listModel);
+		listModel = new  DefaultListModel<>();
+		jlist = new JList<>(listModel);
 		jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		jlist.setLayoutOrientation(JList.VERTICAL);
 		jlist.setVisibleRowCount(-1);
 		jlist.addListSelectionListener(this);
 		jlist.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseClicked(MouseEvent evt) {
 				if (evt.getClickCount() == 2) {
 
