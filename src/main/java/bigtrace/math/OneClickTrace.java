@@ -42,6 +42,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	 * new full box is recalculated at the current location **/
 	public FinalInterval innerTraceBox; 
 	public RealPoint startPoint;
+	
+	public boolean bUpdateProgressBar = true;
+	
+	public boolean bUnlockInTheEnd = true;
+	
 	public RealPoint currentVector;
 	public long [] boxFullHalfRange;
 	public long [] boxInnerHalfRange;
@@ -66,7 +71,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	
 	double [][] nNeighborsVectors = new double[26][3];
 	
-	private HashMap<String, ArrayList<int[]>> neighborsMap = new HashMap<String, ArrayList<int[]>>();
+	private HashMap<String, ArrayList<int[]>> neighborsMap = new HashMap<>();
 	
 	/** vector of curve direction for the last point **/
 	double [] lastDirectionVector;
@@ -99,20 +104,32 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	
 	private String progressState;
 	
+	@Override
 	public String getProgressState()
 	{
 		return progressState;
 	}
+	@Override
 	public void setProgressState(String state_)
 	{
-		progressState=state_;
+		progressState = state_;
 	}
+	
 	@Override
 	protected Void doInBackground() throws Exception {
 		
+		runTracing ();
+		return null;
+	}
+	
+	public void runTracing ()
+	{
 		LineTrace3D existingTracing = null;
-		setProgress(0);
 		
+		if(bUpdateProgressBar)
+		{
+			setProgress(0);
+		}
 		init();
 		
 		long start1, end1;
@@ -122,7 +139,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//in case we continue
 		if(!bNewTrace)
 		{
-			existingTracing  = (LineTrace3D)bt.roiManager.rois.get(bt.roiManager.activeRoi);
+			existingTracing  = (LineTrace3D)bt.roiManager.getActiveRoi();
 			nRenderTypeSave = existingTracing.getRenderType();
 			existingTracing.setRenderType(Roi3D.WIRE);
 			startPoint = new RealPoint(bt.roiManager.getLastTracePoint());
@@ -141,7 +158,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			lastDirectionVector[d] = startDirectionVector[d];
 		}
 		
-		allPointsIntersection = new ArrayList<double[]>();
+		allPointsIntersection = new ArrayList<>();
 		int nTotPoints = 0;
 		//we continue tracing, let's setup environment for that
 		if(!bNewTrace)
@@ -180,18 +197,22 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 
 		if(bNewTrace)
 		{
-			allPointsIntersection = new ArrayList<double[]>();
+			allPointsIntersection = new ArrayList<>();
 			//trace in one direction
 			nTotPoints = traceOneDirection(true, 0);
-			setProgress(50);
-			setProgressState(Integer.toString(nTotPoints)+"points found.");
+			
+			if(bUpdateProgressBar)
+			{
+				setProgress(50);
+				setProgressState(Integer.toString(nTotPoints)+"points found.");
+			}
 			//look for another direction
 			for (int d=0; d<3; d++)
 			{
 				lastDirectionVector[d]=(-1)*startDirectionVector[d];
 			}
 			//reverse ROI
-			bt.roiManager.rois.get(bt.roiManager.activeRoi).reversePoints();
+			bt.roiManager.getActiveRoi().reversePoints();
 			//init math at new point
 			getMathForCurrentPoint(startPoint);
 		}
@@ -199,15 +220,16 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		nTotPoints = traceOneDirection(false, nTotPoints);
 		
 		end1 = System.currentTimeMillis();
-		System.out.println("THREADED Elapsed Time in seconds: "+ 0.001*(end1-start1));
-
-		setProgress(100);
+		//System.out.println("THREADED Elapsed Time in seconds: "+ 0.001*(end1-start1));
 		
-		setProgressState("trace with "+Integer.toString(nTotPoints)+" points. auto-tracing done.");
-
-		return null;
+		
+		if(bUpdateProgressBar)
+		{
+			setProgress(100);	
+			setProgressState("trace with "+Integer.toString(nTotPoints)+" points. auto-tracing done.");
+		}
+		return ;
 	}
-	
 	/** traces line in one direction.
 	 * @param bFirstTrace 
 	 *        if it is a first trace or continuation of existing 
@@ -216,7 +238,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	public int traceOneDirection(boolean bFirstTrace, int nCountIn)
 	{
 		
-		ArrayList<RealPoint> points = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> points = new ArrayList<>();
 		
 		RealPoint nextPoint;
 		
@@ -225,7 +247,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		allPointsIntersection.add(startPoint.positionAsDoubleArray());
 		if(bFirstTrace)
 		{
-			bt.roiManager.addSegment(points.get(0),null);
+			LineTrace3D newTracing;
+			newTracing = (LineTrace3D) bt.roiManager.makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
+			newTracing.addFirstPoint(points.get(0));
+			bt.roiManager.addRoi(newTracing);
+			//bt.roiManager.addSegment(points.get(0),null);
 			nRenderTypeSave = bt.roiManager.getActiveRoi().getRenderType();
 			bt.roiManager.getActiveRoi().setRenderType(Roi3D.WIRE);
 		}
@@ -243,17 +269,19 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			if(points.size() == nPointPerSegment)
 			{
 				bt.roiManager.addSegment(points.get(points.size()-1), points);
-				points = new ArrayList<RealPoint>();
-				setProgressState(Integer.toString(nCountPoints)+"points found.");
-				if(bFirstTrace)
+				points = new ArrayList<>();
+				if(bUpdateProgressBar)
 				{
-					setProgress(20);
+					setProgressState(Integer.toString(nCountPoints)+"points found.");
+					if(bFirstTrace)
+					{
+						setProgress(20);
+					}
+					else
+					{
+						setProgress(70);
+					}
 				}
-				else
-				{
-					setProgress(70);
-				}
-				
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException ignore) {}
@@ -289,6 +317,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 
 		}
 		//adding last part of the trace
+
 		bt.roiManager.addSegment(points.get(points.size()-1), points);
 		
 		return nCountPoints;
@@ -622,7 +651,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	
 	ArrayList<int[]> getNeighborPixels(double [] directionVector)
 	{
-		ArrayList<int[]> out = new ArrayList<int[]>();
+		ArrayList<int[]> out = new ArrayList<>();
 		for(int i=0;i<26;i++)
 		{
 			if(LinAlgHelpers.dot(directionVector, nNeighborsVectors[i])>0.5)
@@ -653,7 +682,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 						for(int d=0;d<3;d++)
 						{
 							nNeighborsIndexes[nCount][d]= dx[d];
-							nNeighborsVectors[nCount][d]= (double)dx[d];
+							nNeighborsVectors[nCount][d]= dx[d];
 							LinAlgHelpers.normalize(nNeighborsVectors[nCount]);
 						}
 						nCount++;
@@ -796,18 +825,25 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
              // Process e here
          }
     	es.shutdown();
+    	
 
     	bt.visBox = null;
+
     	bt.roiManager.getActiveRoi().setRenderType(nRenderTypeSave);
-    	bt.roiManager.setLockMode(false);
-    	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
-		//unlock user interaction
-    	bt.bInputLock = false;
     	//deselect the trace if we just made it
     	if(bNewTrace)
     	{
     		bt.roiManager.unselect();
     	}
+    	bt.bInputLock = false;
+    	if(bUnlockInTheEnd)
+    	{
+    		//unlock user interaction  	
+    		bt.roiManager.setLockMode(false);
+        	bt.bInputLock = false;
+        	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
+    	}
+
     }
     
     /*

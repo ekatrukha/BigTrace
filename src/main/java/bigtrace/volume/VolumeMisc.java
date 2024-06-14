@@ -105,10 +105,16 @@ public class VolumeMisc {
 		final Cursor< T > cursor = input.localizingCursor();
 		
 		boolean bFound = false;
-		// initialize min and max with the first image value
+		// initialize max with the first image value
 		T type = cursor.next();
 		T max = type.copy();
 		double [] pos = new double [3];
+		cursor.localize( pos );
+		if(clickCone.isPointInsideShape(pos))
+		{
+			maxLocation.setPosition( cursor );
+		}
+		
 		// loop over the rest of the data and determine min and max value
 		while ( cursor.hasNext() )
 		{
@@ -135,87 +141,86 @@ public class VolumeMisc {
 	/** maximum intensity finding function, but without cuboid **/
 	public static < T extends Comparable< T > & Type< T > > void findMaxLocation(
 			final IterableInterval< T > input,  final RealPoint maxLocation )
-		{
-			// create a cursor for the image (the order does not matter)
-			final Cursor< T > cursor = input.localizingCursor();
-			
+	{
+		// create a cursor for the image (the order does not matter)
+		final Cursor< T > cursor = input.localizingCursor();
 
-			// initialize min and max with the first image value
-			T type = cursor.next();
-			T max = type.copy();
-			double [] pos = new double [3];
-			// loop over the rest of the data and determine min and max value
-			while ( cursor.hasNext() )
+
+		// initialize min and max with the first image value
+		T type = cursor.next();
+		T max = type.copy();
+		maxLocation.setPosition( cursor );
+		// loop over the rest of the data and determine min and max value
+		while ( cursor.hasNext() )
+		{
+			// we need this type more than once
+			type = cursor.next();
+
+			if ( type.compareTo( max ) > 0 )
 			{
-				// we need this type more than once
-				type = cursor.next();
-	 
-					if ( type.compareTo( max ) > 0 )
-					{
-						cursor.localize(pos);
-						max.set( type );
-						maxLocation.setPosition( cursor );
-						
-					}
+				max.set( type );
+				maxLocation.setPosition( cursor );
+
 			}
-			return ;
 		}
+		return ;
+	}
 	
 	public static IntervalView< UnsignedByteType > localMax(final IntervalView< UnsignedByteType > input)
+	{
+		Shape voxShape = new RectangleShape( 2, true);
+		long[] dim = Intervals.dimensionsAsLongArray( input );
+		ArrayImg<UnsignedByteType, ByteArray> outBytes = ArrayImgs.unsignedBytes(dim);
+		IntervalView< UnsignedByteType > output = Views.translate(outBytes, input.minAsLongArray());
+
+		final RandomAccessible< Neighborhood< UnsignedByteType > > inputNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.extendZero(input) );		
+		final RandomAccess< Neighborhood< UnsignedByteType > > inRA = inputNeighborhoods.randomAccess();
+
+
+		Cursor< UnsignedByteType > inC=input.cursor();
+		Cursor< UnsignedByteType > ouC=output.cursor();
+		Cursor< UnsignedByteType > neibC;
+		//int nMaxDet = 0;
+		//int nMaxNDet = 0;
+		int currVal;
+		boolean isMax;
+		while ( inC.hasNext() )
 		{
-			Shape voxShape = new RectangleShape( 2, true);
-			long[] dim = Intervals.dimensionsAsLongArray( input );
-			ArrayImg<UnsignedByteType, ByteArray> outBytes = ArrayImgs.unsignedBytes(dim);
-			IntervalView< UnsignedByteType > output = Views.translate(outBytes, input.minAsLongArray());
-			
-			final RandomAccessible< Neighborhood< UnsignedByteType > > inputNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.extendZero(input) );		
-			final RandomAccess< Neighborhood< UnsignedByteType > > inRA = inputNeighborhoods.randomAccess();
-			
-			
-			Cursor< UnsignedByteType > inC=input.cursor();
-			Cursor< UnsignedByteType > ouC=output.cursor();
-			Cursor< UnsignedByteType > neibC;
-			//int nMaxDet = 0;
-			//int nMaxNDet = 0;
-			int currVal;
-			boolean isMax;
-			while ( inC.hasNext() )
+			inC.fwd();
+			ouC.fwd();
+			currVal=inC.get().get();
+			if(currVal>20)
 			{
-				inC.fwd();
-				ouC.fwd();
-				currVal=inC.get().get();
-				if(currVal>20)
+				inRA.setPosition(inC.positionAsLongArray());
+				neibC = inRA.get().cursor();
+				isMax= true;
+				while(neibC.hasNext())
 				{
-					inRA.setPosition(inC.positionAsLongArray());
-					neibC = inRA.get().cursor();
-					isMax= true;
-					while(neibC.hasNext())
+					neibC.fwd();
+					if(neibC.get().get()>currVal)
 					{
-						neibC.fwd();
-						if(neibC.get().get()>currVal)
-						{
-							isMax = false;
-							break;
-						}
-							
+						isMax = false;
+						break;
 					}
-					if(isMax)
-					{
-						ouC.get().set(100);
-						//nMaxDet++;
-						
-					}
-					else
-					{
-						ouC.get().set(0);
-						//nMaxNDet++;
-					}
+
+				}
+				if(isMax)
+				{
+					ouC.get().set(100);
+					//nMaxDet++;
+
+				}
+				else
+				{
+					ouC.get().set(0);
+					//nMaxNDet++;
 				}
 			}
-			//System.out.println("max det:"+Integer.toString(nMaxDet));
-			//System.out.println("max N det:"+Integer.toString(nMaxNDet));
-			return output;
 		}
+		//System.out.println("max det:"+Integer.toString(nMaxDet));
+		//System.out.println("max N det:"+Integer.toString(nMaxNDet));
+		return output;
+	}
 	
 	public static IntervalView<UnsignedByteType> convertFloatToUnsignedByte(RandomAccessibleInterval<FloatType> input, boolean inverse)
 	{

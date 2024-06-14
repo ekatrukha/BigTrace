@@ -377,19 +377,17 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	/** calculates trace box around last vertice of provided trace.
 	 * if bRefine is true, it will refine the position of the dot
 	 * and add it to the ROI manager **/
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	//@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void runOneClickTrace(final RealPoint pclick, final boolean bNewTrace_)
 	{
 		
-		IntervalView<?> traceIV;
-		
-		traceIV = getTraceInterval(btData.bTraceOnlyClipped);	
+		final IntervalView<T> traceIV =  getTraceInterval(btData.bTraceOnlyClipped);	
 //		System.out.println(pclick.getDoublePosition(0));
 //		System.out.println(pclick.getDoublePosition(1));
 //		System.out.println(pclick.getDoublePosition(2));
 
 		bInputLock = true;
-		OneClickTrace calcTask = new OneClickTrace();
+		OneClickTrace<T> calcTask = new OneClickTrace<>();
 		calcTask.fullInput = traceIV;
 		calcTask.bt = this;
 		calcTask.startPoint = pclick;
@@ -401,7 +399,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	
 	/** returns current Interval for the tracing. If bClippedInterval is true,
 	 * returns clipped volume, otherwise returns full original volume. **/
-	IntervalView<T> getTraceInterval(boolean bClippedInterval)
+	public IntervalView<T> getTraceInterval(boolean bClippedInterval)
 	{
 		if(bClippedInterval)
 		{
@@ -1433,12 +1431,14 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		return false;	
 	}
 	
+	
 	@Override
-	public void timePointChanged(int timePointIndex) {
+	public void timePointChanged(int timePointIndex) 
+	{
 					
-		if(btData.nCurrTimepoint != viewer.state().getCurrentTimepoint())
+		if(btData.nCurrTimepoint != timePointIndex)
 		{
-			btData.nCurrTimepoint = viewer.state().getCurrentTimepoint();
+			btData.nCurrTimepoint = timePointIndex;
 			if(btData.bDeselectROITime)
 			{
 				btActions.actionDeselect();
@@ -1449,9 +1449,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			}
 			//if(btpanel!=null)
 			btPanel.updateViewDataSources();
-		}
-
-		
+		}	
 	}
 
 
@@ -1581,7 +1579,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	{
 		while(bInputLock)
 		{
-			Thread.sleep(1000);
+			Thread.sleep(100);
 		}
 		closeWindows();
 	}
@@ -1590,7 +1588,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		while(bInputLock)
 		{
 		  IJ.log( "not unlocked" );
-		  Thread.sleep(1000);
+		  Thread.sleep(100);
 		}
 		IJ.log( "unlocked" );
 		resetViewXY();

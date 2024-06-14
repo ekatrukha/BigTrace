@@ -30,7 +30,7 @@ import net.imglib2.roi.util.RealLocalizableRealPositionable;
 import net.imglib2.util.LinAlgHelpers;
 
 
-public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyline
+public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 {
 	
 	public ArrayList<ArrayList<RealPoint>> segments;
@@ -53,8 +53,8 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 		
 		renderType= preset_in.renderType;
 		
-		vertices = new ArrayList<RealPoint>();
-		segments = new ArrayList<ArrayList<RealPoint>>();
+		vertices = new ArrayList<>();
+		segments = new ArrayList<>();
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
@@ -117,10 +117,8 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 			//segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
 			return true;
 		}
-		else
-		{
-			return false;
-		}
+		
+		return false;
 		
 	}
 	
@@ -194,6 +192,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 	 * to the best of my knowledge (and so they do not produce errors)
 	 */
 	
+	@Override
 	public int numVertices() {
 		return vertices.size();
 	}
@@ -370,7 +369,7 @@ public class LineTrace3D extends AbstractCurve3D implements Roi3D, WritablePolyl
 	/** returns joint segment of ROI in VOXEL coordinates as RealPoint **/
 	public ArrayList<RealPoint> makeJointSegment()
 	{
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> out = new ArrayList<>();
 		if(vertices.size()>1)
 		{
 			//first vertex

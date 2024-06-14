@@ -695,7 +695,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 				break;
 			case Roi3D.POLYLINE:
 			case Roi3D.LINE_TRACE:
-				val.length = ((AbstractCurve3D)roi).getLength(BigTraceData.shapeInterpolation, BigTraceData.globCal);
+				val.length = ((AbstractCurve3D)roi).getLength();
 				break;		
 			default:
 				val.length = Double.NaN;
@@ -818,7 +818,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 				break;
 			case Roi3D.POLYLINE:
 			case Roi3D.LINE_TRACE:
-				val.straightness = ((AbstractCurve3D)roi).getEndsDistance( BigTraceData.globCal)/((AbstractCurve3D)roi).getLength(BigTraceData.shapeInterpolation,BigTraceData.globCal);
+				val.straightness = ((AbstractCurve3D)roi).getEndsDistance( BigTraceData.globCal)/((AbstractCurve3D)roi).getLength();
 				break;			
 			default:
 				val.straightness = Double.NaN;
@@ -910,7 +910,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			case Roi3D.POLYLINE:
 			case Roi3D.LINE_TRACE:				
 				
-				li_profile = ((AbstractCurve3D)roi).getCoalignmentProfile(coalignVector, BigTraceData.globCal, BigTraceData.shapeInterpolation, bAlignCosine);
+				li_profile = ((AbstractCurve3D)roi).getCoalignmentProfile(coalignVector, bAlignCosine);
 				break;			
 		}
 		if (li_profile!=null && bMakePlot)

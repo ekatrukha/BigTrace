@@ -46,7 +46,7 @@ public class CurveShapeInterpolation {
 	/** depending on the Roi3D type and interpolation type, 
 	 * builds different "reference" curves.
 	 * Provided points in array are assumed to be in VOXEL coordinates **/
-	public void init(final ArrayList<RealPoint> points, final int nShapeInterpolation)
+	public boolean init(final ArrayList<RealPoint> points, final int nShapeInterpolation)
 	{
 		
 		if(points.size()>1)
@@ -101,8 +101,9 @@ public class CurveShapeInterpolation {
 						break;
 				}
 				
-
+				return true;
 		}
+		return false;
 	}
 	
 	

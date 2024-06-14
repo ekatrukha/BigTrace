@@ -30,7 +30,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	CurveShapeInterpolation interpolator = null;
 	
 	/** returns the length of Polyline using globCal voxel size **/
-	public double getLength(int nShapeInterpolation, final double [] globCal)
+	public double getLength()
 	{
 
 		return interpolator.getLength();
@@ -47,11 +47,8 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 			Roi3D.scaleGlob(vertices.get(vertices.size()-1),globCal).localize(posE);
 			return LinAlgHelpers.distance(posB, posE);
 		}
-		else
-		{
 			
-			return Double.NaN;
-		}
+		return Double.NaN;
 			
 	}
 	
@@ -139,7 +136,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	 * @deprecated use {@link #getIntensityProfilePipe(IntervalView, double [], int, InterpolatorFactory, int)} instead.  
 	 */
 	@Deprecated
-	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
+	public < T extends RealType< T > >  double [][] getIntensityProfile(final IntervalView<T> source, final double [] globCal, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
 	{
 	
 		ArrayList<RealPoint> allPoints = getJointSegmentResampled();
@@ -202,7 +199,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		return out;
 	}
 	/** TEST voxel placement**/
-	public < T extends RealType< T > & NativeType< T > >  double [][] getIntensityProfilePipeTEST(final BigTrace<T> bt, final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory, final int nShapeInterpolation)
+	public < T extends RealType< T > & NativeType< T > >  double [][] getIntensityProfilePipeTEST(final BigTrace<T> bt, final IntervalView<T> source, final double [] globCal, final int nRadius, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
 	{
 	
 		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
@@ -350,7 +347,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	 * 2 x coordinate (in scaled units) 
 	 * 3 y coordinate (in scaled units) 
 	 * 4 z coordinate (in scaled units) **/
-	public double [][] getCoalignmentProfile(final double [] dir_vector, final double [] globCal, final int nShapeInterpolation, final boolean bCosine)
+	public double [][] getCoalignmentProfile(final double [] dir_vector, final boolean bCosine)
 	{
 
 		final ArrayList<RealPoint> allPoints = getJointSegmentResampled();
@@ -416,7 +413,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	@Override
 	public Interval getBoundingBox() 
 	{
-		final ArrayList<RealPoint> allvertices = new ArrayList<RealPoint>();
+		final ArrayList<RealPoint> allvertices = new ArrayList<>();
 		
 		//in VOXEL coordinates
 		if(this.vertices.size()==1)
@@ -431,15 +428,13 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 			}
 			return new FinalInterval(lPos[0],lPos[1]);
 		}
-		else
+		
+		final ArrayList<ArrayList< RealPoint >> point_contours  = Pipe3D.getCountours(interpolator.getVerticesVisual(), interpolator.getTangentsVisual(), BigTraceData.sectorN, 0.5*lineThickness*BigTraceData.dMinVoxelSize);
+		for(int i=0; i<point_contours.size(); i++)
 		{
-			final ArrayList<ArrayList< RealPoint >> point_contours  = Pipe3D.getCountours(interpolator.getVerticesVisual(), interpolator.getTangentsVisual(), BigTraceData.sectorN, 0.5*lineThickness*BigTraceData.dMinVoxelSize);
-			for(int i=0; i<point_contours.size(); i++)
-			{
-				allvertices.addAll(Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
-			}
-			
+			allvertices.addAll(Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
 		}
+		
 		long [][] bBox = new long [2][3];
 		for (int d = 0; d<3;d++)
 		{

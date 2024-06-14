@@ -14,6 +14,7 @@ import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
@@ -66,7 +67,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	///public static final int SECTORS_DEF=16;
 
 	public ArrayList<Roi3D> rois =  new ArrayList<>();
-	public int activeRoi = -1;
+	public AtomicInteger activeRoi = new AtomicInteger (-1);// = -1;
 
 	public ArrayList<Roi3DGroup> groups = new ArrayList<>();
 
@@ -130,7 +131,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 		this.bt = bt;
 		rmDiag = new RoiManager3DDialogs(bt);
-
 		int nButtonSize = 40;
 
 		JPanel panTracing = new JPanel(new GridBagLayout());  
@@ -456,7 +456,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 //listModel.addElement(newRoi.getName());
 		 listModel.addElement(getGroupPrefixRoiName(newRoi));
 		 jlist.setSelectedIndex(rois.size()-1);
-		 activeRoi = rois.size()-1;
+		 activeRoi.set(rois.size()-1);
 
 	 }
 	 
@@ -581,13 +581,17 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 	 public Roi3D getActiveRoi()
 	 {
-		 return rois.get(activeRoi);
+		 if(activeRoi.intValue()>-1)
+		 {
+			 return rois.get(activeRoi.intValue());
+		 }
+		 return null;
 	 }
 	 /** removes ROI and updates ListModel
 	  * does not update activeRoi index! **/
-	 public void removeRoi(int roiIndex)
+	 public synchronized void removeRoi(int roiIndex)
 	 {
-		 int nVal=activeRoi;
+		 int nVal = activeRoi.intValue();
 		 if(roiIndex<rois.size())
 		 {
 			 rois.remove(roiIndex);
@@ -596,8 +600,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 }
 		 //not sure what is going on here (why activeRoi becomes -1),
 		 //but workaround for now
-		 activeRoi=nVal-1;
-		 if(activeRoi<0)
+		 activeRoi.set( nVal-1 );
+		 if(activeRoi.intValue()<0)
 		 {
 			 jlist.clearSelection();
 		 }
@@ -606,25 +610,25 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 
 	 /** removes active ROI and updates ListModel
 	  * and activeRoi index **/
-	 public void removeActiveRoi()
+	 public synchronized void removeActiveRoi()
 	 {
 		 
-		 if(activeRoi>=0)
+		 if(activeRoi.intValue()>=0)
 		 {
-			 rois.remove(activeRoi);
-			 listModel.removeElementAt(activeRoi);
-			 activeRoi--;
-			 if(activeRoi<0)
+			 rois.remove(activeRoi.intValue());
+			 listModel.removeElementAt(activeRoi.intValue());
+			 activeRoi.decrementAndGet();
+			 if(activeRoi.intValue()<0)
 			 {
 				 jlist.clearSelection();
 			 }
-			 fireActiveRoiChanged(activeRoi);
+			 fireActiveRoiChanged(activeRoi.intValue());
 		 }
 
 	 }
 	 
 	 @Override
-	 public void removeAll()
+	 public synchronized void removeAll()
 	 {
 		 rois =  new ArrayList< >();
 	 }
@@ -655,7 +659,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	    	   {
 
 		    	   //save colors in case ROI is active
-		    	   if(i==activeRoi)
+		    	   if(i==activeRoi.intValue())
 		    	   {
 		    		   savePointColor = roi.getPointColor();
 		    		   saveLineColor = roi.getLineColor();
@@ -678,7 +682,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		    		   else
 		    		   {
 		    			   //still draw active ROI
-			    		   if(i==activeRoi)
+			    		   if(i==activeRoi.intValue())
 			    		   {
 			    			   roi.draw(gl, pvm, vm, screen_size);
 			    		   }	    			   
@@ -686,14 +690,14 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		    	   }
 		    	   else
 		    	   {
-		    		   if(i==activeRoi)
+		    		   if(i==activeRoi.intValue())
 		    		   {
 		    			   roi.draw(gl, pvm, vm, screen_size);
 		    		   }
 		    	   }
 		    	  
 		    	   //restore colors in case ROI is active
-		    	   if(i==activeRoi)
+		    	   if(i==activeRoi.intValue())
 		    	   {
 		    		   roi.setPointColor(savePointColor);
 		    		   roi.setLineColor(saveLineColor);
@@ -708,7 +712,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 }
 	 
 	 /**adds new point to Point3D, Polyline3D or Plane3D ROI **/
-	 public void addPoint(RealPoint point_)
+	 public synchronized void addPoint(RealPoint point_)
 	 {
 		 
 		 switch (mode){
@@ -727,7 +731,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 bt.repaintBVV();
 		 
 	 }
-	 public void addPoint3D(RealPoint point_)
+	 public synchronized void addPoint3D(RealPoint point_)
 	 {
 
 		 Point3D pointROI =(Point3D)makeRoi( Roi3D.POINT, bt.btData.nCurrTimepoint); 
@@ -735,11 +739,11 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 addRoi(pointROI);
 	 }
 	 
-	 public void addSegment(RealPoint point_, ArrayList<RealPoint> segments_)
+	 public synchronized void addSegment(RealPoint point_, ArrayList<RealPoint> segments_)
 	 {
 		 LineTrace3D tracing;
 		 //new Line
-		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.LINE_TRACE)
+		 if(jlist.getSelectedIndex()<0 || getActiveRoi().getType()!=Roi3D.LINE_TRACE)
 		 {
 			 tracing = (LineTrace3D) makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
 			 tracing.addFirstPoint(point_);
@@ -749,22 +753,22 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 }
 		 
 		 //add point to line
-		 tracing = (LineTrace3D) rois.get(activeRoi);
+		 tracing = (LineTrace3D) getActiveRoi();
 		 tracing.addPointAndSegment(point_,segments_);
 		 bt.repaintBVV();
 	 }
 	 public RealPoint getLastTracePoint()
 	 { 
 		 LineTrace3D tracing;
-		 tracing = (LineTrace3D) rois.get(activeRoi);
+		 tracing = (LineTrace3D) getActiveRoi();
 		 return tracing.vertices.get(tracing.vertices.size()-1);
 	 }
 
 	 
-	 public boolean removeSegment()
+	 public synchronized boolean removeSegment()
 	 {
 		 LineTrace3D tracing;
-		 tracing = (LineTrace3D) rois.get(activeRoi);
+		 tracing = (LineTrace3D) getActiveRoi();
 		 boolean bRemove =tracing.removeLastSegment();
 		 bt.repaintBVV();
 		 return bRemove;
@@ -773,13 +777,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 /** adds point to active Polyline3D ROI
 	  *  if active ROI is not a polyline, does nothing
 	  *  if there are no active ROIS, starts new polyline **/
-	 public void addPointToLine(RealPoint point_)
+	 public synchronized void addPointToLine(RealPoint point_)
 	 {
 
 		 PolyLine3D polyline;
 		 
 		 //new Line
-		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
+		 if(jlist.getSelectedIndex()<0 || getActiveRoi().getType()!=Roi3D.POLYLINE)
 		 {
 			 polyline  = (PolyLine3D) makeRoi(Roi3D.POLYLINE, bt.btData.nCurrTimepoint);
 			 polyline.addPointToEnd(point_);
@@ -789,7 +793,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 }
 
 		 //add point to line
-		 polyline = (PolyLine3D) rois.get(activeRoi);
+		 polyline = (PolyLine3D) getActiveRoi();
 		 polyline.addPointToEnd(point_);			
 	 
 	 }
@@ -797,13 +801,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 /** adds point to active plane3D ROI
 	  *  if active ROI is not a plane, does nothing
 	  *  if there are no active ROIS, starts new polyline **/
-	 public void addPointToPlane(RealPoint point_)
+	 public synchronized void addPointToPlane(RealPoint point_)
 	 {
 
 		 CrossSection3D plane;
 		 
 		 //new Plane
-		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.PLANE)
+		 if(jlist.getSelectedIndex()<0 || getActiveRoi().getType()!=Roi3D.PLANE)
 		 {	
 			 plane  = (CrossSection3D) makeRoi(Roi3D.PLANE, bt.btData.nCurrTimepoint);
 			 plane.addPoint(point_);
@@ -813,7 +817,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 }
 
 		 //add point to plane
-		 plane = (CrossSection3D) rois.get(activeRoi);
+		 plane = (CrossSection3D) getActiveRoi();
 		 plane.addPoint(point_);			
 	 
 	 }
@@ -823,13 +827,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	  *  if it is a last point, removes ROI object
 	  *  and activates previous Roi in the list (if any of the same type) 
 	  * **/
-	 public void removePointLinePlane()
+	 public synchronized void removePointLinePlane()
 	 {
 		 boolean bPointRemoved =false;
 		 
-		 if(activeRoi<0)
+		 if(jlist.getSelectedIndex()<0)
 			 return;
-		 final int nRoiType = rois.get(activeRoi).getType();
+		 final int nRoiType = getActiveRoi().getType();
 		 
 		 //active ROI is not a line or none ROI selected
 		 //if(nRoiType==Roi3D.POLYLINE || nRoiType==Roi3D.PLANE)
@@ -837,36 +841,36 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			 switch (nRoiType)
 			 {
 			 case Roi3D.POLYLINE:
-				 bPointRemoved = ((PolyLine3D) rois.get(activeRoi)).removeEndPoint();
+				 bPointRemoved = ((PolyLine3D) getActiveRoi()).removeEndPoint();
 				 break;
 			 case Roi3D.PLANE:
-				 bPointRemoved = ((CrossSection3D) rois.get(activeRoi)).removePoint();
+				 bPointRemoved = ((CrossSection3D) getActiveRoi()).removePoint();
 				 break;
 			 case Roi3D.LINE_TRACE:
-				 bPointRemoved = ((LineTrace3D) rois.get(activeRoi)).removeLastSegment();
+				 bPointRemoved = ((LineTrace3D) getActiveRoi()).removeLastSegment();
 				 break;
 			 }
 			
 			 if(!bPointRemoved)
 			 {
-				 removeRoi(activeRoi);
-				 if(activeRoi>=0)
+				 removeRoi(activeRoi.intValue());
+				 if(activeRoi.intValue()>=0)
 				 {
-					 if(rois.get(activeRoi).getType()!=nRoiType)
+					 if(getActiveRoi().getType()!=nRoiType)
 					 {
-						 activeRoi=-1;
+						 activeRoi.set(-1);
 						 jlist.clearSelection();
 					 }
 					 else
 					 {
-						 jlist.setSelectedIndex(activeRoi);
+						 jlist.setSelectedIndex(activeRoi.intValue());
 					 }
 				 }
 			 }
 			 bt.repaintBVV();
 		 }
 	 }
-	 public void setLockMode(boolean bLockMode)
+	 public synchronized void setLockMode(boolean bLockMode)
 	 {
 		 
 		 
@@ -903,11 +907,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			 
 
 	 }
-	 public void unselect()
+	 public synchronized void unselect()
 	 {
-		 activeRoi=-1;
+		 activeRoi.set(-1);
 		 jlist.clearSelection();
-		 fireActiveRoiChanged(activeRoi);
+		 roiMeasure.jlist.clearSelection();
+		 btTracksPanel.jlist.clearSelection();
+		 fireActiveRoiChanged(activeRoi.intValue());
 
 	 }
 	 
@@ -934,19 +940,19 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			//No selection:
 			if (jlist.getSelectedIndex() == -1) 
             {
-            	activeRoi=-1;
+            	activeRoi.set(-1);
             //Multiple selection:disabled right now		
             } else if (jlist.getSelectedIndices().length > 1) {
             
             //Single selection
             } else {
 
-            	activeRoi=jlist.getSelectedIndex();
+            	activeRoi.set(jlist.getSelectedIndex());
             	//update the timepoint
-            	if(rois.get(activeRoi).getTimePoint()!=bt.viewer.state().getCurrentTimepoint())
+            	if(getActiveRoi().getTimePoint()!=bt.viewer.state().getCurrentTimepoint())
             	{
             		bt.btData.bDeselectROITime = false;
-            		bt.viewer.setTimepoint(rois.get(activeRoi).getTimePoint());
+            		bt.viewer.setTimepoint(getActiveRoi().getTimePoint());
             	}
             	//jlist.setSelectedIndex(activeRoi);
             	//update the timepoint
@@ -1013,7 +1019,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		//ACTIVE CHANNEL
 		if(e.getSource() == cbActiveChannel)
 		{
-			bt.btData.nChAnalysis=cbActiveChannel.getSelectedIndex();
+			bt.btData.nChAnalysis = cbActiveChannel.getSelectedIndex();
 			roiMeasure.cbActiveChannel.setSelectedIndex(bt.btData.nChAnalysis);
 		}
 		
@@ -1033,7 +1039,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		if(e.getSource() == butShowAll)
 		{
 			this.bShowAll=butShowAll.isSelected();
-			fireActiveRoiChanged(activeRoi); 
+			fireActiveRoiChanged(activeRoi.intValue()); 
 		}
 		
 		//SAVE ROIS
@@ -1085,21 +1091,21 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		}
 		
 		///SIDE ROI SPECIFIC LIST BUTTONS
-		if(activeRoi>=0)
+		if(activeRoi.intValue()>=0)
 		{
 			//DELETE
 			if(e.getSource() == butDelete)
 			{
-				 removeRoi(activeRoi);
-				 if(activeRoi>=0)
+				 removeRoi(activeRoi.intValue());
+				 if(activeRoi.intValue()>=0)
 				 {
-					 jlist.setSelectedIndex(activeRoi);
+					 jlist.setSelectedIndex(activeRoi.intValue());
 				 }
 				 else
 				 {
 					 jlist.clearSelection();
 				 }
-				 fireActiveRoiChanged(activeRoi); 
+				 fireActiveRoiChanged(activeRoi.intValue()); 
 			}
 			//RENAME
 			if(e.getSource() == butRename)
@@ -1112,13 +1118,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 						JOptionPane.PLAIN_MESSAGE,
 						null,
 						null,
-						rois.get(activeRoi).getName());
+						getActiveRoi().getName());
 
 				//If a string was returned, rename
 				if ((s != null) && (s.length() > 0)) 
 				{
-					rois.get(activeRoi).setName(s);
-					listModel.set(activeRoi,s);
+					getActiveRoi().setName(s);
+					listModel.set(activeRoi.intValue(),s);
 					return;
 				}
 
@@ -1138,10 +1144,10 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			
 			if(e.getSource() == butApplyGroup)
 			{
-				Roi3D activeROI = rois.get(activeRoi);
+				Roi3D activeROI = getActiveRoi();
 				activeROI.setGroup(groups.get(nActiveGroup));
 				activeROI.setGroupInd(nActiveGroup);
-				listModel.setElementAt(getGroupPrefixRoiName(activeROI), activeRoi);
+				listModel.setElementAt(getGroupPrefixRoiName(activeROI), activeRoi.intValue());
 			}	
 			
 
@@ -1160,7 +1166,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		NumberField nfLineThickness = new NumberField(4);
 		NumberField nfOpacity = new NumberField(4);
 		
-		Roi3D currentROI = rois.get(activeRoi);
+		Roi3D currentROI = getActiveRoi();
 
 		String[] sRenderType = { "Outline", "Wire", "Surface" };
 		JComboBox<String> renderTypeList = new JComboBox<>(sRenderType);
@@ -1321,7 +1327,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 			}
 			
-			fireActiveRoiChanged(activeRoi); 
+			fireActiveRoiChanged(activeRoi.intValue()); 
 		}
 	}
 	

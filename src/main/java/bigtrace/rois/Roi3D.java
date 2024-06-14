@@ -96,21 +96,21 @@ public interface Roi3D
 	public static int stringTypeToInt(String sType)
 	{
 		if(sType.equals("Point"))
-		{ return POINT;};
+		{ return POINT;}
 		if(sType.equals("Polyline"))
-		{ return POLYLINE;};
+		{ return POLYLINE;}
 		if(sType.equals("LineTrace"))
-		{ return LINE_TRACE;};
+		{ return LINE_TRACE;}
 		if(sType.equals("Plane"))
-		{ return PLANE;};
+		{ return PLANE;}
 		if(sType.equals("Box"))
-		{ return BOX;};
+		{ return BOX;}
 		
 		return -1;
 	}
 	public static ArrayList<RealPoint> reverseArrayRP(final ArrayList<RealPoint> vert_in) 
 	{
-		ArrayList<RealPoint> reversed = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> reversed = new ArrayList<>();
 		
 		for(int i=vert_in.size()-1;i>=0;i--)
 		{
@@ -136,7 +136,7 @@ public interface Roi3D
 	 * **/
 	public static ArrayList<RealPoint> scaleGlob(final ArrayList<RealPoint> in, final double [] globCal)
 	{
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>(in.size());
+		ArrayList<RealPoint> out = new ArrayList<>(in.size());
 			
 		for (int i=0;i<in.size();i++)
 		{
@@ -162,7 +162,7 @@ public interface Roi3D
 	 * **/
 	public static ArrayList<RealPoint> scaleGlobInv(final ArrayList<RealPoint> in, final double [] globCal)
 	{
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>(in.size());
+		ArrayList<RealPoint> out = new ArrayList<>(in.size());
 		
 		for (int i=0;i<in.size();i++)
 		{

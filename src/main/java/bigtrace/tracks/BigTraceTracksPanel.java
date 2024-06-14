@@ -25,7 +25,9 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
 import bigtrace.BigTrace;
+import bigtrace.BigTraceData;
 import bigtrace.gui.PanelTitle;
+
 
 
 public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener
@@ -153,10 +155,30 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		cr.weighty = 0.01;
 		add(new JLabel(), cr);    
 	}
+	
+	void simpleTracking()
+	{
+		CurveTracker<T> btTracker = new CurveTracker< >(bt);
+		btTracker.execute();
+//		try
+//		{
+//			btTracker.traceCurve();
+//		}
+//		catch ( InterruptedException exc )
+//		{
+//			exc.printStackTrace();
+//		}
+				
+	}
 	@Override
 	public void actionPerformed( ActionEvent e )
 	{
-		
+		// RUN TRACKING
+		if(e.getSource() == butTrack && jlist.getSelectedIndex()>-1)
+		{
+			if(BigTraceData.nNumTimepoints > 1)
+				simpleTracking();
+		}
 	}
 	@Override
 	public void valueChanged( ListSelectionEvent e )

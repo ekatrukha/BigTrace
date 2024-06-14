@@ -58,7 +58,7 @@ public abstract class AbstractRoi3D implements Roi3D {
 	@Override
 	public float getOpacity()
 	{
-		return ((float)(pointColor.getAlpha())/255.0f);
+		return (pointColor.getAlpha()/255.0f);
 	}
 	@Override
 	public void setOpacity(float fOpacity)

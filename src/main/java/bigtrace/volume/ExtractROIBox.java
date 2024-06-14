@@ -78,9 +78,9 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 		//output calibration
 		cal.setUnit(bt.btData.sVoxelUnit);
 		cal.setTimeUnit(bt.btData.sTimeUnit);
-		cal.pixelWidth= BigTraceData.dMinVoxelSize;
+		cal.pixelWidth = BigTraceData.dMinVoxelSize;
 		cal.pixelHeight= BigTraceData.dMinVoxelSize;
-		cal.pixelDepth= BigTraceData.dMinVoxelSize;
+		cal.pixelDepth = BigTraceData.dMinVoxelSize;
 		final int nTotROIs = listROIs.size();  
 		if(nTotROIs == 0)
 			return null;

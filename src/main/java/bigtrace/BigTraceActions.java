@@ -111,7 +111,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 							bt.setTraceBoxMode(true);
 							
 							//nothing selected, make a new tracing
-							if(bt.roiManager.activeRoi==-1)
+							if(bt.roiManager.activeRoi.intValue()==-1)
 							{
 								//make a temporary ROI to calculate TraceBox
 								LineTrace3D tracing_for_box = (LineTrace3D) bt.roiManager.makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
@@ -140,7 +140,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 							
 							boolean bMakeNewTrace = false;
 							
-							if(bt.roiManager.activeRoi==-1)
+							if(bt.roiManager.activeRoi.intValue()==-1)
 							{
 								bMakeNewTrace = true;
 							}
@@ -220,7 +220,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 				{
 					bt.btData.nPointsInTraceBox--;
 					bt.roiManager.removeActiveRoi();
-					bt.roiManager.activeRoi=-1;
+					bt.roiManager.activeRoi.set(-1);
 					bt.setTraceBoxMode(false);						
 					bt.removeTraceBox();
 					
@@ -275,7 +275,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		//solution for now, to not interfere with typing
 		if(!bt.bInputLock && !(c instanceof JTextField))
 		{
-			if(bt.roiManager.activeRoi>=0)
+			if(bt.roiManager.activeRoi.intValue()>=0)
 			{
 				int nRoiType = bt.roiManager.getActiveRoi().getType();
 				//continue tracing for the selected tracing
@@ -335,7 +335,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 			{	
 				if(RoiManager3D.mode == RoiManager3D.ADD_POINT_ONECLICKLINE)
 				{
-					if(bt.roiManager.activeRoi>=0)
+					if(bt.roiManager.activeRoi.intValue()>=0)
 					{
 						if(bt.roiManager.getActiveRoi().getType() == Roi3D.LINE_TRACE)
 						{

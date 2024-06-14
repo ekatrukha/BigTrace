@@ -28,12 +28,10 @@ import net.imglib2.roi.util.RealLocalizableRealPositionable;
 import net.imglib2.util.LinAlgHelpers;
 
 
-public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyline 
-{
-	
+public class PolyLine3D extends AbstractCurve3D implements WritablePolyline 
+{	
 
 	public VisPointsScaled verticesVis;
-	//public VisPolyLineScaled edgesVis;
 	public VisPolyLineMesh edgesVis;
 	
 
@@ -49,7 +47,7 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 				
 		renderType = preset_in.renderType;
 
-		vertices = new ArrayList<RealPoint>();
+		vertices = new ArrayList<>();
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
@@ -84,27 +82,30 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 		{
 			vertices.add(new RealPoint(in_));			
 		}
+		
 		updateRenderVertices();
 	}
 	//removes the point from the "end" and returns "true"
 	//if it is the last point, returns "false"
 	public boolean removeEndPoint()
-	 {
-		 
-		 int nP= vertices.size();
-		 if(nP>0)
-			{
-			 	vertices.remove(nP-1);
-			 	updateRenderVertices();
-			 	if(nP==1)
-			 		return false;
-			 	else
-			 		return true;
-			}
-		 return false;
-	 }
+	{
+
+		final int nP = vertices.size();
+		
+		if(nP>0)
+		{
+			vertices.remove(nP-1);
+			updateRenderVertices();
+			if(nP==1)
+				return false;
+			return true;
+		}
+		
+		return false;
+	}
 	
 	
+	@Override
 	public void updateRenderVertices()
 	{
 
@@ -116,9 +117,9 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 		}
 		else
 		{
-			if(vertices.size()==1)
+			if(vertices.size() == 1)
 			{
-				edgesVis.nPointsN=0;	
+				edgesVis.nPointsN = 0;	
 			}
 		}
 
@@ -126,7 +127,7 @@ public class PolyLine3D extends AbstractCurve3D implements Roi3D, WritablePolyli
 	}
 	public void setVertices(ArrayList<RealPoint> vertices_)
 	{
-		vertices = new ArrayList<RealPoint>();
+		vertices = new ArrayList<>();
 		for(int i=0;i<vertices_.size();i++)
 			vertices.add(new RealPoint(vertices_.get(i)));		
 		updateRenderVertices();
