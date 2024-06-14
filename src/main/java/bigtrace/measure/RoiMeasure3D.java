@@ -288,9 +288,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		cr.gridx=0;
 		cr.gridy=0;
 		cr.fill = GridBagConstraints.HORIZONTAL;
-
-
-		
+	
 		//Line Tools
 		add(panLineTools,cr);
 		//roi list

@@ -53,6 +53,7 @@ import bigtrace.gui.GuiMisc;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.measure.RoiMeasure3D;
+import bigtrace.tracks.BigTraceTracksPanel;
 
 
 public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener {
@@ -80,13 +81,15 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	public static int mode = (int) Prefs.get("BigTrace.RoiManagerMode", ADD_POINT_LINE);
 	public boolean bShowAll = true;
 
+	
+	//MEASURE OBJECT/PANEL
+	public RoiMeasure3D<T> roiMeasure = null;
+	
+	//TRACKS PANEL
+	public BigTraceTracksPanel<T> btTracksPanel = null;
+	
 	//dialogs
-	@SuppressWarnings("rawtypes")
-	final RoiManager3DDialogs rmDiag;
-
-	//MEASURE OBJECT
-	@SuppressWarnings("rawtypes")
-	public RoiMeasure3D roiMeasure = null;
+	final RoiManager3DDialogs<T> rmDiag;
 
 	//GUI
 	public DefaultListModel<String> listModel; 
@@ -401,7 +404,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		cbActiveGroup.addActionListener(this);
 		butApplyGroup = new JButton("Apply");
 		butApplyGroup.addActionListener(this);
-		icon_path =bigtrace.BigTrace.class.getResource("/icons/group_visibility.png");
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/group_visibility.png");
 		tabIcon = new ImageIcon(icon_path);
 		butDisplayGroup = new JButton(tabIcon);
 		butDisplayGroup.setToolTipText("Toggle ROI groups visibility");
@@ -537,14 +540,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 public String getGroupName(final Roi3D nRoi)
 	 {
 		 final int nInd = nRoi.getGroupInd(); 
+		 
 		 if(nInd == 0 || (nInd> groups.size()-1))
 		 {
 			 return sUndefinedGroupName;
 		 }
-		 else
-		 {
-			 return groups.get(nInd).getName();
-		 }
+		 
+		 return groups.get(nInd).getName();
 	 }
 	 /** returns ROI name with a short 3 letters group prefix  in squared brackets**/
 	 public String getGroupPrefixRoiName(final Roi3D nRoi)
@@ -567,16 +569,14 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 public String getTimeGroupPrefixRoiName(final Roi3D roi)
 	 {
 		 final String sTimeFormat = Integer.toString(String.valueOf(BigTraceData.nNumTimepoints).length());
-		 
+
 		 if(BigTraceData.nNumTimepoints>1)
 		 {
 			 return "T"+String.format("%0"+sTimeFormat+"d", roi.getTimePoint())+"_"+bt.roiManager.getGroupPrefixRoiName(roi);
 		 }
+		 
 		 //single time point, skip time
-		 else
-		 {
-			 return bt.roiManager.getGroupPrefixRoiName(roi);
-		 }
+		 return bt.roiManager.getGroupPrefixRoiName(roi);
 	 }
 
 	 public Roi3D getActiveRoi()
@@ -623,9 +623,10 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 	 }
 	 
+	 @Override
 	 public void removeAll()
 	 {
-		 rois =  new ArrayList<Roi3D >();
+		 rois =  new ArrayList< >();
 	 }
 	 
 	 /** Draw all ROIS **/
@@ -638,8 +639,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	       int nShift;
 	       float fOpacityScale = 1.0f;
 	       float fOpacitySave = 1.0f;
-	       int nMinF = (int)Math.min(0,BigTraceData.timeFade);
-	       int nMaxF = (int)Math.max(0,BigTraceData.timeFade);
+	       int nMinF = Math.min(0,BigTraceData.timeFade);
+	       int nMaxF = Math.max(0,BigTraceData.timeFade);
 	       if(BigTraceData.timeRender==0)
 	       {
 		       nMinF = 0;
@@ -661,7 +662,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		    		   roi.setPointColorRGB(activePointColor);
 		    		   roi.setLineColorRGB(activeLineColor);
 		    	   }
-		    	   nShift = (int)Math.abs(nShift);
+		    	   nShift = Math.abs(nShift);
 	    		   if(nShift>0)
 	    		   {
 	    			   fOpacityScale=1.0f-(float)nShift/(float)(Math.abs(BigTraceData.timeFade)+1);
@@ -746,13 +747,11 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			 //activeRoi = rois.size()-1; 
 			 return;
 		 }
+		 
 		 //add point to line
-		 else
-		 {
-			 tracing = (LineTrace3D) rois.get(activeRoi);
-			 tracing.addPointAndSegment(point_,segments_);
-			 bt.repaintBVV();
-		 }
+		 tracing = (LineTrace3D) rois.get(activeRoi);
+		 tracing.addPointAndSegment(point_,segments_);
+		 bt.repaintBVV();
 	 }
 	 public RealPoint getLastTracePoint()
 	 { 
@@ -778,6 +777,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 {
 
 		 PolyLine3D polyline;
+		 
 		 //new Line
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.POLYLINE)
 		 {
@@ -789,12 +789,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 }
 
 		 //add point to line
-		 else
-		 {
-			 polyline = (PolyLine3D) rois.get(activeRoi);
-			 polyline.addPointToEnd(point_);
-		 }
-			
+		 polyline = (PolyLine3D) rois.get(activeRoi);
+		 polyline.addPointToEnd(point_);			
 	 
 	 }
 	 
@@ -805,6 +801,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 {
 
 		 CrossSection3D plane;
+		 
 		 //new Plane
 		 if(activeRoi<0 || rois.get(activeRoi).getType()!=Roi3D.PLANE)
 		 {	
@@ -816,12 +813,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 }
 
 		 //add point to plane
-		 else
-		 {
-			 plane = (CrossSection3D) rois.get(activeRoi);
-			 plane.addPoint(point_);
-		 }
-			
+		 plane = (CrossSection3D) rois.get(activeRoi);
+		 plane.addPoint(point_);			
 	 
 	 }
 	 
@@ -881,6 +874,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 	 
 		 	 GuiMisc.setPanelStatusAllComponents(this, bState);
 		 	 GuiMisc.setPanelStatusAllComponents(roiMeasure, bState);
+		 	 GuiMisc.setPanelStatusAllComponents(btTracksPanel, bState);
 		 	 
 		 	 //keep it on
 		 	 butShowAll.setEnabled(true);
@@ -936,6 +930,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 			bt.repaintBVV();
 			roiMeasure.jlist.setSelectedIndex(jlist.getSelectedIndex());
+			btTracksPanel.jlist.setSelectedIndex( jlist.getSelectedIndex() );
 			//No selection:
 			if (jlist.getSelectedIndex() == -1) 
             {
@@ -1064,7 +1059,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		//Groups Manager
 		if(e.getSource() == butROIGroups)
 		{
-			Roi3DGroupManager<T> dialGroup = new Roi3DGroupManager<T>(this);
+			Roi3DGroupManager<T> dialGroup = new Roi3DGroupManager<>(this);
 			dialGroup.initGUI();
 			dialGroup.show();
 			int nGroupSave = nActiveGroup;
@@ -1168,7 +1163,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		Roi3D currentROI = rois.get(activeRoi);
 
 		String[] sRenderType = { "Outline", "Wire", "Surface" };
-		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
+		JComboBox<String> renderTypeList = new JComboBox<>(sRenderType);
 		nfTimePoint.setIntegersOnly(true);
 		nfTimePoint.setText(Integer.toString(currentROI.getTimePoint()));
 		nfPointSize.setText(Float.toString(currentROI.getPointSize()));
@@ -1569,7 +1564,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	/** show Group visibility dialog **/
 	public void dialGroupVisibility()
 	{
-		Roi3DGroupVisibility<T> groupVis = new Roi3DGroupVisibility<T>(this);
+		Roi3DGroupVisibility<T> groupVis = new Roi3DGroupVisibility<>(this);
 		groupVis.show();
 	}
 	
@@ -1585,9 +1580,14 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 nActiveGroup = 0;
 
 	}
-	public void setRoiMeasure3D( RoiMeasure3D<?> roiMeasure_)
+	public void setRoiMeasure3D( RoiMeasure3D<T> roiMeasure_)
 	{
-		 this.roiMeasure=roiMeasure_;
+		 this.roiMeasure = roiMeasure_;
+	}
+	
+	public void setTracksPanel( BigTraceTracksPanel<T> btTracksPanel_)
+	{
+		 this.btTracksPanel = btTracksPanel_;
 	}
 
 	public void repaintBVV()

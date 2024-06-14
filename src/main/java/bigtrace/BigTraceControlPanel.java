@@ -40,6 +40,7 @@ import bigtrace.gui.VoxelSizePanel;
 import bigtrace.measure.RoiMeasure3D;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.RoiManager3D;
+import bigtrace.tracks.BigTraceTracksPanel;
 import bigtrace.volume.ExtractClip;
 import btbvv.vistools.BvvStackSource;
 import ij.Prefs;
@@ -69,9 +70,10 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	public VoxelSizePanel voxelSizePanel;
 	public RenderMethodPanel<T> renderMethodPanel;
 	
-	RoiManager3D<T> roiManager;
-	RoiMeasure3D<T> roiMeasure;
 	
+	final RoiManager3D<T> roiManager;
+	final RoiMeasure3D<T> roiMeasure;
+	BigTraceTracksPanel<T> btTracksPanel;
 
 	double [][] nDisplayMinMax;
 
@@ -86,11 +88,13 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		//finalPanel = new JPanel(new GridBagLayout());
 		super(new GridBagLayout());
 
-		btdata=btd_;
-		bt=bt_;		
-		roiManager=roiManager_;
+		btdata = btd_;
+		bt = bt_;		
+		roiManager = roiManager_;
 		roiMeasure = new RoiMeasure3D<>(bt);
+		btTracksPanel = new BigTraceTracksPanel<>(bt);
 		roiManager.setRoiMeasure3D(roiMeasure);
+		roiManager.setTracksPanel(btTracksPanel);
 		
 		JTabbedPane tabPane = new JTabbedPane(SwingConstants.LEFT);
 		
@@ -112,7 +116,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    //TRACKS	    
 	    icon_path = bigtrace.BigTrace.class.getResource("/icons/tracks.png");
 	    tabIcon = new ImageIcon(icon_path);
-	    tabPane.addTab("",tabIcon ,null,"Tracking");
+	    tabPane.addTab("",tabIcon ,btTracksPanel,"Tracking");
 
 	    
 	    icon_path = bigtrace.BigTrace.class.getResource("/icons/shortcut.png");
