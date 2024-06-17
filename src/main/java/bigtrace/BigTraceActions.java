@@ -40,6 +40,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		actions.runnableAction(() -> actionAddPoint(),	            "add point", "F" );
 		actions.runnableAction(() -> actionNewRoiTraceMode(),	    "new trace", "V" );		
 		actions.runnableAction(() -> actionRemovePoint(),       	"remove point",	"G" );
+		actions.runnableAction(() -> actionDeleteROI(),       		"delete ROI", "DELETE" );
 		actions.runnableAction(() -> actionDeselect(),	            "deselect", "H" );
 		actions.runnableAction(() -> actionReversePoints(),         "reverse curve point order","Y" );
 		actions.runnableAction(() -> actionAdvanceTraceBox(),       "advance trace box", "T" );
@@ -240,6 +241,17 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 			bt.viewer.showMessage("Point removed");
 
 		}					
+		
+	}
+	
+	public void actionDeleteROI()
+	{
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bt.bInputLock && !(c instanceof JTextField))
+		{
+			bt.roiManager.deleteROI();
+		}
 		
 	}
 	/** deselects current ROI (and finishes tracing)

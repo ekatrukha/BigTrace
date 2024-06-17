@@ -917,6 +917,20 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 	 }
 	 
+	 public synchronized void deleteROI()
+	 {
+		 removeRoi(activeRoi.intValue());
+		 if(activeRoi.intValue()>=0)
+		 {
+			 jlist.setSelectedIndex(activeRoi.intValue());
+		 }
+		 else
+		 {
+			 jlist.clearSelection();
+		 }
+		 fireActiveRoiChanged(activeRoi.intValue()); 
+	 }
+	 
 	 public void addRoiManager3DListener(Listener l) {
 		 listeners.add(l);
 	 }
@@ -1096,16 +1110,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			//DELETE
 			if(e.getSource() == butDelete)
 			{
-				 removeRoi(activeRoi.intValue());
-				 if(activeRoi.intValue()>=0)
-				 {
-					 jlist.setSelectedIndex(activeRoi.intValue());
-				 }
-				 else
-				 {
-					 jlist.clearSelection();
-				 }
-				 fireActiveRoiChanged(activeRoi.intValue()); 
+				deleteROI();
 			}
 			//RENAME
 			if(e.getSource() == butRename)
