@@ -20,6 +20,7 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
 import bigtrace.math.OneClickTrace;
+import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.Roi3DGroup;
 import bigtrace.volume.VolumeMisc;
@@ -62,12 +63,14 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		bt.roiManager.setLockMode(true);
 		
 		//make a New Group
-		final Roi3DGroup newGroupTrack = new Roi3DGroup(bt.roiManager.groups.get( currentRoi.getGroupInd() ), "test"); 
-		bt.roiManager.groups.add(newGroupTrack);
+		final Roi3DGroup newGroupTrack = new Roi3DGroup( currentRoi, String.format("%03d", BigTraceData.nTrackN.getAndIncrement())); 
+		bt.roiManager.addGroup( newGroupTrack );
+		
+		bt.roiManager.applyGroupToROI( currentRoi, newGroupTrack  );
 		//int nTP = nInitialTimePoint+1; 
 		OneClickTrace<T> calcTask = new OneClickTrace<>();
-		
-		for(int nTP = nInitialTimePoint+1; nTP<BigTraceData.nNumTimepoints; nTP++)
+		boolean bTracing = true;
+		for(int nTP = nInitialTimePoint+1; nTP<BigTraceData.nNumTimepoints && bTracing; nTP++)
 		{
 			bt.viewer.setTimepoint(nTP);
 			
@@ -96,7 +99,17 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 			//bt.roiManager.unselect();
 			//get the new box
 			currentRoi = bt.roiManager.rois.get(bt.roiManager.rois.size()-1);
-			currentRoi.setGroup( newGroupTrack );
+			//found just one vertex, abort
+			if(((LineTrace3D)currentRoi).vertices.size()<2)
+			{
+				bt.roiManager.removeRoi(bt.roiManager.rois.size()-1);
+				bTracing = false;
+				System.out.println("Very short (one voxel) ROI found, stopping tracing at frame "+ Integer.toString( nTP )+".");
+			}
+			else
+			{
+				bt.roiManager.applyGroupToROI( currentRoi, newGroupTrack  );
+			}
 			
 		}
 		

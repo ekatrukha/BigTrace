@@ -570,7 +570,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		}
 
 
-		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
+		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<>(3);
 
 		directionVectors =  Views.translate(dV, minV);
 		salWeights =  Views.translate(sW, minV[0],minV[1],minV[2]);
@@ -611,11 +611,12 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+dSDN*bt.btData.sigmaTrace[d]);
 		}
 		//get an box around the target
-		FinalInterval maxSearchArea = new FinalInterval(rangeMax[0],rangeMax[1]);
+		FinalInterval searchArea = new FinalInterval(rangeMax[0],rangeMax[1]);
 		
 		RealPoint out = new RealPoint(3);
-		
-		VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(salWeights), maxSearchArea),out);
+		searchArea  = Intervals.intersect( fullInput, searchArea );
+		//VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(salWeights), maxSearchArea),out);
+		VolumeMisc.findMaxLocation(Views.interval(salWeights, searchArea),out);
 		return out;
 		
 	}
@@ -713,7 +714,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 					{
 						//let's make a hash string
 						String sKey = Integer.toString(d1)+Integer.toString(d2)+Integer.toString(d3);
-						ArrayList<int[]> around =new ArrayList<int[]>();
+						ArrayList<int[]> around =new ArrayList<>();
 						//System.out.print(sKey);
 						
 						nCount++;	

@@ -92,13 +92,15 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	//dialogs
 	final RoiManager3DDialogs<T> rmDiag;
 
-	//GUI
+	//ROI LIST
 	public DefaultListModel<String> listModel; 
 	public JList<String> jlist;
 	JScrollPane listScroller;
+	
 	public static interface Listener {
 		public void activeRoiChanged(int nRoi);				
 	}
+	
 	JButton butDelete;
 	JButton butRename;
 	JButton butDeselect;
@@ -1084,20 +1086,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			Roi3DGroupManager<T> dialGroup = new Roi3DGroupManager<>(this);
 			dialGroup.initGUI();
 			dialGroup.show();
-			int nGroupSave = nActiveGroup;
-			cbActiveGroup.removeAllItems();
-			for(int i=0;i<groups.size();i++)
-			{
-				cbActiveGroup.addItem(groups.get(i).getName());
-			}
-			if(nGroupSave>(cbActiveGroup.getItemCount()-1))
-			{
-				cbActiveGroup.setSelectedIndex(0);
-			}
-			else
-			{
-				cbActiveGroup.setSelectedIndex(nGroupSave);
-			}
+			updateGroupSelector();
 			
 		}
 		//GROUP VISIBILITY
@@ -1130,8 +1119,9 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 				//If a string was returned, rename
 				if ((s != null) && (s.length() > 0)) 
 				{
-					getActiveRoi().setName(s);
-					listModel.set(activeRoi.intValue(),s);
+					final Roi3D currROI = getActiveRoi();
+					currROI.setName(s);
+					listModel.set(activeRoi.intValue(),getGroupPrefixRoiName(currROI));
 					return;
 				}
 
@@ -1151,10 +1141,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			
 			if(e.getSource() == butApplyGroup)
 			{
-				Roi3D activeROI = getActiveRoi();
-				activeROI.setGroup(groups.get(nActiveGroup));
-				activeROI.setGroupInd(nActiveGroup);
-				listModel.setElementAt(getGroupPrefixRoiName(activeROI), activeRoi.intValue());
+				applyGroupToROI(activeRoi.intValue(), nActiveGroup);
 			}	
 			
 
@@ -1560,6 +1547,72 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			}
 		}
 	}
+	
+	void updateGroupSelector()
+	{
+		int nGroupSave = nActiveGroup;
+		cbActiveGroup.removeAllItems();
+		for(int i=0;i<groups.size();i++)
+		{
+			//cbActiveGroup.addItem(groups.get(i).getName());
+			cbActiveGroup.insertItemAt(groups.get(i).getName(),i);
+		}
+		if(nGroupSave>(cbActiveGroup.getItemCount()-1))
+		{
+			cbActiveGroup.setSelectedIndex(0);
+		}
+		else
+		{
+			cbActiveGroup.setSelectedIndex(nGroupSave);
+		}
+		
+	}
+	
+	public void addGroup(Roi3DGroup group_in)
+	{
+		groups.add( group_in );		
+		updateGroupSelector();
+		
+	}
+	/** apply group to roi **/	
+	public void applyGroupToROI(int nRoiIndex, int nGroupIndex)
+	{
+
+		if(nRoiIndex<0 && nRoiIndex>rois.size()-1)
+			return;
+		if(nGroupIndex<0 && nGroupIndex>groups.size()-1)
+			return;
+		final Roi3D currROI = rois.get( nRoiIndex );
+		currROI.setGroup(groups.get(nGroupIndex));
+		currROI.setGroupInd(nGroupIndex);
+		listModel.setElementAt(getGroupPrefixRoiName(currROI), nRoiIndex);
+	}
+	
+	public void applyGroupToROI(Roi3D roiIn, int nGroupIndex)
+	{
+		for (int i =0;i<rois.size();i++)
+		{
+			if(roiIn.equals( rois.get( i ) ))
+			{
+				applyGroupToROI(i,nGroupIndex);
+				return;
+			}
+		}
+	}
+
+	public void applyGroupToROI(Roi3D roiIn, Roi3DGroup rGroup)
+	{
+		for (int i =0;i<groups.size();i++)
+		{
+			if(rGroup.equals( groups.get( i ) ))
+			{
+				applyGroupToROI(roiIn, i);
+				return;
+			}
+		}
+	}
+
+	
 	/** deletes ROIs of specific group **/
 	public void deleteROIGroup(int nGroupN)
 	{

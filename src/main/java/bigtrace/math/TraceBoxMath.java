@@ -34,10 +34,12 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 	private String progressState;
 	public RealPoint refinePosition = null;
 	
+	@Override
 	public String getProgressState()
 	{
 		return progressState;
 	}
+	@Override
 	public void setProgressState(String state_)
 	{
 		progressState=state_;
@@ -103,7 +105,7 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 		//System.out.println("impl new Elapsed Time in milli seconds: "+ (end1-start1));
 		
 
-		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<FloatType>(3);
+		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<>(3);
 		ArrayImg<FloatType, FloatArray> dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
 		ArrayImg<FloatType, FloatArray> sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
 		ArrayImg<FloatType, FloatArray> nC = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
@@ -180,11 +182,11 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+dSDN*bt.btData.sigmaTrace[d]);
 		}
 		//get an box around the target
-		FinalInterval maxSearchArea = new FinalInterval(rangeMax[0],rangeMax[1]);
+		FinalInterval searchArea = new FinalInterval(rangeMax[0],rangeMax[1]);
 		
 		RealPoint out = new RealPoint(3);
-		
-		VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(bt.btData.trace_weights), maxSearchArea),out);
+		searchArea  = Intervals.intersect( bt.btData.trace_weights, searchArea );
+		VolumeMisc.findMaxLocation(Views.interval(bt.btData.trace_weights, searchArea),out);
 		return out;
 		
 	}

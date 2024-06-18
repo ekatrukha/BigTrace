@@ -156,7 +156,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		NumberField nfOpacity = new NumberField(4);
 
 		String[] sRenderType = { "Outline", "Wire", "Surface" };
-		JComboBox<String> renderTypeList = new JComboBox<String>(sRenderType);
+		JComboBox<String> renderTypeList = new JComboBox<>(sRenderType);
 		
 		
 		tfName.setText(preset.getName());

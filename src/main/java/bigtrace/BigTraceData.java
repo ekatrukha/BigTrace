@@ -2,6 +2,7 @@ package bigtrace;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import bigtrace.gui.BCsettings;
 import bigtrace.gui.RenderSettings;
@@ -256,7 +257,11 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	/** storage of the dataset orientation before entering TraceBox mode **/
 	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
 	
-
+	////////////////////////// TRACKING
+	
+	/** for now, generate a number of the track **/
+	
+	public static AtomicInteger nTrackN = new AtomicInteger(1);
 	
 	public BigTraceData(final BigTrace<T> bt_)
 	{

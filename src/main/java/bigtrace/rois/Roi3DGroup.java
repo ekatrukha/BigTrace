@@ -6,35 +6,49 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
-public class Roi3DGroup {
-	 public Color pointColor = Color.GREEN;
-	 public Color lineColor = Color.BLUE;
-	 public String sName;
+public class Roi3DGroup 
+{
 
-	 public float lineThickness = 6.0f;
-	 public float pointSize = 3.0f;
-	 public int renderType = Roi3D.SURFACE;
-	 public boolean bVisible = true;
-	 
-	 public Roi3DGroup(String sGroupName_,  float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_)
-	 {
-		 sName=new String(sGroupName_);
-		 lineThickness=lineThickness_;
-		 pointSize=pointSize_;
-		 renderType = renderType_;
-		 setPointColor(pointColor_);
-		 setLineColor(lineColor_);
-		 bVisible = true;
-	 }
-	 public Roi3DGroup(Roi3DGroup preset_in, String name)
-	 {
-		 sName=new String(name);
-		 lineThickness=preset_in.getLineThickness();
-		 pointSize=preset_in.getPointSize();
-		 renderType = preset_in.getRenderType();
-		 setPointColor(preset_in.getPointColor());
-		 setLineColor(preset_in.getLineColor());		 
-	 }
+	public Color pointColor = Color.GREEN;
+	public Color lineColor = Color.BLUE;
+	public String sName;
+
+	public float lineThickness = 6.0f;
+	public float pointSize = 3.0f;
+	public int renderType = Roi3D.SURFACE;
+	public boolean bVisible = true;
+
+	public Roi3DGroup(String sGroupName_,  float pointSize_, Color pointColor_, float lineThickness_, Color lineColor_,  int renderType_)
+	{
+		sName = new String(sGroupName_);
+		lineThickness = lineThickness_;
+		pointSize = pointSize_;
+		renderType = renderType_;
+		setPointColor(pointColor_);
+		setLineColor(lineColor_);
+		bVisible = true;
+	}
+	
+	public Roi3DGroup(Roi3DGroup preset_in, String name)
+	{
+		sName = new String(name);
+		lineThickness = preset_in.getLineThickness();
+		pointSize = preset_in.getPointSize();
+		renderType = preset_in.getRenderType();
+		setPointColor(preset_in.getPointColor());
+		setLineColor(preset_in.getLineColor());		 
+	}
+	
+	public Roi3DGroup(Roi3D preset_in, String name)
+	{
+		sName = new String(name);
+		lineThickness = preset_in.getLineThickness();
+		pointSize = preset_in.getPointSize();
+		renderType = preset_in.getRenderType();
+		setPointColor(preset_in.getPointColor());
+		setLineColor(preset_in.getLineColor());		 
+	}
+
 	 
 	public void setPointColor(Color pointColor_) {
 		
@@ -91,22 +105,22 @@ public class Roi3DGroup {
 
 		return pointSize;
 	}
+	
 	public float getOpacity()
 	{
-		return ((float)(pointColor.getAlpha())/255.0f);
+		return (pointColor.getAlpha()/255.0f);
 	}
-	
 	
 	public Color getPointColor()
 	{
 		return new Color(pointColor.getRed(),pointColor.getGreen(),pointColor.getBlue(),pointColor.getAlpha());
 	}
 	
-	
 	public Color getLineColor()
 	{
 		return new Color(lineColor.getRed(),lineColor.getGreen(),lineColor.getBlue(),lineColor.getAlpha());
 	}
+	
 	public int getRenderType()
 	{
 		return renderType;
