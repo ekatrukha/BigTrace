@@ -75,7 +75,6 @@ import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
-import bigtrace.rois.ROIsLoadBG;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineSimple;
 import bigtrace.volume.VolumeMisc;

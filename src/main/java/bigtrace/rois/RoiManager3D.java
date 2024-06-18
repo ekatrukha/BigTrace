@@ -917,8 +917,10 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 	 }
 	 
-	 public synchronized void deleteROI()
+	 public synchronized void deleteActiveROI()
 	 {
+		 if(activeRoi.intValue()<0)
+			 return;
 		 removeRoi(activeRoi.intValue());
 		 if(activeRoi.intValue()>=0)
 		 {
@@ -1110,7 +1112,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			//DELETE
 			if(e.getSource() == butDelete)
 			{
-				deleteROI();
+				deleteActiveROI();
 			}
 			//RENAME
 			if(e.getSource() == butRename)

@@ -71,8 +71,8 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 	
 	public void initGUI()
 	{
-		 listModel = new  DefaultListModel<String>();
-		 jlist = new JList<String>(listModel);
+		 listModel = new  DefaultListModel<>();
+		 jlist = new JList<>(listModel);
 		 jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		 jlist.setLayoutOrientation(JList.VERTICAL);
 		 jlist.setVisibleRowCount(-1);
@@ -319,21 +319,23 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
         if (path==null)
         	return;
         filename = path+sd.getFileName();
-        
-        try {
-			final File file = new File(filename);
-			
-			final FileWriter writer = new FileWriter(file);
-			saveGroups(writer);
-			
-			writer.write("End of BigTrace Groups\n");
-			writer.close();
 
-		} catch (IOException e) {	
-			System.err.print(e.getMessage());
-			//e.printStackTrace();
-		}
-		return;
+
+        final File file = new File(filename);
+
+        try (FileWriter writer = new FileWriter(file))
+        {
+        	saveGroups(writer);
+
+        	writer.write("End of BigTrace Groups\n");
+        	writer.close();
+        }
+
+        catch (IOException e) {	
+        	System.err.print(e.getMessage());
+        	//e.printStackTrace();
+        }
+        return;
 
 	}
 	
@@ -392,7 +394,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
         if(input.equals("Overwrite current groups"))
         {
         	nLoadMode = 0;
-        	roiManager.groups = new ArrayList<Roi3DGroup>();
+        	roiManager.groups = new ArrayList<>();
         	listModel.removeAllElements();
         }
         else
@@ -609,8 +611,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 				}
 				if(dialPropertiesShow(newGroup, true))
 				{
-					roiManager.groups.add(newGroup);
-					listModel.addElement(newGroup.getName());					
+					addGroup(newGroup);
 				}
 				
 			}			
@@ -634,7 +635,13 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 			
 		}
 	}
-	
+
+	/** adds a new Group **/ 
+	public void addGroup(Roi3DGroup newGroup_)
+	{
+		roiManager.groups.add(newGroup_);
+		listModel.addElement(newGroup_.getName());
+	}
 	/** deletes Group and asks what to do with ROIs **/ 
 	void deleteGroup(int indList)
 	{

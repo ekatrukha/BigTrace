@@ -9,6 +9,7 @@ import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Intervals;
@@ -20,6 +21,7 @@ import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
 import bigtrace.math.OneClickTrace;
 import bigtrace.rois.Roi3D;
+import bigtrace.rois.Roi3DGroup;
 import bigtrace.volume.VolumeMisc;
 
 public class CurveTracker < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
@@ -58,8 +60,13 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		bt.roiManager.unselect();
 		bt.bInputLock = true;
 		bt.roiManager.setLockMode(true);
+		
+		//make a New Group
+		final Roi3DGroup newGroupTrack = new Roi3DGroup(bt.roiManager.groups.get( currentRoi.getGroupInd() ), "test"); 
+		bt.roiManager.groups.add(newGroupTrack);
 		//int nTP = nInitialTimePoint+1; 
 		OneClickTrace<T> calcTask = new OneClickTrace<>();
+		
 		for(int nTP = nInitialTimePoint+1; nTP<BigTraceData.nNumTimepoints; nTP++)
 		{
 			bt.viewer.setTimepoint(nTP);
@@ -72,7 +79,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 			nInt[1][3] = nTP;
 			IntervalView<T> searchBox = Views.interval( full_RAI, new FinalInterval(nInt[0],nInt[1]) );
 			VolumeMisc.findMaxLocation(searchBox,  rpMax );
-			
+			//ImageJFunctions.show( searchBox,"Test");
 			
 			final IntervalView<T> traceIV =  bt.getTraceInterval(bt.btData.bTraceOnlyClipped);
 			
@@ -89,6 +96,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 			//bt.roiManager.unselect();
 			//get the new box
 			currentRoi = bt.roiManager.rois.get(bt.roiManager.rois.size()-1);
+			currentRoi.setGroup( newGroupTrack );
 			
 		}
 		

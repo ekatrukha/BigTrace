@@ -250,7 +250,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		//solution for now, to not interfere with typing
 		if(!bt.bInputLock && !(c instanceof JTextField))
 		{
-			bt.roiManager.deleteROI();
+			bt.roiManager.deleteActiveROI();
 		}
 		
 	}
