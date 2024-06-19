@@ -95,7 +95,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 			//calcTask.addPropertyChangeListener(this);
 			calcTask.runTracing();
 		
-
+			calcTask.releaseMultiThread();
 			//bt.roiManager.unselect();
 			//get the new box
 			currentRoi = bt.roiManager.rois.get(bt.roiManager.rois.size()-1);

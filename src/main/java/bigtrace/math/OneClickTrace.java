@@ -79,7 +79,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	ArrayList<double[]> allPointsIntersection;
 	
 	Convolution [] convObjects = new Convolution[6];
-	ExecutorService es;// = Executors.newFixedThreadPool( nThreads );
+	ExecutorService es = null;// = Executors.newFixedThreadPool( nThreads );
 	int nThreads;
 	
 	//boolean bPrint = false;
@@ -93,7 +93,6 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	IntervalView<FloatType> salWeights;
 	RandomAccess<FloatType> raV;
 	RandomAccess<FloatType> raW;
-	int nRenderTypeSave = 0;
 
 	/** whether we are starting a new trace or continue with existing **/
 	public boolean bNewTrace;
@@ -132,16 +131,14 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		}
 		init();
 		
-		long start1, end1;
+		//long start1, end1;
 		
-		start1 = System.currentTimeMillis();
+		//start1 = System.currentTimeMillis();
 		
 		//in case we continue
 		if(!bNewTrace)
 		{
 			existingTracing  = (LineTrace3D)bt.roiManager.getActiveRoi();
-			nRenderTypeSave = existingTracing.getRenderType();
-			existingTracing.setRenderType(Roi3D.WIRE);
 			startPoint = new RealPoint(bt.roiManager.getLastTracePoint());
 		}
 		//init math
@@ -219,10 +216,10 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//trace in the other direction
 		nTotPoints = traceOneDirection(false, nTotPoints);
 		
-		end1 = System.currentTimeMillis();
+		//end1 = System.currentTimeMillis();
 		//System.out.println("THREADED Elapsed Time in seconds: "+ 0.001*(end1-start1));
 		
-		
+	
 		if(bUpdateProgressBar)
 		{
 			setProgress(100);	
@@ -252,8 +249,6 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			newTracing.addFirstPoint(points.get(0));
 			bt.roiManager.addRoi(newTracing);
 			//bt.roiManager.addSegment(points.get(0),null);
-			nRenderTypeSave = bt.roiManager.getActiveRoi().getRenderType();
-			bt.roiManager.getActiveRoi().setRenderType(Roi3D.WIRE);
 		}
 		else
 		{
@@ -388,6 +383,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		}
 	}
 
+	public void releaseMultiThread()
+	{
+		if(es!=null)
+			es.shutdown();
+	}
 	/** checks if the point intersects already traced part of the curve**/
 	boolean checkIntersection(RealPoint currpoint)
 	{
@@ -825,12 +825,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
          } catch (InterruptedException e) {
              // Process e here
          }
-    	es.shutdown();
-    	
+    	//es.shutdown();
+    	releaseMultiThread();
 
     	bt.visBox = null;
 
-    	bt.roiManager.getActiveRoi().setRenderType(nRenderTypeSave);
     	//deselect the trace if we just made it
     	if(bNewTrace)
     	{

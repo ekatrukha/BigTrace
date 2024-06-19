@@ -51,6 +51,7 @@ public class VisPolyLineMesh {
 	private BufferMesh mesh = null;
 	
 	private long nMeshTrianglesSize = 0;
+	volatile boolean bLocked = false;
 
 	public VisPolyLineMesh()
 	{
@@ -104,9 +105,22 @@ public class VisPolyLineMesh {
 		
 	}
 	
-	public void setVertices( final ArrayList< RealPoint > points_, final ArrayList<double[]> tangents_)
+	public synchronized void setVertices( final ArrayList< RealPoint > points_, final ArrayList<double[]> tangents_)
 	{
-		
+	
+		while (bLocked)
+		{
+			try
+			{
+				Thread.sleep( 10 );
+			}
+			catch ( InterruptedException exc )
+			{
+				// TODO Auto-generated catch block
+				exc.printStackTrace();
+			}
+		}
+		bLocked  = true;
 		if(renderType == Roi3D.OUTLINE)
 		{
 			setVerticesCenterLine(Roi3D.scaleGlobInv(points_, BigTraceData.globCal));
@@ -135,6 +149,7 @@ public class VisPolyLineMesh {
 		}
 		
 		initialized = false;
+		bLocked  = false;
 		
 	}
 
@@ -245,6 +260,7 @@ public class VisPolyLineMesh {
 	
 	private boolean init( final GL3 gl )
 	{
+		bLocked  = true;
 		if(renderType == Roi3D.SURFACE)
 		{
 			//initMesh();
@@ -252,6 +268,7 @@ public class VisPolyLineMesh {
 	
 		}
 		initLineShader( gl );
+		bLocked  = false;
 		return true;
 	}
 	
@@ -405,11 +422,28 @@ public class VisPolyLineMesh {
 	public void draw( final GL3 gl, final Matrix4fc pvm, Matrix4fc vm )
 	{
 		int nPointIt;
+		while (bLocked)
+		{
+			try
+			{
+				Thread.sleep( 10 );
+			}
+			catch ( InterruptedException exc )
+			{
+				// TODO Auto-generated catch block
+				exc.printStackTrace();
+			}
+		}
+		bLocked = true;
 		if ( !initialized )
 		{
 			if(!init(gl))
+			{
+				bLocked = false;
 				return;
+			}
 		}
+		bLocked = false;
 
 		if(nPointsN>1)
 		{
