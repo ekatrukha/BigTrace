@@ -40,40 +40,42 @@ public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends Sw
     	bt.roiManager.setLockMode(true);
     	
     	//get the group manager to save groups
-    	Roi3DGroupManager<T> roiGM = new Roi3DGroupManager<T>(bt.roiManager);
+    	Roi3DGroupManager<T> roiGM = new Roi3DGroupManager<>(bt.roiManager);
     	
         try {
 			final File file = new File(sFilename);
 			
-			final FileWriter writer = new FileWriter(file);
-			setProgressState("saving Groups...");
-			roiGM.saveGroups(writer);
-			setProgressState("saving ROIs...");
-			DecimalFormatSymbols symbols = new DecimalFormatSymbols();
-			symbols.setDecimalSeparator('.');
-			DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
-			
-			writer.write("BigTrace_ROIs,version," + BigTraceData.sVersion + "\n");
-			writer.write("ImageUnits,"+bt.btData.sVoxelUnit+"\n");
-			writer.write("ImageVoxelWidth," + df3.format(BigTraceData.globCal[0]) + "\n");
-			writer.write("ImageVoxelHeight," + df3.format(BigTraceData.globCal[1]) + "\n");
-			writer.write("ImageVoxelDepth," + df3.format(BigTraceData.globCal[2]) + "\n");
-			writer.write("TimeUnits," + bt.btData.sTimeUnit + "\n");
-			writer.write("FrameInterval," + df3.format(bt.btData.dFrameInterval) + "\n");
-			nRoiN = bt.roiManager.rois.size();
-			writer.write("ROIsNumber," + Integer.toString(nRoiN)+"\n");
-			for(nRoi=0;nRoi<nRoiN;nRoi++)
+			try (FileWriter writer = new FileWriter(file))
 			{
-				  //Sleep for up to one second.
-				try {
-					Thread.sleep(1);
-				} catch (InterruptedException ignore) {}
-				setProgress(nRoi*100/nRoiN);
-				writer.write("BT_Roi,"+Integer.toString(nRoi+1)+"\n");
-				((Roi3D) bt.roiManager.rois.get(nRoi)).saveRoi(writer);
+				setProgressState("saving Groups...");
+				roiGM.saveGroups(writer);
+				setProgressState("saving ROIs...");
+				DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+				symbols.setDecimalSeparator('.');
+				DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+				
+				writer.write("BigTrace_ROIs,version," + BigTraceData.sVersion + "\n");
+				writer.write("ImageUnits,"+bt.btData.sVoxelUnit+"\n");
+				writer.write("ImageVoxelWidth," + df3.format(BigTraceData.globCal[0]) + "\n");
+				writer.write("ImageVoxelHeight," + df3.format(BigTraceData.globCal[1]) + "\n");
+				writer.write("ImageVoxelDepth," + df3.format(BigTraceData.globCal[2]) + "\n");
+				writer.write("TimeUnits," + bt.btData.sTimeUnit + "\n");
+				writer.write("FrameInterval," + df3.format(bt.btData.dFrameInterval) + "\n");
+				nRoiN = bt.roiManager.rois.size();
+				writer.write("ROIsNumber," + Integer.toString(nRoiN)+"\n");
+				for(nRoi=0;nRoi<nRoiN;nRoi++)
+				{
+					  //Sleep for up to one second.
+					try {
+						Thread.sleep(1);
+					} catch (InterruptedException ignore) {}
+					setProgress(nRoi*100/nRoiN);
+					writer.write("BT_Roi,"+Integer.toString(nRoi+1)+"\n");
+					bt.roiManager.rois.get(nRoi).saveRoi(writer);
+				}
+				writer.write("End of BigTrace ROIs\n");
+				writer.close();
 			}
-			writer.write("End of BigTrace ROIs\n");
-			writer.close();
 			setProgress(100);
 			setProgressState("saving ROIs done.");
 		} catch (IOException e) {	

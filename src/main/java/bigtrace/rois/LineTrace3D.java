@@ -352,7 +352,7 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 		//update drawing component
 		verticesVis.setVertices(vertices);
 		
-		ArrayList<ArrayList<RealPoint>> segments_r = new ArrayList<ArrayList<RealPoint>>();
+		ArrayList<ArrayList<RealPoint>> segments_r = new ArrayList<>();
 		for(i= segments.size()-1;i>=0;i--)
 		{
 			segments_r.add(Roi3D.reverseArrayRP(segments.get(i)));
@@ -392,7 +392,7 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 	/** returns joint segment of ROI in VOXEL coordinates **/
 	public ArrayList<double[]> makeJointSegmentDouble()
 	{
-		ArrayList<double[]> out = new ArrayList<double[]>();
+		final ArrayList<double[]> out = new ArrayList<>();
 		if(vertices.size()>1)
 		{
 			//first vertex

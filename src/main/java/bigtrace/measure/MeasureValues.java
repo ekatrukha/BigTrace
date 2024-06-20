@@ -1,6 +1,6 @@
 package bigtrace.measure;
 
-import ij.measure.Measurements;
+
 import net.imglib2.RealPoint;
 
 public class MeasureValues implements Measurements {
@@ -14,9 +14,10 @@ public class MeasureValues implements Measurements {
 	public double mean;
 	public double stdDev;
 	public double straightness;
+	/** coordinates of the ends **/
 	public RealPoint [] ends;
+	/** normalized vector pointing between ends **/
 	public RealPoint direction = null;
-	
 	public double [] intensity_values = null;
 	
 

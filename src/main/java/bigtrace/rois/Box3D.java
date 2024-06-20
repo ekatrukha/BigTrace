@@ -19,7 +19,8 @@ import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 
-public class Box3D extends AbstractRoi3D implements Roi3D {
+public class Box3D extends AbstractRoi3D 
+{
 
 	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> edges;
@@ -41,12 +42,15 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 	public Box3D(float [][] nDimBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nTimePoint_)
 	{
 		type = Roi3D.BOX;
+		pointSize = pointSize_;
 		lineThickness=lineThickness_;
+		
+		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 
 		nTimePoint = nTimePoint_;
-		verticesVis = new ArrayList<VisPointsScaled>();
-		edgesVis = new ArrayList<VisPolyLineSimple>();
+		verticesVis = new ArrayList<>();
+		edgesVis = new ArrayList<>();
 		int i;
 		
 		
@@ -60,12 +64,15 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 	public Box3D(AbstractInterval nIntervalBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nTimePoint_)
 	{
 		type = Roi3D.BOX;
+		pointSize = pointSize_;
 		lineThickness=lineThickness_;
+		
+		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 
 		nTimePoint = nTimePoint_;
-		verticesVis = new ArrayList<VisPointsScaled>();
-		edgesVis = new ArrayList<VisPolyLineSimple>();
+		verticesVis = new ArrayList<>();
+		edgesVis = new ArrayList<>();
 		int i;
 		float [][] nDimBox = new float [2][3];
 		
@@ -209,7 +216,7 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 	public static ArrayList<ArrayList< RealPoint >> getEdgesPairPoints(final float [][] nDimBox)
 	{
 		int i,j,z;
-		ArrayList<ArrayList< RealPoint >> out = new ArrayList<ArrayList< RealPoint >>();
+		ArrayList<ArrayList< RealPoint >> out = new ArrayList<>();
 		int [][] edgesxy = new int [5][2];
 		edgesxy[0]=new int[]{0,0};
 		edgesxy[1]=new int[]{1,0};
@@ -232,7 +239,7 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 				vertex1.setPosition(nDimBox[z][2], 2);
 				vertex2.setPosition(nDimBox[z][2], 2);
 				
-				ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
+				ArrayList< RealPoint > point_coords = new ArrayList<  >();
 				point_coords.add(new RealPoint(vertex1));
 				point_coords.add(new RealPoint(vertex2));
 
@@ -252,7 +259,7 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 			//z coord
 			vertex1.setPosition(nDimBox[0][2], 2);
 			vertex2.setPosition(nDimBox[1][2], 2);
-			ArrayList< RealPoint > point_coords = new ArrayList< RealPoint >();
+			ArrayList< RealPoint > point_coords = new ArrayList<  >();
 
 			point_coords.add(new RealPoint(vertex1));
 			point_coords.add(new RealPoint(vertex2));
@@ -265,7 +272,7 @@ public class Box3D extends AbstractRoi3D implements Roi3D {
 	public static ArrayList<RealPoint > getBoxVertices(final Interval interval)
 	{
 		int i,d;
-		ArrayList<RealPoint> out = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> out = new ArrayList<>();
 		RealPoint [] rpBounds = new RealPoint [2];
 		rpBounds[0]= interval.minAsRealPoint();
 		rpBounds[1]= interval.maxAsRealPoint();

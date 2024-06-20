@@ -180,8 +180,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		JPanel panNavigation = new JPanel(new GridBagLayout());
 		//Interface
 		
-		//RENDER METHOD PANEL
-		
+		//RENDER METHOD PANEL		
 		renderMethodPanel = new RenderMethodPanel<>(bt);
 		
 		
@@ -538,8 +537,8 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		String[] sExtractClippedTime = { "current time point", "range (specify below)" };
 		JComboBox<String> extractClippedTimeList = new JComboBox<>(sExtractClippedTime);
 		int [] nRange = new int [2];
-		nRange[0]=0;
-		nRange[1]=BigTraceData.nNumTimepoints-1;
+		nRange[0] = 0;
+		nRange[1] = BigTraceData.nNumTimepoints-1;
 		RangeSliderTF timeRange = new RangeSliderTF(nRange, nRange);
 		if(BigTraceData.nNumTimepoints>1)
 		{

@@ -30,7 +30,7 @@ import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
-public class Point3D extends AbstractRoi3D implements Roi3D {
+public class Point3D extends AbstractRoi3D {
 
 	public RealPoint vertex;
 	
@@ -153,7 +153,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 		RealRandomAccess<T> ra =   interpolate.realRandomAccess();
 		
 		final double dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
-		ArrayList<Double> intVals = new ArrayList<Double>();
+		ArrayList<Double> intVals = new ArrayList<>();
 		Sphere3DMeasure measureSphere = new Sphere3DMeasure();
 		measureSphere.setRadius((int)(0.5*Math.floor(pointSize)));
 		double [] current_pixel = new double [3];
@@ -186,7 +186,7 @@ public class Point3D extends AbstractRoi3D implements Roi3D {
 		RealRandomAccess<T> ra =   interpolate.realRandomAccess();
 		
 		final double dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
-		ArrayList<Double> intVals = new ArrayList<Double>();
+		ArrayList<Double> intVals = new ArrayList<>();
 		Sphere3DMeasure measureSphere = new Sphere3DMeasure();
 		measureSphere.setRadius((int)(0.5*Math.floor(pointSize)));
 		double [] current_pixel = new double [3];

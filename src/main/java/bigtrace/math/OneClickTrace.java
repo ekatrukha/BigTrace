@@ -78,6 +78,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	
 	ArrayList<double[]> allPointsIntersection;
 	
+	@SuppressWarnings( "rawtypes" )
 	Convolution [] convObjects = new Convolution[6];
 	ExecutorService es = null;// = Executors.newFixedThreadPool( nThreads );
 	int nThreads;
@@ -102,6 +103,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	ArrayImg<FloatType, FloatArray> hessFloat;
 	
 	private String progressState;
+	private LineTrace3D existingTracing;
 	
 	@Override
 	public String getProgressState()
@@ -123,7 +125,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	
 	public void runTracing ()
 	{
-		LineTrace3D existingTracing = null;
+		existingTracing = null;
 		
 		if(bUpdateProgressBar)
 		{
@@ -135,7 +137,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 		//start1 = System.currentTimeMillis();
 		
-		//in case we continue
+		//in case we continue tracing
 		if(!bNewTrace)
 		{
 			existingTracing  = (LineTrace3D)bt.roiManager.getActiveRoi();
@@ -437,9 +439,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 
 		long[] candPos = new long[3];
 		float[] finPos = new float[3];
+		
 		for(int nScan=0;nScan<scannedPos.size();nScan++)
 		{
-			candidateNeighbor=scannedPos.get(nScan);
+			candidateNeighbor = scannedPos.get(nScan);
+			
 			for(d=0;d<3;d++)
 			{
 				candPos[d]=Math.round(currpoint.getFloatPosition(d))+candidateNeighbor[d];
@@ -447,7 +451,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 			if(Intervals.contains(fullInput, new RealPoint(new float []{candPos[0],candPos[1],candPos[2]})))
 			{
-				currSal=raW.setPositionAndGet(candPos).get();
+				currSal = raW.setPositionAndGet(candPos).get();
 				candDirection = getVectorAtLocation(candPos);
 //				if(bPrint)
 //				{
@@ -477,7 +481,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 						{
 							finPos[i] = candPos[i];
 						}
-						newDirection=candDirection;
+						newDirection = candDirection;
 					}
 				}
 			}
@@ -505,10 +509,12 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 //				
 //			}
 		}
-		else
-		{
-			out = null;
-		}
+		
+		//else //it is already null
+		//{
+		
+			//out = null;
+		//}
 
 
 		return out;
@@ -516,6 +522,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	}
 
 	/** calculate hessian/eigen vectors around current point **/
+	@SuppressWarnings( "unchecked" )
 	public void getMathForCurrentPoint(final RealPoint currPoint)
 	{
 		//let's figure out the volume around the point
@@ -700,7 +707,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	 */
 	void initNeighborsHashMap()
 	{
-		int nCount = 0;
+		//int nCount = 0;
 		for (int d1=-1;d1<2;d1++)
 		{
 			for ( int d2 = -1; d2 < 2; d2++ )
@@ -717,7 +724,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 						ArrayList<int[]> around =new ArrayList<>();
 						//System.out.print(sKey);
 						
-						nCount++;	
+						//nCount++;	
 
 						//iterating around the neighborhood of each pixel
 						for (int m1=-1;m1<2;m1++)

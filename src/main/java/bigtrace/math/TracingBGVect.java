@@ -36,7 +36,7 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 		final DijkstraFHRestrictVector dijkRVBegin;
 		final DijkstraFHRestrictVector dijkRVEnd;
 		
-		trace= new ArrayList<RealPoint>();
+		trace= new ArrayList<>();
 		
 		setProgress(30);
 		setProgressState("finding trace..");	
@@ -65,68 +65,66 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 			return null;
 		}
 		//need to find shortcut through jumping points
+		
+		//showCorners(jump_points);
+		// get corners in the beginning
+		ArrayList<long []> begCorners = dijkRVBegin.exploredCorners(bt.btData.jump_points);
+		setProgress(50);
+		//start1 = System.currentTimeMillis();
+		dijkRVEnd = new DijkstraFHRestrictVector(bt.btData.trace_weights, bt.btData.trace_vectors,bt.btData.gammaTrace);
+
+		//bt.dijkRVEnd.calcCost(target);
+		//provide same point as start and end,
+		//so it searches everything
+		dijkRVEnd.calcCostTwoPoints(target, target);
+		//end1 = System.currentTimeMillis();
+		//System.out.println("Dijkstra Restr VECTOR search END: elapsed Time in milli seconds: "+ (end1-start1));
+		ArrayList<long []> endCorners = dijkRVEnd.exploredCorners(bt.btData.jump_points);
+		setProgress(80);
+		//there are corners (jump points) in the trace area
+		// let's construct the path
+		if(begCorners.size()>0 && endCorners.size()>0)
+		{
+			//find a closest pair of corners
+			ArrayList<long []> pair = VolumeMisc.findClosestPoints(begCorners,endCorners);
+			RealPoint pB = new RealPoint(3);
+			RealPoint pE = new RealPoint(3);
+			pB.setPosition(pair.get(0));
+			pE.setPosition(pair.get(1));
+			ArrayList<RealPoint> traceB = new ArrayList<> (); 
+			dijkRVBegin.getTrace(pB, traceB);
+			ArrayList<RealPoint> traceE = new ArrayList<> ();
+			ArrayList<RealPoint> traceM = new ArrayList<> ();
+			dijkRVEnd.getTrace(pE, traceE);
+			int i;
+			//connect traces
+			for(i=0;i<traceB.size();i++)
+			{
+				trace.add(traceB.get(i));
+			}
+			//3D bresenham connecting jumping points here
+			traceM=VolumeMisc.BresenhamWrap(traceB.get(traceB.size()-1),
+											traceE.get(traceE.size()-1));
+			for(i=1;i<traceM.size()-1 ;i++)	
+			{
+				trace.add(traceM.get(i));
+			}				
+			for(i=traceE.size()-1;i>=0 ;i--)				
+			{
+				trace.add(traceE.get(i));
+			}
+
+		}
+		//no corners, just do a straight line
 		else
 		{
-			//showCorners(jump_points);
-			// get corners in the beginning
-			ArrayList<long []> begCorners = dijkRVBegin.exploredCorners(bt.btData.jump_points);
-			setProgress(50);
-			//start1 = System.currentTimeMillis();
-			dijkRVEnd = new DijkstraFHRestrictVector(bt.btData.trace_weights, bt.btData.trace_vectors,bt.btData.gammaTrace);
-
-			//bt.dijkRVEnd.calcCost(target);
-			//provide same point as start and end,
-			//so it searches everything
-			dijkRVEnd.calcCostTwoPoints(target, target);
-			//end1 = System.currentTimeMillis();
-			//System.out.println("Dijkstra Restr VECTOR search END: elapsed Time in milli seconds: "+ (end1-start1));
-			ArrayList<long []> endCorners = dijkRVEnd.exploredCorners(bt.btData.jump_points);
-			setProgress(80);
-			//there are corners (jump points) in the trace area
-			// let's construct the path
-			if(begCorners.size()>0 && endCorners.size()>0)
-			{
-				//find a closest pair of corners
-				ArrayList<long []> pair = VolumeMisc.findClosestPoints(begCorners,endCorners);
-				RealPoint pB = new RealPoint(3);
-				RealPoint pE = new RealPoint(3);
-				pB.setPosition(pair.get(0));
-				pE.setPosition(pair.get(1));
-				ArrayList<RealPoint> traceB = new ArrayList<RealPoint> (); 
-				dijkRVBegin.getTrace(pB, traceB);
-				ArrayList<RealPoint> traceE = new ArrayList<RealPoint> ();
-				ArrayList<RealPoint> traceM = new ArrayList<RealPoint> ();
-				dijkRVEnd.getTrace(pE, traceE);
-				int i;
-				//connect traces
-				for(i=0;i<traceB.size();i++)
-				{
-					trace.add(traceB.get(i));
-				}
-				//3D bresenham connecting jumping points here
-				traceM=VolumeMisc.BresenhamWrap(traceB.get(traceB.size()-1),
-												traceE.get(traceE.size()-1));
-				for(i=1;i<traceM.size()-1 ;i++)	
-				{
-					trace.add(traceM.get(i));
-				}				
-				for(i=traceE.size()-1;i>=0 ;i--)				
-				{
-					trace.add(traceE.get(i));
-				}
-
-			}
-			//no corners, just do a straight line
-			else
-			{
-				//3D bresenham here
-				trace=VolumeMisc.BresenhamWrap(bt.roiManager.getLastTracePoint(),target);
-			}
-			//return trace;
-			setProgress(100);
-			setProgressState("finding trace done.");
-			return null;
+			//3D bresenham here
+			trace=VolumeMisc.BresenhamWrap(bt.roiManager.getLastTracePoint(),target);
 		}
+		//return trace;
+		setProgress(100);
+		setProgressState("finding trace done.");
+		return null;
 		
 		
 		

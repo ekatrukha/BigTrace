@@ -52,7 +52,7 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
    /** Arrays for internal storage of eigenvalues.
    @serial internal storage of eigenvalues.
    */
-   private double[] d, e;
+   private double[] dEV, eEV;
 
    /** Array for internal storage of eigenvectors.
    @serial internal storage of eigenvectors.
@@ -72,8 +72,8 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
    {
 	   n=nDim;
 	   V = new double[n][n];
-       d = new double[n];
-       e = new double[n];
+       dEV = new double[n];
+       eEV = new double[n];
 
    }
    
@@ -81,7 +81,7 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
 		   final RandomAccessibleInterval< T > eVector, 
 		   final RandomAccessibleInterval< T > eWeight)
    {
-	   EigenValVecSymmDecomposition<T> dCalc = new EigenValVecSymmDecomposition<T>(eWeight.numDimensions());
+	   EigenValVecSymmDecomposition<T> dCalc = new EigenValVecSymmDecomposition<>(eWeight.numDimensions());
 	   
 	   dCalc.computeVWRAI(  RAIin, eVector, eWeight);
    }
@@ -157,7 +157,7 @@ public void computeVWRAI( final RandomAccessibleInterval< T > tensor,
 		}
 		
 
-		Collection < Future  > futures = new HashSet<Future>();
+		Collection < Future  > futures = new HashSet<>();
 		for (Runnable r : tasks_r) {
 
 			futures.add(es.submit(r));
@@ -196,7 +196,7 @@ public void computeVWRAI( final RandomAccessibleInterval< T > tensor,
 		   final RandomAccessibleInterval< T > eWeight,
 		   final RandomAccessibleInterval< T > eCorners)
    {
-	   EigenValVecSymmDecomposition<T> dCalc = new EigenValVecSymmDecomposition<T>(eWeight.numDimensions());
+	   EigenValVecSymmDecomposition<T> dCalc = new EigenValVecSymmDecomposition<>(eWeight.numDimensions());
 	   
 	   dCalc.computeVWCRAI(  RAIin, eVector, eWeight, eCorners);
    }
@@ -266,7 +266,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 		}
 		
 
-		Collection < Future  > futures = new HashSet<Future>();
+		Collection < Future  > futures = new HashSet<>();
 		for (Runnable r : tasks_r) {
 
 			futures.add(es.submit(r));
@@ -296,7 +296,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 	   for(i =0;i<n; i++)
 		   for(int j =i;j<n; j++)
 	   {
-		   V[i][j] = tensor.get((long)(nCount)).getRealFloat();
+		   V[i][j] = tensor.get(nCount).getRealFloat();
 		   //V[i][j] = m.get(i, j);
 		   V[j][i]=V[i][j];
 		   nCount++;
@@ -313,13 +313,13 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        // find the smallest absolute eigenvalue
        // and store corresponding vector
        int index = 0;
-       double dMin = Math.abs(d[index]);
+       double dMin = Math.abs(dEV[index]);
        for (i =1;i<n; i++)
        {
-    	   if(Math.abs(d[i])<dMin)
+    	   if(Math.abs(dEV[i])<dMin)
     	   {
     		   index=i;
-    		   dMin=Math.abs(d[index]);
+    		   dMin=Math.abs(dEV[index]);
     	   }
        }
        for (i =0;i<n; i++)
@@ -332,13 +332,13 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        {
     	   if(i!=index)
     	   {
-    		   if(d[i]>0)
+    		   if(dEV[i]>0)
     		   {
     			   bBothNegative = false;
     		   }
     		   else
     		   {
-    			   dWeight-=d[i];
+    			   dWeight-=dEV[i];
     		   }
     	   }
        }       
@@ -362,7 +362,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 	   for(i =0;i<n; i++)
 		   for(int j =i;j<n; j++)
 	   {
-		   V[i][j] = tensor.get((long)(nCount)).getRealFloat();
+		   V[i][j] = tensor.get(nCount).getRealFloat();
 		   //V[i][j] = m.get(i, j);
 		   V[j][i]=V[i][j];
 		   nCount++;
@@ -378,18 +378,18 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        // find the smallest absolute eigenvalue
        // and store corresponding vector
        int index = 0;
-       double dMax = d[index];
-       double dMin = Math.abs(d[index]);
+       double dMax = dEV[index];
+       double dMin = Math.abs(dEV[index]);
        for (i =1;i<n; i++)
        {
-    	   if(Math.abs(d[i])<dMin)
+    	   if(Math.abs(dEV[i])<dMin)
     	   {
     		   index=i;
-    		   dMin=Math.abs(d[index]);
+    		   dMin=Math.abs(dEV[index]);
     	   }
-    	   if(d[i]>dMax)
+    	   if(dEV[i]>dMax)
     	   {
-    		   dMax=d[i];
+    		   dMax=dEV[i];
     	   }
        }
    
@@ -412,7 +412,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 	   for(i =0;i<n; i++)
 		   for(int j =i;j<n; j++)
 	   {
-		   V[i][j] = tensor.get((long)(nCount)).getRealFloat();
+		   V[i][j] = tensor.get(nCount).getRealFloat();
 		   //V[i][j] = m.get(i, j);
 		   V[j][i]=V[i][j];
 		   nCount++;
@@ -428,18 +428,18 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        // and largest eigenvalue
        // and store corresponding vector
        int index = 0;
-       double dMax = d[index];
-       double dMin = Math.abs(d[index]);
+       double dMax = dEV[index];
+       double dMin = Math.abs(dEV[index]);
        for (i =1;i<n; i++)
        {
-    	   if(Math.abs(d[i])<dMin)
+    	   if(Math.abs(dEV[i])<dMin)
     	   {
     		   index=i;
-    		   dMin=Math.abs(d[index]);
+    		   dMin=Math.abs(dEV[index]);
     	   }
-    	   if(d[i]>dMax)
+    	   if(dEV[i]>dMax)
     	   {
-    		   dMax=d[i];
+    		   dMax=dEV[i];
     	   }
        }
        for (i =0;i<n; i++)
@@ -452,13 +452,13 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        {
     	   if(i!=index)
     	   {
-    		   if(d[i]>0)
+    		   if(dEV[i]>0)
     		   {
     			   bBothNegative = false;
     		   }
     		   else
     		   {
-    			   dWeight-=d[i];
+    			   dWeight-=dEV[i];
     		   }
     		   
     	   }
@@ -480,6 +480,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
     	   corner.setZero();
        }
    }
+   
    public void computeTensor( RealComposite< T > tensor, final float [][] in_vals)
    {
 	   int nCount=0;
@@ -488,7 +489,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 	   for(int i =0;i<n; i++)
 		   for(int j =i;j<n; j++)
 	   {
-		   V[i][j] = tensor.get((long)(nCount)).getRealFloat();
+		   V[i][j] = tensor.get(nCount).getRealFloat();
 		   //V[i][j] = m.get(i, j);
 		   V[j][i]=V[i][j];
 		   nCount++;
@@ -500,7 +501,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        tql2();
        
        
-       System.out.println("eig "+Double.toString(d[0])+" "+Double.toString(d[1])+" "+Double.toString(d[2]));
+       System.out.println("eig "+Double.toString(dEV[0])+" "+Double.toString(dEV[1])+" "+Double.toString(dEV[2]));
 	   for(int i =0;i<n; i++)
 		   for(int j =0;j<n; j++)
 		   {
@@ -518,9 +519,9 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 	   int i;
 	   for(i=0;i<3;i++)
 	   {
-		   if(Math.abs(d[i])<dMin)
+		   if(Math.abs(dEV[i])<dMin)
 		   {
-			   dMin=Math.abs(d[i]);
+			   dMin=Math.abs(dEV[i]);
 			   nIndex=i;
 		   }
 	   }
@@ -549,7 +550,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
    */
 
    public double[] getRealEigenvalues () {
-      return d;
+      return dEV;
    }
 
    /** Return the imaginary parts of the eigenvalues
@@ -557,12 +558,11 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
    */
 
    public double[] getImagEigenvalues () {
-      return e;
+      return eEV;
    }
 
-   /** Return the block diagonal eigenvalue matrix
-   @return     D
-   */
+   /** Return the block diagonal eigenvalue matrix 
+   **/
 
    /*public Matrix getD () {
       Matrix X = new Matrix(n,n);
@@ -595,7 +595,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
    //  Fortran subroutine in EISPACK.
 
       for (int j = 0; j < n; j++) {
-         d[j] = V[n-1][j];
+         dEV[j] = V[n-1][j];
       }
 
       // Householder reduction to tridiagonal form.
@@ -607,12 +607,12 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
          double scale = 0.0;
          double h = 0.0;
          for (int k = 0; k < i; k++) {
-            scale = scale + Math.abs(d[k]);
+            scale = scale + Math.abs(dEV[k]);
          }
          if (scale == 0.0) {
-            e[i] = d[i-1];
+            eEV[i] = dEV[i-1];
             for (int j = 0; j < i; j++) {
-               d[j] = V[i-1][j];
+               dEV[j] = V[i-1][j];
                V[i][j] = 0.0;
                V[j][i] = 0.0;
             }
@@ -621,53 +621,53 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
             // Generate Householder vector.
    
             for (int k = 0; k < i; k++) {
-               d[k] /= scale;
-               h += d[k] * d[k];
+               dEV[k] /= scale;
+               h += dEV[k] * dEV[k];
             }
-            double f = d[i-1];
+            double f = dEV[i-1];
             double g = Math.sqrt(h);
             if (f > 0) {
                g = -g;
             }
-            e[i] = scale * g;
+            eEV[i] = scale * g;
             h = h - f * g;
-            d[i-1] = f - g;
+            dEV[i-1] = f - g;
             for (int j = 0; j < i; j++) {
-               e[j] = 0.0;
+               eEV[j] = 0.0;
             }
    
             // Apply similarity transformation to remaining columns.
    
             for (int j = 0; j < i; j++) {
-               f = d[j];
+               f = dEV[j];
                V[j][i] = f;
-               g = e[j] + V[j][j] * f;
+               g = eEV[j] + V[j][j] * f;
                for (int k = j+1; k <= i-1; k++) {
-                  g += V[k][j] * d[k];
-                  e[k] += V[k][j] * f;
+                  g += V[k][j] * dEV[k];
+                  eEV[k] += V[k][j] * f;
                }
-               e[j] = g;
+               eEV[j] = g;
             }
             f = 0.0;
             for (int j = 0; j < i; j++) {
-               e[j] /= h;
-               f += e[j] * d[j];
+               eEV[j] /= h;
+               f += eEV[j] * dEV[j];
             }
             double hh = f / (h + h);
             for (int j = 0; j < i; j++) {
-               e[j] -= hh * d[j];
+               eEV[j] -= hh * dEV[j];
             }
             for (int j = 0; j < i; j++) {
-               f = d[j];
-               g = e[j];
+               f = dEV[j];
+               g = eEV[j];
                for (int k = j; k <= i-1; k++) {
-                  V[k][j] -= (f * e[k] + g * d[k]);
+                  V[k][j] -= (f * eEV[k] + g * dEV[k]);
                }
-               d[j] = V[i-1][j];
+               dEV[j] = V[i-1][j];
                V[i][j] = 0.0;
             }
          }
-         d[i] = h;
+         dEV[i] = h;
       }
    
       // Accumulate transformations.
@@ -675,10 +675,10 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
       for (int i = 0; i < n-1; i++) {
          V[n-1][i] = V[i][i];
          V[i][i] = 1.0;
-         double h = d[i+1];
+         double h = dEV[i+1];
          if (h != 0.0) {
             for (int k = 0; k <= i; k++) {
-               d[k] = V[k][i+1] / h;
+               dEV[k] = V[k][i+1] / h;
             }
             for (int j = 0; j <= i; j++) {
                double g = 0.0;
@@ -686,7 +686,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
                   g += V[k][i+1] * V[k][j];
                }
                for (int k = 0; k <= i; k++) {
-                  V[k][j] -= g * d[k];
+                  V[k][j] -= g * dEV[k];
                }
             }
          }
@@ -695,11 +695,11 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
          }
       }
       for (int j = 0; j < n; j++) {
-         d[j] = V[n-1][j];
+         dEV[j] = V[n-1][j];
          V[n-1][j] = 0.0;
       }
       V[n-1][n-1] = 1.0;
-      e[0] = 0.0;
+      eEV[0] = 0.0;
    } 
 
    // Symmetric tridiagonal QL algorithm.
@@ -712,9 +712,9 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
    //  Fortran subroutine in EISPACK.
    
       for (int i = 1; i < n; i++) {
-         e[i-1] = e[i];
+         eEV[i-1] = eEV[i];
       }
-      e[n-1] = 0.0;
+      eEV[n-1] = 0.0;
    
       double f = 0.0;
       double tst1 = 0.0;
@@ -723,10 +723,10 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 
          // Find small subdiagonal element
    
-         tst1 = Math.max(tst1,Math.abs(d[l]) + Math.abs(e[l]));
+         tst1 = Math.max(tst1,Math.abs(dEV[l]) + Math.abs(eEV[l]));
          int m = l;
          while (m < n) {
-            if (Math.abs(e[m]) <= eps*tst1) {
+            if (Math.abs(eEV[m]) <= eps*tst1) {
                break;
             }
             m++;
@@ -742,42 +742,42 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
    
                // Compute implicit shift
    
-               double g = d[l];
-               double p = (d[l+1] - g) / (2.0 * e[l]);
+               double g = dEV[l];
+               double p = (dEV[l+1] - g) / (2.0 * eEV[l]);
                double r = EigenValVecSymmDecomposition.hypot(p,1.0);
                if (p < 0) {
                   r = -r;
                }
-               d[l] = e[l] / (p + r);
-               d[l+1] = e[l] * (p + r);
-               double dl1 = d[l+1];
-               double h = g - d[l];
+               dEV[l] = eEV[l] / (p + r);
+               dEV[l+1] = eEV[l] * (p + r);
+               double dl1 = dEV[l+1];
+               double h = g - dEV[l];
                for (int i = l+2; i < n; i++) {
-                  d[i] -= h;
+                  dEV[i] -= h;
                }
                f = f + h;
    
                // Implicit QL transformation.
    
-               p = d[m];
+               p = dEV[m];
                double c = 1.0;
                double c2 = c;
                double c3 = c;
-               double el1 = e[l+1];
+               double el1 = eEV[l+1];
                double s = 0.0;
                double s2 = 0.0;
                for (int i = m-1; i >= l; i--) {
                   c3 = c2;
                   c2 = c;
                   s2 = s;
-                  g = c * e[i];
+                  g = c * eEV[i];
                   h = c * p;
-                  r = EigenValVecSymmDecomposition.hypot(p,e[i]);
-                  e[i+1] = s * r;
-                  s = e[i] / r;
+                  r = EigenValVecSymmDecomposition.hypot(p,eEV[i]);
+                  eEV[i+1] = s * r;
+                  s = eEV[i] / r;
                   c = p / r;
-                  p = c * d[i] - s * g;
-                  d[i+1] = h + s * (c * g + s * d[i]);
+                  p = c * dEV[i] - s * g;
+                  dEV[i+1] = h + s * (c * g + s * dEV[i]);
    
                   // Accumulate transformation.
    
@@ -787,32 +787,32 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
                      V[k][i] = c * V[k][i] - s * h;
                   }
                }
-               p = -s * s2 * c3 * el1 * e[l] / dl1;
-               e[l] = s * p;
-               d[l] = c * p;
+               p = -s * s2 * c3 * el1 * eEV[l] / dl1;
+               eEV[l] = s * p;
+               dEV[l] = c * p;
    
                // Check for convergence.
    
-            } while (Math.abs(e[l]) > eps*tst1);
+            } while (Math.abs(eEV[l]) > eps*tst1);
          }
-         d[l] = d[l] + f;
-         e[l] = 0.0;
+         dEV[l] = dEV[l] + f;
+         eEV[l] = 0.0;
       }
      
       // Sort eigenvalues and corresponding vectors.
    
       for (int i = 0; i < n-1; i++) {
          int k = i;
-         double p = d[i];
+         double p = dEV[i];
          for (int j = i+1; j < n; j++) {
-            if (d[j] < p) {
+            if (dEV[j] < p) {
                k = j;
-               p = d[j];
+               p = dEV[j];
             }
          }
          if (k != i) {
-            d[k] = d[i];
-            d[i] = p;
+            dEV[k] = dEV[i];
+            dEV[i] = p;
             for (int j = 0; j < n; j++) {
                p = V[j][i];
                V[j][i] = V[j][k];

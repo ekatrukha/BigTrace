@@ -138,36 +138,36 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		{
 				
 			bt.btData.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btData.lTraceBoxSize));
+			Prefs.set("BigTrace.lTraceBoxSize", bt.btData.lTraceBoxSize);
 			
 			bt.btData.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btData.lTraceBoxSize));
+			Prefs.set("BigTrace.lTraceBoxSize", bt.btData.lTraceBoxSize);
 		
 			//TRACING OPTIONS
 			
 			bt.btData.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
-			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btData.sigmaTrace[0]));
+			Prefs.set("BigTrace.sigmaTraceX", bt.btData.sigmaTrace[0]);
 			
 			bt.btData.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
-			Prefs.set("BigTrace.sigmaTraceY", (double)(bt.btData.sigmaTrace[1]));
+			Prefs.set("BigTrace.sigmaTraceY", bt.btData.sigmaTrace[1]);
 			
 			bt.btData.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
-			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btData.sigmaTrace[2]));
+			Prefs.set("BigTrace.sigmaTraceZ", bt.btData.sigmaTrace[2]);
 			
 			bt.btData.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
 			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btData.bTraceOnlyClipped);			
 			
 			bt.btData.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", (double)(bt.btData.lTraceBoxSize));
+			Prefs.set("BigTrace.lTraceBoxSize", bt.btData.lTraceBoxSize);
 			
 			bt.btData.dTraceBoxScreenFraction = Double.parseDouble(nfTraceBoxScreenFraction.getText());
-			Prefs.set("BigTrace.dTraceBoxScreenFraction", (double)(bt.btData.dTraceBoxScreenFraction));
+			Prefs.set("BigTrace.dTraceBoxScreenFraction", bt.btData.dTraceBoxScreenFraction);
 			
 			bt.btData.fTraceBoxAdvanceFraction = Float.parseFloat(nfTBAdvance.getText());
-			Prefs.set("BigTrace.fTraceBoxAdvanceFraction", (double)(bt.btData.fTraceBoxAdvanceFraction));
+			Prefs.set("BigTrace.fTraceBoxAdvanceFraction", bt.btData.fTraceBoxAdvanceFraction);
 			
 			bt.btData.gammaTrace = Double.parseDouble(nfGammaTrace.getText());
-			Prefs.set("BigTrace.gammaTrace", (double)(bt.btData.gammaTrace));
+			Prefs.set("BigTrace.gammaTrace", bt.btData.gammaTrace);
 			
 			
 		}
@@ -233,7 +233,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		NumberField nfDirectionalityOneClick = new NumberField(4);
 		
 		nfPlaceVertex.setIntegersOnly(true);
-		nfPlaceVertex.setText(Integer.toString((int)(bt.btData.nVertexPlacementPointN)));
+		nfPlaceVertex.setText(Integer.toString(bt.btData.nVertexPlacementPointN));
 		nfDirectionalityOneClick.setText(df.format(bt.btData.dDirectionalityOneClick));
 		
 		cd.gridx=0;
@@ -261,18 +261,18 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 			//TRACING OPTIONS
 			
 			bt.btData.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
-			Prefs.set("BigTrace.sigmaTraceX", (double)(bt.btData.sigmaTrace[0]));
+			Prefs.set("BigTrace.sigmaTraceX", bt.btData.sigmaTrace[0]);
 			
 			bt.btData.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
-			Prefs.set("BigTrace.sigmaTraceY", (double)(bt.btData.sigmaTrace[1]));
+			Prefs.set("BigTrace.sigmaTraceY", bt.btData.sigmaTrace[1]);
 			
 			bt.btData.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
-			Prefs.set("BigTrace.sigmaTraceZ", (double)(bt.btData.sigmaTrace[2]));
+			Prefs.set("BigTrace.sigmaTraceZ", bt.btData.sigmaTrace[2]);
 			
 			bt.btData.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
 			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btData.bTraceOnlyClipped);			
 			
-			bt.btData.nVertexPlacementPointN=(int)(Math.max(3, Integer.parseInt(nfPlaceVertex.getText())));
+			bt.btData.nVertexPlacementPointN = Math.max(3, Integer.parseInt(nfPlaceVertex.getText()));
 			Prefs.set("BigTrace.nVertexPlacementPointN", (double)(bt.btData.nVertexPlacementPointN));
 			
 			bt.btData.dDirectionalityOneClick=Math.min(1.0, (Math.max(0, Double.parseDouble(nfDirectionalityOneClick.getText()))));
@@ -325,7 +325,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		nfRoiDoubleClickExpand.setText(Integer.toString(BigTraceData.nROIDoubleClickClipExpand));
 		
 		String[] sShapeInterpolationType = { "Voxel", "Smooth", "Spline"};
-		JComboBox<String> shapeInterpolationList = new JComboBox<String>(sShapeInterpolationType);
+		JComboBox<String> shapeInterpolationList = new JComboBox<>(sShapeInterpolationType);
 		shapeInterpolationList.setSelectedIndex(BigTraceData.shapeInterpolation);
 		
 		NumberField nfSmoothWindow = new NumberField(2);
@@ -334,12 +334,12 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		
 		
 		String[] sTimeRenderROIs = { "current timepoint", "backward in time", "forward in time"};
-		JComboBox<String> sTimeRenderROIsList = new JComboBox<String>(sTimeRenderROIs);
+		JComboBox<String> sTimeRenderROIsList = new JComboBox<>(sTimeRenderROIs);
 		sTimeRenderROIsList.setSelectedIndex(BigTraceData.timeRender);
 		
 		NumberField nfTimeFadeROIs = new NumberField(4);
 		nfTimeFadeROIs.setIntegersOnly(true);
-		nfTimeFadeROIs.setText(Integer.toString((int)Math.abs(BigTraceData.timeFade)));
+		nfTimeFadeROIs.setText(Integer.toString(Math.abs(BigTraceData.timeFade)));
 		
 		
 		
@@ -419,7 +419,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		nfCrossSectionGridStep.setText(Integer.toString(BigTraceData.crossSectionGridStep));
 		
 		String[] sSilhouetteRenderType = { "transparent", "front culling"};
-		JComboBox<String> sSilhouetteRenderList = new JComboBox<String>(sSilhouetteRenderType);
+		JComboBox<String> sSilhouetteRenderList = new JComboBox<>(sSilhouetteRenderType);
 		sSilhouetteRenderList.setSelectedIndex(BigTraceData.silhouetteRender);
 		
 		NumberField nfSilhouetteDecay = new NumberField(4);

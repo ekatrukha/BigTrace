@@ -406,10 +406,8 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 	
         filename = path+openDial.getFileName();
         
-		try {
+		try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
 			
-	        BufferedReader br = new BufferedReader(new FileReader(filename));
-	        
 	        bFirstPartCheck = loadGroups(br);
 	        roiManager.updateGroupsList();
 	        br.close();
@@ -520,7 +518,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 						nLoadedGroupsN++;
 						if(listModel==null)
 						{
-							listModel = new  DefaultListModel<String>(); 
+							listModel = new  DefaultListModel<>(); 
 						}
 						listModel.addElement(readGroup.getName());
 					}
@@ -539,8 +537,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
         {
         	return bFirstPartCheck;
         }
-        else
-        	return -1;
+		return -1;
 	}
 
 

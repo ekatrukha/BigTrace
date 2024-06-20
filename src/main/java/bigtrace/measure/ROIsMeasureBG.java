@@ -46,8 +46,7 @@ public class ROIsMeasureBG extends SwingWorker<Void, String> implements BigTrace
     /*
      * Executed in event dispatching thread
      */
-    @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public void done() 
     {
     	//show results

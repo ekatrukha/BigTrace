@@ -77,7 +77,7 @@ public class DijkstraFHRestrictVector {
 		//vectors = directionVectors;
 		vectors = directionVectors;
 
-		queue = new FibonacciHeap<Integer>();		
+		queue = new FibonacciHeap<>();		
 		orientationWeight = orientationW; 
 		getNeighboursIndexesVectors();
 	}
@@ -94,13 +94,13 @@ public class DijkstraFHRestrictVector {
 		long nTotPix = 1;
 		for (int i = 0; i < dim.length; i++)
 		{
-			iniPoint[i] = (long)Math.round(startPoint_.getFloatPosition(i));			
+			iniPoint[i] = Math.round(startPoint_.getFloatPosition(i));			
 			currPoint[i] = iniPoint[i];
 			nTotPix *= dim[i];
-			endPoint[i] = (long)Math.round(endPoint_.getFloatPosition(i));	
+			endPoint[i] = Math.round(endPoint_.getFloatPosition(i));	
 		}
 		long [][] pos = new long [(int)(nTotPix)][dim.length];
-		entries = new ArrayList<Entry< Integer >>((int)(nTotPix));
+		entries = new ArrayList<>((int)(nTotPix));
 		
 		//int [] vals_test = new int[(int)(nTotPix)];
 	
@@ -328,7 +328,7 @@ public class DijkstraFHRestrictVector {
 		iniPoint = new long [dim.length];
 		for (i =0;i<dim.length; i++)
 		{
-			endPoint[i]=(long)Math.round(click.getFloatPosition(i));
+			endPoint[i]=Math.round(click.getFloatPosition(i));
 		}
 		
 
@@ -365,7 +365,7 @@ public class DijkstraFHRestrictVector {
 						finSegment.add(new RealPoint(currRP));
 						for (i =0;i<dim.length; i++)
 						{
-							endPoint[i]=(long)Math.round(currRP.getFloatPosition(i));
+							endPoint[i]=Math.round(currRP.getFloatPosition(i));
 						}
 					}
 				
@@ -422,10 +422,10 @@ public class DijkstraFHRestrictVector {
 	public ArrayList<long []> exploredCorners(ArrayList<long []> allCorners)
 	{
 		int i;
-		int nCornNum=0;
+		//int nCornNum=0;
 		
 		
-		ArrayList<long []> markedCorners = new ArrayList<long []> (); 
+		ArrayList<long []> markedCorners = new ArrayList<> (); 
 		final RandomAccess< UnsignedByteType> dirsRA = dirs.randomAccess();
 		for (i=0;i<allCorners.size(); i++)
 		{
@@ -434,7 +434,7 @@ public class DijkstraFHRestrictVector {
 			if(dirsRA.get().get()>0)
 			{
 				markedCorners.add(allCorners.get(i));
-				nCornNum++;
+				//nCornNum++;
 			}
 		}
 		//System.out.println("Corners found:"+Integer.toString(nCornNum));

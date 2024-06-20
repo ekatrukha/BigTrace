@@ -48,7 +48,7 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
     	int nFrameRead;
     	int nFrame;
     	
-		ArrayList<Roi3D> allRois = new ArrayList<Roi3D>();
+		ArrayList<Roi3D> allRois = new ArrayList<>();
 		Color cCurrentTrackColor = null;
 		//enter locked mode
         bt.bInputLock = true;
@@ -127,7 +127,7 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
 		
 		setProgress(100);
 		bt.roiManager.rois = allRois;
-		DefaultListModel<String> listModelin = new  DefaultListModel<String>();
+		DefaultListModel<String> listModelin = new  DefaultListModel<>();
 		for (int i =0;i<allRois.size();i++)
 		{
 			listModelin.addElement(allRois.get(i).getName());

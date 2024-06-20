@@ -1083,10 +1083,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		//Groups Manager
 		if(e.getSource() == butROIGroups)
 		{
-			Roi3DGroupManager<T> dialGroup = new Roi3DGroupManager<>(this);
-			dialGroup.initGUI();
-			dialGroup.show();
-			updateGroupSelector();
+			showGroupsDialog();
 			
 		}
 		//GROUP VISIBILITY
@@ -1586,6 +1583,14 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		currROI.setGroup(groups.get(nGroupIndex));
 		currROI.setGroupInd(nGroupIndex);
 		listModel.setElementAt(getGroupPrefixRoiName(currROI), nRoiIndex);
+	}
+	
+	public void showGroupsDialog()
+	{
+		Roi3DGroupManager<T> dialGroup = new Roi3DGroupManager<>(this);
+		dialGroup.initGUI();
+		dialGroup.show();
+		updateGroupSelector();
 	}
 	
 	public void applyGroupToROI(Roi3D roiIn, int nGroupIndex)

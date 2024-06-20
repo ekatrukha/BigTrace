@@ -25,7 +25,8 @@ import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 import net.imglib2.util.LinAlgHelpers;
 
-public class CrossSection3D extends AbstractRoi3D implements Roi3D {
+public class CrossSection3D extends AbstractRoi3D 
+{
 	
 	/** vertices provided by user (plane is fitted to them) **/
 	public ArrayList<RealPoint> vertices;
@@ -53,7 +54,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		renderType = preset_in.renderType;
 		
 		
-		vertices = new ArrayList<RealPoint>();
+		vertices = new ArrayList<>();
 		verticesVis = new VisPointsScaled();
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
@@ -68,7 +69,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		nDimBox = new float [2][3];
 		for(int i=0;i<2;i++)
 			for(int j=0;j<3;j++)
-				nDimBox[i][j]=(float)nDimIni_[i][j];
+				nDimBox[i][j]=nDimIni_[i][j];
 
 	}
 	/** adds initial vertex **/
@@ -121,8 +122,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 			 	updateRenderVertices();
 			 	if(nP==1)
 			 		return false;
-			 	else
-			 		return true;
+				return true;
 			}
 		 return false;
 	 }
@@ -136,7 +136,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 	
 	public void setVertices(ArrayList<RealPoint> vertices_)
 	{
-		vertices = new ArrayList<RealPoint>();
+		vertices = new ArrayList<>();
 		for(int i=0;i<vertices_.size();i++)
 			vertices.add(new RealPoint(vertices_.get(i)));		
 		updateRenderVertices();
@@ -263,7 +263,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 			//for now;
 			//fittedPlane = new Plane3D(vertices.get(0),vertices.get(1),vertices.get(2));
 			fittedPlane = fitPlane(vertices);
-			polygonVert = new ArrayList< RealPoint >();
+			polygonVert = new ArrayList<  >();
 			ArrayList<ArrayList< RealPoint >> boxEdges = Box3D.getEdgesPairPoints(nDimBox);
 			
 			for(int i = 0;i<boxEdges.size();i++)
@@ -283,7 +283,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		}
 		else
 		{
-			planeVis.setVertices(new ArrayList<RealPoint>());
+			planeVis.setVertices(new ArrayList<>());
 		}
 	}
 	/** given a set of points (more than 2) 
@@ -312,8 +312,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		    	LinAlgHelpers.cross(lhs,rhs, v);
 		    	if(LinAlgHelpers.dot(v, planeNormal)<0)
 		    		return 1;
-		    	else
-		    		return -1;
+				return -1;
 		    }
 		};
 		Collections.sort(vertices,compareRP);
@@ -355,7 +354,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		if(vertices.size()<1)
 			return null;
 		final int nDim=vertices.get(0).numDimensions();
-		final double nPoints = (double)vertices.size();
+		final double nPoints = vertices.size();
 		int d;
 		double [] meanV = new double [nDim];
 		for(int i=0;i<vertices.size();i++)
@@ -367,7 +366,7 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 		}
 		for(d=0;d<nDim;d++)
 		{
-			meanV[d]/=(double)nPoints;
+			meanV[d] /= nPoints;
 		
 		}
 		return new RealPoint(meanV);
@@ -397,11 +396,11 @@ public class CrossSection3D extends AbstractRoi3D implements Roi3D {
 			//see if the point inside the polygon
 			if(Intersections3D.pointInsideConvexPolygon(polygonVert, intersectionPoint,fittedPlane.n))
 				return 0.0;
-			else
-				return Double.MAX_VALUE;
+			
+			return Double.MAX_VALUE;
 		}
-		else
-			{return Double.MAX_VALUE;}
+		
+		return Double.MAX_VALUE;
 	
 	}
 	/*

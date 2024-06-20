@@ -34,8 +34,8 @@ public class Roi3DGroupVisibility < T extends RealType< T > & NativeType< T > > 
 	{
 		 roiManager  = roiManager_;
 		 
-		 groupNames = new ArrayList<JLabel>();
-		 groupCheckbox = new ArrayList<JCheckBox>();
+		 groupNames = new ArrayList<>();
+		 groupCheckbox = new ArrayList<>();
 		 JPanel panelGroupVis = new JPanel(new GridLayout(0,2));
 
 

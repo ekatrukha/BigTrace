@@ -68,13 +68,13 @@ public class DijkstraFibonacciHeap {
 		long nTotPix = 1;
 		for (int i =0;i<dim.length; i++)
 		{
-			iniPoint[i]=(long)Math.round(startPoint_.getFloatPosition(i));
+			iniPoint[i]=Math.round(startPoint_.getFloatPosition(i));
 			currPoint[i]=iniPoint[i];
 			nTotPix *=dim[i];
 		}
 		long [][] pos = new long [(int)(nTotPix)][dim.length];
 		//queue = new PriorityQueue<Cursor< IntType >>(25000, new CursorCompare());
-		queue = new FibonacciHeap<Integer>();
+		queue = new FibonacciHeap<>();
 		//entries = new ArrayList<Entry<Cursor< IntType >>>(25000);
 	
 		
@@ -191,7 +191,7 @@ public class DijkstraFibonacciHeap {
 							}
 							else
 							{
-								int nn = 1;//enC.get().get();
+								//int nn = 1;//enC.get().get();
 							
 							}
 
@@ -199,18 +199,18 @@ public class DijkstraFibonacciHeap {
 							/*if(iNewCCost>maxCost)
 								maxCost=iNewCCost;*/
 							nEnQ++;
-							int vv=0;
+							//int vv=0;
 							if (iCurCCost==0)
 							{																								
 								//entries.add(queue.enqueue(cnC.copyCursor(), iNewCCost));
 								//enC.get().set(entries.size()-1);
-								vv=1;
+								//vv=1;
 							}
 							else
 							{
 								//int nn = enC.get().get();
 								//queue.decreaseKey(entries.get(enC.get().get()), iNewCCost);
-								vv=2;
+								//vv=2;
 							}
 							dnC.get().set(nDir);
 						}
@@ -271,7 +271,7 @@ public class DijkstraFibonacciHeap {
 	
 	public ArrayList<RealPoint> getTrace(final RealPoint click)
 	{
-		ArrayList<RealPoint> finSegment = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> finSegment = new ArrayList<>();
 		RealPoint currRP = new RealPoint(click);
 		int i;
 		float [][] neibIndexes = new float [26][3];
@@ -281,7 +281,7 @@ public class DijkstraFibonacciHeap {
 		iniPoint = new long [dim.length];
 		for (i =0;i<dim.length; i++)
 		{
-			endPoint[i]=(long)Math.round(click.getFloatPosition(i));
+			endPoint[i]=Math.round(click.getFloatPosition(i));
 		}
 		
 	
@@ -327,7 +327,7 @@ public class DijkstraFibonacciHeap {
 				finSegment.add(new RealPoint(currRP));
 				for (i =0;i<dim.length; i++)
 				{
-					endPoint[i]=(long)Math.round(currRP.getFloatPosition(i));
+					endPoint[i]=Math.round(currRP.getFloatPosition(i));
 				}
 			}
 			

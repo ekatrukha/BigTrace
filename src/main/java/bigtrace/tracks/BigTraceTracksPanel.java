@@ -12,8 +12,10 @@ import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
@@ -26,7 +28,12 @@ import net.imglib2.type.numeric.RealType;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
+import bigtrace.gui.GBCHelper;
+import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.gui.RangeSliderTF;
+import bigtrace.rois.Roi3D;
+import ij.Prefs;
 
 
 
@@ -36,7 +43,7 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 
 	JButton butTrack;
 	JButton butSettings;
-	JButton butColor;
+	JButton butGroups;
 	public JList<String> jlist;
 	JScrollPane listScroller;
 	
@@ -113,12 +120,12 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		cr.weighty=0.0;
 		cr.fill = GridBagConstraints.NONE;
 
-		butColor = new JButton("Color");
-		butColor.addActionListener(this);
+		butGroups = new JButton("Groups");
+		butGroups.addActionListener(this);
 		cr.gridx++;
 		cr.gridy++;
 		cr.gridheight=1;
-		panTracksChange.add(butColor,cr);
+		panTracksChange.add(butGroups,cr);
 
 
 		// Blank/filler component
@@ -129,8 +136,8 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		panTracksChange.add(new JLabel(), cr);		
 
 		// a solution for now
-		panTracksChange.setMinimumSize(butColor.getPreferredSize());
-		panTracksChange.setPreferredSize(butColor.getPreferredSize()); 
+		panTracksChange.setMinimumSize(butGroups.getPreferredSize());
+		panTracksChange.setPreferredSize(butGroups.getPreferredSize()); 
 
 
 		//put all panels together
@@ -158,16 +165,87 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 	
 	void simpleTracking()
 	{
-		CurveTracker<T> btTracker = new CurveTracker< >(bt);
-		btTracker.execute();
-//		try
-//		{
-//			btTracker.traceCurve();
-//		}
-//		catch ( InterruptedException exc )
-//		{
-//			exc.printStackTrace();
-//		}
+		JPanel dialogTrackSettings = new JPanel();
+		
+		NumberField nfBoxExpand = new NumberField(4);
+		
+		dialogTrackSettings.setLayout(new GridBagLayout());
+		
+		GridBagConstraints cd = new GridBagConstraints();
+
+		GBCHelper.alighLeft(cd);
+		
+		cd.gridx=0;
+		cd.gridy=0;	
+		String[] sTrackDirection = { "all timepoints", "forward in time", "backward in time", "range below" };
+		JComboBox<String> trackDirectionList = new JComboBox<>(sTrackDirection);
+		int [] nRange = new int [2];
+		nRange[0] = 0;
+		nRange[1] = BigTraceData.nNumTimepoints-1;
+		RangeSliderTF timeRange = new RangeSliderTF(nRange, nRange);
+		timeRange.makeConstrained( bt.btData.nCurrTimepoint, bt.btData.nCurrTimepoint );
+	
+		dialogTrackSettings.add(new JLabel("Tracking:"),cd);
+		trackDirectionList.setSelectedIndex((int)Prefs.get("BigTrace.trackDirection", 0));
+		cd.gridx++;
+		dialogTrackSettings.add(trackDirectionList,cd);
+		cd.gridy++;
+		cd.gridx=0;
+		//cd.gridx++;
+
+		cd.gridwidth=2;
+		dialogTrackSettings.add(timeRange,cd);
+		cd.gridwidth=1;
+		cd.gridy++;
+		
+		cd.gridx=0;	
+		dialogTrackSettings.add(new JLabel("Expand ROI box search by (px):"),cd);
+		cd.gridx++;
+		nfBoxExpand.setIntegersOnly( true );
+		nfBoxExpand.setText(Integer.toString((int)(Prefs.get("BigTrace.nTrackExpandBox", 0))));
+		dialogTrackSettings.add(nfBoxExpand,cd);
+	
+		int reply = JOptionPane.showConfirmDialog(null, dialogTrackSettings, "Track settings", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			int nTrackDirection = trackDirectionList.getSelectedIndex();
+			Prefs.set("BigTrace.trackDirection", nTrackDirection);
+			
+			final CurveTracker<T> btTracker = new CurveTracker< >(bt);
+			//tracking range
+			switch(nTrackDirection)
+			{
+				//all timepoints
+				case 0:
+					btTracker.nFirstTP = 0;
+					btTracker.nLastTP = BigTraceData.nNumTimepoints-1;
+					break;
+				//forward 
+				case 1:
+					btTracker.nFirstTP = bt.btData.nCurrTimepoint;
+					btTracker.nLastTP = BigTraceData.nNumTimepoints-1;
+					break;
+				//backwards
+				case 2:
+					btTracker.nFirstTP = 0;
+					btTracker.nLastTP = bt.btData.nCurrTimepoint;
+					break;
+				//range
+				case 3:
+					btTracker.nFirstTP = timeRange.getMin();
+					btTracker.nLastTP = timeRange.getMax();
+					break;
+
+					
+			}
+			// box expand
+			int nBoxExpand = Integer.parseInt(nfBoxExpand.getText());
+			Prefs.set("BigTrace.nTrackExpandBox", nBoxExpand);	
+			btTracker.nBoxExpand = nBoxExpand;
+			btTracker.execute();
+		}
+
 				
 	}
 	@Override
@@ -176,8 +254,17 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		// RUN TRACKING
 		if(e.getSource() == butTrack && jlist.getSelectedIndex()>-1)
 		{
-			if(BigTraceData.nNumTimepoints > 1)
+			if(BigTraceData.nNumTimepoints > 1 && bt.roiManager.getActiveRoi().getType()==Roi3D.LINE_TRACE)
+			{
 				simpleTracking();
+			}
+		}
+		
+		//Groups Manager
+		if(e.getSource() == butGroups)
+		{
+			bt.roiManager.showGroupsDialog();
+			
 		}
 	}
 	@Override

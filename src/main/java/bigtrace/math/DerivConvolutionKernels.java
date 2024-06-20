@@ -1,6 +1,5 @@
 package bigtrace.math;
 
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
 
@@ -279,7 +278,7 @@ public static void main(String[] args) {
 		}
 	
 	FloatProcessor imp = new FloatProcessor(kernel);
-	ImageJ ij = new ImageJ();
+	//ImageJ ij = new ImageJ();
 
 	final ImagePlus ip = new ImagePlus("kernel",imp);
 	ip.show();

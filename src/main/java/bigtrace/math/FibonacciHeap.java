@@ -58,7 +58,6 @@ import java.util.*; // For ArrayList
 /**
  * A class representing a Fibonacci heap.
  *
- * @param T The type of elements to store in the heap.
  * @author Keith Schwarz (htiek@cs.stanford.edu)
  */
 public final class FibonacciHeap<T> {
@@ -144,7 +143,7 @@ public final class FibonacciHeap<T> {
         /* Create the entry object, which is a circularly-linked list of length
          * one.
          */
-        Entry<T> result = new Entry<T>(value, priority);
+        Entry<T> result = new Entry<>(value, priority);
 
         /* Merge this singleton list with the tree list. */
         mMin = mergeLists(mMin, result);
@@ -202,7 +201,7 @@ public final class FibonacciHeap<T> {
      */
     public static <T> FibonacciHeap<T> merge(FibonacciHeap<T> one, FibonacciHeap<T> two) {
         /* Create a new FibonacciHeap to hold the result. */
-        FibonacciHeap<T> result = new FibonacciHeap<T>();
+        FibonacciHeap<T> result = new FibonacciHeap<>();
 
         /* Merge the two Fibonacci heap root lists together.  This helper function
          * also computes the min of the two lists, so we can store the result in
@@ -288,7 +287,7 @@ public final class FibonacciHeap<T> {
          * ArrayList where the entry at position i is either null or the 
          * unique tree of degree i.
          */
-        List<Entry<T>> treeTable = new ArrayList<Entry<T>>();
+        List<Entry<T>> treeTable = new ArrayList<>();
 
         /* We need to traverse the entire list, but since we're going to be
          * messing around with it we have to be careful not to break our
@@ -297,7 +296,7 @@ public final class FibonacciHeap<T> {
          * spent a bit of overhead adding all of the nodes to a list, and
          * then will visit each element of this list in order.
          */
-        List<Entry<T>> toVisit = new ArrayList<Entry<T>>();
+        List<Entry<T>> toVisit = new ArrayList<>();
 
         /* To add everything, we'll iterate across the elements until we
          * find the first element twice.  We check this by looping while the
@@ -484,14 +483,19 @@ public final class FibonacciHeap<T> {
              *              +-----------------+
              *
              */
-            Entry<T> oneNext = one.mNext; // Cache this since we're about to overwrite it.
-            one.mNext = two.mNext;
-            one.mNext.mPrev = one;
-            two.mNext = oneNext;
-            two.mNext.mPrev = two;
-
-            /* Return a pointer to whichever's smaller. */
-            return one.mPriority < two.mPriority? one : two;
+        	if(one !=null && two != null)
+        	{
+	            Entry<T> oneNext = one.mNext; // Cache this since we're about to overwrite it.
+	            one.mNext = two.mNext;
+	            one.mNext.mPrev = one;
+	            two.mNext = oneNext;
+	            two.mNext.mPrev = two;
+	        	
+	            /* Return a pointer to whichever's smaller. */
+	            return one.mPriority < two.mPriority? one : two;
+        	}
+        	 
+        	return null;
         }
     }
 

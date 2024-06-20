@@ -11,6 +11,7 @@ import javax.swing.SwingWorker;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.volume.VolumeMisc;
+
 import net.imglib2.FinalInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.algorithm.convolution.Convolution;
@@ -68,6 +69,12 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 		
 		int count = 0;
 		int [] nDerivOrder;
+		//start1 = System.currentTimeMillis();
+		
+		//Convolution convObj;
+//		final int nThreads = Runtime.getRuntime().availableProcessors();
+//		ExecutorService es = Executors.newFixedThreadPool( nThreads );
+		
 		
 		setProgress(0);
 		//start1 = System.currentTimeMillis();
@@ -91,12 +98,17 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 				nDerivOrder[d2]++;
 				kernels = DerivConvolutionKernels.convolve_derive_kernel(bt.btData.sigmaTrace, nDerivOrder );
 				derivKernel = Kernel1D.centralAsymmetric(kernels);
+//				convObj = SeparableKernelConvolution.convolution( derivKernel );
+//				convObj.setExecutor(es);
+//				convObj.process(Views.extendBorder(input), hs2 );
+				
+				
 				final Convolution convObjx = SeparableKernelConvolution.convolution( derivKernel );
 
 				Parallelization.runMultiThreaded( () -> {
 					convObjx.process(Views.extendBorder(input), hs2 );
 				} );
-				SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
+				//SeparableKernelConvolution.convolution( derivKernel ).process( input, hs2 );
 				count++;
 				//System.out.println(count);
 			}
@@ -127,7 +139,7 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 
 		setProgress(100);
 		setProgressState("trace box done.");
-
+		//ImageJFunctions.show( ( RandomAccessibleInterval< T > ) salWeights, "int" );
 		bt.btData.trace_weights = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
 
 		

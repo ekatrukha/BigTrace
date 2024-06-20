@@ -27,7 +27,7 @@ public class DijkstraBinaryHeap {
 	
 	/** weights (saliency) of each voxel  **/
 	IntervalView< UnsignedByteType > trace_weights;
-	/** Interval containing calculated costs AND simulataneously used as
+	/** Interval containing calculated costs AND simultaneously used as
 	 * marks for visiting/processing. Processed voxel values are negative,
 	 * while unprocessed are positive or zero (initial, unprocessed)  **/
 	public IntervalView< IntType > ccost;
@@ -76,13 +76,13 @@ public class DijkstraBinaryHeap {
 		long nTotPix = 1;
 		for (int i =0;i<dim.length; i++)
 		{
-			iniPoint[i]=(long)Math.round(startPoint_.getFloatPosition(i));
+			iniPoint[i]=Math.round(startPoint_.getFloatPosition(i));
 			currPoint[i]=iniPoint[i];
 			nTotPix *=dim[i];
 		}
 		long [][] pos = new long [(int)(nTotPix)][dim.length];
 		//queue = new PriorityQueue<Cursor< IntType >>(25000, new CursorCompare());
-		queue = new PriorityQueue<Node>(25000, new NodeCompare());
+		queue = new PriorityQueue<>(25000, new NodeCompare());
 		
 	
 		
@@ -109,7 +109,7 @@ public class DijkstraBinaryHeap {
 		Cursor< IntType > cnC;
 		Cursor< UnsignedByteType > wnC;
 		Cursor< UnsignedByteType > dnC;
-		Cursor< IntType > nextNode;
+		//Cursor< IntType > nextNode;
 		
 		//starting point
 		ccostRA.setPosition(currPoint);
@@ -125,7 +125,7 @@ public class DijkstraBinaryHeap {
 		int nDir = 0;
 		int iNewCCost;
 		int iCurCCost;	
-		int nW;
+		//int nW;
 		// Path searching:
 		while (bQueue) 
 		{
@@ -173,14 +173,14 @@ public class DijkstraBinaryHeap {
 						iNewCCost = nValVox + (255 - wnC.get().get());
 						if (iNewCCost < iCurCCost || iCurCCost==0)
 						{
-							int xx=0;
+							//int xx=0;
 							if (iCurCCost==0)
 							{
-								xx=1;
+							//	xx=1;
 							}
 							else
 							{
-								xx=2;
+							//	xx=2;
 							}
 							cnC.get().set(iNewCCost);
 							cnC.localize(pos[nEnQ]);
@@ -275,7 +275,7 @@ public class DijkstraBinaryHeap {
 	
 	public ArrayList<RealPoint> getTrace(final RealPoint click)
 	{
-		ArrayList<RealPoint> finSegment = new ArrayList<RealPoint>();
+		ArrayList<RealPoint> finSegment = new ArrayList<>();
 		RealPoint currRP = new RealPoint(click);
 		int i;
 		float [][] neibIndexes = new float [26][3];
@@ -285,7 +285,7 @@ public class DijkstraBinaryHeap {
 		iniPoint = new long [dim.length];
 		for (i =0;i<dim.length; i++)
 		{
-			endPoint[i]=(long)Math.round(click.getFloatPosition(i));
+			endPoint[i]=Math.round(click.getFloatPosition(i));
 		}
 		
 	
@@ -331,7 +331,7 @@ public class DijkstraBinaryHeap {
 				finSegment.add(new RealPoint(currRP));
 				for (i =0;i<dim.length; i++)
 				{
-					endPoint[i]=(long)Math.round(currRP.getFloatPosition(i));
+					endPoint[i]=Math.round(currRP.getFloatPosition(i));
 				}
 			}
 			
