@@ -451,8 +451,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		add(new JLabel(), c);    
 
 	}
-	 /** makes an empty initial ROI of specific type **/
-	 public synchronized void addRoi(Roi3D newRoi)
+	 /** adds provided ROI to the end of the list **/
+	 public synchronized void addRoi(final Roi3D newRoi)
 	 {		
 		 rois.add(newRoi);		 
 		 //listModel.addElement(newRoi.getName());
@@ -461,7 +461,24 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 activeRoi.set(rois.size()-1);
 
 	 }
-	 
+
+	 /** adds provided ROI to the end of the list **/
+	 public synchronized void insertRoi(final Roi3D newRoi, final int nInsertN)
+	 {		
+		 if(nInsertN<0 || nInsertN>(rois.size()-1))
+		 {
+			 System.err.println("ERROR! Index of ROI insertion is out of the roi list range.");
+			 System.err.println("Appending ROI to the end of the list.");
+			 addRoi(newRoi);
+			 return;
+		 }
+		 rois.add(nInsertN, newRoi);
+		 listModel.insertElementAt(newRoi.getName(), nInsertN);
+		 jlist.setSelectedIndex(nInsertN);
+		 activeRoi.set(nInsertN);
+
+	 }
+
 	 public void focusOnRoi(Roi3D roi)
 	 {	
 		 final Interval roiBoundingBox = roi.getBoundingBox(); 

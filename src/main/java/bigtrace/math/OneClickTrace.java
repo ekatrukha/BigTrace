@@ -97,6 +97,12 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 
 	/** whether we are starting a new trace or continue with existing **/
 	public boolean bNewTrace;
+	
+	
+	public boolean bInsertROI = false;
+	
+	public int nInsertROIInd = 0;
+	
 	//IntervalView<UnsignedByteType> salWeightsUB;
 	
 	ArrayImg<FloatType, FloatArray> gradFloat;
@@ -249,8 +255,16 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			LineTrace3D newTracing;
 			newTracing = (LineTrace3D) bt.roiManager.makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
 			newTracing.addFirstPoint(points.get(0));
-			bt.roiManager.addRoi(newTracing);
-			//bt.roiManager.addSegment(points.get(0),null);
+			if(!bInsertROI)
+			{
+				bt.roiManager.addRoi(newTracing);
+			}
+			else
+			{
+				bt.roiManager.insertRoi(newTracing, nInsertROIInd);
+			}
+			//bt.roiManager.insertRoi(newTracing);
+
 		}
 		else
 		{

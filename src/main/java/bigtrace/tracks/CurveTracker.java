@@ -38,6 +38,11 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 	
 	public int nBoxExpand;
 	
+	Roi3D currentRoi;
+	
+	MeasureValues oldVect;
+	MeasureValues newVect;
+	
 	private String progressState;
 	
 	@Override
@@ -66,7 +71,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		long [][] nInt = new long [2][5];
 		RealPoint rpMax = new RealPoint(3);
 		
-		Roi3D currentRoi = bt.roiManager.getActiveRoi();
+		currentRoi = bt.roiManager.getActiveRoi();
 	
 		bt.bInputLock = true;
 		bt.roiManager.setLockMode(true);
@@ -77,19 +82,23 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		bt.roiManager.applyGroupToROI( currentRoi, newGroupTrack  );
 		
 		//get direction between ends of the current ROI
-		MeasureValues oldVect = new MeasureValues();
-		MeasureValues newVect = new MeasureValues();
+		oldVect = new MeasureValues();
+		newVect = new MeasureValues();
 		((AbstractCurve3D)currentRoi).getEndsDirection(oldVect, BigTraceData.globCal);
 		
 		//int nTP = nInitialTimePoint+1; 
 		OneClickTrace<T> calcTask = new OneClickTrace<>();
+		calcTask.bNewTrace = true;
+		calcTask.bUnlockInTheEnd = false;
+		calcTask.bUpdateProgressBar = false;
+		calcTask.bt = this.bt;
 		
 		boolean bTracing = true;
 		
 		for(int nTP = nInitialTimePoint+1; nTP<BigTraceData.nNumTimepoints && bTracing; nTP++)
 		{
-			bt.viewer.setTimepoint(nTP);
 			
+			bt.viewer.setTimepoint(nTP);		
 			boxNext = Intervals.intersect( bt.btData.getDataCurrentSourceFull(),Intervals.expand(currentRoi.getBoundingBox(),nBoxExpand));
 			boxNext.min( nInt[0] );
 			boxNext.max( nInt[1] );
@@ -100,19 +109,12 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 			VolumeMisc.findMaxLocation(searchBox,  rpMax );
 			//ImageJFunctions.show( searchBox,"Test");
 			
-			final IntervalView<T> traceIV =  bt.getTraceInterval(bt.btData.bTraceOnlyClipped);
-			
+			final IntervalView<T> traceIV =  bt.getTraceInterval(bt.btData.bTraceOnlyClipped);			
 			calcTask.fullInput = traceIV;
-			calcTask.bt = this.bt;
 			calcTask.startPoint = rpMax;
-			calcTask.bNewTrace = true;
-			calcTask.bUnlockInTheEnd = false;
-			calcTask.bUpdateProgressBar = false;
-			//calcTask.addPropertyChangeListener(this);
 			calcTask.runTracing();
-		
 			calcTask.releaseMultiThread();
-			//bt.roiManager.unselect();
+
 			//get the new box
 			//currentRoi = bt.roiManager.rois.get(bt.roiManager.rois.size()-1);
 			currentRoi = bt.roiManager.getActiveRoi();
@@ -148,6 +150,8 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		
 		return null;
 	}
+	
+	//findNextTrace(final int nTP);
     /*
      * Executed in event dispatching thread
      */
