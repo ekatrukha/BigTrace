@@ -46,23 +46,29 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 	JButton butGroups;
 	public JList<String> jlist;
 	JScrollPane listScroller;
+	CurveTracker<T> btTracker;
+	
+	ImageIcon tabIconTrain;
+	ImageIcon tabIconCancel;
 	
 	public BigTraceTracksPanel(BigTrace<T> bt)
 	{
 		this.bt = bt;
-		
+		this.btTracker = null;// = new CurveTracker< >(bt);
 		JPanel panTrackTools = new JPanel(new GridBagLayout());  
 		panTrackTools.setBorder(new PanelTitle(" Tracking "));
 		int nButtonSize = 40;
 		
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/train.png");
-		ImageIcon tabIcon = new ImageIcon(icon_path);
-		butTrack = new JButton(tabIcon);
+		tabIconTrain = new ImageIcon(icon_path);
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/cancel.png");
+		tabIconCancel = new ImageIcon(icon_path);
+		butTrack = new JButton(tabIconTrain);
 		butTrack.setToolTipText("Track");
 		butTrack.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
-		tabIcon = new ImageIcon(icon_path);
+		ImageIcon tabIcon = new ImageIcon(icon_path);
 		butSettings = new JButton(tabIcon);
 		butSettings.setToolTipText("Settings");
 		butSettings.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
@@ -212,7 +218,9 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 			int nTrackDirection = trackDirectionList.getSelectedIndex();
 			Prefs.set("BigTrace.trackDirection", nTrackDirection);
 			
-			final CurveTracker<T> btTracker = new CurveTracker< >(bt);
+			
+			this.btTracker = new CurveTracker< >(bt);
+			
 			//tracking range
 			switch(nTrackDirection)
 			{
@@ -241,8 +249,17 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 			}
 			// box expand
 			int nBoxExpand = Integer.parseInt(nfBoxExpand.getText());
+			
+			bt.bInputLock = true;
+			bt.roiManager.setLockMode(true);
+			butTrack.setEnabled( true );
 			Prefs.set("BigTrace.nTrackExpandBox", nBoxExpand);	
 			btTracker.nBoxExpand = nBoxExpand;
+			butTrack.setIcon( tabIconCancel );
+			butTrack.setToolTipText( "Stop tracking" );
+			btTracker.addPropertyChangeListener( bt.btPanel );
+			btTracker.butTrack = butTrack;
+			btTracker.tabIconTrain = tabIconTrain; 
 			btTracker.execute();
 		}
 
@@ -254,9 +271,17 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		// RUN TRACKING
 		if(e.getSource() == butTrack && jlist.getSelectedIndex()>-1)
 		{
-			if(BigTraceData.nNumTimepoints > 1 && bt.roiManager.getActiveRoi().getType()==Roi3D.LINE_TRACE)
+			
+			if(!bt.bInputLock && BigTraceData.nNumTimepoints > 1 && bt.roiManager.getActiveRoi().getType()==Roi3D.LINE_TRACE)
 			{
 				simpleTracking();
+			}
+			else
+			{
+				if(bt.bInputLock && butTrack.isEnabled() && btTracker!=null && !btTracker.isCancelled() && !btTracker.isDone())
+				{
+					btTracker.cancel( false );
+				}
 			}
 		}
 		
