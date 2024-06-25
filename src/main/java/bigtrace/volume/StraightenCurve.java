@@ -40,6 +40,8 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 	final int nOutput;
 	final String sSaveFolderPath;
 	final Calibration cal;
+	
+	public boolean bMacroMessage = false;
 		
 	public StraightenCurve(final ArrayList<AbstractCurve3D> curveROIArr_, final BigTrace<T> bt_, final float fRadius_, final int nStraightenAxis_, final int nTimePoint_, final int nOutput_, final String sSaveFolderPath_)
 	{
@@ -113,7 +115,11 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 				setProgressState("extracting ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
 				IntervalView<T> extractedRAI = extractCurveRAI(curveROIArr.get(nRoi),  full_RAI, false);
 				setProgressState("storing ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
-				outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
+				if(!outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal)))
+				{
+					IJ.log("Error saving straighten ROIs to "+sSaveFolderPath);
+					break;
+				}
 			}
 			setProgressState("ROI straightening finished.");
 			setProgress(100);
@@ -123,16 +129,15 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		return null;
 	}
 	
-	void outputImagePlus(ImagePlus ip)
+	boolean outputImagePlus(ImagePlus ip)
 	{
 		if(nOutput == 0)
 		{
 			ip.show();
+			return true;
 		}
-		else
-		{
-			IJ.saveAsTiff(ip, sSaveFolderPath+ip.getTitle());
-		}
+		
+		return IJ.saveAsTiff(ip, sSaveFolderPath+ip.getTitle());
 	}
 
 	
@@ -316,6 +321,8 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		//unlock user interaction
     	bt.bInputLock = false;
         bt.roiManager.setLockMode(false);
+        if(bMacroMessage)
+        	IJ.log( "BigTrace: done saving straightened volumes to " + sSaveFolderPath);
 
     }
 }

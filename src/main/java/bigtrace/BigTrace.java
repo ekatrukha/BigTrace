@@ -139,10 +139,15 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	/** ROI manager + list tab **/
 	public RoiManager3D<T> roiManager;
 	
+	/** BigTrace interface panel **/
+	BigTraceMacro<T> btMacro;
+	
 	/**macro extensions **/
 	private ExtensionDescriptor[] extensions = {
 			
-			ExtensionDescriptor.newDescriptor("btLoadROIs", this, ARG_STRING, ARG_STRING),			
+			ExtensionDescriptor.newDescriptor("btLoadROIs", this, ARG_STRING, ARG_STRING),	
+			ExtensionDescriptor.newDescriptor("btStraighten", this, ARG_NUMBER, ARG_STRING),	
+			ExtensionDescriptor.newDescriptor("btTest", this),
 			ExtensionDescriptor.newDescriptor("btClose", this),
 			ExtensionDescriptor.newDescriptor("btTest", this),
 
@@ -157,13 +162,17 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	@Override
 	public void run(String arg)
 	{
+		//lock interface for initialization
+		bInputLock = true;
 		
+		btMacro = new BigTraceMacro<>(this);
 		//register IJ macro extensions
 		if (IJ.macroRunning())
 		{
 			Functions.registerExtensions(this);
 		}
-		bInputLock = true;
+		
+		
 		
 		//switch to FlatLaf theme		
 		try {
@@ -176,6 +185,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		
 		btData = new BigTraceData<>(this);
 		btLoad = new BigTraceLoad<>(this);
+		
+		
 		if(arg.equals(""))
 		{
 			btData.sFileNameFullImg = IJ.getFilePath("Open TIF/BDV/Bioformats file (3D, composite, time)...");
@@ -1531,17 +1542,19 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		{
 			if (name.equals("btLoadROIs")) 
 			{
-				macroLoadROIs((String)args[0],(String)args[1]);
+				btMacro.macroLoadROIs( (String)args[0],(String)args[1]);
+			}
+			if (name.equals("btStraighten")) 
+			{
+				btMacro.macroStraighten((int)Math.round(((Double)args[0]).doubleValue()),(String)args[1]);
 			}
 			if (name.equals("btClose")) 
 			{
-				macroCloseBT();
-				IJ.log("BigTrace closed.");
+				btMacro.macroCloseBT();			
 			}
 			if (name.equals("btTest")) 
 			{
-				IJ.log("test ok right away");
-				macroTest();
+				btMacro.macroTest();
 			} 
 		}
 		catch ( InterruptedException exc )
@@ -1549,49 +1562,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			exc.printStackTrace();
 		}
 		return null;
-	}
-	void macroLoadROIs(String sFileName, String input) throws InterruptedException
-	{
-		while(bInputLock)
-		{
-			Thread.sleep(1000);
-		}
-        if(input == null)
-        	return;
-        int nLoadMode =0;
-        switch (input)
-        {
-        	case "Clean":
-            	nLoadMode = 0;
-        		break;
-        	case "Append":
-        		nLoadMode = 1;
-        		break;  
-        	default:
-        		IJ.log( "Error! ROIs loading mode should be either Clean or Append. Loading failed." );
-        		return;
-        }
-        roiManager.loadROIs( sFileName, nLoadMode );
-	}
-	
-	void macroCloseBT() throws InterruptedException
-	{
-		while(bInputLock)
-		{
-			Thread.sleep(100);
-		}
-		closeWindows();
-	}
-	void macroTest() throws InterruptedException
-	{
-		while(bInputLock)
-		{
-		  IJ.log( "not unlocked" );
-		  Thread.sleep(100);
-		}
-		IJ.log( "unlocked" );
-		resetViewXY();
-
 	}
 	
 	@SuppressWarnings("rawtypes")
