@@ -44,6 +44,8 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 
 	JButton butTrack;
 	JButton butSettings;
+	JButton butDelete;
+	JButton butRename;
 	JButton butGroups;
 	public JList<String> jlist;
 	JScrollPane listScroller;
@@ -136,12 +138,30 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		cr.weighty=0.0;
 		cr.fill = GridBagConstraints.NONE;
 
-		butGroups = new JButton("Groups");
-		butGroups.addActionListener(this);
+		butDelete = new JButton("Delete");
+		butDelete.addActionListener(this);
 		cr.gridx++;
 		cr.gridy++;
 		cr.gridheight=1;
+		panTracksChange.add(butDelete,cr);
+		
+		butRename = new JButton("Rename");
+		butRename.addActionListener(this);
+		cr.gridy++;
+		panTracksChange.add(butRename,cr);
+		
+		butGroups = new JButton("Groups");
+		butGroups.addActionListener(this);
+		cr.gridy++;
 		panTracksChange.add(butGroups,cr);
+
+		// a solution for now
+		butDelete.setMinimumSize(butRename.getPreferredSize());
+		butDelete.setPreferredSize(butRename.getPreferredSize());
+		butRename.setMinimumSize(butRename.getPreferredSize());		 
+		butRename.setPreferredSize(butRename.getPreferredSize());
+		butGroups.setMinimumSize(butRename.getPreferredSize());		 
+		butGroups.setPreferredSize(butRename.getPreferredSize());
 
 
 		// Blank/filler component
@@ -300,6 +320,23 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		{
 			bt.roiManager.showGroupsDialog();
 			
+		}
+		
+		//DELETE
+		if(e.getSource() == butDelete)
+		{
+			bt.roiManager.deleteActiveROI();
+		}
+		//RENAME
+		if(e.getSource() == butRename)
+		{
+			bt.roiManager.renameActiveROIDialog();
+		}
+		
+		//Settings
+		if(e.getSource() == butSettings)
+		{
+			bt.roiManager.rmDiag.dialOneClickProperties();
 		}
 	}
 	@Override

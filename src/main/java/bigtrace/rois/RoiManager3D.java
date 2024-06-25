@@ -91,7 +91,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	public BigTraceTracksPanel<T> btTracksPanel = null;
 	
 	//dialogs
-	final RoiManager3DDialogs<T> rmDiag;
+	public final RoiManager3DDialogs<T> rmDiag;
 
 	//ROI LIST
 	public DefaultListModel<String> listModel; 
@@ -962,6 +962,26 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 fireActiveRoiChanged(activeRoi.intValue()); 
 	 }
 	 
+	 public void renameActiveROIDialog()
+	 {
+			String s = (String)JOptionPane.showInputDialog(
+					this,
+					"New name:",
+					"Rename ROI",
+					JOptionPane.PLAIN_MESSAGE,
+					null,
+					null,
+					getActiveRoi().getName());
+
+			//If a string was returned, rename
+			if ((s != null) && (s.length() > 0)) 
+			{
+				final Roi3D currROI = getActiveRoi();
+				currROI.setName(s);
+				listModel.set(activeRoi.intValue(),getGroupPrefixRoiName(currROI));
+				return;
+			}
+	 }
 	 public void addRoiManager3DListener(Listener l) {
 		 listeners.add(l);
 	 }
@@ -1130,24 +1150,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			//RENAME
 			if(e.getSource() == butRename)
 			{
-		
-				String s = (String)JOptionPane.showInputDialog(
-						this,
-						"New name:",
-						"Rename ROI",
-						JOptionPane.PLAIN_MESSAGE,
-						null,
-						null,
-						getActiveRoi().getName());
-
-				//If a string was returned, rename
-				if ((s != null) && (s.length() > 0)) 
-				{
-					final Roi3D currROI = getActiveRoi();
-					currROI.setName(s);
-					listModel.set(activeRoi.intValue(),getGroupPrefixRoiName(currROI));
-					return;
-				}
+				renameActiveROIDialog();
 
 			}
 			//DESELECT
