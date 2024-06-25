@@ -294,34 +294,34 @@ public class VolumeMisc {
 		
 	}
 	/** function finds local "weak" maxima in the interval and returns its list as long[] **/	
-	public static ArrayList<long []> localMaxPointList(final IntervalView< UnsignedByteType > input, final int maxVal)
+	public static < T extends RealType< T > & NativeType< T > > ArrayList<long []> localMaxPointList(final IntervalView< T > input, final int maxVal)
 	{
 		Shape voxShape = new RectangleShape( 1, true);
 		
 		ArrayList<long []> finList= new ArrayList<> (); 
-		final RandomAccessible< Neighborhood< UnsignedByteType > > inputNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.extendZero(input) );		
-		final RandomAccess< Neighborhood< UnsignedByteType > > inRA = inputNeighborhoods.randomAccess();
+		final RandomAccessible< Neighborhood< T > > inputNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.extendZero(input) );		
+		final RandomAccess< Neighborhood< T > > inRA = inputNeighborhoods.randomAccess();
 		
 		
-		Cursor< UnsignedByteType > inC=input.cursor();
-		Cursor< UnsignedByteType > neibC;
+		Cursor< T > inC = input.cursor();
+		Cursor< T > neibC;
 		//int nMaxDet = 0;
 		//int nMaxNDet = 0;
-		int currVal;
+		double currVal;
 		boolean isMax;
 		while ( inC.hasNext() )
 		{
 			inC.fwd();
-			currVal=inC.get().get();
+			currVal=inC.get().getRealDouble();
 			if(currVal>maxVal)
 			{
 				inRA.setPosition(inC.positionAsLongArray());
 				neibC = inRA.get().cursor();
-				isMax= true;
+				isMax = true;
 				while(neibC.hasNext())
 				{
 					neibC.fwd();
-					if(neibC.get().get()>currVal)
+					if(neibC.get().getRealDouble()>currVal)
 					{
 						isMax = false;
 						break;
