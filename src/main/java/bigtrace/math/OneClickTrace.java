@@ -488,6 +488,13 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 					{
 						currSal=0.0f;
 					}
+					if(bt.btData.bOCIntensityStop)
+					{
+						if(fullInput.randomAccess().setPositionAndGet( candPos ).getRealDouble()<bt.btData.dOCIntensityThreshold)
+						{
+							currSal=0.0f;
+						}
+					}
 					if(currSal>maxSal)
 					{
 						maxSal=currSal;

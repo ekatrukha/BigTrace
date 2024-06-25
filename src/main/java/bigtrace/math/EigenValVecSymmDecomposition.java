@@ -430,16 +430,16 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        int index = 0;
        double dMax = dEV[index];
        double dMin = Math.abs(dEV[index]);
-       for (i =1;i<n; i++)
+       for (i=1; i<n; i++)
        {
     	   if(Math.abs(dEV[i])<dMin)
     	   {
-    		   index=i;
-    		   dMin=Math.abs(dEV[index]);
+    		   index = i;
+    		   dMin = Math.abs(dEV[index]);
     	   }
-    	   if(dEV[i]>dMax)
+    	   if(dEV[i] > dMax)
     	   {
-    		   dMax=dEV[i];
+    		   dMax = dEV[i];
     	   }
        }
        for (i =0;i<n; i++)

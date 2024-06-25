@@ -124,8 +124,8 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 			return null;
 		final ArrayList<double []> allTangents = getJointSegmentTangentsResampled();
 		
-		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
-		
+		//RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
+		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendValue(source,Double.NaN),nInterpolatorFactory);		
 		
 		return getIntensityProfilePointsPipe(allPoints,allTangents, nRadius, interpolate,globCal);
 	}
@@ -226,7 +226,6 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		double dInt;
 		int nPixN;
 		
-		
 		//get a frame around line
 		double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(points, tangents);
 		int d;
@@ -250,8 +249,9 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 			
 			//get intensities in perpendicular plane
 			//iterate over voxels of circle
-			nPixN =0;
-			dInt =0.0;
+			nPixN = 0;
+			dInt = 0.0;
+			double dVal;
 			while (measureCircle.cursorCircle.hasNext())
 			{
 				measureCircle.cursorCircle.fwd();
@@ -259,15 +259,22 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 				LinAlgHelpers.scale(current_pixel, BigTraceData.dMinVoxelSize, current_pixel);
 				getVoxelInPlane(rsVect[0][nPoint],rsVect[1][nPoint], current_point,current_pixel);
 				//back to voxel units
-				current_pixel =Roi3D.scaleGlobInv(current_pixel, globCal);
+				current_pixel = Roi3D.scaleGlobInv(current_pixel, globCal);
 				ra.setPosition(current_pixel);
+				dVal = ra.get().getRealDouble();
+				if(!Double.isNaN( dVal ))
+				{
+					dInt += dVal;
+					nPixN++;
+				}
 				//intensity
-				dInt+=ra.get().getRealDouble();
-				nPixN++;
+				//dInt += ra.get().getRealDouble();
+				//nPixN++;
+
 			}
 			out[1][nPoint] = dInt/nPixN;
-		}
 
+		}
 		return out;
 	}
 	

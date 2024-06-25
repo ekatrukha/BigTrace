@@ -30,6 +30,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -214,11 +215,20 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		 jlist.addMouseListener(new MouseAdapter() {
 			    @Override
 				public void mouseClicked(MouseEvent evt) {
-			        if (evt.getClickCount() == 2) {
+			        if (evt.getClickCount() == 2) 
+			        {
 			            // Double-click detected
 			            int index = jlist.locationToIndex(evt.getPoint());
 			            bt.roiManager.focusOnRoi(bt.roiManager.rois.get(index));
-			        } 
+			        }
+			        //right click
+			    	if (SwingUtilities.isRightMouseButton(evt))
+					{
+						if(bt.roiManager.activeRoi.intValue()>=0)
+						{
+							bt.roiManager.dialProperties();
+						}
+					}
 			    }
 			});
 
@@ -781,7 +791,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 				break;
 			case Roi3D.POLYLINE:
 			case Roi3D.LINE_TRACE:
-				if(val.intensity_values==null)
+				if(val.intensity_values == null)
 				{
 					li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),btdata.nInterpolatorFactory, BigTraceData.shapeInterpolation);
 					if(li_profile!=null)
@@ -791,7 +801,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 					
 				}
 
-				if (val.intensity_values!=null)
+				if (val.intensity_values != null)
 				{
 					if((systemMeasurements&MEAN)!=0) 
 					{

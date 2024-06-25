@@ -252,7 +252,12 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	
 	/** directionality constrain for one click **/
 	public double dDirectionalityOneClick;
+
+	/** Use minimum intensity threshold when tracing **/
+	public boolean bOCIntensityStop;
 	
+	/** value of the intensity threshold to stop One click tracing **/
+	public double dOCIntensityThreshold;	
 	
 	/** storage of the dataset orientation before entering TraceBox mode **/
 	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
@@ -290,6 +295,8 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 		
 		nVertexPlacementPointN = (int) Prefs.get("BigTrace.nVertexPlacementPointN", 10);
 		dDirectionalityOneClick = Prefs.get("BigTrace.dDirectionalityOneClick", 0.6);
+		bOCIntensityStop = Prefs.get("BigTrace.bOCIntensityStop", false);
+		dOCIntensityThreshold =Prefs.get("BigTrace.dOCIntensityThreshold", 100.);
 		//init interpolation factory
 		setInterpolationFactory();
 	}

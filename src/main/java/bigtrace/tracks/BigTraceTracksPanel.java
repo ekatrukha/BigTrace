@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -106,11 +107,20 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		jlist.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent evt) {
-				if (evt.getClickCount() == 2) {
+				if (evt.getClickCount() == 2) 
+				{
 					// Double-click detected
 					int index = jlist.locationToIndex(evt.getPoint());
 					bt.roiManager.focusOnRoi(bt.roiManager.rois.get(index));
-				} 
+				}
+		        //right click
+		    	if (SwingUtilities.isRightMouseButton(evt))
+				{
+					if(bt.roiManager.activeRoi.intValue()>=0)
+					{
+						bt.roiManager.dialProperties();
+					}
+				}
 			}
 		});
 

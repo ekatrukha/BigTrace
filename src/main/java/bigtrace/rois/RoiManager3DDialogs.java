@@ -3,6 +3,8 @@ package bigtrace.rois;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
@@ -189,7 +191,11 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		NumberField nfSigmaX = new NumberField(4);
 		NumberField nfSigmaY = new NumberField(4);
 		NumberField nfSigmaZ = new NumberField(4);
+		
+
+		NumberField nfIntensityThreshold = new NumberField(5);
 		JCheckBox cbTraceOnlyClipped = new JCheckBox();
+		JCheckBox cbIntensityStop = new JCheckBox();
 
 		
 		nfSigmaX.setText(df.format(bt.btData.sigmaTrace[0]));
@@ -198,6 +204,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 
 		cbTraceOnlyClipped.setSelected(bt.btData.bTraceOnlyClipped);
 		
+
 		cd.gridx=0;
 		cd.gridy=0;
 
@@ -235,6 +242,9 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		nfPlaceVertex.setIntegersOnly(true);
 		nfPlaceVertex.setText(Integer.toString(bt.btData.nVertexPlacementPointN));
 		nfDirectionalityOneClick.setText(df.format(bt.btData.dDirectionalityOneClick));
+		cbIntensityStop.setSelected(bt.btData.bOCIntensityStop);
+		nfIntensityThreshold.setText(df.format(bt.btData.dOCIntensityThreshold));
+		nfIntensityThreshold.setTFEnabled( bt.btData.bOCIntensityStop);
 		
 		cd.gridx=0;
 		cd.gridy=0;		
@@ -247,6 +257,30 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		pOneCLick.add(new JLabel("Constrain directionality (0-1): "),cd);
 		cd.gridx++;
 		pOneCLick.add(nfDirectionalityOneClick,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		//cd.anchor=GridBagConstraints.WEST;
+		pOneCLick.add(new JLabel("Use intensity threshold: "),cd);
+		cd.gridx++;
+		pOneCLick.add(cbIntensityStop,cd);
+		cbIntensityStop.addActionListener( new ActionListener()
+				{
+
+					@Override
+					public void actionPerformed( ActionEvent arg0 )
+					{
+						
+						nfIntensityThreshold.setTFEnabled( cbIntensityStop.isSelected() );
+					}
+			
+				});
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pOneCLick.add(new JLabel("Minimum intensity: "),cd);
+		cd.gridx++;
+		pOneCLick.add(nfIntensityThreshold,cd);
 		
 		//assemble pane
 		tabPane.addTab("Tracing",pTrace);
@@ -275,10 +309,16 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 			bt.btData.nVertexPlacementPointN = Math.max(3, Integer.parseInt(nfPlaceVertex.getText()));
 			Prefs.set("BigTrace.nVertexPlacementPointN", (double)(bt.btData.nVertexPlacementPointN));
 			
-			bt.btData.dDirectionalityOneClick=Math.min(1.0, (Math.max(0, Double.parseDouble(nfDirectionalityOneClick.getText()))));
+			bt.btData.dDirectionalityOneClick = Math.min(1.0, (Math.max(0, Double.parseDouble(nfDirectionalityOneClick.getText()))));
 			Prefs.set("BigTrace.dDirectionalityOneClick",bt.btData.dDirectionalityOneClick);
 			
-			
+			bt.btData.bOCIntensityStop = cbIntensityStop.isSelected();
+			Prefs.set("BigTrace.bOCIntensityStop", bt.btData.bOCIntensityStop);	
+			if(bt.btData.bOCIntensityStop)
+			{
+				bt.btData.dOCIntensityThreshold = Math.max(0, Double.parseDouble(nfIntensityThreshold.getText()));
+				Prefs.set("BigTrace.dOCIntensityThreshold",bt.btData.dOCIntensityThreshold);		
+			}
 		}
 	}
 	/** show ROI Appearance dialog**/

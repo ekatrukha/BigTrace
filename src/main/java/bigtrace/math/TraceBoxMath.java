@@ -136,10 +136,12 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 		ExecutorService es = Executors.newFixedThreadPool( nThreads );
 		mEV.computeVWCRAI(hessian, directionVectors, salWeights, lineCorners, nThreads, es);
 		es.shutdown();
-
+		
 		setProgress(100);
 		setProgressState("trace box done.");
 		//ImageJFunctions.show( ( RandomAccessibleInterval< T > ) salWeights, "int" );
+		//ImageJFunctions.show( lineCorners, "lineCorners" );
+		//ImageJFunctions.show( ( RandomAccessibleInterval< T > ) input, "raw" );
 		bt.btData.trace_weights = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
 
 		

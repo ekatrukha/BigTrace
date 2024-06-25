@@ -31,6 +31,7 @@ import javax.swing.JSeparator;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -188,11 +189,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		roiPolyOneClickMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 		if(mode==RoiManager3D.ADD_POINT_ONECLICKLINE)
 		{roiPolyOneClickMode.setSelected(true);}		
-		roiPolyOneClickMode.addMouseListener(new MouseAdapter() {
+		
+		roiPolyOneClickMode.addMouseListener(new MouseAdapter() 
+		{
 			@Override
 			public void mouseClicked(MouseEvent evt) {
-				if (evt.getClickCount() == 2) {
-
+				if (evt.getClickCount() == 2) 
+				{
 					// Double-click detected
 					rmDiag.dialOneClickProperties();
 				} 
@@ -280,6 +283,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 					int index = jlist.locationToIndex(evt.getPoint());
 					focusOnRoi(rois.get(index));
 				} 
+				if (SwingUtilities.isRightMouseButton(evt))
+				{
+					if(activeRoi.intValue()>=0)
+					{
+						dialProperties();
+					}
+				}
 			}
 		});
 
