@@ -18,6 +18,7 @@ import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -56,8 +57,10 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 	JButton butEdit;
 	JButton butCopyNew;
 	JButton butDelete;
+	JButton butMerge;
 	JButton butSave;
 	JButton butLoad;
+	
 	
 	
 	RoiManager3D <T> roiManager;
@@ -80,14 +83,11 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		 listScroller = new JScrollPane(jlist);
 		 listScroller.setPreferredSize(new Dimension(170, 400));
 		 listScroller.setMinimumSize(new Dimension(170, 250));
-		 
-		 
-		 
+		 	 
 		 for (int i = 0;i<roiManager.groups.size();i++)
 		 {
 			 listModel.addElement(roiManager.groups.get(i).getName());
-		 }
-		 
+		 }		 
 		 
 		 presetList = new JPanel(new GridBagLayout());
 		 //presetList.setBorder(new PanelTitle(" Groups Manager "));
@@ -98,6 +98,8 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		 butCopyNew.addActionListener(this);	 
 		 butDelete = new JButton("Delete");
 		 butDelete.addActionListener(this);
+		 butMerge = new JButton("Merge");
+		 butMerge.addActionListener(this);
 		 butSave = new JButton("Save");
 		 butSave.addActionListener(this);
 		 butLoad = new JButton("Load");
@@ -122,6 +124,8 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		 cr.gridy++;
 		 presetList.add(butDelete,cr);
 		 cr.gridy++;
+		 presetList.add(butMerge,cr);
+		 cr.gridy++;
 		 presetList.add(butSave,cr);
 		 cr.gridy++;
 		 presetList.add(butLoad,cr);
@@ -144,9 +148,71 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		dialog.setVisible(true); 
 	}
 
+	/** show Group Properties dialog**/
+	void dialogMerge(int indList)	
+	{
+		
+		JPanel dialMerge = new JPanel(new GridBagLayout());
+		GridBagConstraints cd = new GridBagConstraints();
+		//make a selection list of non-selected groups
+		//ask user what he wants to do with ROIs
+		String [] sGroupToMerge = new String [roiManager.groups.size()-1];		
+		int nCount = 0;
+		for(int i=0;i<roiManager.groups.size();i++)
+		{
+			if(i!=indList)
+			{
+				sGroupToMerge[nCount] = roiManager.groups.get( i ).getName();
+			    nCount++;
+			}
+		}
+		JComboBox<String> cbGroup = new JComboBox<>(sGroupToMerge);
+		
+		JCheckBox cbDeleteGroup = new JCheckBox();
+		cbDeleteGroup .setSelected( Prefs.get( "BigTrace.bMergeDeleteGroup", true ) ); 
+		cd.gridx=0;
+		cd.gridy=0;
+		cd.gridwidth = 2; 
+		dialMerge.add(new JLabel("Move ROIs from group "+roiManager.groups.get( indList ).getName() +" to"),cd);
+		cd.gridy++;
+		dialMerge.add(cbGroup,cd);
+		if(indList!=0)
+		{
+			cd.gridwidth = 1;
+			cd.gridy++;
+			dialMerge.add(new JLabel("and delete this group"),cd);
+			cd.gridx++;
+			dialMerge.add(cbDeleteGroup,cd);
+			
+		}
+		int reply = JOptionPane.showConfirmDialog(null, dialMerge, "Merge Groups", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);		
+		
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			boolean bDeleteGroup = false;
+			if(indList!=0)
+			{
+				bDeleteGroup = cbDeleteGroup.isSelected();
+				Prefs.set( "BigTrace.bMergeDeleteGroup", bDeleteGroup );
+			}
+			//get the index of the group to merge
+			int nGroupMergeInd = cbGroup.getSelectedIndex();
+			if(nGroupMergeInd>=indList)
+			{
+				nGroupMergeInd++;
+			}
+			roiManager.moveROIsGroups(indList,nGroupMergeInd);
+			//System.out.println(roiManager.groups.get(nGroupMergeInd).getName());
+			if(bDeleteGroup)
+			{
+				deleteGroupAndCorrectIndex(indList);
+			}
+		}
+	}
     
 	/** show Group Properties dialog**/
-	public boolean dialPropertiesShow(final Roi3DGroup preset, boolean bNameChangable)	
+	public boolean dialogPropertiesShow(final Roi3DGroup preset, boolean bNameChangable)	
 	{
 		JPanel dialProperties = new JPanel(new GridBagLayout());
 		GridBagConstraints cd = new GridBagConstraints();
@@ -193,8 +259,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 					butLineColor.setIcon(new ColorIcon(newColor));
 				}
 				
-		});
-		
+		});		
 
 		JButton butSaveAsDefault = new JButton ("Save as new default");
 		
@@ -328,7 +393,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 	}
 	
 	/** Save Groups dialog and saving **/
-	public void diagSaveGroups()
+	public void dialogSaveGroups()
 	{
 		String filename;
 		//int nGroupN, nGroup;
@@ -359,7 +424,6 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 
 	}
 	
-	
 	public void saveGroups (FileWriter writer)
 	{
 		int nGroupN, nGroup;
@@ -385,8 +449,8 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		}
 	}
 	
-	/** Load Groups dialog and saving **/
-	public void diagLoadGroups()
+	/** Load Groups dialog **/
+	public void dialogLoadGroups()
 	{
 		String filename;
 
@@ -562,19 +626,22 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 
 
 	@Override
-	public void valueChanged(ListSelectionEvent e) {
+	public void valueChanged(ListSelectionEvent e) 
+	{
         if (jlist.getSelectedIndex() == -1) 
         {
         //No selection
-        // should not happen 	
+        //should not happen 	
 
         } else if (jlist.getSelectedIndices().length > 1) {
         //Multiple selection: 
-
-        } else {
-        //Single selection:
+        //should not happen 
+        } 
+        else 
+        {
+        	//Single selection:
         	//undefined group, cannot edit or delete
-        	if(jlist.getSelectedIndex() ==0)
+        	if(jlist.getSelectedIndex() == 0)
         	{
         		//butEdit.setEnabled(false);
         		butDelete.setEnabled(false);
@@ -584,7 +651,9 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
         		//butEdit.setEnabled(true);
         		butDelete.setEnabled(true);        		
         	}
+
         }
+        updateMergeButton();
     
 	}
 
@@ -608,7 +677,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 				{
 					bNameChange = true;
 				}
-				if(dialPropertiesShow(roiManager.groups.get(indList),bNameChange))
+				if(dialogPropertiesShow(roiManager.groups.get(indList),bNameChange))
 				{
 					listModel.set(indList,roiManager.groups.get(indList).getName());
 					roiManager.updateROIsGroupDisplay(indList);
@@ -626,7 +695,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 				{
 					newGroup = new Roi3DGroup(roiManager.groups.get(indList), roiManager.groups.get(indList).getName()+"_copy"); 
 				}
-				if(dialPropertiesShow(newGroup, true))
+				if(dialogPropertiesShow(newGroup, true))
 				{
 					addGroup(newGroup);
 				}
@@ -634,20 +703,24 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 			}			
 			//DELETE
 			if(ae.getSource() == butDelete)
-			{
-				
+			{				
 				deleteGroup(indList);
+			}
+			//DELETE
+			if(ae.getSource() == butMerge)
+			{				
+				dialogMerge(indList);
 			}
 			//SAVE
 			if(ae.getSource() == butSave)
 			{
 			
-				diagSaveGroups();
+				dialogSaveGroups();
 			}
 			//LOAD
 			if(ae.getSource() == butLoad)
 			{			
-				diagLoadGroups();
+				dialogLoadGroups();
 			}
 			
 		}
@@ -658,6 +731,20 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 	{
 		roiManager.groups.add(newGroup_);
 		listModel.addElement(newGroup_.getName());
+		updateMergeButton();
+
+	}
+	
+	void updateMergeButton()
+	{
+		if(roiManager.groups.size()<2)
+		{
+			butMerge.setEnabled( false );
+		}
+		else
+		{
+			butMerge.setEnabled( true );
+		}	
 	}
 	/** deletes Group and asks what to do with ROIs **/ 
 	void deleteGroup(int indList)
@@ -694,36 +781,47 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 					return;
 				if(input.equals("Mark these ROIs as *undefined*"))
 				{
-					roiManager.markROIsUndefined(indList);
+					//roiManager.markROIsUndefined(indList);
+					roiManager.moveROIsGroups( indList, 0 );
+					Prefs.set("BigTrace.DeleteGroup", 0);
 				}
 				else
 				{
-					roiManager.deleteROIGroup(indList);
+					Prefs.set("BigTrace.DeleteGroup", 1);
+					roiManager.deleteROIsBelongingToGroup(indList);
+					
 				}
 			}
+			deleteGroupAndCorrectIndex(indList);
 
-			//correct indexing
-			for (Roi3D roi : roiManager.rois)
+		}
+		updateMergeButton();
+	}
+	
+	void deleteGroupAndCorrectIndex(int indList)
+	{
+		//correct indexing
+		for (Roi3D roi : roiManager.rois)
+		{
+			if(roi.getGroupInd()>indList)
 			{
-				if(roi.getGroupInd()>indList)
-				{
-					roi.setGroupInd(roi.getGroupInd()-1);
-				}
-			}	
-			//delete group itself
-			roiManager.groups.remove(indList);
-			listModel.removeElementAt(indList);
-
-
-			//select previous Group
-			if(indList==0)
-			{
-				jlist.setSelectedIndex(0);
+				roi.setGroupInd(roi.getGroupInd()-1);
 			}
-			else
-			{
-				jlist.setSelectedIndex(indList-1);
-			}
+		}	
+		
+		//delete group itself
+		roiManager.groups.remove(indList);
+		listModel.removeElementAt(indList);
+
+
+		//select previous Group
+		if(indList==0)
+		{
+			jlist.setSelectedIndex(0);
+		}
+		else
+		{
+			jlist.setSelectedIndex(indList-1);
 		}
 	}
 	

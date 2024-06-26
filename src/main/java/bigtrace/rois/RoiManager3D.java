@@ -1563,14 +1563,26 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	}
 	
 	/** marks ROIs of specific group as undefined and updates ROI indexes**/
-	public void markROIsUndefined(int nGroupN)
+//	public void markROIsUndefined(int nGroupN)
+//	{
+//		for (int i=0;i<rois.size();i++)
+//		{
+//			if(rois.get(i).getGroupInd()==nGroupN)
+//			{
+//				rois.get(i).setGroupInd(0);
+//				listModel.setElementAt(rois.get(i).getName(), i);
+//			}
+//		}
+//	}
+	/** moves ROIs from nGroupFrom index to group with nGroupTo index **/
+	public void moveROIsGroups(final int nGroupFrom, final int nGroupTo)
 	{
 		for (int i=0;i<rois.size();i++)
 		{
-			if(rois.get(i).getGroupInd()==nGroupN)
+			if(rois.get(i).getGroupInd() == nGroupFrom)
 			{
-				rois.get(i).setGroupInd(0);
-				listModel.setElementAt(rois.get(i).getName(), i);
+				rois.get(i).setGroupInd(nGroupTo);
+				listModel.setElementAt(getGroupPrefixRoiName(rois.get(i)), i);
 			}
 		}
 	}
@@ -1649,7 +1661,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 	
 	/** deletes ROIs of specific group **/
-	public void deleteROIGroup(int nGroupN)
+	public void deleteROIsBelongingToGroup(int nGroupN)
 	{
 		for (int i=(rois.size()-1);i>=0;i--)
 		{
