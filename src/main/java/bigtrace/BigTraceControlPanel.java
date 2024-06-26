@@ -85,7 +85,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	
 	public BigTraceControlPanel(final BigTrace<T> bt_,final BigTraceData<T> btd_, final RoiManager3D<T> roiManager_)//, int locx, int locy) 
 	{
-		//finalPanel = new JPanel(new GridBagLayout());
+	
 		super(new GridBagLayout());
 
 		btdata = btd_;
@@ -113,11 +113,13 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    tabIcon = new ImageIcon(icon_path);
 	    tabPane.addTab("",tabIcon ,roiMeasure,"Measure");
 	    
-	    //TRACKS	    
-	    icon_path = bigtrace.BigTrace.class.getResource("/icons/tracks.png");
-	    tabIcon = new ImageIcon(icon_path);
-	    tabPane.addTab("",tabIcon ,btTracksPanel,"Tracking");
-
+	    //TRACKS	
+	    if(BigTraceData.nNumTimepoints>1)
+	    {
+		    icon_path = bigtrace.BigTrace.class.getResource("/icons/tracks.png");
+		    tabIcon = new ImageIcon(icon_path);
+		    tabPane.addTab("",tabIcon ,btTracksPanel,"Tracking");
+	    }
 	    
 	    icon_path = bigtrace.BigTrace.class.getResource("/icons/shortcut.png");
 	    tabIcon = new ImageIcon(icon_path);
