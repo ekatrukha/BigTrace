@@ -198,6 +198,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 			}
 			//get the index of the group to merge
 			int nGroupMergeInd = cbGroup.getSelectedIndex();
+			
 			if(nGroupMergeInd>=indList)
 			{
 				nGroupMergeInd++;
