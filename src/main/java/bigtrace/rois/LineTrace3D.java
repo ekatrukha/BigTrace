@@ -44,7 +44,7 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 	{
 		type = Roi3D.LINE_TRACE;
 		pointSize = preset_in.pointSize;
-		lineThickness=preset_in.lineThickness;
+		lineThickness = preset_in.lineThickness;
 		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());

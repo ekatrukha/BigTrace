@@ -7,6 +7,8 @@ public class MeasureValues implements Measurements {
 	
 	public String roiName;
 	public String roiGroupName;
+	float pointSize;
+	float lineThickness;
 	public int nTimePoint;
 	public int roiType;
 	public double length;
@@ -34,7 +36,7 @@ public class MeasureValues implements Measurements {
 	
 	public void setRoiType(final int roiType_)
 	{
-		this.roiType=roiType_;
+		this.roiType = roiType_;
 	}
 	
 	void setTimePoint(int nTimePoint_)
@@ -59,6 +61,24 @@ public class MeasureValues implements Measurements {
 	public int getTimePoint() {		
 		return nTimePoint;
 	}
-
-
+	
+	void setPointSize(float pointSize_)
+	{
+		pointSize = pointSize_;
+	}
+	
+	public float getPointSize()
+	{
+		return pointSize;
+	}
+	
+	void setLineThickness(float lineThickness_)
+	{
+		lineThickness = lineThickness_;
+	}
+	
+	public float getLineThickness()
+	{
+		return lineThickness;
+	}
 }

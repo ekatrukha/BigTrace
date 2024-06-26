@@ -495,6 +495,9 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		val.setRoiType(roi.getType());
 		val.setRoiGroupName(bt.roiManager.getGroupName(roi));
 		val.setTimePoint(roi.getTimePoint());
+		val.setPointSize( roi.getPointSize() );
+		val.setLineThickness( roi.getLineThickness() );
+
 		if(systemMeasurements>0)
 		{
 
@@ -541,7 +544,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 
 			ROIsMeasureBG measureBG = new ROIsMeasureBG();		
 			measureBG.rois = rois;
-			measureBG.bt=bt;
+			measureBG.bt = bt;
 			measureBG.resetTable = resetTable;
 			measureBG.addPropertyChangeListener(bt.btPanel);
 			measureBG.execute();
@@ -638,6 +641,9 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		rt.setValue("ROI_Name", row, val.getRoiName());
 		rt.setValue("ROI_Type", row, Roi3D.intTypeToString(val.getRoiType()));
 		rt.setValue("ROI_Group", row, val.getRoiGroupName());
+		rt.setValue("Point_Size", row, val.getPointSize());
+		rt.setValue("Line_Thickness", row, val.getLineThickness());
+
 		if(BigTraceData.nNumTimepoints>1)
 		{
 			rt.setValue("ROI_TimePoint", row, val.getTimePoint());
