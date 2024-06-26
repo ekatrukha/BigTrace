@@ -3,7 +3,8 @@ package bigtrace.gui;
 import java.awt.Component;
 import java.awt.Container;
 
-public class GuiMisc {
+public class GuiMisc 
+{
 
 	public static void setPanelStatusAllComponents(Container panel, boolean bStatus)
 	{
@@ -17,4 +18,5 @@ public class GuiMisc {
 			}
 		}
 	}
+	
 }

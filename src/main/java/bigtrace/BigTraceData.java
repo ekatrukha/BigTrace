@@ -1,11 +1,13 @@
 package bigtrace;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import bigtrace.gui.BCsettings;
 import bigtrace.gui.RenderSettings;
+import bigtrace.rois.Roi3D;
 import ij.Prefs;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessible;
@@ -245,6 +247,9 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	/** current number of vertices in the tracebox **/
 	public int nPointsInTraceBox = 0;
 	
+	/** storage of the dataset orientation before entering TraceBox mode **/
+	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
+	
 	///////////////////////////// TRACING SETTINGS ONE CLICK
 	
 	/** current number of vertices in the tracebox **/
@@ -258,15 +263,22 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	
 	/** value of the intensity threshold to stop One click tracing **/
 	public double dOCIntensityThreshold;	
-	
-	/** storage of the dataset orientation before entering TraceBox mode **/
-	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
-	
+		
 	////////////////////////// TRACKING
 	
 	/** for now, generate a number of the track **/
 	
 	public static AtomicInteger nTrackN = new AtomicInteger(1);
+	
+	///////////////// DEFAULT SETTINGS FOR UNDEFINED GROUP
+	
+	public float undefPointSize;// = 4.0f;
+	public float undefLineThickness;// = 7.0f;
+	public int undefRenderType;// = Roi3D.SURFACE;
+	public int undefPointColor ;// = Color.GREEN.getRGB();
+	public int undefLineColor;//  = Color.BLUE.getRGB();
+	
+	
 	
 	public BigTraceData(final BigTrace<T> bt_)
 	{
@@ -293,10 +305,19 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 		dTraceBoxScreenFraction = Prefs.get("BigTrace.dTraceBoxScreenFraction", 0.5);
 		gammaTrace =  Prefs.get("BigTrace.gammaTrace", 0.0);
 		
+		//one-click
 		nVertexPlacementPointN = (int) Prefs.get("BigTrace.nVertexPlacementPointN", 10);
 		dDirectionalityOneClick = Prefs.get("BigTrace.dDirectionalityOneClick", 0.6);
 		bOCIntensityStop = Prefs.get("BigTrace.bOCIntensityStop", false);
-		dOCIntensityThreshold =Prefs.get("BigTrace.dOCIntensityThreshold", 100.);
+		dOCIntensityThreshold = Prefs.get("BigTrace.dOCIntensityThreshold", 100.);
+		
+		//undefined group properties
+		undefPointSize = ( float ) Prefs.get( "BigTrace.undefPointSize", 4.0 );
+		undefLineThickness = ( float ) Prefs.get( "BigTrace.undefLineThickness", 7.0 );
+		undefPointColor = ( int ) Prefs.get( "BigTrace.undefPointColor", Color.GREEN.getRGB() );
+		undefLineColor = ( int ) Prefs.get( "BigTrace.undefLineColor", Color.BLUE.getRGB() );
+		undefRenderType = ( int ) Prefs.get( "BigTrace.undefRenderType", Roi3D.SURFACE );
+		
 		//init interpolation factory
 		setInterpolationFactory();
 	}

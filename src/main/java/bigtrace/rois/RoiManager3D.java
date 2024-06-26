@@ -142,7 +142,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		ButtonGroup roiTraceMode = new ButtonGroup();
 
 		//initialize new *undefined* ROI group
-		groups.add(new Roi3DGroup(sUndefinedGroupName, 4.0f, Color.GREEN, 7.0f, Color.BLUE, Roi3D.SURFACE) );
+		groups.add(new Roi3DGroup(sUndefinedGroupName, bt.btData.undefPointSize, new Color(bt.btData.undefPointColor), bt.btData.undefLineThickness, new Color(bt.btData.undefLineColor), bt.btData.undefRenderType) );
 		nActiveGroup = 0;
 
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");

@@ -170,7 +170,6 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		nfOpacity.setText(df.format(preset.getOpacity()));
 		nfOpacity.setLimits(0.0, 1.0);
 		
-
 		JButton butPointColor = new JButton( new ColorIcon( preset.getPointColor() ) );
 		
 		butPointColor.addActionListener( e -> {
@@ -197,23 +196,36 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		});
 		
 
+		JButton butSaveAsDefault = new JButton ("Save as new default");
+		
+		butSaveAsDefault.addActionListener( 
+				new ActionListener() 
+				{
+					@Override
+					public void actionPerformed( ActionEvent e )
+					{
+						Prefs.set("BigTrace.undefPointSize",Float.parseFloat(nfPointSize.getText()));	
+						Prefs.set("BigTrace.undefLineThickness",Float.parseFloat(nfLineThickness.getText()));	
+						Prefs.set("BigTrace.undefRenderType",renderTypeList.getSelectedIndex());
+						Prefs.set("BigTrace.undefPointColor",selectColors.getColor(0).getRGB());
+						Prefs.set("BigTrace.undefLineColor",selectColors.getColor(1).getRGB());
+					}
+				});
+		
+		
 		cd.gridx=0;
 		cd.gridy=0;
 
 		dialProperties.add(new JLabel("Name: "),cd);
 		cd.gridx++;
-		dialProperties.add(tfName,cd);
-		
-		
+		dialProperties.add(tfName,cd);				
 		
 		cd.gridx=0;
 		cd.gridy++;
 		dialProperties.add(new JLabel("Point size: "),cd);
 		cd.gridx++;
-		dialProperties.add(nfPointSize,cd);
-		
-		
-		
+		dialProperties.add(nfPointSize,cd);		
+				
 		cd.gridx=0;
 		cd.gridy++;
 		dialProperties.add(new JLabel("Point color: "),cd);
@@ -225,6 +237,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		dialProperties.add(new JLabel("Line thickness: "),cd);
 		cd.gridx++;
 		dialProperties.add(nfLineThickness,cd);
+		
 		cd.gridx=0;
 		cd.gridy++;
 		dialProperties.add(new JLabel("Line color: "),cd);
@@ -243,6 +256,13 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		renderTypeList.setSelectedIndex(preset.getRenderType());
 		cd.gridx++;
 		dialProperties.add(renderTypeList,cd);
+		
+		if(!bNameChangable)
+		{
+			cd.gridx=0;
+			cd.gridy++;
+			dialProperties.add(butSaveAsDefault,cd);
+		}
 
 		
 		
