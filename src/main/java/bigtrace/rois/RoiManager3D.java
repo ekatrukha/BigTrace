@@ -76,8 +76,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 	public int nActiveGroup = 0;
 
-	public Color activePointColor = Color.YELLOW;
-	public Color activeLineColor = Color.RED;
+	public Color activePointColor = new Color((int)Prefs.get( "BigTrace.activePointColor", Color.YELLOW.getRGB() ));
+	public Color activeLineColor = new Color((int)Prefs.get( "BigTrace.activeLineColor", Color.RED.getRGB() ));
 
 	public ColorUserSettings selectColors = new ColorUserSettings(); 
 	public static int mode = (int) Prefs.get("BigTrace.RoiManagerMode", ADD_POINT_LINE);

@@ -278,7 +278,7 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	public int undefPointColor ;// = Color.GREEN.getRGB();
 	public int undefLineColor;//  = Color.BLUE.getRGB();
 	
-	
+	///////////////// DEFAULT SETTINGS FOR ACTIVE ROI COLORS
 	
 	public BigTraceData(final BigTrace<T> bt_)
 	{

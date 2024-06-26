@@ -533,13 +533,17 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 			{
 				rm.activePointColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
 				rm.selectColors.setColor(null, 0);
+				Prefs.set("BigTrace.activePointColor", tempC.getRGB());
 			}
+			
 			tempC = rm.selectColors.getColor(1);
 			if(tempC!=null)
 			{
 				rm.activeLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
 				rm.selectColors.setColor(null, 1);
+				Prefs.set("BigTrace.activeLineColor", tempC.getRGB());
 			}
+			
 			BigTraceData.bROIDoubleClickClip = cbRoiDoubleClickClip.isSelected();
 			Prefs.set("BigTrace.bROIDoubleClickClip", BigTraceData.bROIDoubleClickClip );
 			
