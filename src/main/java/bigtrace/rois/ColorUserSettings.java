@@ -11,12 +11,12 @@ public class ColorUserSettings {
 	{
 		for(int i=0;i<4;i++)
 		{
-			colors[i]=null;
+			colors[i] = null;
 		}
 	}
 	public void setColor(Color color_in, int index)
 	{
-		if (color_in==null)
+		if (color_in == null)
 		{
 			colors[index] = null;
 		}

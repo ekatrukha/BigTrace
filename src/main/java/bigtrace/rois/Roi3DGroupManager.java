@@ -238,7 +238,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		nfOpacity.setLimits(0.0, 1.0);
 		
 		JButton butPointColor = new JButton( new ColorIcon( preset.getPointColor() ) );
-		
+		selectColors.setColor(preset.getPointColor(), 0);
 		butPointColor.addActionListener( e -> {
 			Color newColor = JColorChooser.showDialog(dialog, "Choose point color", preset.getPointColor() );
 			if (newColor!=null)
@@ -251,7 +251,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		
 		JButton butLineColor  = new JButton( new ColorIcon( preset.getLineColor()) );
 
-		
+		selectColors.setColor(preset.getLineColor(), 1);
 		butLineColor.addActionListener( e -> {
 				Color newColor = JColorChooser.showDialog(dialog, "Choose line color", preset.getPointColor() );
 				if (newColor!=null)
