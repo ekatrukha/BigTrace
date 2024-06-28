@@ -264,11 +264,6 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	/** value of the intensity threshold to stop One click tracing **/
 	public double dOCIntensityThreshold;	
 		
-	////////////////////////// TRACKING
-	
-	/** for now, generate a number of the track **/
-	
-	public static AtomicInteger nTrackN = new AtomicInteger(1);
 	
 	///////////////// DEFAULT SETTINGS FOR UNDEFINED GROUP
 	

@@ -93,7 +93,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		setProgress(0);	
 		
 		//make a New Group
-		newGroupTrack = new Roi3DGroup( currentRoi, String.format("%03d", BigTraceData.nTrackN.getAndIncrement())); 
+		newGroupTrack = new Roi3DGroup( currentRoi, getNewGroupNameInteger()); 
 		
 		bt.roiManager.addGroup( newGroupTrack );		
 		bt.roiManager.applyGroupToROI( currentRoi, newGroupTrack  );
@@ -254,6 +254,36 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
     	bt.roiManager.setLockMode(false);
     	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
 
+    }
+    
+    String getNewGroupNameInteger()
+    {
+    	
+    	int nCand = 1;
+    	boolean bFoundGood = false;
+    	boolean bExistsAlready;
+    	String sCandName = String.format("%03d", nCand);
+    	while (!bFoundGood)
+    	{
+    		bExistsAlready = false;
+    		for (int i=0;i<bt.roiManager.groups.size() && !bExistsAlready;i++)
+    		{
+    			if(sCandName.equals( bt.roiManager.groups.get( i ).getName() ))
+    			{
+    				bExistsAlready = true;
+    			}
+    		}
+    		if(bExistsAlready)
+    		{
+    			nCand++;
+    			sCandName = String.format("%03d", nCand);
+    		}
+    		else
+    		{
+    			return sCandName;
+    		}
+    	}
+    	return "Error";
     }
 
 }
