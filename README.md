@@ -7,7 +7,9 @@ BigTrace
 <br />
 <br />
 For full description and manual refer to <a href="https://github.com/ekatrukha/BigTrace/wiki"><strong>Wiki page</strong></a>.  
-
+<br />
+The plugin is <a href ="https://github.com/ekatrukha/BigTrace/wiki/Macros">scriptable</a> using ImageJ macros.  
+<br />
 Main topics:
 <ul>
 <li> <a href="https://github.com/ekatrukha/BigTrace/wiki/How-to-install-plugin">How to install plugin</a></li>

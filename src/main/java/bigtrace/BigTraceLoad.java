@@ -379,7 +379,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		btdata.nBitDepth = imp.getBitDepth();
 		if(btdata.nBitDepth<=16)
 		{
-			img_ImageJ = ImageJFunctions.wrapReal(imp);
+			img_ImageJ = ImageJFunctions.wrap( imp );//.wrapNumeric(imp);
 		}
 		else
 		{
