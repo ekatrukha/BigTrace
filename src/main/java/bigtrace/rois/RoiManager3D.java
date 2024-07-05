@@ -39,7 +39,6 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bdv.tools.brightness.ColorIcon;
-import ij.IJ;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
