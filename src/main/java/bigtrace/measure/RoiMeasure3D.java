@@ -398,9 +398,9 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			{
 				BigTraceData.nSmoothWindow = Integer.parseInt(nfSmoothWindow.getText());
 				Prefs.set("BigTrace.nSmoothWindow", BigTraceData.nSmoothWindow);
-				BigTraceData.shapeInterpolation= shapeInterpolationList.getSelectedIndex();
+				BigTraceData.shapeInterpolation = shapeInterpolationList.getSelectedIndex();
 				Prefs.set("BigTrace.ShapeInterpolation",BigTraceData.shapeInterpolation);
-				BigTraceData.rotationMinFrame= rotationFrameList.getSelectedIndex();
+				BigTraceData.rotationMinFrame = rotationFrameList.getSelectedIndex();
 				Prefs.set("BigTrace.RotationMinFrame",BigTraceData.rotationMinFrame);
 				bt.roiManager.updateROIsDisplay();
 			}

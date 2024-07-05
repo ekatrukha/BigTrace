@@ -139,7 +139,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	/** ROI manager + list tab **/
 	public RoiManager3D<T> roiManager;
 	
-	/** BigTrace interface panel **/
+	/** BigTrace macro interface**/
 	BigTraceMacro<T> btMacro;
 	
 	/**macro extensions **/
@@ -147,16 +147,12 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			
 			ExtensionDescriptor.newDescriptor("btLoadROIs", this, ARG_STRING, ARG_STRING),	
 			ExtensionDescriptor.newDescriptor("btStraighten", this, ARG_NUMBER, ARG_STRING),	
+			ExtensionDescriptor.newDescriptor("btShapeInterpolation", this, ARG_STRING,ARG_NUMBER),
+			ExtensionDescriptor.newDescriptor("btIntensityInterpolation", this, ARG_STRING),
 			ExtensionDescriptor.newDescriptor("btTest", this),
 			ExtensionDescriptor.newDescriptor("btClose", this),
 			ExtensionDescriptor.newDescriptor("btTest", this),
 
-			//ExtensionDescriptor.newDescriptor("testBigTrace", this, ARG_OUTPUT+ARG_NUMBER),
-			//ExtensionDescriptor.newDescriptor("getFrame", this, ARG_OUTPUT+ARG_NUMBER),
-			//ExtensionDescriptor.newDescriptor("setChannel", this, ARG_NUMBER ),
-			//ExtensionDescriptor.newDescriptor("setFrame", this, ARG_NUMBER ),
-			//ExtensionDescriptor.newDescriptor("getDisplayMode", this),
-			//ExtensionDescriptor.newDescriptor("setDisplayMode", this, ARG_STRING),
 	};
 		
 	@Override
@@ -1548,6 +1544,14 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			{
 				btMacro.macroStraighten((int)Math.round(((Double)args[0]).doubleValue()),(String)args[1]);
 			}
+			if (name.equals("btShapeInterpolation")) 
+			{
+				btMacro.macroShapeInterpolation( (String)args[0],(int)Math.round(((Double)args[1]).doubleValue()));
+			}
+			if (name.equals("btIntensityInterpolation")) 
+			{
+				btMacro.macroIntensityInterpolation( (String)args[0]);
+			}
 			if (name.equals("btClose")) 
 			{
 				btMacro.macroCloseBT();			
@@ -1571,7 +1575,22 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
+		
 		testI.run("");
+		///macros test
+//		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT_8bit.tif");
+//		testI.btMacro.macroLoadROIs( "/home/eugene/Desktop/projects/BigTrace/macro/ExM_MT_8bit.tif_btrois.csv","Clean" );
+//		IJ.log( "shapeInt1" );
+//		testI.btMacro.macroShapeInterpolation("Voxel", 10);
+//		testI.btMacro.macroIntensityInterpolation("Neighbor");
+//		IJ.log( "straight1" );
+//		testI.btMacro.macroStraighten(1, "/home/eugene/Desktop/test1/");
+//		IJ.log( "shapeInt2" );
+//		testI.btMacro.macroShapeInterpolation("Spline", 10);
+//		testI.btMacro.macroIntensityInterpolation("Linear");
+//		IJ.log( "straight2" );
+//		testI.btMacro.macroStraighten(1, "/home/eugene/Desktop/test2/");
+
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_tracks/Snejana_small_example.tif");
 		

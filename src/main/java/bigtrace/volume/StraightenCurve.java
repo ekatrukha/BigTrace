@@ -100,7 +100,14 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		{
 			sRoiName = bt.roiManager.getTimeGroupPrefixRoiName(curveROIArr.get(0));
 			IntervalView<T> extractedRAI = extractCurveRAI(curveROIArr.get(0),  full_RAI, true);
-			outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
+			if(extractedRAI == null)
+			{
+				IJ.log( "error straightening ROI "+sRoiName+", too few vertices." );
+			}
+			else
+			{
+				outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
+			}
 		}
 		else
 		{
@@ -114,11 +121,18 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 				setProgress(100*nRoi/(nTotROIs));
 				setProgressState("extracting ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
 				IntervalView<T> extractedRAI = extractCurveRAI(curveROIArr.get(nRoi),  full_RAI, false);
-				setProgressState("storing ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
-				if(!outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal)))
+				if(extractedRAI == null)
 				{
-					IJ.log("Error saving straighten ROIs to "+sSaveFolderPath);
-					break;
+					IJ.log( "error straightening ROI "+sRoiName+", too few vertices." );
+				}
+				else
+				{
+					setProgressState("storing ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
+					if(!outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal)))
+					{
+						IJ.log("Error saving straighten ROIs to "+sSaveFolderPath);
+						break;
+					}
 				}
 			}
 			setProgressState("ROI straightening finished.");
@@ -147,6 +161,9 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		//curve points in SPACE units
 		//sampled with dMin step
 		ArrayList<RealPoint> points_space = curveROI.getJointSegmentResampled();
+		
+		if(points_space == null)
+			return null;
 		//get tangent vectors		
 		ArrayList<double []> tangents = curveROI.getJointSegmentTangentsResampled();
 		

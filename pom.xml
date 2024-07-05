@@ -11,7 +11,7 @@
 
 	<groupId>nl.uu.science.cellbiology</groupId>
 	<artifactId>bigtrace</artifactId>
-	<version>0.4.0</version>
+	<version>0.4.1</version>
 
 	<name>BigTrace</name>
 	<description>Tracing of curvilinear structures in 3D</description>
@@ -106,6 +106,11 @@
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh</artifactId>
 		</dependency>
+		<!-- dependency>
+		    <groupId>com.github.imglib</groupId>
+		    <artifactId>imglib2-mesh</artifactId>
+		    <version>e7d4e89</version>
+		</dependency -->
 		
 		<dependency>
 			<groupId>com.formdev</groupId>

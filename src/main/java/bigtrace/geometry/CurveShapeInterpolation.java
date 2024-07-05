@@ -389,10 +389,14 @@ public class CurveShapeInterpolation {
 		int i;
 		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
 		{
+			if(linInter == null)
+				return null;
 			dLength = linInter.getMaxLength();
 		}
 		else
 		{
+			if(splineInter == null)
+				return null;
 			dLength = splineInter.getMaxArcLength();
 		}
 		nNewPoints =(int) Math.ceil(dLength/ BigTraceData.dMinVoxelSize);

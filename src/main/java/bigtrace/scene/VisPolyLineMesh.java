@@ -26,8 +26,8 @@ import btbvv.core.shadergen.DefaultShader;
 import btbvv.core.shadergen.Shader;
 import btbvv.core.shadergen.generate.Segment;
 import btbvv.core.shadergen.generate.SegmentTemplate;
-import net.imagej.mesh.nio.BufferMesh;
 import net.imglib2.RealPoint;
+import net.imagej.mesh.nio.BufferMesh;
 
 public class VisPolyLineMesh {
 	
@@ -144,7 +144,7 @@ public class VisPolyLineMesh {
 			//(renderType == Roi3D.SURFACE)
 			{
 
-					initMesh(point_contours);
+					initMesh(point_contours);//, points_);
 			}
 		}
 		
@@ -300,7 +300,11 @@ public class VisPolyLineMesh {
 			gl.glBindVertexArray( 0 );
 		}
 	}
-	private void initMesh(final ArrayList<ArrayList< RealPoint >> allContours )
+	
+	/** initializing the mesh **/
+
+	//private void initMesh(final ArrayList<ArrayList< RealPoint >> allContours, ArrayList< RealPoint > centerline )
+	private void initMesh(final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 	
 		int i,j, iPoint;
@@ -309,6 +313,7 @@ public class VisPolyLineMesh {
 		final int nSectorN = BigTraceData.sectorN;
 		nPointsN = allContours.size();
 		float [][] triangle = new float[3][3];
+		//int nMeshTrianglesN = (nPointsN-1)*nSectorN*2+nSectorN*2;
 		int nMeshTrianglesN = (nPointsN-1)*nSectorN*2;
 		if(nPointsN>1)
 		{
@@ -321,13 +326,13 @@ public class VisPolyLineMesh {
 			{
 				//add to drawing vertices triangles
 				//nmesh.triangles().addf(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z)
-				for (i=0;i<nSectorN-1; i++)
+				for (i=0;i<nSectorN; i++)
 				{
 					for (j=0;j<3; j++)
 					{
 						
 						triangle[0][j] = allContours.get(iPoint-1).get(i).getFloatPosition(j);
-						triangle[1][j] = allContours.get(iPoint-1).get(i+1).getFloatPosition(j);
+						triangle[1][j] = allContours.get(iPoint-1).get((i+1)%nSectorN).getFloatPosition(j);
 						triangle[2][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
 						
 					}	
@@ -337,34 +342,45 @@ public class VisPolyLineMesh {
 					{
 						
 						triangle[0][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
-						triangle[1][j] = allContours.get(iPoint-1).get(i+1).getFloatPosition(j);
-						triangle[2][j] = allContours.get(iPoint).get(i+1).getFloatPosition(j);
+						triangle[1][j] = allContours.get(iPoint-1).get((i+1)%nSectorN).getFloatPosition(j);
+						triangle[2][j] = allContours.get(iPoint).get((i+1)%nSectorN).getFloatPosition(j);
 						
 					}	
 					addTriangle(mesh, triangle);
 				}
-				i=nSectorN-1;
-				//last one closing the sector
-				for (j=0;j<3; j++)
-				{
-					
-					triangle[0][j] = allContours.get(iPoint-1).get(i).getFloatPosition(j);
-					triangle[1][j] = allContours.get(iPoint-1).get(0).getFloatPosition(j);
-					triangle[2][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
-					
-				}	
-				addTriangle(mesh, triangle);
-				for (j=0;j<3; j++)
-				{
-					
-					triangle[0][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
-					triangle[1][j] = allContours.get(iPoint-1).get(0).getFloatPosition(j);
-					triangle[2][j] = allContours.get(iPoint).get(0).getFloatPosition(j);
-					
-				}
-				addTriangle(mesh, triangle);
 
 			}
+			
+//			//"lids" of the mesh, beginning
+//			for (i=0;i<nSectorN; i++)
+//			{
+//				for (j=0;j<3; j++)
+//				{
+//					
+//					triangle[0][j] = allContours.get(0).get((i+1)%nSectorN).getFloatPosition(j);
+//					triangle[1][j] = allContours.get(0).get(i).getFloatPosition(j);
+//					triangle[2][j] = centerline.get(0).getFloatPosition(j);
+//					
+//				}	
+//				
+//				addTriangle(mesh, triangle);
+//			}
+//			
+//			//"lids" of the mesh, end 
+//			for (i=0;i<nSectorN; i++)
+//			{
+//				for (j=0;j<3; j++)
+//				{
+//					
+//					triangle[0][j] = allContours.get(nPointsN-1).get(i).getFloatPosition(j);
+//					triangle[1][j] = allContours.get(nPointsN-1).get((i+1)%nSectorN).getFloatPosition(j);
+//					triangle[2][j] = centerline.get(nPointsN-1).getFloatPosition(j);
+//					
+//				}	
+//				
+//				addTriangle(mesh, triangle);
+//			}
+
 			nMeshTrianglesSize = mesh.triangles().size();
 		}
 	}

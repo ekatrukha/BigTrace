@@ -27,6 +27,10 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		{
 			Thread.sleep(1000);
 		}
+		
+		//it should be later unlocked by  bt.roiManager.loadROIs
+		bt.bInputLock = true;
+		
         if(input == null)
         	return;
         int nLoadMode = 0;
@@ -44,6 +48,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
         }
         bt.roiManager.loadROIs( sFileName, nLoadMode );
         IJ.log( "BigTrace ROIs loaded from " + sFileName);
+
 	}
 	
 	void macroStraighten(final int nStraightenAxis, String sSaveDir) throws InterruptedException
@@ -52,6 +57,11 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		{
 			Thread.sleep(100);
 		}
+		
+		//it should be later unlocked by StraightenCurve,
+		//if we call it 
+		bt.bInputLock = true;
+		
 		//build list of ROIs
 		final ArrayList<AbstractCurve3D> curvesOut = new ArrayList<>();
 		
@@ -83,8 +93,71 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		{
 			IJ.log("Cannot find proper curve ROIs to straighten.");
 			bt.btPanel.progressBar.setString("curve straightening aborted.");
+			bt.bInputLock = false;
 		}
+		
 	}
+
+	void macroShapeInterpolation(String sShapeInterpol, int nSmoothWindow) throws InterruptedException
+	{
+		while(bt.bInputLock)
+		{
+			Thread.sleep(100);
+		}
+		bt.bInputLock = true;
+		switch (sShapeInterpol)
+		{
+		case "Voxel":
+			BigTraceData.shapeInterpolation = BigTraceData.SHAPE_Voxel;
+			IJ.log("BigTrace ROI Shape Interpolation set to Voxel.");
+			break;
+		case "Smooth":
+			BigTraceData.shapeInterpolation = BigTraceData.SHAPE_Smooth;
+			IJ.log("BigTrace ROI Shape Interpolation set to Smooth.");
+			break;
+		case "Spline":
+			BigTraceData.shapeInterpolation = BigTraceData.SHAPE_Spline;
+			IJ.log("BigTrace ROI Shape Interpolation set to Spline.");
+			break;
+		default:
+			IJ.log( "Error! ROI Shape Interpolation values should be either Voxel, Smooth or Spline." );
+			return;
+		}
+		BigTraceData.nSmoothWindow = Math.max( 1, Math.abs( Math.round( nSmoothWindow ) ));
+		IJ.log("BigTrace ROI smoothing window set to "+Integer.toString( BigTraceData.nSmoothWindow )+".");
+		bt.roiManager.updateROIsDisplay();
+		bt.bInputLock = false;
+	}
+	
+	void macroIntensityInterpolation(String sInterpol) throws InterruptedException
+	{
+		while(bt.bInputLock)
+		{
+			Thread.sleep(100);
+		}
+		bt.bInputLock = true;
+		switch (sInterpol)
+		{
+		case "Neighbor":
+			BigTraceData.intensityInterpolation = BigTraceData.INT_NearestNeighbor;
+			IJ.log("BigTrace Intensity Interpolation set to Nearest Neighbor.");
+			break;
+		case "Linear":
+			BigTraceData.intensityInterpolation = BigTraceData.INT_NLinear;
+			IJ.log("BigTrace Intensity Interpolation set to Linear.");
+			break;
+		case "Lanczos":
+			BigTraceData.intensityInterpolation = BigTraceData.INT_Lanczos;
+			IJ.log("BigTrace Intensity Interpolation set to Lanczos.");
+			break;
+		default:
+			IJ.log( "Error! Intensity interpolation values should be either Nearest, Linear or Lanczos." );
+			return;
+		}
+		bt.btData.setInterpolationFactory();
+		bt.bInputLock = false;
+	}
+
 	
 	void macroCloseBT() throws InterruptedException
 	{

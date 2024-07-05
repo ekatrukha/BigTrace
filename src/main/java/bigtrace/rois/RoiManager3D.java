@@ -39,7 +39,7 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bdv.tools.brightness.ColorIcon;
-
+import ij.IJ;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
@@ -1519,7 +1519,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	/** updates all ROIs images**/
 	public void updateROIsDisplay()
 	{
-
 			for (Roi3D roi : rois)
 			{
 				roi.updateRenderVertices();
