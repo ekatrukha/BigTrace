@@ -8,15 +8,29 @@ import javax.swing.SwingWorker;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
+import bigtrace.geometry.Pipe3D;
+import bigtrace.measure.Circle2DMeasure;
+import bigtrace.rois.AbstractCurve3D;
+import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
+import bigtrace.scene.VisPolyLineMesh;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.Calibration;
+
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealPoint;
+import net.imglib2.img.Img;
+import net.imglib2.mesh.alg.MeshCursor;
+import net.imglib2.mesh.impl.nio.BufferMesh;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Intervals;
+import net.imglib2.util.LinAlgHelpers;
+import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
@@ -120,6 +134,8 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 	{
 		FinalInterval roiBoxInt = (FinalInterval) roiIn.getBoundingBox();
 		
+
+		
 		//expand box
 		FinalInterval finBox3D = Intervals.expand(roiBoxInt, nExpandROIBox);
 		long [][] nInt = new long [2][5];
@@ -152,7 +168,49 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 		//Img<T> out1 = Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(Intervals.zeroMin(finBoxInt));
 		//IntervalView<T> finBox = Views.interval(Views.extendZero(all_RAI),finBoxInt);
 		
-		return Views.interval(Views.extendZero(all_RAI),finBoxInt);
+		IntervalView<T> test = Views.interval(Views.extendZero(all_RAI),finBoxInt);
+		Img<T> out1 =  Util.getSuitableImgFactory(test, Util.getTypeFromInterval(test)).create(test);
+		IntervalView< T > trans = Views.translate( out1, test.minAsLongArray() );
+		RandomAccess< T > ra = trans.randomAccess();
+		if(roiIn.getType()==Roi3D.LINE_TRACE)
+		{
+			LineTrace3D roiline = (LineTrace3D)roiIn;
+			ArrayList< RealPoint > points = roiline.getJointSegmentResampled();
+			ArrayList< double[] > tangents = roiline.getJointSegmentTangentsResampled();
+			//get a frame around line
+			double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(points, tangents);
+			Circle2DMeasure measureCircle = new Circle2DMeasure();
+			double [] current_point = new double [3];
+			double [] current_pixel = new double[3];
+			int [] current_pixel_int = new int[5];
+			measureCircle.setRadius((int)Math.round( roiline.lineThickness*0.5 ));
+			for (int nPoint = 0;nPoint<points.size();nPoint++)
+			{			
+				points.get(nPoint).localize(current_point); 
+				//reset cursor
+				measureCircle.cursorCircle.reset();
+				while (measureCircle.cursorCircle.hasNext())
+					{
+					measureCircle.cursorCircle.fwd();
+					measureCircle.cursorCircle.localize(current_pixel);
+					LinAlgHelpers.scale(current_pixel, BigTraceData.dMinVoxelSize, current_pixel);
+					AbstractCurve3D.getVoxelInPlane(rsVect[0][nPoint],rsVect[1][nPoint], current_point,current_pixel);
+					//back to voxel units
+					current_pixel = Roi3D.scaleGlobInv(current_pixel, BigTraceData.globCal);
+					for(int d=0;d<3;d++)
+					{
+						current_pixel_int[d] = (int)Math.round(current_pixel[d]);
+					}
+					
+					ra.setPosition( current_pixel_int );
+					ra.get().setOne();
+				}
+			}
+		}
+		
+		
+		return Views.interval( out1, out1 );
+		//return Views.interval(Views.extendZero(all_RAI),finBoxInt);
 	}
     /*
      * Executed in event dispatching thread

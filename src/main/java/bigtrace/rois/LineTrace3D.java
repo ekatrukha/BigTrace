@@ -433,6 +433,7 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 
 		
 	}
+	
 	@Override
 	public double getMinDist(Line3D line) 
 	{

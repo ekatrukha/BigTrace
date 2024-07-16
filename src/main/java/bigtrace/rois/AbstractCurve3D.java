@@ -337,7 +337,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		return out;
 	}
 	
-	private static void getVoxelInPlane(final double [] x,final double [] y, final double [] c, final double [] voxel)
+	public static void getVoxelInPlane(final double [] x,final double [] y, final double [] c, final double [] voxel)
 	{
 		 double [] xp = new double[3];
 		 double [] yp = new double[3];
