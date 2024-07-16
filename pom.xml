@@ -102,15 +102,15 @@
 			</exclusions>
 		</dependency>
 		
-		<dependency>
+		<!--dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh</artifactId>
-		</dependency>
-		<!-- dependency>
+		</dependency -->
+		<dependency>
 		    <groupId>com.github.imglib</groupId>
 		    <artifactId>imglib2-mesh</artifactId>
 		    <version>e7d4e89</version>
-		</dependency -->
+		</dependency>
 		
 		<dependency>
 			<groupId>com.formdev</groupId>
