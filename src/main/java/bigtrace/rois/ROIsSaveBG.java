@@ -52,7 +52,7 @@ public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends Sw
 				setProgressState("saving ROIs...");
 				DecimalFormatSymbols symbols = new DecimalFormatSymbols();
 				symbols.setDecimalSeparator('.');
-				DecimalFormat df3 = new DecimalFormat ("#.###", symbols);
+				DecimalFormat df3 = new DecimalFormat ("#.#####", symbols);
 				
 				writer.write("BigTrace_ROIs,version," + BigTraceData.sVersion + "\n");
 				writer.write("ImageUnits,"+bt.btData.sVoxelUnit+"\n");

@@ -51,7 +51,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 
 	}
 	
-	void macroStraighten(final int nStraightenAxis, String sSaveDir) throws InterruptedException
+	void macroStraighten(final int nStraightenAxis, String sSaveDir, String sShape) throws InterruptedException
 	{
 		while(bt.bInputLock)
 		{
@@ -83,9 +83,14 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			IJ.log( "First axis parameter should be in the range of 0-2, wher 0 = X axis, 1 = Y axis, 2 = Z axis" );
 			IJ.log( "Setting the value to 0, X axis." );
 		}
+		int nShape = 0 ;
+		if(sShape =="Round")
+		{
+			nShape  = 1;
+		}
 		if(curvesOut.size()>0)
 		{	
-			StraightenCurve<T> straightBG = new StraightenCurve<>(curvesOut, bt, -1.0f, nAxis, 0, 1, sSaveDir);
+			StraightenCurve<T> straightBG = new StraightenCurve<>(curvesOut, bt, -1.0f, nAxis, nShape, 0, 1, sSaveDir);
 			straightBG.addPropertyChangeListener(bt.btPanel);
 			straightBG.execute();
 		}

@@ -17,14 +17,14 @@ public class HyperSphereTest {
 		
 		new ImageJ();
 		//double [] pos = new double [2];
-		long [] dim = new long[] {31,31,10};
+		long [] dim = new long[] {71,71,30};
 		Point center = new Point( 2 );
-		center.setPosition( 15 , 0 );
-		center.setPosition( 15 , 1 );
+		center.setPosition( 35 , 0 );
+		center.setPosition( 35 , 1 );
 		ArrayImg<IntType, IntArray> costInt = ArrayImgs.ints(dim);
 		int nRadius = 2;
 		
-		for (nRadius=0;nRadius<10;nRadius++)
+		for (nRadius=0;nRadius<30;nRadius++)
 		{
 			//HyperSphere< IntType > hyperSphere =
 //					new HyperSphere<>( Views.extendZero(costInt), center, nRadius);
