@@ -9,6 +9,7 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Pipe3D;
+import bigtrace.measure.Circle2DMeasure;
 import bigtrace.rois.Roi3D;
 import ij.IJ;
 import ij.ImagePlus;
@@ -25,6 +26,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Util;
+import net.imglib2.util.ValuePair;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
@@ -34,6 +36,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 	final public BigTrace<T> bt;
 	final float fRadiusIn;
 	final int nStraightenAxis;
+	final int nStraightenShape;
 	/** 0 - single time point, 1 - all time points **/
 	final int nTimeRange;
 	final ArrayList<AbstractCurve3D> curveROIArr;	
@@ -43,7 +46,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 	
 	public boolean bMacroMessage = false;
 		
-	public StraightenCurve(final ArrayList<AbstractCurve3D> curveROIArr_, final BigTrace<T> bt_, final float fRadius_, final int nStraightenAxis_, final int nTimePoint_, final int nOutput_, final String sSaveFolderPath_)
+	public StraightenCurve(final ArrayList<AbstractCurve3D> curveROIArr_, final BigTrace<T> bt_, final float fRadius_, final int nStraightenAxis_, final int nStraightenShape_, final int nTimePoint_, final int nOutput_, final String sSaveFolderPath_)
 	{
 		super();
 		curveROIArr = curveROIArr_;
@@ -51,6 +54,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		nTimeRange = nTimePoint_;
 		fRadiusIn = fRadius_;
 		nStraightenAxis = nStraightenAxis_;
+		nStraightenShape = nStraightenShape_;
 		nOutput = nOutput_;
 		sSaveFolderPath = sSaveFolderPath_;
 		cal = new Calibration();
@@ -214,7 +218,8 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 
 		
 		//plane perpendicular to the line
-		ArrayList< RealPoint > planeNorm;
+		//ArrayList< RealPoint > planeNorm;
+		ArrayList< ValuePair< int[],RealPoint>  > planeNorm;
 
 		double [] current_point = new double [3];
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(all_RAI), bt.btData.nInterpolatorFactory);
@@ -231,33 +236,66 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		{
 			
 			points_space.get(nPoint).localize(current_point); 
-			planeNorm = getNormPlaneGridXY(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);
-			
-			for (int i=0;i<dimXY;i++)
-				for (int j=0;j<dimXY;j++)
+			//planeNorm = getNormSquareGridXY(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);
+			//planeNorm = getNormSquareGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);			
+			if(nStraightenShape == 0 )
+			{
+				planeNorm = getNormSquareGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);			
+				
+			}
+			else
+			{			
+				planeNorm = getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);			
+			}
+			for(int i=0;i<planeNorm.size();i++)
+			{
+				//current XY point coordinates
+				curr_XY = new RealPoint( planeNorm.get(i).getB());
+				//back to voxel units
+				curr_XY = Roi3D.scaleGlobInv(curr_XY, BigTraceData.globCal);
+				for(int nTimePoint = nMinTimePoint;nTimePoint<=nMaxTimePoint;nTimePoint++)
 				{
-					//current XY point coordinates
-					curr_XY = new RealPoint( planeNorm.get(j+i*dimXY));
-
-					//back to voxel units
-					curr_XY = Roi3D.scaleGlobInv(curr_XY, BigTraceData.globCal);
-					for(int nTimePoint = nMinTimePoint;nTimePoint<=nMaxTimePoint;nTimePoint++)
+					for (int nCh=0;nCh<nChannelN;nCh++)
 					{
-						for (int nCh=0;nCh<nChannelN;nCh++)
-						{
-	
-							curr_XY.localize(currXYmCh);
-							//time
-							currXYmCh[3] = nTimePoint; 
-							//channel
-							currXYmCh[4] = nCh; 
-							ra.setPosition(currXYmCh);
-							ra_out.setPosition(new int [] {nPoint,j,i,nTimePoint-nMinTimePoint,nCh});
 
-							ra_out.get().setReal(ra.get().getRealDouble());
-						}
+						curr_XY.localize(currXYmCh);
+						//time
+						currXYmCh[3] = nTimePoint; 
+						//channel
+						currXYmCh[4] = nCh; 
+						ra.setPosition(currXYmCh);
+						ra_out.setPosition(new int [] {nPoint,planeNorm.get(i).getA()[1],planeNorm.get(i).getA()[0],nTimePoint-nMinTimePoint,nCh});
+
+						ra_out.get().setReal(ra.get().getRealDouble());
 					}
-				}	
+				}
+			}
+			
+//			for (int i=0;i<dimXY;i++)
+//				for (int j=0;j<dimXY;j++)
+//				{
+//					//current XY point coordinates
+//					curr_XY = new RealPoint( planeNorm.get(j+i*dimXY));
+//
+//					//back to voxel units
+//					curr_XY = Roi3D.scaleGlobInv(curr_XY, BigTraceData.globCal);
+//					for(int nTimePoint = nMinTimePoint;nTimePoint<=nMaxTimePoint;nTimePoint++)
+//					{
+//						for (int nCh=0;nCh<nChannelN;nCh++)
+//						{
+//	
+//							curr_XY.localize(currXYmCh);
+//							//time
+//							currXYmCh[3] = nTimePoint; 
+//							//channel
+//							currXYmCh[4] = nCh; 
+//							ra.setPosition(currXYmCh);
+//							ra_out.setPosition(new int [] {nPoint,j,i,nTimePoint-nMinTimePoint,nCh});
+//
+//							ra_out.get().setReal(ra.get().getRealDouble());
+//						}
+//					}
+//				}	
 			if(bUpdateProgressBar)
 			{
 				setProgress(100*nPoint/(points_space.size()-1));
@@ -295,11 +333,11 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		 
 		 return planeXY;
 	}
-	/** generates XY plane sampling grid coordinates from -nRadius till nRadius values (in dPixSize units) in XY plane 
+	/** generates XY sampling grid coordinates in the shape of a square from -nRadius till nRadius values (in dPixSize units) in XY plane 
 	 * defined by two normalized perpendicular vectors X and Y and with center at c **/
-	public static ArrayList< RealPoint > getNormPlaneGridXY(final int nRadius,final double dPixSize,final double [] x,final double [] y, final double [] c)
+	public static ArrayList< RealPoint > getNormSquareGridXY(final int nRadius,final double dPixSize,final double [] x,final double [] y, final double [] c)
 	{
-		 ArrayList< RealPoint > planeXY = new  ArrayList< > ();
+		 ArrayList< RealPoint > squareXY = new  ArrayList< > ();
 		 double [] xp = new double[3];
 		 double [] yp = new double[3];
 		 
@@ -311,12 +349,63 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 				 LinAlgHelpers.scale(y, j*dPixSize, yp);
 				 LinAlgHelpers.add(xp, yp,xp);
 				 LinAlgHelpers.add(xp, c,xp);
-				 planeXY.add(new RealPoint(xp));
+				 squareXY.add(new RealPoint(xp));
 			 }
 		 }
 		 
-		 return planeXY;
+		 return squareXY;
 	}
+	
+	/** generates XY sampling grid coordinates in the shape of a square from -nRadius till nRadius values (in dPixSize units) in XY plane 
+	 * defined by two normalized perpendicular vectors X and Y and with center at c **/
+	public static ArrayList< ValuePair< int[],RealPoint> > getNormSquareGridXYPairs(final int nRadius,final double dPixSize,final double [] x,final double [] y, final double [] c)
+	{
+		 ArrayList< ValuePair< int[],RealPoint >> squareXY = new  ArrayList< > ();
+		 double [] xp = new double[3];
+		 double [] yp = new double[3];
+		 
+		 for (int i=-nRadius;i<=nRadius;i++)
+		 {
+			 for (int j=-nRadius;j<=nRadius;j++)
+			 {
+				 LinAlgHelpers.scale(x, i*dPixSize, xp);
+				 LinAlgHelpers.scale(y, j*dPixSize, yp);
+				 LinAlgHelpers.add(xp, yp,xp);
+				 LinAlgHelpers.add(xp, c,xp);
+				 squareXY.add(new ValuePair<>(new int[] {i+nRadius, j+nRadius},new RealPoint(xp)));
+			 }
+		 }
+		 
+		 return squareXY;
+	}
+	
+	/** generates XY sampling grid coordinates in the shape of a circle from -nRadius till nRadius values (in dPixSize units) in XY plane 
+	 * defined by two normalized perpendicular vectors X and Y and with center at c **/
+	public static ArrayList< ValuePair< int[],RealPoint> > getNormCircleGridXYPairs(final int nRadius,final double dPixSize,final double [] x,final double [] y, final double [] c)
+	{
+		 ArrayList< ValuePair< int[],RealPoint> > circleXY = new  ArrayList< > ();
+		 
+		 Circle2DMeasure circle = new Circle2DMeasure();
+		 circle.setRadius( nRadius );
+		 double [] currentPoint = new double[3];
+		 double [] xp = new double[3];
+		 double [] yp = new double[3];
+		 
+		 while (circle.cursorCircle.hasNext())
+		 {
+			 circle.cursorCircle.fwd();
+			 circle.cursorCircle.localize(currentPoint);
+			 LinAlgHelpers.scale(x, currentPoint[0]*dPixSize, xp);
+			 LinAlgHelpers.scale(y, currentPoint[1]*dPixSize, yp);
+			 LinAlgHelpers.add(xp, yp,xp);
+			 LinAlgHelpers.add(xp, c,xp);
+			 circleXY.add(new ValuePair<>(new int[] {(int)Math.round(currentPoint[0])+nRadius, (int)Math.round( currentPoint[1])+nRadius},new RealPoint(xp)));
+		 }		 
+
+		 return circleXY;
+	}
+
+	
     /*
      * Executed in event dispatching thread
      */

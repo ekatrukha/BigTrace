@@ -957,12 +957,12 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 			out+=(values[i]-mean)*(values[i]-mean);
 		}
-		out =Math.sqrt(out/(values.length-1));
+		out = Math.sqrt(out/(values.length-1));
 		return out;
 	}
 
 	/** dialog for the box around ROI extraction**/
-	public void extractROIBox(final Roi3D roiIn)
+	public void dialExtractROIBox(final Roi3D roiIn)
 	{
 		
 		int nExtractBoxROIList;
@@ -1115,13 +1115,14 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	}
 	
 	/** dialog for the Straighten procedure **/
-	public void straightenCurveDialog(final AbstractCurve3D curveLine)
+	public void dialStraightenCurve(final AbstractCurve3D curveLine)
 	{
 		
 		float fRadiusStraighted = 0.0f;
 		int nRadiusType = 0;
 		int nTimeRange = -1;
 		int nStraightenAxis = 0;
+		int nStraightenShape = 0;
 		int nROIList = 0;
 		int nStraightenOutput = 0;
 		
@@ -1173,6 +1174,15 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		cd.gridx++;
 		cbStraightenAxis.setSelectedIndex((int)Prefs.get("BigTrace.nStraightenAxis", 0));
 		straightenSettings.add(cbStraightenAxis,cd);
+		
+		String[] sShapeOutput = { "Square", "Round" };
+		JComboBox<String> cbStraightenShape = new JComboBox<>(sShapeOutput);
+		cd.gridy++;
+		cd.gridx=0;
+		straightenSettings.add(new JLabel("Shape:"),cd);
+		cd.gridx++;
+		cbStraightenShape.setSelectedIndex((int)Prefs.get("BigTrace.nStraightenShape", 0));
+		straightenSettings.add(cbStraightenShape,cd);
 		
 		String[] sStraightenTime = { "Single ROI's time point", "All time points" };
 		JComboBox<String> straightenTimeList = new JComboBox<>(sStraightenTime);
@@ -1230,6 +1240,9 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			nStraightenAxis = cbStraightenAxis.getSelectedIndex();
 			Prefs.set("BigTrace.nStraightenAxis", nStraightenAxis);
 			
+			nStraightenShape = cbStraightenShape.getSelectedIndex();
+			Prefs.set("BigTrace.nStraightenShape", nStraightenShape);
+			
 			nTimeRange = 0;
 			if(BigTraceData.nNumTimepoints>1)
 			{
@@ -1283,7 +1296,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			if(curvesOut.size()>0)
 			{			
 				//run in a separate thread
-				StraightenCurve<T> straightBG = new StraightenCurve<>(curvesOut, bt, fRadiusStraighted, nStraightenAxis, nTimeRange, nStraightenOutput, sSaveDir);
+				StraightenCurve<T> straightBG = new StraightenCurve<>(curvesOut, bt, fRadiusStraighted, nStraightenAxis, nStraightenShape, nTimeRange, nStraightenOutput, sSaveDir);
 				straightBG.addPropertyChangeListener(bt.btPanel);
 				straightBG.execute();
 			}
@@ -1298,7 +1311,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	}
 	
 	/** given cross-section ROI, splits provided volume in two and shows them (dialog) **/
-	public void sliceVolumeDialog(final CrossSection3D crossSection)
+	public void dialSliceVolume(final CrossSection3D crossSection)
 	{
 		int nSliceType = 0;
 		JPanel sliceSettings = new JPanel();
@@ -1407,7 +1420,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 			if (jlist.getSelectedIndex()>-1)
 			{				
-				extractROIBox(bt.roiManager.rois.get(jlist.getSelectedIndex()));
+				dialExtractROIBox(bt.roiManager.rois.get(jlist.getSelectedIndex()));
 			}
 		}
 		
@@ -1418,7 +1431,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			{
 					if(bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.LINE_TRACE||bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.POLYLINE)
 					{
-						straightenCurveDialog((AbstractCurve3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
+						dialStraightenCurve((AbstractCurve3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					}
 			}
 		}
@@ -1429,7 +1442,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			{
 					if(bt.roiManager.rois.get(jlist.getSelectedIndex()).getType()==Roi3D.PLANE)
 					{
-						sliceVolumeDialog((CrossSection3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
+						dialSliceVolume((CrossSection3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					}
 			}
 		}

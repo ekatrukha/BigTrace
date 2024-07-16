@@ -146,7 +146,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	private ExtensionDescriptor[] extensions = {
 			
 			ExtensionDescriptor.newDescriptor("btLoadROIs", this, ARG_STRING, ARG_STRING),	
-			ExtensionDescriptor.newDescriptor("btStraighten", this, ARG_NUMBER, ARG_STRING),	
+			ExtensionDescriptor.newDescriptor("btStraighten", this, ARG_NUMBER, ARG_STRING, ARG_STRING),	
 			ExtensionDescriptor.newDescriptor("btShapeInterpolation", this, ARG_STRING,ARG_NUMBER),
 			ExtensionDescriptor.newDescriptor("btIntensityInterpolation", this, ARG_STRING),
 			ExtensionDescriptor.newDescriptor("btTest", this),
@@ -1542,7 +1542,15 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			}
 			if (name.equals("btStraighten")) 
 			{
-				btMacro.macroStraighten((int)Math.round(((Double)args[0]).doubleValue()),(String)args[1]);
+				if(args.length==2)
+				{
+					//backwards compartibility
+					btMacro.macroStraighten((int)Math.round(((Double)args[0]).doubleValue()), (String)args[1], "Square");					
+				}
+				else
+				{
+					btMacro.macroStraighten((int)Math.round(((Double)args[0]).doubleValue()), (String)args[1], (String)args[2]);
+				}
 			}
 			if (name.equals("btShapeInterpolation")) 
 			{
