@@ -24,6 +24,8 @@ import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.img.Img;
+import net.imglib2.mesh.Mesh;
+import net.imglib2.mesh.Meshes;
 import net.imglib2.mesh.alg.MeshCursor;
 import net.imglib2.mesh.impl.nio.BufferMesh;
 import net.imglib2.type.NativeType;
@@ -175,36 +177,30 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 		if(roiIn.getType()==Roi3D.LINE_TRACE)
 		{
 			LineTrace3D roiline = (LineTrace3D)roiIn;
-			ArrayList< RealPoint > points = roiline.getJointSegmentResampled();
-			ArrayList< double[] > tangents = roiline.getJointSegmentTangentsResampled();
-			//get a frame around line
-			double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(points, tangents);
-			Circle2DMeasure measureCircle = new Circle2DMeasure();
-			double [] current_point = new double [3];
-			double [] current_pixel = new double[3];
-			int [] current_pixel_int = new int[5];
-			measureCircle.setRadius((int)Math.round( roiline.lineThickness*0.5 ));
-			for (int nPoint = 0;nPoint<points.size();nPoint++)
-			{			
-				points.get(nPoint).localize(current_point); 
-				//reset cursor
-				measureCircle.cursorCircle.reset();
-				while (measureCircle.cursorCircle.hasNext())
-					{
-					measureCircle.cursorCircle.fwd();
-					measureCircle.cursorCircle.localize(current_pixel);
-					LinAlgHelpers.scale(current_pixel, BigTraceData.dMinVoxelSize, current_pixel);
-					AbstractCurve3D.getVoxelInPlane(rsVect[0][nPoint],rsVect[1][nPoint], current_point,current_pixel);
-					//back to voxel units
-					current_pixel = Roi3D.scaleGlobInv(current_pixel, BigTraceData.globCal);
-					for(int d=0;d<3;d++)
-					{
-						current_pixel_int[d] = (int)Math.round(current_pixel[d]);
-					}
-					
-					ra.setPosition( current_pixel_int );
-					ra.get().setOne();
-				}
+			ArrayList< RealPoint > points = roiline.getVerticesVisual();
+			ArrayList< double[] > tangents = roiline.getTangentsVisual();
+			ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points, tangents, BigTraceData.sectorN, 0.5*roiline.getLineThickness()*BigTraceData.dMinVoxelSize);
+			//return to voxel space	for the render		
+			for(int i=0; i<point_contours.size(); i++)
+			{
+				point_contours.set(i, Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
+			}
+			BufferMesh meshx = VisPolyLineMesh.initMeshCappedEnds(point_contours, Roi3D.scaleGlobInv(points, BigTraceData.globCal) );
+			
+			final Mesh m2 = Meshes.removeDuplicateVertices( meshx, 2 );
+			//BufferMesh mesh = new BufferMesh( m2.vertices().size(), m2.triangles().size(), true );
+			//Meshes.calculateNormals( m2, mesh );
+			
+			final Cursor< T > c1 = new MeshCursor<>( ra, m2, new double[] { 1., 1., 1. } );
+
+			int nCount = 0;
+			
+			while ( c1.hasNext() )
+			{
+				c1.fwd();
+				long[] pos = c1.positionAsLongArray();
+				c1.get().setOne();
+				nCount++;
 			}
 		}
 		

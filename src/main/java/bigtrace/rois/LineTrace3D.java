@@ -434,6 +434,16 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 		
 	}
 	
+	public ArrayList<RealPoint> getVerticesVisual()
+	{
+		return interpolator.getVerticesVisual();
+	}
+
+	public ArrayList<double[]> getTangentsVisual()
+	{
+		return interpolator.getTangentsVisual();
+	}
+	
 	@Override
 	public double getMinDist(Line3D line) 
 	{
