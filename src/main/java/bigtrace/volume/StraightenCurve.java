@@ -236,12 +236,10 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		{
 			
 			points_space.get(nPoint).localize(current_point); 
-			//planeNorm = getNormSquareGridXY(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);
-			//planeNorm = getNormSquareGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);			
+
 			if(nStraightenShape == 0 )
 			{
-				planeNorm = getNormSquareGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);			
-				
+				planeNorm = getNormSquareGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,rsVect[0][nPoint],rsVect[1][nPoint], current_point);							
 			}
 			else
 			{			
@@ -271,31 +269,6 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 				}
 			}
 			
-//			for (int i=0;i<dimXY;i++)
-//				for (int j=0;j<dimXY;j++)
-//				{
-//					//current XY point coordinates
-//					curr_XY = new RealPoint( planeNorm.get(j+i*dimXY));
-//
-//					//back to voxel units
-//					curr_XY = Roi3D.scaleGlobInv(curr_XY, BigTraceData.globCal);
-//					for(int nTimePoint = nMinTimePoint;nTimePoint<=nMaxTimePoint;nTimePoint++)
-//					{
-//						for (int nCh=0;nCh<nChannelN;nCh++)
-//						{
-//	
-//							curr_XY.localize(currXYmCh);
-//							//time
-//							currXYmCh[3] = nTimePoint; 
-//							//channel
-//							currXYmCh[4] = nCh; 
-//							ra.setPosition(currXYmCh);
-//							ra_out.setPosition(new int [] {nPoint,j,i,nTimePoint-nMinTimePoint,nCh});
-//
-//							ra_out.get().setReal(ra.get().getRealDouble());
-//						}
-//					}
-//				}	
 			if(bUpdateProgressBar)
 			{
 				setProgress(100*nPoint/(points_space.size()-1));
@@ -332,28 +305,6 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		 }
 		 
 		 return planeXY;
-	}
-	/** generates XY sampling grid coordinates in the shape of a square from -nRadius till nRadius values (in dPixSize units) in XY plane 
-	 * defined by two normalized perpendicular vectors X and Y and with center at c **/
-	public static ArrayList< RealPoint > getNormSquareGridXY(final int nRadius,final double dPixSize,final double [] x,final double [] y, final double [] c)
-	{
-		 ArrayList< RealPoint > squareXY = new  ArrayList< > ();
-		 double [] xp = new double[3];
-		 double [] yp = new double[3];
-		 
-		 for (int i=-nRadius;i<=nRadius;i++)
-		 {
-			 for (int j=-nRadius;j<=nRadius;j++)
-			 {
-				 LinAlgHelpers.scale(x, i*dPixSize, xp);
-				 LinAlgHelpers.scale(y, j*dPixSize, yp);
-				 LinAlgHelpers.add(xp, yp,xp);
-				 LinAlgHelpers.add(xp, c,xp);
-				 squareXY.add(new RealPoint(xp));
-			 }
-		 }
-		 
-		 return squareXY;
 	}
 	
 	/** generates XY sampling grid coordinates in the shape of a square from -nRadius till nRadius values (in dPixSize units) in XY plane 
