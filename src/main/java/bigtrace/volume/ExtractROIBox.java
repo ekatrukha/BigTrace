@@ -167,14 +167,13 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 		
 		//check the time axis
 		
-		//Img<T> out1 = Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(Intervals.zeroMin(finBoxInt));
-		//IntervalView<T> finBox = Views.interval(Views.extendZero(all_RAI),finBoxInt);
 		
-		IntervalView<T> test = Views.interval(Views.extendZero(all_RAI),finBoxInt);
-		Img<T> out1 =  Util.getSuitableImgFactory(test, Util.getTypeFromInterval(test)).create(test);
-		IntervalView< T > trans = Views.translate( out1, test.minAsLongArray() );
+		IntervalView<T> bboxOut = Views.interval(Views.extendZero(all_RAI),finBoxInt);
+		Img<T> out1 =  Util.getSuitableImgFactory(bboxOut, Util.getTypeFromInterval(bboxOut)).create(bboxOut);
+		
+		IntervalView< T > trans = Views.translate( out1, bboxOut.minAsLongArray() );
 		RandomAccess< T > ra = trans.randomAccess();
-		if(roiIn.getType()==Roi3D.LINE_TRACE)
+		if(roiIn.getType() == Roi3D.LINE_TRACE)
 		{
 			LineTrace3D roiline = (LineTrace3D)roiIn;
 			ArrayList< RealPoint > points = roiline.getVerticesVisual();
@@ -192,15 +191,15 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 			//Meshes.calculateNormals( m2, mesh );
 			
 			final Cursor< T > c1 = new MeshCursor<>( ra, m2, new double[] { 1., 1., 1. } );
-
-			int nCount = 0;
-			
+		
+			final int [] pos = new int[5];
+			RandomAccess< T > bboxra = bboxOut.randomAccess();
 			while ( c1.hasNext() )
 			{
 				c1.fwd();
-				long[] pos = c1.positionAsLongArray();
-				c1.get().setOne();
-				nCount++;
+				c1.localize( pos );
+				bboxra.setPosition( pos );
+				c1.get().set( bboxra.get());
 			}
 		}
 		
