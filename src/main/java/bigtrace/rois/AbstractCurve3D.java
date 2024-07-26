@@ -8,9 +8,12 @@ import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.measure.Circle2DMeasure;
 import bigtrace.measure.MeasureValues;
+
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
@@ -506,5 +509,11 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		}
 		return new FinalInterval(bBox[0],bBox[1]);
 		
+	}
+	
+	@Override
+	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getVolumeCursor( RandomAccessibleInterval< T > input )
+	{		
+		return Views.interval( input, getBoundingBox() ).cursor();
 	}
 }

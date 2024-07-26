@@ -16,13 +16,19 @@ import bigtrace.geometry.Line3D;
 import bigtrace.measure.MeasureValues;
 import bigtrace.measure.Sphere3DMeasure;
 import bigtrace.scene.VisPointsScaled;
+
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
+import net.imglib2.Point;
 import net.imglib2.RandomAccessible;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
+import net.imglib2.algorithm.region.hypersphere.HyperSphere;
 import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
@@ -267,5 +273,17 @@ public class Point3D extends AbstractRoi3D {
 	{	
 		return getBoundingBox();
 
+	}
+	
+	@Override
+	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getVolumeCursor( RandomAccessibleInterval< T > input )
+	{
+		final Point center = new Point(3);
+		for(int d=0;d<3;d++)
+		{
+			center.setPosition( Math.round(vertex.getDoublePosition( d )), d );
+		}
+		final HyperSphere<T> sphere = new HyperSphere<>(Views.extendValue( input, Double.NaN ), center, (long)(0.5*Math.floor(pointSize)) );
+		return sphere.cursor();
 	}
 }

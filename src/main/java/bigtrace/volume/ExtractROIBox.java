@@ -164,6 +164,7 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 		}
 
 		FinalInterval finBoxInt = new FinalInterval(nInt[0],nInt[1]);
+			
 		
 		//check the time axis
 		
@@ -200,6 +201,7 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 				c1.localize( pos );
 				bboxra.setPosition( pos );
 				c1.get().set( bboxra.get());
+				//c1.get().setOne();
 			}
 		}
 		

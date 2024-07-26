@@ -9,8 +9,13 @@ import org.joml.Matrix4fc;
 import com.jogamp.opengl.GL3;
 
 import bigtrace.geometry.Line3D;
+
+import net.imglib2.Cursor;
 import net.imglib2.Interval;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 
 public interface Roi3D 
@@ -68,6 +73,8 @@ public interface Roi3D
 	
 	public Interval getBoundingBoxVisual();
 	public Interval getBoundingBox();
+	
+	public <T extends RealType< T > & NativeType< T > > Cursor<T> getVolumeCursor(RandomAccessibleInterval< T > input);
 	
 	public static String intTypeToString(int nType)
 	{
