@@ -140,7 +140,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	public RoiManager3D<T> roiManager;
 	
 	/** BigTrace macro interface**/
-	BigTraceMacro<T> btMacro;
+	public BigTraceMacro<T> btMacro;
 	
 	/**macro extensions **/
 	private ExtensionDescriptor[] extensions = {
