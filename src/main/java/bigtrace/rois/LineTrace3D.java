@@ -420,7 +420,9 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 		if(vertices.size()>1)
 		{
 			interpolator.init(makeJointSegment(), BigTraceData.shapeInterpolation);
-			segmentsVis.setVertices(interpolator.getVerticesVisual(),interpolator.getTangentsVisual());
+			//segmentsVis.setVertices(interpolator.getVerticesVisual(),interpolator.getTangentsVisual());
+			segmentsVis.setVertices(interpolator.getVerticesResample(),interpolator.getTangentsResample());
+
 		}
 		else
 		{
