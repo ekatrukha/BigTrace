@@ -260,10 +260,12 @@ public class Point3D extends AbstractRoi3D {
 		
 		double [] pos = vertex.positionAsDoubleArray();
 		long [][] lPos = new long[2][3];
+		int nRadius ;//=  ( int ) Math.ceil( pointSize*0.5 );
 		for (int d=0;d<3;d++)
 		{
-			lPos[0][d] = Math.round(pos[d] - pointSize);
-			lPos[1][d] = Math.round(pos[d] + pointSize);
+			nRadius = ( int ) Math.ceil( pointSize*0.5 *BigTraceData.dMinVoxelSize/BigTraceData.globCal[d]);
+			lPos[0][d] = Math.round(pos[d] - nRadius);
+			lPos[1][d] = Math.round(pos[d] +  nRadius);
 		}
 		return new FinalInterval(lPos[0],lPos[1]);
 
@@ -276,14 +278,18 @@ public class Point3D extends AbstractRoi3D {
 	}
 	
 	@Override
-	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getVolumeCursor( RandomAccessibleInterval< T > input )
+	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getSingle3DVolumeCursor( RandomAccessibleInterval< T > input )
 	{
+		if(input.numDimensions()!=3)
+		{
+			System.err.println("The input for VolumeCursor should be 3D RAI!");
+		}
 		final Point center = new Point(3);
 		for(int d=0;d<3;d++)
 		{
 			center.setPosition( Math.round(vertex.getDoublePosition( d )), d );
 		}
 		final HyperSphere<T> sphere = new HyperSphere<>(Views.extendValue( input, Double.NaN ), center, (long)(0.5*Math.floor(pointSize)) );
-		return sphere.cursor();
+		return sphere.localizingCursor();
 	}
 }

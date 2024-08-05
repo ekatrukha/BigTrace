@@ -471,7 +471,7 @@ public class CrossSection3D extends AbstractRoi3D
 
 	}
 	@Override
-	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getVolumeCursor( RandomAccessibleInterval< T > input )
+	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getSingle3DVolumeCursor( RandomAccessibleInterval< T > input )
 	{
 		return null;
 	}

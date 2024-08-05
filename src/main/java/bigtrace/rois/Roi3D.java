@@ -74,7 +74,9 @@ public interface Roi3D
 	public Interval getBoundingBoxVisual();
 	public Interval getBoundingBox();
 	
-	public <T extends RealType< T > & NativeType< T > > Cursor<T> getVolumeCursor(RandomAccessibleInterval< T > input);
+	/** given 3D RAI (without channel or time),
+	 * returns a cursor iterating over the volume of the ROI **/
+	public <T extends RealType< T > & NativeType< T > > Cursor<T> getSingle3DVolumeCursor(RandomAccessibleInterval< T > input);
 	
 	public static String intTypeToString(int nType)
 	{
@@ -100,6 +102,7 @@ public interface Roi3D
 		}
 		return sType;
 	}
+	
 	public static int stringTypeToInt(String sType)
 	{
 		if(sType.equals("Point"))
@@ -115,6 +118,7 @@ public interface Roi3D
 		
 		return -1;
 	}
+	
 	public static ArrayList<RealPoint> reverseArrayRP(final ArrayList<RealPoint> vert_in) 
 	{
 		ArrayList<RealPoint> reversed = new ArrayList<>();

@@ -507,35 +507,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 }
 	 }
 	 
-	 /*
-	 public Roi3D makeRoi(int nRoiType)
-	 {
-		 Roi3D newRoi;
-		 
-		 switch (nRoiType)
-		 {
-		 case Roi3D.POINT:
-			 newRoi= new Point3D(groups.get(nActiveGroup), bt.btdata.nCurrTimepoint);
-			 break;
-		 case Roi3D.POLYLINE:
-			 newRoi = new PolyLine3D(groups.get(nActiveGroup),bt.btdata.nCurrTimepoint);
-			 break;
-		 case Roi3D.LINE_TRACE:
-			 newRoi = new LineTrace3D(groups.get(nActiveGroup),bt.btdata.nCurrTimepoint);
-			 break;
-		 case Roi3D.PLANE:
-			 newRoi = new CrossSection3D(groups.get(nActiveGroup),bt.btdata.nDimIni,bt.btdata.nCurrTimepoint);
-			 break;
-		 case Roi3D.BOX:
-			 newRoi = new Box3D(groups.get(nActiveGroup),bt.btdata.nCurrTimepoint);
-			 break;
-		 default:
-			 newRoi= new Point3D(groups.get(nActiveGroup),bt.btdata.nCurrTimepoint);
-		 }
-		 newRoi.setGroupInd(nActiveGroup);
-		 return newRoi;
-	 }
-	 */
 	 public Roi3D makeRoi(int nRoiType, int nTimePoint)
 	 {
 		 Roi3D newRoi;

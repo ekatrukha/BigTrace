@@ -340,7 +340,7 @@ public class Box3D extends AbstractRoi3D
 		return getBoundingBox();	
 	}
 	@Override
-	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getVolumeCursor( RandomAccessibleInterval< T > input )
+	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getSingle3DVolumeCursor( RandomAccessibleInterval< T > input )
 	{		
 		return Views.interval( input, getBoundingBox() ).cursor();
 	}

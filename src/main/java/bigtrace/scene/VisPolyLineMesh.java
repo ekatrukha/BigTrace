@@ -450,6 +450,94 @@ public class VisPolyLineMesh {
 		return meshOut;
 	}
 	
+	/** given contours and centerline coordinates, returns a mesh with capped (closed) ends**/
+	public static BufferMesh initClosedVolumeMesh(final ArrayList<ArrayList< RealPoint >> allContours, ArrayList< RealPoint > centerline )
+	//private void initMesh(final ArrayList<ArrayList< RealPoint >> allContours)
+	{
+	
+		BufferMesh meshOut = null;
+		int i,j, iPoint;
+		
+		final int nPointsCurveN = allContours.size();
+		if(nPointsCurveN==0)
+			return meshOut;
+		
+		final int nSectorN = allContours.get( 0 ).size();
+		
+		float [][] triangle = new float[3][3];
+		int nMeshTrianglesN = (nPointsCurveN-1)*nSectorN*2+nSectorN*2;
+		//int nMeshTrianglesN = (nPointsN-1)*nSectorN*2;
+		if(nPointsCurveN>1)
+		{
+			//calculate total number of triangles
+			meshOut = new BufferMesh( nMeshTrianglesN*3, nMeshTrianglesN, true );
+	
+			//all vertices
+			//vertices = new float [2*(nSectorN+1)*3*nPointsN];
+			for (iPoint=1;iPoint<nPointsCurveN;iPoint++)
+			{
+				//add to drawing vertices triangles
+				//nmesh.triangles().addf(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z)
+				for (i=0;i<nSectorN; i++)
+				{
+					for (j=0;j<3; j++)
+					{
+						
+						triangle[0][j] = allContours.get(iPoint-1).get(i).getFloatPosition(j);
+						triangle[1][j] = allContours.get(iPoint-1).get((i+1)%nSectorN).getFloatPosition(j);
+						triangle[2][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
+						
+					}	
+					
+					addTriangleWithoutNormale(meshOut, triangle);
+					for (j=0;j<3; j++)
+					{
+						
+						triangle[0][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
+						triangle[1][j] = allContours.get(iPoint-1).get((i+1)%nSectorN).getFloatPosition(j);
+						triangle[2][j] = allContours.get(iPoint).get((i+1)%nSectorN).getFloatPosition(j);
+						
+					}	
+					addTriangleWithoutNormale(meshOut, triangle);
+				}
+
+			}
+			
+			//"lids" of the mesh, beginning
+			for (i=0;i<nSectorN; i++)
+			{
+				for (j=0;j<3; j++)
+				{
+					
+					triangle[0][j] = allContours.get(0).get((i+1)%nSectorN).getFloatPosition(j);
+					triangle[1][j] = allContours.get(0).get(i).getFloatPosition(j);
+					triangle[2][j] = centerline.get(0).getFloatPosition(j);
+					
+				}	
+				
+				addTriangleWithoutNormale(meshOut, triangle);
+			}
+			
+			//"lids" of the mesh, end 
+			for (i=0;i<nSectorN; i++)
+			{
+				for (j=0;j<3; j++)
+				{
+					
+					triangle[0][j] = allContours.get(nPointsCurveN-1).get(i).getFloatPosition(j);
+					triangle[1][j] = allContours.get(nPointsCurveN-1).get((i+1)%nSectorN).getFloatPosition(j);
+					triangle[2][j] = centerline.get(nPointsCurveN-1).getFloatPosition(j);
+					
+				}	
+				
+				addTriangleWithoutNormale(meshOut, triangle);
+			}
+
+			//nMeshTrianglesSize = meshOut.triangles().size();
+		}
+		return meshOut;
+	}
+	
 	private boolean initMeshShader( GL3 gl )
 	{
 		initialized = true;
@@ -672,7 +760,15 @@ public class VisPolyLineMesh {
 					cumNormal[i][0] / vNormalMag, cumNormal[i][1] / vNormalMag, cumNormal[i][2] / vNormalMag,0.0,0.0);
 		}
 		mesh_in.triangles().add(index[0], index[1], index[2], normale[0], normale[1], normale[2]);
-		//mesh.triangles().addf(triangle[0][0], triangle[0][1], triangle[0][2], triangle[1][0], triangle[1][1], triangle[1][2], triangle[2][0], triangle[2][1], triangle[2][2],
-			//	normale[0],normale[1],normale[2]);
+	}
+	public static void addTriangleWithoutNormale(final BufferMesh mesh_in, final float[][] triangle)
+	{
+		long [] index = new long[3];
+		for (int i=0;i<3;i++)
+		{			
+			index[i] = mesh_in.vertices().add(triangle[i][0],triangle[i][1],triangle[i][2]);
+		}
+		mesh_in.triangles().add(index[0], index[1], index[2]);
+
 	}
 }

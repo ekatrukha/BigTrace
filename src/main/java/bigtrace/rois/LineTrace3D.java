@@ -417,6 +417,7 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 	public void updateRenderVertices() {
 		
 		verticesVis.setVertices(vertices);
+		bMeshInit = false;
 		if(vertices.size()>1)
 		{
 			interpolator.init(makeJointSegment(), BigTraceData.shapeInterpolation);

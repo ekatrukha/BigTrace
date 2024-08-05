@@ -970,7 +970,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		int nExpandROIBox;
 		int nTimeRange;
 		int nExtractBoxOutput;
-		
+		boolean bOnlyVoxelsInsideROI;
 		
 		final JPanel extractROISettings = new JPanel();
 		
@@ -990,6 +990,14 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		JComboBox<String> extractBoxRoiList = new JComboBox<>(sExtractBoxROIsRange);
 		extractBoxRoiList.setSelectedIndex((int)Prefs.get("BigTrace.nExtractBoxROIList", 0));
 		extractROISettings.add(extractBoxRoiList, cd);	
+		
+		cd.gridy++;
+		cd.gridx=0;	
+		extractROISettings.add(new JLabel("Extract only voxels inside ROI:"),cd);
+		cd.gridx++;
+		JCheckBox extractVoxelsInsideROI = new JCheckBox();
+		extractVoxelsInsideROI.setSelected( Prefs.get("BigTrace.bOnlyVoxelsInsideROI", false) );
+		extractROISettings.add(extractVoxelsInsideROI,cd);
 		
 		cd.gridy++;
 		cd.gridx=0;	
@@ -1044,6 +1052,9 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 			nExtractBoxROIList = extractBoxRoiList.getSelectedIndex();
 			Prefs.set("BigTrace.nExtractBoxROIList", nExtractBoxROIList);
+			
+			bOnlyVoxelsInsideROI = extractVoxelsInsideROI.isSelected();
+			Prefs.set("BigTrace.bOnlyVoxelsInsideROI", bOnlyVoxelsInsideROI);
 			
 			nExtractRoiType = extractBoxTypeList.getSelectedIndex();
 			Prefs.set("BigTrace.nExtractRoiType", nExtractRoiType);
@@ -1101,7 +1112,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			if(roiOut.size()>0)
 			{			
 				//run in a separate thread
-				ExtractROIBox<T> extractBoxBG = new ExtractROIBox<>(roiOut, bt, nExpandROIBox, nTimeRange, nExtractBoxOutput, sSaveDir);				
+				ExtractROIBox<T> extractBoxBG = new ExtractROIBox<>(roiOut, bt, nExpandROIBox, nTimeRange, nExtractBoxOutput, bOnlyVoxelsInsideROI, sSaveDir);				
 				extractBoxBG.addPropertyChangeListener(bt.btPanel);
 				extractBoxBG.execute();
 			}
