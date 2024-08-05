@@ -20,13 +20,12 @@ import bigtrace.scene.VisPointsScaled;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
-import net.imglib2.Point;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
-import net.imglib2.algorithm.region.hypersphere.HyperSphere;
+import net.imglib2.algorithm.region.localneighborhood.EllipsoidNeighborhood;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -260,10 +259,10 @@ public class Point3D extends AbstractRoi3D {
 		
 		double [] pos = vertex.positionAsDoubleArray();
 		long [][] lPos = new long[2][3];
-		int nRadius ;//=  ( int ) Math.ceil( pointSize*0.5 );
+		long nRadius;//=  ( int ) Math.ceil( pointSize*0.5 );
 		for (int d=0;d<3;d++)
 		{
-			nRadius = ( int ) Math.ceil( pointSize*0.5 *BigTraceData.dMinVoxelSize/BigTraceData.globCal[d]);
+			nRadius = ( long ) Math.ceil( pointSize*0.5 *BigTraceData.dMinVoxelSize/BigTraceData.globCal[d]);
 			lPos[0][d] = Math.round(pos[d] - nRadius);
 			lPos[1][d] = Math.round(pos[d] +  nRadius);
 		}
@@ -284,12 +283,15 @@ public class Point3D extends AbstractRoi3D {
 		{
 			System.err.println("The input for VolumeCursor should be 3D RAI!");
 		}
-		final Point center = new Point(3);
+
+		final long [] center = new long[3];
+		final long[] radiuses = new long[3]; 
 		for(int d=0;d<3;d++)
 		{
-			center.setPosition( Math.round(vertex.getDoublePosition( d )), d );
+			radiuses[d] = Math.round( pointSize*0.5 *BigTraceData.dMinVoxelSize/BigTraceData.globCal[d]);
+			center[d]= Math.round(vertex.getDoublePosition( d ));
 		}
-		final HyperSphere<T> sphere = new HyperSphere<>(Views.extendValue( input, Double.NaN ), center, (long)(0.5*Math.floor(pointSize)) );
-		return sphere.localizingCursor();
+		final EllipsoidNeighborhood<T> ellipse = new EllipsoidNeighborhood<>(input, center,  radiuses); 
+		return ellipse.localizingCursor();
 	}
 }
