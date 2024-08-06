@@ -3,9 +3,10 @@
 [![logo](./logo/bigtrace_logo_dark_150.png)](https://github.com/ekatrukha/BigTrace#gh-dark-mode-only)
 [![logo](./logo/bigtrace_logo_light_150.png)](https://github.com/ekatrukha/BigTrace#gh-light-mode-only)
 
-<a href="https://fiji.sc/">FIJI</a> plugin for tracing and analysis of curvilinear structures  
-in large (and small) volumetric microscopy datasets  
-using <a href="https://github.com/ekatrukha/bvv-playground">BigVolumeViewer</a> modification for visualization.   
+Tracing and analysis of curvilinear structures in 3D + time (filaments, cilia, vessels, neurites, bones, etc).  
+BigTrace is a plugin for [FIJI](https://fiji.sc/), using [imglib2](https://imagej.net/libs/imglib2/) library and [BigVolumeViewer](https://forum.image.sc/t/bigvolumeviewer-tech-demo/12104) ([fork](https://github.com/ekatrukha/bvv-playground)).  
+It works with images larger than RAM, reads proprietary formats,  
+can perform dataset transforms, and is scriptable.  
 <br />
 For full description and manual refer to <a href="https://github.com/ekatrukha/BigTrace/wiki"><strong>Wiki page</strong></a>.  
 <br />
