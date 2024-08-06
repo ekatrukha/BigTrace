@@ -25,6 +25,7 @@ import net.imglib2.mesh.alg.MeshCursor;
 import net.imglib2.mesh.impl.nio.BufferMesh;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
@@ -112,6 +113,49 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	{
 		return interpolator.getTangentsResample();
 	}
+	
+	public <T extends RealType< T > & NativeType< T >  > double[] getIntensityVoxelsInside(final IntervalView<T> source)
+	{
+
+		final Cursor< T > cursorRoi = this.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > ) source);
+		
+		final ArrayList<Double> intVals = new ArrayList<>();
+
+		cursorRoi.reset();
+		while (cursorRoi.hasNext())
+		{
+			cursorRoi.fwd();
+			if(Intervals.contains( source, cursorRoi ))
+			{
+				intVals.add(cursorRoi.get().getRealDouble());
+			}
+		}
+		final double [] out = new double[intVals.size()];
+		for (int i =0;i<intVals.size();i++)
+		{
+			out[i]=intVals.get(i).doubleValue();
+		}
+		return out;
+	}
+	
+	public <T extends RealType< T > & NativeType< T >  > long getVoxelNumberInside(final IntervalView<T> source)
+	{
+
+		final Cursor< T > cursorRoi = this.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > )source);
+		
+		long nVoxNumber = 0;
+
+		cursorRoi.reset();
+
+		while (cursorRoi.hasNext())
+		{
+			cursorRoi.fwd();
+			if(Intervals.contains( source, cursorRoi ))
+				{nVoxNumber++;}
+		}
+		return nVoxNumber;
+	}
+
 	
 	/** Measures intensity profile along the ROI;
 	 * @param	source	IntervalView of measurement

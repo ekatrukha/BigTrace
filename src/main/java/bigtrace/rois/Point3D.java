@@ -29,6 +29,7 @@ import net.imglib2.algorithm.region.localneighborhood.EllipsoidNeighborhood;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
@@ -199,7 +200,7 @@ public class Point3D extends AbstractRoi3D {
 	public <T extends RealType< T > & NativeType< T >  > double[] getIntensityValuesEllipsoid(final IntervalView<T> source)
 	{
 
-		final Cursor< T > cursorRoi = this.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > ) Views.interval( Views.extendValue(source,Double.NaN), this.getBoundingBox()));
+		final Cursor< T > cursorRoi = this.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > )source);
 		
 		final ArrayList<Double> intVals = new ArrayList<>();
 
@@ -208,13 +209,17 @@ public class Point3D extends AbstractRoi3D {
 		while (cursorRoi.hasNext())
 		{
 			cursorRoi.fwd();
-
+			
 			dVal = cursorRoi.get().getRealDouble();
-			if(!Double.isNaN( dVal ))
+			if(Intervals.contains( source, cursorRoi ))
 			{
 				intVals.add(dVal);
 			}
+
 		}
+		
+		if (intVals.size()==0)
+			return null;
 		final double [] out = new double[intVals.size()];
 		for (int i =0;i<intVals.size();i++)
 		{
@@ -222,7 +227,24 @@ public class Point3D extends AbstractRoi3D {
 		}
 		return out;
 	}
+	
+	public <T extends RealType< T > & NativeType< T >  > long getVoxelNumberInside(final IntervalView<T> source)
+	{
+		final Cursor< T > cursorRoi = this.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > )source);
+		
+		long nVoxNumber = 0;
+		cursorRoi.reset();
 
+		while (cursorRoi.hasNext())
+		{
+			cursorRoi.fwd();
+			if(Intervals.contains( source, cursorRoi ))
+			{
+				nVoxNumber++;
+			}
+		}
+		return nVoxNumber;	
+	}
 	
 	@Override
 	public void updateRenderVertices() 
@@ -293,6 +315,8 @@ public class Point3D extends AbstractRoi3D {
 			radiuses[d] = Math.round( pointSize*0.5 *BigTraceData.dMinVoxelSize/BigTraceData.globCal[d]);
 			center[d]= Math.round(vertex.getDoublePosition( d ));
 		}
+
+	
 		final EllipsoidNeighborhood<T> ellipse = new EllipsoidNeighborhood<>(input, center,  radiuses); 
 		return ellipse.localizingCursor();
 	}

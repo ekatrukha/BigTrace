@@ -25,7 +25,8 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 	public String sFilename;
 	public int nLoadMode;
 	String sFinalOut = "";
-	
+
+    
 	@Override
 	public String getProgressState()
 	{
@@ -179,9 +180,14 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 					  break;  
 					  
 				  case "GroupInd":
-					  if(nLoadMode ==0)
+					  if(nLoadMode == 0)
 					  {						  
 						  nROIGroupInd = Integer.parseInt(line_array[1]);
+						  pointSize = bt.roiManager.groups.get( nROIGroupInd ).pointSize;
+						  lineThickness = bt.roiManager.groups.get( nROIGroupInd ).lineThickness;
+						  pointColor = bt.roiManager.groups.get( nROIGroupInd ).getPointColor();
+						  lineColor = bt.roiManager.groups.get( nROIGroupInd ).getLineColor();
+						  nRenderType = bt.roiManager.groups.get( nROIGroupInd ).getRenderType();
 					  }	
 					  break;
 					  
@@ -226,8 +232,8 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 					  {
 					  case Roi3D.POINT:
 
-						  Point3D roiP = (Point3D) bt.roiManager.makeRoi(nRoiType, nTimePoint);						  
-						  roiP.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
+						  Point3D roiP = (Point3D) bt.roiManager.makeRoi(nRoiType, nTimePoint);	
+						  roiP.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));  
 						  roiP.setGroupInd(nROIGroupInd);
 						  roiP.setName(sName);
 						  roiP.setVertex(vertices.get(0));
@@ -238,7 +244,7 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 					  case Roi3D.POLYLINE:
 
 						  PolyLine3D roiPL = (PolyLine3D) bt.roiManager.makeRoi(nRoiType, nTimePoint);						  
-						  roiPL.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
+						  roiPL.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));  
 						  roiPL.setGroupInd(nROIGroupInd);
 						  roiPL.setName(sName);
 						  roiPL.setVertices(vertices);
@@ -249,7 +255,7 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 
 						  LineTrace3D roiLT = (LineTrace3D) bt.roiManager.makeRoi(nRoiType, nTimePoint);
 						  
-						  roiLT.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
+						  roiLT.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));  
 						  roiLT.setGroupInd(nROIGroupInd);
 						  roiLT.setName(sName);
 						  roiLT.addFirstPoint(vertices.get(0));
@@ -278,7 +284,7 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 						  break;
 					  case Roi3D.PLANE:
 						  CrossSection3D roiCS = (CrossSection3D) bt.roiManager.makeRoi(nRoiType, nTimePoint);
-						  roiCS.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));
+						  roiCS.setGroup(new Roi3DGroup("",pointSize,pointColor, lineThickness, lineColor,nRenderType));  
 						  roiCS.setGroupInd(nROIGroupInd);
 						  roiCS.setName(sName);
 						  roiCS.setVertices(vertices);
@@ -333,6 +339,8 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 
 		return null;
 	}
+	
+
     /*
      * Executed in event dispatching thread
      */

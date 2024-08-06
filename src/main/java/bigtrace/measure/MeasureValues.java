@@ -11,17 +11,26 @@ public class MeasureValues implements Measurements {
 	float lineThickness;
 	public int nTimePoint;
 	public int roiType;
+	
+	public double volume;
 	public double length;
-	public double endsDistance;
+	
+	public double [] intensity_values = null;
 	public double mean;
 	public double stdDev;
+	public double integrated;
+
+	public double [] lin_intensity_values = null;	
+	public double mean_linear;
+	public double std_linear;
+	
 	public double straightness;
+	public double endsDistance;
 	/** coordinates of the ends **/
 	public RealPoint [] ends;
 	/** normalized vector pointing between ends **/
 	public RealPoint direction = null;
-	public double [] intensity_values = null;
-	
+
 
 
 	void setRoiName(String roiname_)
