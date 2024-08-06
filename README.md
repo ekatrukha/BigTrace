@@ -1,8 +1,7 @@
 [![](https://github.com/ekatrukha/bigtrace/actions/workflows/build-main.yml/badge.svg)](https://github.com/ekatrukha/bigtrace/actions/workflows/build-main.yml)
 
-
-<img src="https://github.com/ekatrukha/BigTrace/blob/main/logo/bigtrace_logo_dark_200.png#gh-dark-mode-only" align="right" style="padding:100px"/>
-<img src="https://github.com/ekatrukha/BigTrace/blob/main/logo/bigtrace_logo_light_200.png#gh-light-mode-only" align="right" style="padding:100px"/>
+[![logo](./logo/bigtrace_logo_dark_200.png)](https://github.com/ekatrukha/BigTrace#gh-dark-mode-only)
+[![logo](./logo/bigtrace_logo_light_200.png)](https://github.com/ekatrukha/BigTrace#gh-light-mode-only)
 
 <a href="https://fiji.sc/">FIJI</a> plugin for tracing and analysis of curvilinear structures  
 in large (and small) volumetric microscopy datasets  
