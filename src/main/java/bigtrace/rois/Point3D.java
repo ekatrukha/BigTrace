@@ -154,7 +154,9 @@ public class Point3D extends AbstractRoi3D {
 	 * by interpolating intensity within a (Hyper)Sphere 
 	 * in the RAI made by resampling source with dMinVoxelSize in all dimensions.
 	 * Voxels outside of BT RAI are not included.
-	 * The source is assumed to be 3D **/
+	 * The source is assumed to be 3D 
+	 * OBSOLETE **/
+	@Deprecated
 	public < T extends RealType< T > & NativeType< T >  > double[] getIntensityValuesInterpolateSphere(final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
 	{
 
