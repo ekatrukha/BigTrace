@@ -3,7 +3,7 @@
 [![logo](./logo/bigtrace_logo_dark_150.png)](https://github.com/ekatrukha/BigTrace#gh-dark-mode-only)
 [![logo](./logo/bigtrace_logo_light_150.png)](https://github.com/ekatrukha/BigTrace#gh-light-mode-only)
 
-Tracing and analysis of curvilinear structures in 3D + time (filaments, cilia, vessels, neurites, bones, etc).  
+Tracing and analysis of curves in 3D + time (filaments, cilia, vessels, neurites, bones, etc).  
 BigTrace is a plugin for [FIJI](https://fiji.sc/), using [imglib2](https://imagej.net/libs/imglib2/) library and [BigVolumeViewer](https://forum.image.sc/t/bigvolumeviewer-tech-demo/12104) ([fork](https://github.com/ekatrukha/bvv-playground)).  
 It works with images larger than RAM, reads proprietary formats,  
 can perform dataset transforms, and is scriptable.  
@@ -17,7 +17,7 @@ Quick shortcuts:
 <li> <a href="https://github.com/ekatrukha/BigTrace/wiki/How-to-cite-plugin%3F">How to cite plugin</a></li>
 </ul>
 <br />
-<img src="https://katpyxa.info/software/BigTrace/bigtrace_example.gif" /> 
+<img src="https://github.com/ekatrukha/BigTrace/blob/main/logo/bigtrace_example.gif" /> 
 
 ----------
 
