@@ -110,6 +110,7 @@ public class PolyLine3D extends AbstractCurve3D implements WritablePolyline
 	{
 
 		verticesVis.setVertices(vertices);
+		bMeshInit = false;
 		if(vertices.size()>1)
 		{
 			interpolator.init(vertices, BigTraceData.shapeInterpolation);

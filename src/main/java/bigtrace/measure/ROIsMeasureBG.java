@@ -1,6 +1,7 @@
 package bigtrace.measure;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingWorker;
 
@@ -49,6 +50,22 @@ public class ROIsMeasureBG extends SwingWorker<Void, String> implements BigTrace
     @Override
     public void done() 
     {
+    	//see if we have some errors
+    	try {
+
+    		get();
+    	} 
+    	catch (ExecutionException e) 
+    	{
+    		e.getCause().printStackTrace();
+    		String msg = String.format("Unexpected error during measurements: %s", 
+    				e.getCause().toString());
+    		System.out.println(msg);
+    	} 
+    	catch (InterruptedException e) 
+    	{
+    		// Process e here
+    	}
     	//show results
     	//measure all -> reset
     	if(resetTable)

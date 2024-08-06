@@ -16,14 +16,20 @@ import bigtrace.geometry.Line3D;
 import bigtrace.measure.MeasureValues;
 import bigtrace.measure.Sphere3DMeasure;
 import bigtrace.scene.VisPointsScaled;
+
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
+import net.imglib2.algorithm.region.localneighborhood.EllipsoidNeighborhood;
 import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
@@ -144,14 +150,20 @@ public class Point3D extends AbstractRoi3D {
 		return;
 	}
 	
-	/** get intensity values in Sphere around the point **/
-	public < T extends RealType< T > > double[] getIntensityValues(final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
+	/** get intensity values in Sphere around the point 
+	 * by interpolating intensity within a (Hyper)Sphere 
+	 * in the RAI made by resampling source with dMinVoxelSize in all dimensions.
+	 * Voxels outside of BT RAI are not included.
+	 * The source is assumed to be 3D 
+	 * OBSOLETE **/
+	@Deprecated
+	public < T extends RealType< T > & NativeType< T >  > double[] getIntensityValuesInterpolateSphere(final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
 	{
+
 		//RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
 		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendValue(source,Double.NaN),nInterpolatorFactory);
 		RealRandomAccess<T> ra =  interpolate.realRandomAccess();
 		
-		final double dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
 		final ArrayList<Double> intVals = new ArrayList<>();
 		Sphere3DMeasure measureSphere = new Sphere3DMeasure();
 		measureSphere.setRadius((int)(0.5*Math.floor(pointSize)));
@@ -165,7 +177,7 @@ public class Point3D extends AbstractRoi3D {
 		{
 			measureSphere.cursorSphere.fwd();
 			measureSphere.cursorSphere.localize(current_pixel);
-			LinAlgHelpers.scale(current_pixel, dMinVoxelSize, current_pixel);
+			LinAlgHelpers.scale(current_pixel, BigTraceData.dMinVoxelSize, current_pixel);
 			LinAlgHelpers.add(center, current_pixel, current_pixel);
 			current_pixel= Roi3D.scaleGlobInv(current_pixel, BigTraceData.globCal);
 			ra.setPosition(current_pixel);
@@ -183,39 +195,58 @@ public class Point3D extends AbstractRoi3D {
 		return out;
 	}
 	
-	/** get intensity values in Sphere around the point **/
-//	public < T extends RealType< T > & NativeType< T > > double[] getIntensityValuesTEST(BigTrace<T> bt, final IntervalView<T> source, final InterpolatorFactory<T, RandomAccessible< T >> nInterpolatorFactory)
-//	{
-//		RealRandomAccessible<T> interpolate = Views.interpolate(Views.extendZero(source),nInterpolatorFactory);
-//		RealRandomAccess<T> ra =   interpolate.realRandomAccess();
-//		
-//		final double dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]),BigTraceData.globCal[2]);
-//		ArrayList<Double> intVals = new ArrayList<>();
-//		Sphere3DMeasure measureSphere = new Sphere3DMeasure();
-//		measureSphere.setRadius((int)(0.5*Math.floor(pointSize)));
-//		double [] current_pixel = new double [3];
-//		double [] center = new double [3];
-//		vertex.localize(center);
-//		center =Roi3D.scaleGlob(center, BigTraceData.globCal);
-//		measureSphere.cursorSphere.reset();
-//		while (measureSphere.cursorSphere.hasNext())
-//		{
-//			measureSphere.cursorSphere.fwd();
-//			measureSphere.cursorSphere.localize(current_pixel);
-//			LinAlgHelpers.scale(current_pixel, dMinVoxelSize, current_pixel);
-//			LinAlgHelpers.add(center, current_pixel, current_pixel);
-//			current_pixel= Roi3D.scaleGlobInv(current_pixel, BigTraceData.globCal);
-//			bt.roiManager.addPoint3D(new RealPoint(current_pixel));
-//			ra.setPosition(current_pixel);
-//			intVals.add(ra.get().getRealDouble());
-//		}
-//		double [] out = new double[intVals.size()];
-//		for (int i =0;i<intVals.size();i++)
-//		{
-//			out[i]=intVals.get(i).doubleValue();
-//		}
-//		return out;
-//	}
+	/** get intensity values in Sphere around the point 
+	 * by using Ellipsoid to account for voxel's anisotropy.
+	 * Voxels outside of BT RAI are not included.
+	 * The source is assumed to be 3D **/
+	public <T extends RealType< T > & NativeType< T >  > double[] getIntensityValuesEllipsoid(final IntervalView<T> source)
+	{
+
+		final Cursor< T > cursorRoi = this.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > )source);
+		
+		final ArrayList<Double> intVals = new ArrayList<>();
+
+		cursorRoi.reset();
+		double dVal;
+		while (cursorRoi.hasNext())
+		{
+			cursorRoi.fwd();
+			
+			dVal = cursorRoi.get().getRealDouble();
+			if(Intervals.contains( source, cursorRoi ))
+			{
+				intVals.add(dVal);
+			}
+
+		}
+		
+		if (intVals.size()==0)
+			return null;
+		final double [] out = new double[intVals.size()];
+		for (int i =0;i<intVals.size();i++)
+		{
+			out[i]=intVals.get(i).doubleValue();
+		}
+		return out;
+	}
+	
+	public <T extends RealType< T > & NativeType< T >  > long getVoxelNumberInside(final IntervalView<T> source)
+	{
+		final Cursor< T > cursorRoi = this.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > )source);
+		
+		long nVoxNumber = 0;
+		cursorRoi.reset();
+
+		while (cursorRoi.hasNext())
+		{
+			cursorRoi.fwd();
+			if(Intervals.contains( source, cursorRoi ))
+			{
+				nVoxNumber++;
+			}
+		}
+		return nVoxNumber;	
+	}
 	
 	@Override
 	public void updateRenderVertices() 
@@ -254,10 +285,12 @@ public class Point3D extends AbstractRoi3D {
 		
 		double [] pos = vertex.positionAsDoubleArray();
 		long [][] lPos = new long[2][3];
+		long nRadius;//=  ( int ) Math.ceil( pointSize*0.5 );
 		for (int d=0;d<3;d++)
 		{
-			lPos[0][d] = Math.round(pos[d] - pointSize);
-			lPos[1][d] = Math.round(pos[d] + pointSize);
+			nRadius = ( long ) Math.ceil( pointSize*0.5 *BigTraceData.dMinVoxelSize/BigTraceData.globCal[d]);
+			lPos[0][d] = Math.round(pos[d] - nRadius);
+			lPos[1][d] = Math.round(pos[d] +  nRadius);
 		}
 		return new FinalInterval(lPos[0],lPos[1]);
 
@@ -267,5 +300,26 @@ public class Point3D extends AbstractRoi3D {
 	{	
 		return getBoundingBox();
 
+	}
+	
+	@Override
+	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getSingle3DVolumeCursor( RandomAccessibleInterval< T > input )
+	{
+		if(input.numDimensions()!=3)
+		{
+			System.err.println("The input for VolumeCursor should be 3D RAI!");
+		}
+
+		final long [] center = new long[3];
+		final long[] radiuses = new long[3]; 
+		for(int d=0;d<3;d++)
+		{
+			radiuses[d] = Math.round( pointSize*0.5 *BigTraceData.dMinVoxelSize/BigTraceData.globCal[d]);
+			center[d]= Math.round(vertex.getDoublePosition( d ));
+		}
+
+	
+		final EllipsoidNeighborhood<T> ellipse = new EllipsoidNeighborhood<>(input, center,  radiuses); 
+		return ellipse.localizingCursor();
 	}
 }

@@ -21,7 +21,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		bt = bt_;
 	}
 	
-	void macroLoadROIs(String sFileName, String input) throws InterruptedException
+	public void macroLoadROIs(String sFileName, String input) throws InterruptedException
 	{
 		while(bt.bInputLock)
 		{
@@ -103,7 +103,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		
 	}
 
-	void macroShapeInterpolation(String sShapeInterpol, int nSmoothWindow) throws InterruptedException
+	public void macroShapeInterpolation(String sShapeInterpol, int nSmoothWindow) throws InterruptedException
 	{
 		while(bt.bInputLock)
 		{

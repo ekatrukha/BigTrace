@@ -31,8 +31,8 @@ public class Plane3D {
      * @param n_ - normal vector (does not have to be normalized) **/
 	public void setVectors(double [] p0_, double [] n_)
 	{
-		p0= new double [3]; 
-		n= new double [3];
+		p0 = new double [3]; 
+		n = new double [3];
 		for (int i =0;i<3;i++)
 		{
 			p0[i]=p0_[i];
@@ -48,7 +48,7 @@ public class Plane3D {
 	 * v1-v2(x) and v3-v2(y), i.e. as (z) **/
 	public Plane3D(final RealPoint v1, final RealPoint v2, final RealPoint v3)
 	{
-		p0= new double [3]; 
+		p0 = new double [3]; 
 		n= new double [3];
 		
 		double [] v12 = new double [3];

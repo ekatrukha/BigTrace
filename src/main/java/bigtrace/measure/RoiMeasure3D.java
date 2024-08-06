@@ -51,11 +51,15 @@ import ij.Prefs;
 import ij.gui.Plot;
 import ij.io.SaveDialog;
 import ij.measure.ResultsTable;
+
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
+import net.imglib2.util.RealSum;
 import net.imglib2.view.IntervalView;
+import net.imglib2.view.Views;
 
 public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener, Measurements { 
 	
@@ -78,13 +82,17 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	public JList<String> jlist;
 	JScrollPane listScroller;
 	
+	boolean bIgnoreClipped = Prefs.get("BigTrace.bIgnoreClipped",false);
+	
 	public JComboBox<String> cbActiveChannel;
 	// Order must agree with order of checkboxes in Set Measurements dialog box
-	private static final int[] list = { LENGTH,  DIST_ENDS, MEAN, STD_DEV, STRAIGHTNESS, ENDS_COORDS, ENDS_DIR};
-	private static final String[] colTemplates = { "Length", "Distance_between_ends", "Mean_intensity", "SD_intensity", "Straightness", "End_","Direction_"};
+	private static final int[] listMeasurements = { VOLUME, LENGTH,  MEAN, STD_DEV, MEAN_LINEAR, STD_LINEAR, INTEGRATED, DIST_ENDS, STRAIGHTNESS, ENDS_COORDS, ENDS_DIR};
+	private static final String[] colTemplates = { "Volume", "Length", "Mean_intensity", "SD_intensity",  
+													"Mean_linear_intensity", "SD_linear_intensity","Integrated_intensity", 
+													"Distance_between_ends", "Straightness", "End_","Direction_"};
 	
 
-	private static int systemMeasurements = (int)Prefs.get("BigTrace.Measurements",LENGTH+MEAN);
+	private static int systemMeasurements = (int)Prefs.get("BigTrace.Measurements",VOLUME+LENGTH+MEAN);
 
 
 	private double [] coalignVector;
@@ -151,9 +159,6 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		butSlice = new JButton(tabIcon);
 		butSlice.setToolTipText("Split volume");
 		butSlice.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		
-
-
 		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
 		tabIcon = new ImageIcon(icon_path);
@@ -326,17 +331,19 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		ArrayList<JCheckBox> measureStates = new ArrayList<>();
 		
 
-		String[] labels = new String[7];
-		boolean[] states = new boolean[7];
-		labels[0]="Length"; states[0]=(systemMeasurements&LENGTH)!=0;
-		labels[1]="Distance between ends"; states[1]=(systemMeasurements&DIST_ENDS)!=0;
-		labels[2]="Mean intensity"; states[2]=(systemMeasurements&MEAN)!=0;
-		labels[3]="SD of intensity"; states[3]=(systemMeasurements&STD_DEV)!=0;
-		labels[4]="Straightness"; states[4]=(systemMeasurements&STRAIGHTNESS)!=0;
-		labels[5]="Ends coordinates"; states[5]=(systemMeasurements&ENDS_COORDS)!=0;
-		labels[6]="End-end direction"; states[6]=(systemMeasurements&ENDS_DIR)!=0;
+		//String[] labels = new String[listMeasurements.length];
+		boolean[] states = new boolean[listMeasurements.length];
+		for (int i=0;i<listMeasurements.length;i++)
+		{
+			states[i]=(systemMeasurements&(int)(Math.pow( 2, i )))!=0;
+		}
 		
-		for(int i = 0;i<list.length;i++)
+		String[] labels = { "Volume", "Length", "Mean intensity", "SD of intensity", 
+			"Mean linear intensity", "SD linear intensity","Integrated intensity", 
+			"Distance between_ends", "Straightness", "Ends coordinates","End-end direction"};
+
+		
+		for(int i = 0;i<listMeasurements.length;i++)
 		{
 
 			measureStates.add(new JCheckBox(labels[i]));
@@ -344,10 +351,16 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			pMeasureSettings.add(measureStates.get(i));
 			
 		}
+		//to account for the empty slot
+		pMeasureSettings.add(new JLabel(" "));
+		
+		pMeasureSettings.add(new JLabel("Ignore clipped volume?"));
+		JCheckBox cbIgnoreClipped = new JCheckBox();
+		cbIgnoreClipped.setSelected( bIgnoreClipped );
+		pMeasureSettings.add( cbIgnoreClipped );
 		
 		String[] sIntInterpolationType = { "Nearest Neighbor", "Linear", "Lanczos" };
 		JComboBox<String> intensityInterpolationList = new JComboBox<>(sIntInterpolationType);
-		pMeasureSettings.add(new JLabel(" "));
 		pMeasureSettings.add(new JLabel("Intensity interpolation: "));
 		intensityInterpolationList.setSelectedIndex(BigTraceData.intensityInterpolation);
 		pMeasureSettings.add(intensityInterpolationList);
@@ -377,14 +390,19 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 
 			//boolean b = false;
-			for (int i=0; i<list.length; i++) {
+			for (int i=0; i<listMeasurements.length; i++) {
 				states[i] = measureStates.get(i).isSelected();
 				if (states[i])
-					systemMeasurements |= list[i];
+					systemMeasurements |= listMeasurements[i];
 				else
-					systemMeasurements &= ~list[i];
+					systemMeasurements &= ~listMeasurements[i];
 			}
 			Prefs.set("BigTrace.Measurements", systemMeasurements);
+			
+			
+			// whether to clip measurements
+			bIgnoreClipped = cbIgnoreClipped.isSelected();
+			Prefs.set("BigTrace.bIgnoreClipped",bIgnoreClipped);
 			
 			//intensity interpolation
 			BigTraceData.intensityInterpolation = intensityInterpolationList.getSelectedIndex();
@@ -408,7 +426,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			if (rt!=null)
 			{	
 				boolean bUpdate=false;
-				for (int i=0; i<list.length; i++) 
+				for (int i=0; i<listMeasurements.length; i++) 
 				{
 					//column not selected
 					//remove it from results table
@@ -505,10 +523,6 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			{
 				measureLength(roi,val);
 			}
-			if((systemMeasurements&DIST_ENDS)!=0) 
-			{
-				measureEndsDistance(roi,val);
-			}
 			if((systemMeasurements&MEAN)!=0) 
 			{
 				measureMeanIntensity(roi,val);
@@ -516,6 +530,26 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			if((systemMeasurements&STD_DEV)!=0) 
 			{
 				measureSDIntensity(roi,val);
+			}
+			if((systemMeasurements&INTEGRATED)!=0) 
+			{
+				measureIntegratedIntensity(roi,val);
+			}
+			if((systemMeasurements&VOLUME)!=0) 
+			{
+				measureVolume(roi,val);
+			}
+			if((systemMeasurements&MEAN_LINEAR)!=0) 
+			{
+				measureMeanLinearIntensity(roi,val);
+			}
+			if((systemMeasurements&STD_LINEAR)!=0) 
+			{
+				measureSDLinearIntensity(roi,val);
+			}
+			if((systemMeasurements&DIST_ENDS)!=0) 
+			{
+				measureEndsDistance(roi,val);
 			}
 			if((systemMeasurements&STRAIGHTNESS)!=0) 
 			{
@@ -634,6 +668,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
         bt.btPanel.progressBar.setValue(100);
         bt.btPanel.progressBar.setString("Measured and saved coalignment angles of "+Integer.toString(bt.roiManager.rois.size())+" ROIs");
 	}
+	
 	void updateTable(final MeasureValues val, final boolean bShow)
 	{
 		rt.incrementCounter();
@@ -648,13 +683,13 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 			rt.setValue("ROI_TimePoint", row, val.getTimePoint());
 		}
+		if ((systemMeasurements&VOLUME)!=0)
+		{
+			rt.setValue("Volume", row, val.volume);
+		}
 		if ((systemMeasurements&LENGTH)!=0)
 		{
 			rt.setValue("Length", row, val.length);
-		}
-		if ((systemMeasurements&DIST_ENDS)!=0)
-		{
-			rt.setValue("Distance_between_ends", row, val.endsDistance);
 		}
 		if ((systemMeasurements&MEAN)!=0)
 		{
@@ -663,6 +698,22 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		if ((systemMeasurements&STD_DEV)!=0)
 		{
 			rt.setValue("SD_intensity", row, val.stdDev);
+		}
+		if ((systemMeasurements&INTEGRATED)!=0)
+		{
+			rt.setValue("Integrated_intensity", row, val.integrated);
+		}
+		if ((systemMeasurements&MEAN_LINEAR)!=0)
+		{
+			rt.setValue("Mean_linear_intensity", row, val.mean_linear);
+		}
+		if ((systemMeasurements&STD_LINEAR)!=0)
+		{
+			rt.setValue("SD_linear_intensity", row, val.std_linear);
+		}
+		if ((systemMeasurements&DIST_ENDS)!=0)
+		{
+			rt.setValue("Distance_between_ends", row, val.endsDistance);
 		}
 		if ((systemMeasurements&STRAIGHTNESS)!=0)
 		{
@@ -692,6 +743,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			rt.updateResults();
 		}
 	}
+	
 	void resetTable(final ArrayList<MeasureValues> vals)
 	{
 		rt.reset();
@@ -702,6 +754,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		rt.show("Results");
 		rt.updateResults();
 	}
+	
 	void measureLength(final Roi3D roi, final MeasureValues val)
 	{
 		switch (roi.getType())
@@ -719,6 +772,37 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			
 		
 	}
+	
+	void measureVolume(final Roi3D roi, final MeasureValues val)
+	{
+		
+		val.volume = Double.NaN;
+		long nVoxelSize = -1;
+		
+		if(val.intensity_values != null)
+		{
+			nVoxelSize = val.intensity_values.length;
+		}
+		else
+		{
+			final IntervalView< T > source = getMeasureSource(roi);
+			switch (roi.getType())
+			{
+				case Roi3D.POINT:
+					nVoxelSize = ((Point3D)roi).getVoxelNumberInside(source);
+					break;
+				case Roi3D.POLYLINE:
+				case Roi3D.LINE_TRACE:
+					nVoxelSize = ((AbstractCurve3D)roi).getVoxelNumberInside(source);
+					break;		
+			}
+		}
+		if(nVoxelSize>=0)
+		{
+			val.volume = nVoxelSize*BigTraceData.globCal[0]*BigTraceData.globCal[1]*BigTraceData.globCal[2];
+		}
+	}
+	
 	void measureEndsDistance(final Roi3D roi, final MeasureValues val)
 	{
 		switch (roi.getType())
@@ -735,96 +819,161 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		}
 	}
 	
+	IntervalView< T > getMeasureSource(final Roi3D roi)
+	{
+		final IntervalView< T > source;
+		
+		if(bIgnoreClipped)
+			source = bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
+		else
+		{
+			RandomAccessibleInterval< T > raifull = bt.btData.getDataSourceFull(bt.btData.nChAnalysis, roi.getTimePoint());
+			source = Views.interval( raifull, raifull );
+		}
+		return source;
+	}
+	
 	void measureMeanIntensity(final Roi3D roi, final MeasureValues val)
 	{
-		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source = bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
-		double [][] li_profile;
-		val.mean = Double.NaN;
-		switch (roi.getType())
-		{
 		
-			case Roi3D.POINT:
-				val.intensity_values = ((Point3D)roi).getIntensityValues(source, btdata.nInterpolatorFactory);
-				//val.intensity_values = ((Point3D)roi).getIntensityValuesTEST(bt,source, nInterpolatorFactory);
-				if(val.intensity_values != null)
-				{
-					val.mean = getMeanDoubleArray(val.intensity_values);
-				}
-				break;
-			case Roi3D.POLYLINE:
-			case Roi3D.LINE_TRACE:
-				
-				//li_profile = ((AbstractCurve3D)roi).getIntensityProfile(source, BigTraceData.globCal, nInterpolatorFactory, BigTraceData.shapeInterpolation);
-				li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),btdata.nInterpolatorFactory, BigTraceData.shapeInterpolation);
-
-				if (li_profile!=null)
-				{
-					val.mean= getMeanDoubleArray(li_profile[1]);
-					val.intensity_values = li_profile[1].clone();
-				}
-				
-				break;	
-			default:
-				val.mean = Double.NaN;
+		final IntervalView< T > source = getMeasureSource(roi);
+		
+		val.mean = Double.NaN;
+		if(val.intensity_values == null)
+		{
+			switch (roi.getType())
+			{
+			
+				case Roi3D.POINT:
+					val.intensity_values = ((Point3D)roi).getIntensityValuesEllipsoid(source);
+					break;
+				case Roi3D.POLYLINE:
+				case Roi3D.LINE_TRACE:
+					val.intensity_values = ((AbstractCurve3D)roi).getIntensityVoxelsInside(source);
+					break;	
+			}
 		}
+		if(val.intensity_values != null)
+		{
+			val.mean = getMeanDoubleArray(val.intensity_values);
+		}		
 	}
 	
 	void measureSDIntensity(final Roi3D roi, final MeasureValues val)
 	{
-		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source = bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
-		double [][] li_profile;
+		final IntervalView< T > source = getMeasureSource(roi);
+
 		val.stdDev = Double.NaN;
-		switch (roi.getType())
+		if(val.intensity_values == null)
 		{
-		
-			case Roi3D.POINT:
-				if(val.intensity_values == null)
-				{
-					val.intensity_values = ((Point3D)roi).getIntensityValues(source, btdata.nInterpolatorFactory);
-					
-				}
-				if((systemMeasurements&MEAN)!=0) 
-				{
-					val.stdDev = getSDDoubleArray(val.mean,val.intensity_values);
-				}
-				else
-				{
-					val.stdDev= getSDDoubleArray(getMeanDoubleArray(val.intensity_values),val.intensity_values);
-				}
+			switch (roi.getType())
+			{
+				case Roi3D.POINT:
+					val.intensity_values = ((Point3D)roi).getIntensityValuesEllipsoid(source);
+					break;
+				case Roi3D.POLYLINE:
+				case Roi3D.LINE_TRACE:
+					val.intensity_values = ((AbstractCurve3D)roi).getIntensityVoxelsInside(source);
+					break;
 
-				break;
-			case Roi3D.POLYLINE:
-			case Roi3D.LINE_TRACE:
-				if(val.intensity_values == null)
-				{
-					li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),btdata.nInterpolatorFactory, BigTraceData.shapeInterpolation);
-					if(li_profile!=null)
-					{
-						val.intensity_values = li_profile[1].clone();
-					}
-					
-				}
-
-				if (val.intensity_values != null)
-				{
-					if((systemMeasurements&MEAN)!=0) 
-					{
-						val.stdDev= getSDDoubleArray(val.mean,val.intensity_values);
-					}
-					else
-					{
-						val.stdDev= getSDDoubleArray(getMeanDoubleArray(val.intensity_values),val.intensity_values);
-					}
-				}
-				break;
-				
-			default:
-				val.stdDev = Double.NaN;
-				
+			}
 		}
+		if (val.intensity_values != null)
+		{
+			if((systemMeasurements&MEAN)!=0) 
+			{
+				val.stdDev= getSDDoubleArray(val.mean,val.intensity_values);
+			}
+			else
+			{
+				val.stdDev= getSDDoubleArray(getMeanDoubleArray(val.intensity_values),val.intensity_values);
+			}
+		}
+	}	
+	void measureIntegratedIntensity(final Roi3D roi, final MeasureValues val)
+	{
+		
+		final IntervalView< T > source = getMeasureSource(roi);
+		
+		val.integrated = Double.NaN;
+		if(val.intensity_values == null)
+		{
+			switch (roi.getType())
+			{
+			
+				case Roi3D.POINT:
+					val.intensity_values = ((Point3D)roi).getIntensityValuesEllipsoid(source);
+					break;
+				case Roi3D.POLYLINE:
+				case Roi3D.LINE_TRACE:
+					val.intensity_values = ((AbstractCurve3D)roi).getIntensityVoxelsInside(source);
+					break;	
+			}
+		}
+		if(val.intensity_values != null)
+		{
+			val.integrated = getSumDoubleArray(val.intensity_values);
+		}		
 	}
+	void measureMeanLinearIntensity(final Roi3D roi, final MeasureValues val)
+	{
+		final IntervalView< T > source = getMeasureSource(roi);
+		
+		double [][] li_profile;
+		val.mean_linear = Double.NaN;
+		if(val.lin_intensity_values == null)
+		{
+			switch (roi.getType())
+			{			
+				case Roi3D.POLYLINE:
+				case Roi3D.LINE_TRACE:
+					li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),btdata.nInterpolatorFactory, BigTraceData.shapeInterpolation);
+					if (li_profile!=null)
+					{
+						val.lin_intensity_values = li_profile[1].clone();
+					}				
+					break;	
+			}
+		}
+		if(val.lin_intensity_values != null)
+		{
+			val.mean_linear = getMeanDoubleArray(val.lin_intensity_values);
+		}	
+
+	}
+	
+	void measureSDLinearIntensity(final Roi3D roi, final MeasureValues val)
+	{
+		final IntervalView< T > source = getMeasureSource(roi);
+		double [][] li_profile;
+		val.std_linear = Double.NaN;
+		if(val.lin_intensity_values == null)
+		{
+			switch (roi.getType())
+			{
+				case Roi3D.POLYLINE:
+				case Roi3D.LINE_TRACE:
+					li_profile = ((AbstractCurve3D)roi).getIntensityProfilePipe(source, BigTraceData.globCal, (int) Math.floor(0.5*roi.getLineThickness()),btdata.nInterpolatorFactory, BigTraceData.shapeInterpolation);
+					if (li_profile!=null)
+					{
+						val.lin_intensity_values = li_profile[1].clone();
+					}	
+
+			}
+		}
+		if (val.lin_intensity_values != null)
+		{
+			if((systemMeasurements&MEAN_LINEAR)!=0) 
+			{
+				val.std_linear= getSDDoubleArray(val.mean_linear,val.lin_intensity_values);
+			}
+			else
+			{
+				val.std_linear= getSDDoubleArray(getMeanDoubleArray(val.lin_intensity_values),val.lin_intensity_values);
+			}
+		}
+	}	
+	
 	void measureStraightness(final Roi3D roi, final MeasureValues val)
 	{
 		switch (roi.getType())
@@ -840,6 +989,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 				val.straightness = Double.NaN;
 		}
 	}
+	
 	void measureEndsCoords(final Roi3D roi, final MeasureValues val)
 	{
 		switch (roi.getType())
@@ -880,8 +1030,8 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	
 	double [][] measureLineProfile(final Roi3D roi, final boolean bMakePlot)
 	{
-		//IntervalView< T > source =(IntervalView<T>) bt.sources.get(bt.btdata.nChAnalysis);
-		IntervalView< T > source = bt.btData.getDataSourceClipped(bt.btData.nChAnalysis, roi.getTimePoint());
+		final IntervalView< T > source = getMeasureSource(roi);
+		
 		double [][] li_profile = null;
 		Plot plotProfile;
 		switch (roi.getType())
@@ -937,28 +1087,42 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		return li_profile;
 	}
 	
-
-	
 	public static double getMeanDoubleArray(final double [] values)
 	{
-		double out = 0.0;
+		final RealSum realSum = new RealSum(values.length);
+		
 		for(int i=0;i<values.length;i++)
 		{
-			out+=values[i];
+			realSum.add( values[i]);
 		}
-		out /=values.length;
-		return out;
+		
+		return realSum.getSum()/values.length;
 	}
 	
 	public static double getSDDoubleArray(final double mean, final double [] values)
 	{
-		double out = 0.0;
+		final RealSum realSum = new RealSum(values.length);
 		for(int i=0;i<values.length;i++)
 		{
-			out+=(values[i]-mean)*(values[i]-mean);
+			realSum.add((values[i]-mean)*(values[i]-mean));
 		}
-		out = Math.sqrt(out/(values.length-1));
-		return out;
+		
+		if(values.length==1)
+			return realSum.getSum();
+	
+		return Math.sqrt(realSum.getSum()/(values.length-1));
+	}
+	
+	public static double getSumDoubleArray(final double [] values)
+	{
+		final RealSum realSum = new RealSum(values.length);
+		
+		for(int i=0;i<values.length;i++)
+		{
+			realSum.add( values[i]);
+		}
+		
+		return realSum.getSum();
 	}
 
 	/** dialog for the box around ROI extraction**/
@@ -970,7 +1134,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		int nExpandROIBox;
 		int nTimeRange;
 		int nExtractBoxOutput;
-		
+		boolean bOnlyVoxelsInsideROI;
 		
 		final JPanel extractROISettings = new JPanel();
 		
@@ -990,6 +1154,14 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		JComboBox<String> extractBoxRoiList = new JComboBox<>(sExtractBoxROIsRange);
 		extractBoxRoiList.setSelectedIndex((int)Prefs.get("BigTrace.nExtractBoxROIList", 0));
 		extractROISettings.add(extractBoxRoiList, cd);	
+		
+		cd.gridy++;
+		cd.gridx=0;	
+		extractROISettings.add(new JLabel("Extract only voxels inside ROI:"),cd);
+		cd.gridx++;
+		JCheckBox extractVoxelsInsideROI = new JCheckBox();
+		extractVoxelsInsideROI.setSelected( Prefs.get("BigTrace.bOnlyVoxelsInsideROI", false) );
+		extractROISettings.add(extractVoxelsInsideROI,cd);
 		
 		cd.gridy++;
 		cd.gridx=0;	
@@ -1044,6 +1216,9 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 			nExtractBoxROIList = extractBoxRoiList.getSelectedIndex();
 			Prefs.set("BigTrace.nExtractBoxROIList", nExtractBoxROIList);
+			
+			bOnlyVoxelsInsideROI = extractVoxelsInsideROI.isSelected();
+			Prefs.set("BigTrace.bOnlyVoxelsInsideROI", bOnlyVoxelsInsideROI);
 			
 			nExtractRoiType = extractBoxTypeList.getSelectedIndex();
 			Prefs.set("BigTrace.nExtractRoiType", nExtractRoiType);
@@ -1101,7 +1276,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			if(roiOut.size()>0)
 			{			
 				//run in a separate thread
-				ExtractROIBox<T> extractBoxBG = new ExtractROIBox<>(roiOut, bt, nExpandROIBox, nTimeRange, nExtractBoxOutput, sSaveDir);				
+				ExtractROIBox<T> extractBoxBG = new ExtractROIBox<>(roiOut, bt, nExpandROIBox, nTimeRange, nExtractBoxOutput, bOnlyVoxelsInsideROI, sSaveDir);				
 				extractBoxBG.addPropertyChangeListener(bt.btPanel);
 				extractBoxBG.execute();
 			}

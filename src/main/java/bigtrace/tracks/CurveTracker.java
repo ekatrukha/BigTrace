@@ -7,6 +7,7 @@ import javax.swing.SwingWorker;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
@@ -38,6 +39,8 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 	
 	public int nLastTP;
 	
+	public int nNextFrame = 0;
+	
 	public int nBoxExpand;
 	
 	Roi3D currentRoi;
@@ -49,9 +52,9 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 	
 	Roi3DGroup newGroupTrack;
 	
-	final long [][] nInt = new long [2][5];
+	//final long [][] nInt = new long [2][5];
 	
-	Interval boxNext;
+	//Interval boxNext;
 	
 	RandomAccessibleInterval<T> full_RAI;
 	
@@ -161,14 +164,28 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		RealPoint rpMax = new RealPoint(3);
 		
 		bt.viewer.setTimepoint(nTP);		
-		boxNext = Intervals.intersect( bt.btData.getDataCurrentSourceFull(),Intervals.expand(currentRoi.getBoundingBox(),nBoxExpand));
-		boxNext.min( nInt[0] );
-		boxNext.max( nInt[1] );
-		//set time point
-		nInt[0][3] = nTP;
-		nInt[1][3] = nTP;
-		IntervalView<T> searchBox = Views.interval( full_RAI, new FinalInterval(nInt[0],nInt[1]) );
-		VolumeMisc.findMaxLocation(searchBox,  rpMax );
+
+		
+		//use bounding box
+		if(nNextFrame == 0)
+		{
+			final Interval boxNext = Intervals.intersect( bt.btData.getDataCurrentSourceFull(),Intervals.expand(currentRoi.getBoundingBox(),nBoxExpand));
+			final long [][] nInt = new long [2][5];
+			boxNext.min( nInt[0] );
+			boxNext.max( nInt[1] );
+			//set time point
+			nInt[0][3] = nTP;
+			nInt[1][3] = nTP;
+			//set channel
+			nInt[0][4] = bt.btData.nChAnalysis; 
+			nInt[1][4] = bt.btData.nChAnalysis;	
+			IntervalView<T> searchBox = Views.interval( full_RAI, new FinalInterval(nInt[0],nInt[1]) );
+			VolumeMisc.findMaxLocation(searchBox,  rpMax );
+		}
+		else
+		{
+			findMaxLocationROIshape(bt.getTraceInterval(bt.btData.bTraceOnlyClipped), (AbstractCurve3D)currentRoi, rpMax );
+		}
 		//ImageJFunctions.show( searchBox,"Test");
 		
 		final IntervalView<T> traceIV =  bt.getTraceInterval(bt.btData.bTraceOnlyClipped);			
@@ -224,7 +241,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
     	catch (ExecutionException e) 
     	{
     		e.getCause().printStackTrace();
-    		String msg = String.format("Unexpected problem during tracking: %s", 
+    		String msg = String.format("Unexpected error during tracking: %s", 
     				e.getCause().toString());
     		System.out.println(msg);
     	} 
@@ -252,7 +269,6 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
     	//unlock user interaction
     	bt.bInputLock = false;
     	bt.roiManager.setLockMode(false);
-    	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
 
     }
     
@@ -284,6 +300,29 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
     		}
     	}
     	return "Error";
+    }
+    
+    void findMaxLocationROIshape(final IntervalView< T > source, final AbstractCurve3D roi, final RealPoint maxLocation )
+    {
+    	final Cursor< T > cursor = roi.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > ) source);
+		T type = cursor.next();
+		T max = type.copy();
+		maxLocation.setPosition( cursor );
+		// loop over the rest of the data and determine min and max value
+		while ( cursor.hasNext() )
+		{
+			// we need this type more than once
+			type = cursor.next();
+			if(Intervals.contains( source, cursor ))
+			{
+				if ( type.compareTo( max ) > 0 )
+				{
+					max.set( type );
+					maxLocation.setPosition( cursor );	
+				}
+			}
+		}
+		return ;
     }
 
 }

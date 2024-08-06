@@ -15,9 +15,14 @@ import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineSimple;
 import net.imglib2.AbstractInterval;
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.view.Views;
 
 public class Box3D extends AbstractRoi3D 
 {
@@ -333,5 +338,10 @@ public class Box3D extends AbstractRoi3D
 	public Interval getBoundingBoxVisual() {
 		
 		return getBoundingBox();	
+	}
+	@Override
+	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getSingle3DVolumeCursor( RandomAccessibleInterval< T > input )
+	{		
+		return Views.interval( input, getBoundingBox() ).cursor();
 	}
 }

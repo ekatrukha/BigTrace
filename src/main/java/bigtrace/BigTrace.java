@@ -140,7 +140,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	public RoiManager3D<T> roiManager;
 	
 	/** BigTrace macro interface**/
-	BigTraceMacro<T> btMacro;
+	public BigTraceMacro<T> btMacro;
 	
 	/**macro extensions **/
 	private ExtensionDescriptor[] extensions = {
@@ -1583,8 +1583,11 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		
 		testI.run("");
+		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
+		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_tracks/Snejana_small_example.tif");
+		
+
 		///macros test
 //		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT_8bit.tif");
 //		testI.btMacro.macroLoadROIs( "/home/eugene/Desktop/projects/BigTrace/macro/ExM_MT_8bit.tif_btrois.csv","Clean" );

@@ -8,15 +8,24 @@ import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.measure.Circle2DMeasure;
 import bigtrace.measure.MeasureValues;
+import bigtrace.scene.VisPolyLineMesh;
+
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.mesh.Mesh;
+import net.imglib2.mesh.Meshes;
+import net.imglib2.mesh.alg.MeshCursor;
+import net.imglib2.mesh.impl.nio.BufferMesh;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
@@ -28,6 +37,8 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 {
 	public ArrayList<RealPoint> vertices;
 	CurveShapeInterpolation interpolator = null;
+	Mesh volumeMesh;
+	boolean bMeshInit = false;
 	
 	/** returns the length of Polyline using globCal voxel size **/
 	public double getLength()
@@ -102,6 +113,49 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	{
 		return interpolator.getTangentsResample();
 	}
+	
+	public <T extends RealType< T > & NativeType< T >  > double[] getIntensityVoxelsInside(final IntervalView<T> source)
+	{
+
+		final Cursor< T > cursorRoi = this.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > ) source);
+		
+		final ArrayList<Double> intVals = new ArrayList<>();
+
+		cursorRoi.reset();
+		while (cursorRoi.hasNext())
+		{
+			cursorRoi.fwd();
+			if(Intervals.contains( source, cursorRoi ))
+			{
+				intVals.add(cursorRoi.get().getRealDouble());
+			}
+		}
+		final double [] out = new double[intVals.size()];
+		for (int i =0;i<intVals.size();i++)
+		{
+			out[i]=intVals.get(i).doubleValue();
+		}
+		return out;
+	}
+	
+	public <T extends RealType< T > & NativeType< T >  > long getVoxelNumberInside(final IntervalView<T> source)
+	{
+
+		final Cursor< T > cursorRoi = this.getSingle3DVolumeCursor(( RandomAccessibleInterval< T > )source);
+		
+		long nVoxNumber = 0;
+
+		cursorRoi.reset();
+
+		while (cursorRoi.hasNext())
+		{
+			cursorRoi.fwd();
+			if(Intervals.contains( source, cursorRoi ))
+				{nVoxNumber++;}
+		}
+		return nVoxNumber;
+	}
+
 	
 	/** Measures intensity profile along the ROI;
 	 * @param	source	IntervalView of measurement
@@ -283,7 +337,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	{
 		double [][] out = new double [5][points.size()];
 		
-		final RealRandomAccess<T> ra =   interpolate.realRandomAccess();
+		final RealRandomAccess<T> ra = interpolate.realRandomAccess();
 		double [] current_pixel = new double[3];
 		double dInt;
 		int nPixN;
@@ -337,7 +391,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		return out;
 	}
 	
-	private static void getVoxelInPlane(final double [] x,final double [] y, final double [] c, final double [] voxel)
+	public static void getVoxelInPlane(final double [] x,final double [] y, final double [] c, final double [] voxel)
 	{
 		 double [] xp = new double[3];
 		 double [] yp = new double[3];
@@ -506,5 +560,30 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		}
 		return new FinalInterval(bBox[0],bBox[1]);
 		
+	}
+	
+	@Override
+	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getSingle3DVolumeCursor( final RandomAccessibleInterval< T > input )
+	{	
+		if(input.numDimensions()!=3)
+		{
+			System.err.println("The input for VolumeCursor should be 3D RAI!");
+		}
+		if(!bMeshInit)
+		{
+			final ArrayList< RealPoint > points = this.getJointSegmentResampled();
+			final ArrayList< double[] > tangents = this.getJointSegmentTangentsResampled();
+			final ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points, tangents, BigTraceData.sectorN, 0.5*this.getLineThickness()*BigTraceData.dMinVoxelSize);
+			//return to voxel space	for the render		
+			for(int i=0; i<point_contours.size(); i++)
+			{
+				point_contours.set(i, Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
+			}
+			BufferMesh meshx = VisPolyLineMesh.initClosedVolumeMesh(point_contours, Roi3D.scaleGlobInv(points, BigTraceData.globCal) );
+			volumeMesh = Meshes.removeDuplicateVertices( meshx, 2 );
+			bMeshInit = true;
+		}
+		
+		return new MeshCursor<>( input.randomAccess(), volumeMesh, new double[] { 1., 1., 1. } );
 	}
 }

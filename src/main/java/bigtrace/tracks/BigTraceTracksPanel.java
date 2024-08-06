@@ -335,23 +335,34 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		cd.gridy=0;	
 		String[] sTrackDirection = { "all timepoints", "forward in time", "backward in time", "range below" };
 		JComboBox<String> trackDirectionList = new JComboBox<>(sTrackDirection);
-		int [] nRange = new int [2];
-		nRange[0] = 0;
-		nRange[1] = BigTraceData.nNumTimepoints-1;
-		RangeSliderTF timeRange = new RangeSliderTF(nRange, nRange);
-		timeRange.makeConstrained( bt.btData.nCurrTimepoint, bt.btData.nCurrTimepoint );
-	
 		dialogTrackSettings.add(new JLabel("Tracking:"),cd);
 		trackDirectionList.setSelectedIndex((int)Prefs.get("BigTrace.trackDirection", 0));
 		cd.gridx++;
 		dialogTrackSettings.add(trackDirectionList,cd);
 		cd.gridy++;
+		
+		
+		int [] nRange = new int [2];
+		nRange[0] = 0;
+		nRange[1] = BigTraceData.nNumTimepoints-1;
+		RangeSliderTF timeRange = new RangeSliderTF(nRange, nRange);
+		timeRange.makeConstrained( bt.btData.nCurrTimepoint, bt.btData.nCurrTimepoint );
+		
+		
 		cd.gridx=0;
-		//cd.gridx++;
-
 		cd.gridwidth=2;
 		dialogTrackSettings.add(timeRange,cd);
 		cd.gridwidth=1;
+		cd.gridy++;
+		
+		String[] sTrackNextFrame = { "ROI bounding box", "ROI's shape"};
+		JComboBox<String> trackNextFrame = new JComboBox<>(sTrackNextFrame);
+		
+		cd.gridx=0;	
+		dialogTrackSettings.add(new JLabel("Search next curve inside:"),cd);
+		trackNextFrame.setSelectedIndex((int)Prefs.get("BigTrace.trackNextFrame", 0));
+		cd.gridx++;
+		dialogTrackSettings.add(trackNextFrame,cd);
 		cd.gridy++;
 		
 		cd.gridx=0;	
@@ -397,6 +408,10 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 
 					
 			}
+			
+			int nNextFrame = trackNextFrame.getSelectedIndex();
+			Prefs.set("BigTrace.trackNextFrame", nNextFrame);
+			
 			// box expand
 			int nBoxExpand = Integer.parseInt(nfBoxExpand.getText());
 			
@@ -404,6 +419,7 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 			bt.roiManager.setLockMode(true);
 			butTrack.setEnabled( true );
 			Prefs.set("BigTrace.nTrackExpandBox", nBoxExpand);	
+			btTracker.nNextFrame=nNextFrame;
 			btTracker.nBoxExpand = nBoxExpand;
 			butTrack.setIcon( tabIconCancel );
 			butTrack.setToolTipText( "Stop tracking" );

@@ -20,9 +20,14 @@ import bigtrace.geometry.Line3D;
 import bigtrace.geometry.Plane3D;
 import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolygonFlat;
+
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 
 public class CrossSection3D extends AbstractRoi3D 
@@ -464,6 +469,11 @@ public class CrossSection3D extends AbstractRoi3D
 		
 		return getBoundingBox();
 
+	}
+	@Override
+	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getSingle3DVolumeCursor( RandomAccessibleInterval< T > input )
+	{
+		return null;
 	}
 
 

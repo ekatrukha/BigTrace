@@ -417,10 +417,13 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 	public void updateRenderVertices() {
 		
 		verticesVis.setVertices(vertices);
+		bMeshInit = false;
 		if(vertices.size()>1)
 		{
 			interpolator.init(makeJointSegment(), BigTraceData.shapeInterpolation);
 			segmentsVis.setVertices(interpolator.getVerticesVisual(),interpolator.getTangentsVisual());
+			//segmentsVis.setVertices(interpolator.getVerticesResample(),interpolator.getTangentsResample());
+
 		}
 		else
 		{
@@ -433,6 +436,17 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 
 		
 	}
+	
+	public ArrayList<RealPoint> getVerticesVisual()
+	{
+		return interpolator.getVerticesVisual();
+	}
+
+	public ArrayList<double[]> getTangentsVisual()
+	{
+		return interpolator.getTangentsVisual();
+	}
+	
 	@Override
 	public double getMinDist(Line3D line) 
 	{
