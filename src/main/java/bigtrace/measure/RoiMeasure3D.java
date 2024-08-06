@@ -745,8 +745,8 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 		
 			case Roi3D.POINT:
-				val.intensity_values = ((Point3D)roi).getIntensityValues(source, btdata.nInterpolatorFactory);
-				//val.intensity_values = ((Point3D)roi).getIntensityValuesTEST(bt,source, nInterpolatorFactory);
+				//val.intensity_values = ((Point3D)roi).getIntensityValuesInterpolateSphere(source, btdata.nInterpolatorFactory);
+				val.intensity_values = ((Point3D)roi).getIntensityValuesEllipsoid(source);
 				if(val.intensity_values != null)
 				{
 					val.mean = getMeanDoubleArray(val.intensity_values);
@@ -782,7 +782,8 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			case Roi3D.POINT:
 				if(val.intensity_values == null)
 				{
-					val.intensity_values = ((Point3D)roi).getIntensityValues(source, btdata.nInterpolatorFactory);
+					//val.intensity_values = ((Point3D)roi).getIntensityValuesInterpolateSphere(source, btdata.nInterpolatorFactory);
+					val.intensity_values = ((Point3D)roi).getIntensityValuesEllipsoid(source);
 					
 				}
 				if((systemMeasurements&MEAN)!=0) 
