@@ -1,9 +1,10 @@
 [![](https://github.com/ekatrukha/bigtrace/actions/workflows/build-main.yml/badge.svg)](https://github.com/ekatrukha/bigtrace/actions/workflows/build-main.yml)
 
-BigTrace
-===
+[![logo](./logo/bigtrace_logo_dark_200.png)](https://github.com/ekatrukha/BigTrace#gh-dark-mode-only)
+[![logo](./logo/bigtrace_logo_light_200.png)](https://github.com/ekatrukha/BigTrace#gh-light-mode-only)
 
-<img src="https://katpyxa.info/software/BigTrace.png" align="right" style="padding:100px"/> <a href="https://fiji.sc/">FIJI</a> plugin for tracing and analysis of curvilinear structures in large (and small) volumetric microscopy datasets using <a href="https://forum.image.sc/t/bigvolumeviewer-tech-demo/12104">BigVolumeViewer</a> for visualization (actually <a href="https://github.com/ekatrukha/bvv-playground">bvv-playground</a> is used). 
+
+<a href="https://fiji.sc/">FIJI</a> plugin for tracing and analysis of curvilinear structures in large (and small) volumetric microscopy datasets using <a href="https://forum.image.sc/t/bigvolumeviewer-tech-demo/12104">BigVolumeViewer</a> for visualization (actually <a href="https://github.com/ekatrukha/bvv-playground">bvv-playground</a> is used). 
 <br />
 <br />
 For full description and manual refer to <a href="https://github.com/ekatrukha/BigTrace/wiki"><strong>Wiki page</strong></a>.  
