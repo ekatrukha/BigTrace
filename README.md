@@ -7,7 +7,13 @@
 <br />
 For full description and manual refer to <a href="https://github.com/ekatrukha/BigTrace/wiki"><strong>Wiki page</strong></a>.  
 <br />
-
+Quick shortcuts:
+<ul>
+<li> <a href="https://github.com/ekatrukha/BigTrace/wiki/How-to-install-plugin">How to install plugin</a></li>
+<li> <a href="https://github.com/ekatrukha/BigTrace/wiki/How-to-use-plugin">How to use plugin</a></li>
+<li> <a href="https://github.com/ekatrukha/BigTrace/wiki/How-to-cite-plugin%3F">How to cite plugin</a></li>
+</ul>
+<br />
 <img src="https://katpyxa.info/software/BigTrace/bigtrace_example.gif" /> 
 
 ----------
