@@ -38,9 +38,7 @@ public class ClipPanel extends JPanel {
 	 * 
 	 */
 	private static final long serialVersionUID = 1885320351623882576L;
-	private RangeSliderTF bbX;
-	private RangeSliderTF bbY;
-	private RangeSliderTF bbZ;
+	private RangeSliderTF [] bbAxes = new RangeSliderTF[3];
 	private ArrayList<Listener> listeners =	new ArrayList<>();
 	
 	public JButton butExtractClipped;
@@ -88,22 +86,16 @@ public class ClipPanel extends JPanel {
 
 		cd.gridy = 0;
 		//cd.gridwidth=3;
+		String[] axesS = {"X","Y","Z"};
+		for(int d=0;d<3;d++)
+		{
+			bbAxes[d] = addRangeSlider(
+					axesS[d],
+					new int[] {0, (int) maxDim[d]},
+					new int[] {0, (int) maxDim[d]},
+					cd);
+		}
 
-		bbX = addRangeSlider(
-				"X",
-				new int[] {0, (int) maxDim[0]},
-				new int[] {0, (int) maxDim[0]},
-				cd);
-		bbY = addRangeSlider(
-				"Y",
-				new int[] {0, (int) maxDim[1]},
-				new int[] {0, (int) maxDim[1]},
-				cd);
-		bbZ = addRangeSlider(
-				"Z",
-				new int[] {0, (int) maxDim[2]},
-				new int[] {0, (int) maxDim[2]},
-				cd);
 		cd.gridwidth=1;
 		cd.weightx = 0.1;
 		cd.fill = GridBagConstraints.NONE;
@@ -126,63 +118,59 @@ public class ClipPanel extends JPanel {
 			@Override
 			public void sliderChanged() {
 				long [][] new_box = new long [2][3];
-				new_box [0][0]=bbX.getMin();
-				new_box [1][0]=bbX.getMax();
-				new_box [0][1]=bbY.getMin();
-				new_box [1][1]=bbY.getMax();
-				new_box [0][2]=bbZ.getMin();
-				new_box [1][2]=bbZ.getMax();
+				for(int d=0;d<3;d++)
+				{
+					new_box [0][d]=bbAxes[d].getMin();
+					new_box [1][d]=bbAxes[d].getMax();
+					
+				}
 				fireBoundingBoxChanged(new_box);
 			}
 		};
-		bbX.addSliderChangeListener(bbListener);
-		bbY.addSliderChangeListener(bbListener);
-		bbZ.addSliderChangeListener(bbListener);
+		for(int d=0;d<3;d++)
+		{
+			bbAxes[d].addSliderChangeListener(bbListener);
+		}
 	}
 
 
-	public int getBBXMin() {
-		return bbX.getMin();
-	}
 
-	public int getBBYMin() {
-		return bbY.getMin();
-	}
-
-	public int getBBZMin() {
-		return bbZ.getMin();
-	}
-
-	public int getBBXMax() {
-		return bbX.getMax();
-	}
-
-	public int getBBYMax() {
-		return bbY.getMax();
-	}
-
-	public int getBBZMax() {
-		return bbZ.getMax();
-	}
-	public void setBoundingBox(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) {
-		bbX.setMinAndMax(bbx0, bbx1);
-		bbY.setMinAndMax(bby0, bby1);
-		bbZ.setMinAndMax(bbz0, bbz1);
+	public void setBoundingBox(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) 
+	{
+		bbAxes[0].setMinAndMax(bbx0, bbx1);
+		bbAxes[1].setMinAndMax(bby0, bby1);
+		bbAxes[2].setMinAndMax(bbz0, bbz1);
 	}
 	
-	public void setBoundingBox(long [][] box) {
-		bbX.setMinAndMax((int)box[0][0], (int)box[1][0]);
-		bbY.setMinAndMax((int)box[0][1], (int)box[1][1]);
-		bbZ.setMinAndMax((int)box[0][2], (int)box[1][2]);
+	public void setBoundingBox(final long [][] box) 
+	{
+		for(int d=0;d<3;d++)
+		{
+			bbAxes[d].setMinAndMax((int)box[0][d], (int)box[1][d]);
+		}
+
 	}
-	public void setBoundingBox(Interval interval) {
+	
+	public void setBoundingBox(final Interval interval) 
+	{
 		long [][] box = new long[2][3];
 		box[0]=interval.minAsLongArray();
 		box[1]=interval.maxAsLongArray();
-		bbX.setMinAndMax((int)box[0][0], (int)box[1][0]);
-		bbY.setMinAndMax((int)box[0][1], (int)box[1][1]);
-		bbZ.setMinAndMax((int)box[0][2], (int)box[1][2]);
+		setBoundingBox(box);
 	}
+	
+	public long [][] getBoundingBox()
+	{
+		long [][] boxout = new long[2][3];
+		for(int d=0;d<3;d++)
+		{
+			boxout[0][d] = bbAxes[d].getMin();
+			boxout[1][d] = bbAxes[d].getMax();			
+		}
+		
+		return boxout;
+	}
+
 
 	public void addClipPanelListener(Listener l) {
         listeners.add(l);

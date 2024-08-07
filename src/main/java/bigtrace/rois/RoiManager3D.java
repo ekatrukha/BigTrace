@@ -54,7 +54,7 @@ import bigtrace.gui.GuiMisc;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.measure.RoiMeasure3D;
-import bigtrace.tracks.BigTraceTracksPanel;
+import bigtrace.tracks.TrackingPanel;
 
 
 public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener {
@@ -87,7 +87,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	public RoiMeasure3D<T> roiMeasure = null;
 	
 	//TRACKS PANEL
-	public BigTraceTracksPanel<T> btTracksPanel = null;
+	public TrackingPanel<T> btTracksPanel = null;
 	
 	//dialogs
 	public final RoiManager3DDialogs<T> rmDiag;
@@ -1667,7 +1667,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 this.roiMeasure = roiMeasure_;
 	}
 	
-	public void setTracksPanel( BigTraceTracksPanel<T> btTracksPanel_)
+	public void setTracksPanel( TrackingPanel<T> btTracksPanel_)
 	{
 		 this.btTracksPanel = btTracksPanel_;
 	}

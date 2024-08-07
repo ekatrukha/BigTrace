@@ -45,7 +45,7 @@ import ij.Prefs;
 
 
 
-public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener
+public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener
 {
 	final BigTrace<T> bt;
 
@@ -62,7 +62,7 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 	ImageIcon tabIconTrain;
 	ImageIcon tabIconCancel;
 	
-	public BigTraceTracksPanel(BigTrace<T> bt)
+	public TrackingPanel(final BigTrace<T> bt)
 	{
 		this.bt = bt;
 		this.btTracker = null;// = new CurveTracker< >(bt);
