@@ -303,12 +303,17 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		{
 			addCurrentKeyFrame();
 		}
+		//replace keyframe
+		if(e.getSource() == butReplace)
+		{
+			replaceSelectedKeyFrame();
+		}
 		//delete keyframe
 		if(e.getSource() == butDelete)
 		{
 			deleteSelectedKeyFrame();
 		}
-
+		
 	}
 
 	@Override
@@ -318,18 +323,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		
 	}
 	
-	void deleteSelectedKeyFrame()
-	{
-		int nInd = jlist.getSelectedIndex();
-		if(nInd>=0)
-		{
-			listModel.remove( nInd );
-			updateKeyIndices();
-			updateKeyMarks();
-			kfAnim.updateTransitionTimeline();
-			updateScene();
-		}
-	}
+
 
 	void addCurrentKeyFrame()
 	{
@@ -360,6 +354,30 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		updateKeyMarks();
 		kfAnim.updateTransitionTimeline();
 		
+	}
+	
+	void replaceSelectedKeyFrame()
+	{
+		int nInd = jlist.getSelectedIndex();
+		if(nInd>=0)
+		{
+			float nTimeMovie = listModel.get( nInd ).fMovieTimePoint;
+			KeyFrame newKeyFrame = new KeyFrame(bt.getCurrentScene(),nTimeMovie);
+			listModel.set( nInd, newKeyFrame );
+			kfAnim.updateTransitionTimeline();
+		}
+	}
+	void deleteSelectedKeyFrame()
+	{
+		int nInd = jlist.getSelectedIndex();
+		if(nInd>=0)
+		{
+			listModel.remove( nInd );
+			updateKeyIndices();
+			updateKeyMarks();
+			kfAnim.updateTransitionTimeline();
+			//updateScene();
+		}
 	}
 
 	@Override

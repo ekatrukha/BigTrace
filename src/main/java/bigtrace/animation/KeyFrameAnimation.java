@@ -89,24 +89,15 @@ public class KeyFrameAnimation < T extends RealType< T > & NativeType< T > >
 		}
 		
 		double fraction;
-		int nIniFrame;
-		int nNextFrame;
 		double dNorm;
 		if(nIndex >= timeIntervals.size()-1)
 		{
 			nIndex = timeIntervals.size()-1;
-			dNorm = (nTotalTime-timeIntervals.get( nIndex-1 ));
-			//fraction = (fTimePoint-timeIntervals.get( nIndex-1 ));
-			nIniFrame = fullList.get(nIndex-1).getScene().getTimeFrame();
-			nNextFrame = fullList.get(fullList.size()-1).getScene().getTimeFrame();
-			
+			dNorm = (nTotalTime-timeIntervals.get( nIndex-1 ));			
 		}
 		else
 		{
-			nIniFrame = fullList.get(nIndex-1).getScene().getTimeFrame();
-			nNextFrame = fullList.get(nIndex).getScene().getTimeFrame();
 			dNorm  = (timeIntervals.get( nIndex )-timeIntervals.get( nIndex-1 ));
-			//fraction  = (fTimePoint-timeIntervals.get( nIndex-1 ))/(timeIntervals.get( nIndex )-timeIntervals.get( nIndex-1 ));
 		}
 		if(dNorm<0.00000001)
 		{
@@ -116,9 +107,24 @@ public class KeyFrameAnimation < T extends RealType< T > & NativeType< T > >
 		{
 			fraction = (fTimePoint-timeIntervals.get( nIndex-1 ))/dNorm;
 		}
-		int nTimeFrame = ( int ) ( nIniFrame + Math.round( fraction* (nNextFrame-nIniFrame)) );
-		final AffineTransform3D finalAT = viewAnimate.get(nIndex-1).get( fraction );
 		
-		return new Scene(finalAT,keyFrames.get( 0 ).scene.getClipBox(), nTimeFrame );
+		//time frame
+		int nIniFrame = fullList.get(nIndex-1).getScene().getTimeFrame();
+		int nNextFrame = fullList.get(nIndex).getScene().getTimeFrame();
+		int nTimeFrame = ( int ) ( nIniFrame + Math.round( fraction* (nNextFrame-nIniFrame)) );
+		// transform
+		final AffineTransform3D finalAT = viewAnimate.get(nIndex-1).get( fraction );
+		//clipping
+		long [][] iniClip = fullList.get(nIndex-1).getScene().getClipBox();
+		long [][] nextClip = fullList.get(nIndex).getScene().getClipBox();
+		
+		long [][] clipBox = new long [2][3];
+		for (int i=0;i<2;i++)
+			for (int j=0;j<3;j++)
+			{
+				clipBox[i][j] = iniClip[i][j] + Math.round( fraction* (nextClip[i][j]-iniClip[i][j]));
+			}
+		
+		return new Scene(finalAT, clipBox, nTimeFrame );
 	}
 }
