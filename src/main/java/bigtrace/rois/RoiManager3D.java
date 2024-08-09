@@ -259,6 +259,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		//ct.gridx++;
 		ct.weightx = 0.01;
 		panTracing.add(new JLabel(), ct);
+		ct.weightx = 0.0;
 		ct.gridx++;
 		panTracing.add(roiImport,ct);
 		ct.gridx++;
@@ -370,16 +371,17 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 
 		// a solution for now
-		butDelete.setMinimumSize(butProperties.getPreferredSize());
-		butDelete.setPreferredSize(butProperties.getPreferredSize());
-		butRename.setMinimumSize(butProperties.getPreferredSize());		 
-		butRename.setPreferredSize(butProperties.getPreferredSize());
-		butDeselect.setMinimumSize(butProperties.getPreferredSize());		 
-		butDeselect.setPreferredSize(butProperties.getPreferredSize());
-		butShowAll.setMinimumSize(butProperties.getPreferredSize());		 
-		butShowAll.setPreferredSize(butProperties.getPreferredSize());
-		butROIGroups.setMinimumSize(butProperties.getPreferredSize());
-		butROIGroups.setPreferredSize(butProperties.getPreferredSize());
+		Dimension butDim = butProperties.getPreferredSize();
+		butDelete.setMinimumSize(butDim);
+		butDelete.setPreferredSize(butDim);
+		butRename.setMinimumSize(butDim);		 
+		butRename.setPreferredSize(butDim);
+		butDeselect.setMinimumSize(butDim);		 
+		butDeselect.setPreferredSize(butDim);
+		butShowAll.setMinimumSize(butDim);		 
+		butShowAll.setPreferredSize(butDim);
+		butROIGroups.setMinimumSize(butDim);
+		butROIGroups.setPreferredSize(butDim);
 
 		JPanel panChannel = new JPanel(new GridBagLayout());
 		panChannel.setBorder(new PanelTitle(""));
@@ -514,7 +516,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 switch (nRoiType)
 		 {
 		 case Roi3D.POINT:
-			 newRoi= new Point3D(groups.get(nActiveGroup), nTimePoint);
+			 newRoi = new Point3D(groups.get(nActiveGroup), nTimePoint);
 			 break;
 		 case Roi3D.POLYLINE:
 			 newRoi = new PolyLine3D(groups.get(nActiveGroup),nTimePoint);

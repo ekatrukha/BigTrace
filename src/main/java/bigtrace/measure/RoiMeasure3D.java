@@ -202,6 +202,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		cr.gridx++;
 		cr.weightx = 0.01;
 		panLineTools.add(new JLabel(), cr);
+		cr.weightx = 0.0;
 		cr.gridx++;
 		panLineTools.add(butSettings,cr);
 

@@ -65,7 +65,7 @@ import btbvv.btuitools.BvvGamma;
 import btbvv.btuitools.GammaConverterSetup;
 import btbvv.core.VolumeViewerPanel;
 import btbvv.core.util.MatrixMath;
-
+import bigtrace.animation.Scene;
 import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
@@ -1458,6 +1458,24 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		}	
 	}
 
+	/** get current scene **/
+	public Scene getCurrentScene()
+	{
+		final AffineTransform3D transform = new AffineTransform3D();
+		viewer.state().getViewerTransform(transform);
+		return new Scene(transform, BigTraceData.nDimCurr, btData.nCurrTimepoint);
+	} 
+	public void setScene(final Scene scene)
+	{
+		
+		viewer.state().setViewerTransform( scene.getViewerTransform() );
+		int nTimePoint = scene.getTimePoint();
+		if(nTimePoint<BigTraceData.nNumTimepoints)
+		{
+			viewer.state().setCurrentTimepoint(nTimePoint);
+		}
+		btPanel.clipPanel.setBoundingBox( scene.getClipBox());
+	} 
 
 	@Override
 	public void windowActivated(WindowEvent arg0) {

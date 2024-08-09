@@ -100,6 +100,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		cr.gridx++;
 		cr.weightx = 0.01;
 		panTrackTools.add(new JLabel(), cr);
+		cr.weightx = 0.0;
 		cr.gridx++;
 		panTrackTools.add(butSettings,cr);
 		
