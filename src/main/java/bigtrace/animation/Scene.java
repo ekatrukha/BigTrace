@@ -6,14 +6,14 @@ public class Scene
 {
 	final AffineTransform3D viewerTransform;
 	final long [][] clipBox;	
-	int nTimePoint;
+	int nTimeFrame;
 	
-	public Scene(final AffineTransform3D viewerTransform_, final long [][] clipBox_, int nTimePoint_)
+	public Scene(final AffineTransform3D viewerTransform_, final long [][] clipBox_, int nTimeFrame_)
 	{
 		viewerTransform = new AffineTransform3D();
 		viewerTransform.set( viewerTransform_ );
 		clipBox = new long [2][3];
-		nTimePoint = nTimePoint_;
+		nTimeFrame = nTimeFrame_;
 		for(int i=0;i<2;i++)
 			for(int j=0;j<3;j++)
 				clipBox[i][j]=clipBox_[i][j];
@@ -29,9 +29,9 @@ public class Scene
 		return clipBox;
 	}
 	
-	public int getTimePoint()
+	public int getTimeFrame()
 	{
-		return nTimePoint;
+		return nTimeFrame;
 	}
 	
 }

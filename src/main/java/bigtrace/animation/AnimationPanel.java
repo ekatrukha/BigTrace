@@ -32,6 +32,8 @@ import javax.swing.JSlider;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -43,7 +45,7 @@ import bigtrace.BigTrace;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 
-public class AnimationPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener,  NumberField.Listener, ActionListener
+public class AnimationPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener,  NumberField.Listener, ChangeListener, ActionListener
 {
 	final BigTrace<T> bt;
 	
@@ -135,6 +137,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		
 		timeSlider.setPaintTicks(true);
 		timeSlider.setPaintLabels(true);
+		timeSlider.addChangeListener( this );
 
 		//timeSlider.setMinimumSize(new Dimension(50, 1250));
 		//timeSlider.setPreferredSize(new Dimension(50, 1250));
@@ -176,6 +179,8 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 					// Double-click detected
 					//int index = jlist.locationToIndex(evt.getPoint());
 					bt.setScene( jlist.getSelectedValue().getScene());
+					int nPos = Math.round( tsSpan*(jlist.getSelectedValue().fMovieTimePoint/kfAnim.getTotalTime()));
+					timeSlider.setValue( nPos);
 					//focusOnRoi(rois.get(index));
 				} 
 				if (SwingUtilities.isRightMouseButton(evt))
@@ -187,7 +192,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		
 		
 		listScroller = new JScrollPane(jlist);
-		 listScroller.setPreferredSize(new Dimension(170, 250));
+		listScroller.setPreferredSize(new Dimension(170, 250));
 		//listScroller.setMinimumSize(new Dimension(170, 250));
 		
 		
@@ -293,12 +298,17 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	@Override
 	public void actionPerformed( ActionEvent e )
 	{
-		//LOAD ROIS
+		//add keyframe
 		if(e.getSource() == butAdd)
 		{
 			addCurrentKeyFrame();
 		}
-		
+		//delete keyframe
+		if(e.getSource() == butDelete)
+		{
+			deleteSelectedKeyFrame();
+		}
+
 	}
 
 	@Override
@@ -307,12 +317,49 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 
 		
 	}
+	
+	void deleteSelectedKeyFrame()
+	{
+		int nInd = jlist.getSelectedIndex();
+		if(nInd>=0)
+		{
+			listModel.remove( nInd );
+			updateKeyIndices();
+			updateKeyMarks();
+			kfAnim.updateTransitionTimeline();
+			updateScene();
+		}
+	}
 
 	void addCurrentKeyFrame()
 	{
-		float nTimeMovie =  ((float)timeSlider.getValue()/(float)(tsSpan+1))*kfAnim.getTotalTime();
-		listModel.addElement( new KeyFrame(bt.getCurrentScene(),nTimeMovie));
+		float nTimeMovie =  ((float)timeSlider.getValue()/(float)(tsSpan))*kfAnim.getTotalTime();
+		KeyFrame newKeyFrame = new KeyFrame(bt.getCurrentScene(),nTimeMovie);
+		if(listModel.size()==0)
+		{
+			listModel.addElement(newKeyFrame);
+		}
+		else
+		{
+			boolean bAdded = false;
+			for(int i = 0; i<listModel.size();i++)
+			{
+				if(listModel.get( i ).fMovieTimePoint>nTimeMovie)
+				{
+					listModel.add(i,newKeyFrame);
+					bAdded = true;
+					break;
+				}
+			}
+			if(!bAdded)
+			{
+				listModel.addElement(newKeyFrame);
+			}
+		}
+		updateKeyIndices();
 		updateKeyMarks();
+		kfAnim.updateTransitionTimeline();
+		
 	}
 
 	@Override
@@ -332,6 +379,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			}
 		}
 		updateKeyMarks();
+		kfAnim.updateTransitionTimeline();
 	}
 	
 	public void setSliderTotalTime()
@@ -373,6 +421,27 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		if(firstDigit<=5)
 			return ( int ) ( 5*Math.pow( 10, nDigits-1 ) );
 		return ( int ) ( Math.pow( 10, nDigits ) );
+		
+	}
+	
+
+	void updateKeyMarks()
+	{
+		ArrayList<Float> keyPoints = new ArrayList<>();
+		for (int i=0;i<listModel.size();i++)
+		{
+			keyPoints.add( listModel.get( i ).fMovieTimePoint/ kfAnim.getTotalTime());
+		}
+		keyMarks.setkeyPoints( keyPoints );
+		keyMarks.repaint();
+	}
+	
+	void updateKeyIndices()
+	{
+		for(int i=0;i<listModel.size(); i++)
+		{
+			listModel.get( i ).nIndex = i;
+		}
 		
 	}
 	
@@ -455,14 +524,22 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 
 	    }
 	}
-	void updateKeyMarks()
-	{
-		ArrayList<Float> keyPoints = new ArrayList<>();
-		for (int i=0;i<listModel.size();i++)
+
+	void updateScene()
+	{			
+		if(listModel.size()>0)
 		{
-			keyPoints.add( listModel.get( i ).fMovieTimePoint/ kfAnim.getTotalTime());
+			float fTimePoint = (kfAnim.getTotalTime())*(timeSlider.getValue()/(float)tsSpan);
+			bt.setScene( kfAnim.getScene( fTimePoint ) );
 		}
-		keyMarks.setkeyPoints( keyPoints );
-		keyMarks.repaint();
+	}
+	@Override
+	public void stateChanged( ChangeEvent e )
+	{
+		if(e.getSource()==timeSlider)
+		{
+			updateScene();
+		}
+		
 	}
 }
