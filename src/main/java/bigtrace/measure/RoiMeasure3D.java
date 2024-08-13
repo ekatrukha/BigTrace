@@ -1598,6 +1598,10 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			{				
 				dialExtractROIBox(bt.roiManager.rois.get(jlist.getSelectedIndex()));
 			}
+			else
+			{
+				bt.btPanel.progressBar.setString("Please select a ROI first.");
+			}
 		}
 		
 		//Straignten
@@ -1609,7 +1613,16 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 					{
 						dialStraightenCurve((AbstractCurve3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					}
+					else
+					{
+						bt.btPanel.progressBar.setString("ROI should be a polyline or trace.");
+					}
 			}
+			else
+			{
+				bt.btPanel.progressBar.setString("Please select a curve-type ROI first.");
+			}
+			
 		}
 		//Slice volume
 		if(e.getSource() == butSlice)
@@ -1633,6 +1646,10 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 					temp.add(bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					measureROIs(temp, false);
 				}
+			}
+			else
+			{
+				bt.btPanel.progressBar.setString("Please select a ROI first.");
 			}
 		}
 		//Measure all

@@ -8,6 +8,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
+
+import javax.swing.SwingWorker;
 
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
@@ -23,7 +26,6 @@ import net.imglib2.img.ImgView;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Util;
@@ -32,6 +34,7 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 import bigtrace.BigTrace;
+import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.geometry.Plane3D;
@@ -44,10 +47,17 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import ij.measure.Calibration;
 
-public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > 
+public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
+	
+	private String progressState;
+	
+	public AbstractCurve3D inputROI;
+	
 	/** total number of intermediate frames **/
-	int nFrames = 100;
+	public int nFrames = 100;
+	
+	public int nUnCoilTask = 0;
 	
 	/** interval containing all ROIs **/
 	FinalInterval allInt;
@@ -60,23 +70,103 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > >
 	/** frames of unbending ROIs **/
 	ArrayList <ArrayList<RealPoint>> alSegments;
 
-	Img<T> template;
+	Img<T> template = null;
 	
 	boolean bAddROIs = false;
 	
 	ArrayList <AbstractCurve3D> alRois;
+	double [] finalOrientation = null;
+	public String sSaveFolderPath;
 	
 	public UnCurveAnimation(final BigTrace<T> bt_)
 	{
 		bt = bt_;	
 	}
+	@Override
+	public String getProgressState() 
+	{		
+		return progressState;
+	}
 	
+	@Override
+	public void setProgressState(String state_) 
+	{		
+		progressState = state_;		
+	}
+	
+	@Override
+	protected Void doInBackground() throws Exception 
+	{
+        bt.bInputLock = true;
+        bt.roiManager.setLockMode(true);
+        
+
+        try 
+        {
+        	Thread.sleep(1);
+        } 
+        catch (InterruptedException ignore) {}
+        setProgress(1);
+        setProgressState("Creating uncoil animation...");
+        
+		//generate only rois for show
+		if(nUnCoilTask==0)
+		{
+			bAddROIs = true;
+			generateROIs(inputROI);
+			
+		}
+		//generate ROIs and volumes
+		if(nUnCoilTask == 1)
+		{
+			bAddROIs = true;
+			//need to edit ROIs to fit the new volumes
+			generateROIs(inputROI);
+			generateAllVolumes(sSaveFolderPath);
+		}
+		//generate only volumes
+		if(nUnCoilTask==2)
+		{
+			bAddROIs = false;
+			generateROIs(inputROI);
+			generateAllVolumes(sSaveFolderPath);
+		}
+		return null;
+		
+	}
+	
+    /*
+     * Executed in event dispatching thread
+     */
+    @Override
+    public void done() 
+    {
+    	//see if we have some errors
+    	try {
+    		get();
+    	} 
+    	catch (ExecutionException e) {
+    		e.getCause().printStackTrace();
+    		String msg = String.format("Unexpected problem during straightening animation generation: %s", 
+    				e.getCause().toString());
+    		System.out.println(msg);
+    	} catch (InterruptedException e) {
+    		// Process e here
+    	}
+		//unlock user interaction
+    	bt.bInputLock = false;
+        bt.roiManager.setLockMode(false);
+
+    }
+    
 	/** Given input ROI (of AbstractCurve type), 
 	generates output ROIs that gradually are straightened.
 	They are added to ROI manager at subsequent time frames **/
 	public void generateROIs(final AbstractCurve3D firstLine)
 	{
 		
+        setProgress(0);
+        setProgressState("Generating ROIs...");
 		alRois = new ArrayList<>();
 		alRois.add( firstLine );
 		
@@ -105,9 +195,21 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > >
 		//specify the final starting end orientation.
 		// it is a vector added in the beginning,
 		// which specifies, where the final straight line ROI is gonna point.
-		double [] finalOrientation = new double[] {-1.0,0.,0.0};
 		double [] iniOrientP = segment.get( 0 ).positionAsDoubleArray();
-		LinAlgHelpers.subtract( iniOrientP, finalOrientation, iniOrientP );
+		if(finalOrientation == null)
+		{
+			finalOrientation = new double[3];
+			double [] nextP = segment.get( 1 ).positionAsDoubleArray();
+			LinAlgHelpers.subtract( nextP,iniOrientP, finalOrientation);
+			LinAlgHelpers.normalize( finalOrientation );
+		}
+		else
+		{
+			//just in case
+			LinAlgHelpers.normalize( finalOrientation );			
+		}		
+		
+		LinAlgHelpers.subtract( iniOrientP, finalOrientation, iniOrientP );		
 		
 		RealPoint iniOrientRP = new RealPoint(iniOrientP);	
 		
@@ -133,9 +235,11 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > >
 		double [] moved = new double [3];
 		double [] rotated = new double [3];
 		
-		for (int i=1; i<20; i++)
-		//for (int i=1; i<nFrames ; i++)
+		//for (int i=1; i<20; i++)
+		for (int i=1; i<nFrames ; i++)
 		{
+			setProgress(100*i/(nFrames-1));
+			setProgressState("generating ROI ("+Integer.toString(i+1)+"/"+Integer.toString(nFrames)+")");
 			ArrayList<RealPoint> segment_new = new ArrayList<>();
 			for (int nPoint = 0; nPoint<nTotPoints; nPoint++)
 			{
@@ -187,15 +291,15 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > >
 			alFrames.add( newFrame );
 			alSegments.add(  Roi3D.scaleGlob(segment_new,BigTraceData.globCal) );
 			//LineTrace3D newROI = addROIsegment(bt, segment_new, i, ( int ) firstLine.getLineThickness());
-			LineTrace3D newROI = addROIsegment(bt, segment_new,0, ( int ) firstLine.getLineThickness(), bAddROIs);
+			LineTrace3D newROI = addROIsegment(bt, segment_new,firstLine.getTimePoint(), ( int ) firstLine.getLineThickness(), bAddROIs);
 			alRois.add( newROI );
 			allInt = Intervals.union( allInt, newROI.getBoundingBox() );
 		}
-		for (int d=0;d<3; d++)
-		{
-			System.out.println( allInt.dimension( d ) );
-		}
-		
+//		for (int d=0;d<3; d++)
+//		{
+//			System.out.println( allInt.dimension( d ) );
+//		}
+//		
 		
 	}
 	
@@ -232,13 +336,14 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > >
 	public boolean generateSingleVolume(int nInd, String sOutputPath)
 	{
 		
-		FinalInterval test = Intervals.expand( alRois.get(nInd).getBoundingBox(),2);
+		FinalInterval roiIntervBox = Intervals.expand( alRois.get(nInd).getBoundingBox(),2);
+		Intervals.addDimension( roiIntervBox, 0, bt.btData.nTotalChannels-1 );
 		//FinalInterval test = Intervals.expand( allInt,2);
 	
 		RandomAccessibleInterval<T> all_RAI =  bt.btData.getAllDataRAI();
 		
-		Img<T> out1 = Util.getSuitableImgFactory(test, Util.getTypeFromInterval(all_RAI) ).create(test);
-		IntervalView<T> outS = Views.translate( out1, test.minAsLongArray() );
+		Img<T> out1 = Util.getSuitableImgFactory(roiIntervBox, Util.getTypeFromInterval(all_RAI) ).create(roiIntervBox);
+		IntervalView<T> outS = Views.translate( out1, roiIntervBox.minAsLongArray() );
 		
 		RealRandomAccessible<T> interpolate = Views.interpolate( Views.extendZero(all_RAI), bt.btData.nInterpolatorFactory);
 		RealRandomAccess<T> ra = interpolate.realRandomAccess();
@@ -333,13 +438,14 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > >
 	public boolean generateSingleVolumeTemplate(int nInd, String sOutputPath)
 	{
 		
-		FinalInterval test = Intervals.expand( alRois.get(nInd).getBoundingBox(),2);
+		FinalInterval roiIntervBox = Intervals.expand( alRois.get(nInd).getBoundingBox(),2);
+		Intervals.addDimension( roiIntervBox, 0, bt.btData.nTotalChannels-1 );
 		//FinalInterval test = Intervals.expand( allInt,2);
 	
 		RandomAccessibleInterval<T> all_RAI =  bt.btData.getAllDataRAI();
 		
-		Img<T> out1 = Util.getSuitableImgFactory(test, Util.getTypeFromInterval(all_RAI) ).create(test);
-		IntervalView<T> outS = Views.translate( out1, test.minAsLongArray() );
+		Img<T> out1 = Util.getSuitableImgFactory(roiIntervBox, Util.getTypeFromInterval(all_RAI) ).create(roiIntervBox);
+		IntervalView<T> outS = Views.translate( out1, roiIntervBox.minAsLongArray() );
 		
 		RealRandomAccessible<T> interpolate = Views.interpolate( Views.extendZero(all_RAI), bt.btData.nInterpolatorFactory);
 		RealRandomAccess<T> ra = interpolate.realRandomAccess();
@@ -436,12 +542,24 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > >
 	
 	public void generateAllVolumes(String sOutputPath)
 	{
+		
+        setProgress(0);
+        setProgressState("Generating volumes...");
 		//for(int i=0;i<20;i++)
 		for(int i=0;i<nFrames;i++)
 		{
-			generateSingleVolumeTemplate(i, sOutputPath);
-			//generateSingleVolume(i);
-			IJ.log( "Saved volume "+Integer.toString( i+1 )+" from "+Integer.toString( nFrames )+"." );
+			setProgress(100*i/(nFrames-1));
+			setProgressState("generating frame ("+Integer.toString(i+1)+"/"+Integer.toString(nFrames)+")");
+			if(template==null)
+			{
+				generateSingleVolume(i, sOutputPath);				
+			}
+			else
+			{
+				generateSingleVolumeTemplate(i, sOutputPath);
+			}
+		
+			//IJ.log( "Saved volume "+Integer.toString( i+1 )+" from "+Integer.toString( nFrames )+"." );
 		}
 	}
 	
@@ -510,51 +628,51 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > >
 	
 
 	
-	public static void main( final String[] args )
-	{
-		new ImageJ();
-		BigTrace<UnsignedShortType> bt = new BigTrace<>(); 
-		
-		//bt.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/HyperStack.tif");
-		bt.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/Chlorophis_irregularis-XYZ_divby8.tif");
-		//bt.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/Chlorophis_irregularis-XYZ_divby8_8bit_3fr.tif");
-
-		try
-		{
-			bt.btMacro.macroLoadROIs( "/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/Chlorophis_irregularis-XYZ_divby8.tif_btrois.csv", "Clean" );
-			bt.btMacro.macroShapeInterpolation( "Spline", 20 );
-		}
-		catch ( InterruptedException exc )
-		{
-			// TODO Auto-generated catch block
-			exc.printStackTrace();
-		}
-		//wait to load things
-		while(bt.bInputLock)
-		{
-			try
-			{
-				Thread.sleep(100);
-			}
-			catch ( InterruptedException exc )
-			{
-				// TODO Auto-generated catch block
-				exc.printStackTrace();
-			}
-		}
-
-		LineTrace3D firstLine = (LineTrace3D) bt.roiManager.rois.get( 0 );
-		
-		UnCurveAnimation<UnsignedShortType> unBend = new UnCurveAnimation<>(bt);
-		
-		unBend.generateROIs( firstLine );	
-		//unBend.testFrames();
-		unBend.loadTemplate( "/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/clean_X_trace172232825_straight.tif" );
-		
-		unBend.generateAllVolumes("/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/out/");
-		//unBend.generateSingleVolume(1);
-		
-	}
+//	public static void main( final String[] args )
+//	{
+//		new ImageJ();
+//		BigTrace<UnsignedShortType> bt = new BigTrace<>(); 
+//		
+//		//bt.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/HyperStack.tif");
+//		bt.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/Chlorophis_irregularis-XYZ_divby8.tif");
+//		//bt.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/Chlorophis_irregularis-XYZ_divby8_8bit_3fr.tif");
+//
+//		try
+//		{
+//			bt.btMacro.macroLoadROIs( "/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/Chlorophis_irregularis-XYZ_divby8.tif_btrois.csv", "Clean" );
+//			bt.btMacro.macroShapeInterpolation( "Spline", 20 );
+//		}
+//		catch ( InterruptedException exc )
+//		{
+//			// TODO Auto-generated catch block
+//			exc.printStackTrace();
+//		}
+//		//wait to load things
+//		while(bt.bInputLock)
+//		{
+//			try
+//			{
+//				Thread.sleep(100);
+//			}
+//			catch ( InterruptedException exc )
+//			{
+//				// TODO Auto-generated catch block
+//				exc.printStackTrace();
+//			}
+//		}
+//
+//		LineTrace3D firstLine = (LineTrace3D) bt.roiManager.rois.get( 0 );
+//		
+//		UnCurveAnimation<UnsignedShortType> unBend = new UnCurveAnimation<>(bt);
+//		
+//		unBend.generateROIs( firstLine );	
+//		//unBend.testFrames();
+//		unBend.loadTemplate( "/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/clean_X_trace172232825_straight.tif" );
+//		
+//		unBend.generateAllVolumes("/home/eugene/Desktop/projects/BigTrace/BigTrace_progress/20240726_bending/snake/out/");
+//		//unBend.generateSingleVolume(1);
+//		
+//	}
 	
 
 }

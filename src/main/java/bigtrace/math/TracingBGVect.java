@@ -24,7 +24,7 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 
 	@Override
 	public void setProgressState(String state_) {
-		progressState=state_;
+		progressState = state_;
 	}
 
 	@Override

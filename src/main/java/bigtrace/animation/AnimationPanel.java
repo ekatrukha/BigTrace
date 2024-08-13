@@ -9,6 +9,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -17,14 +18,19 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
@@ -40,17 +46,23 @@ import javax.swing.event.ListSelectionListener;
 
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.LinAlgHelpers;
 
 import bigtrace.BigTrace;
+import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.rois.AbstractCurve3D;
+import bigtrace.rois.Roi3D;
+import ij.IJ;
+import ij.Prefs;
 
 public class AnimationPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener,  NumberField.Listener, ChangeListener, ActionListener
 {
 	final BigTrace<T> bt;
 	
 	final JButton butRecord;
-	//final JButton butUncoil;
+	final JButton butUncoil;
 	final JButton butSettings;
 	final JSlider timeSlider;
 	
@@ -97,6 +109,12 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		butRecord.setToolTipText("Record video");
 		butRecord.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/uncoil.png");
+		tabIcon = new ImageIcon(icon_path);		
+		butUncoil = new JButton(tabIcon);
+		butUncoil.setToolTipText("Straighten animation");
+		butUncoil.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
+		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
 		tabIcon = new ImageIcon(icon_path);
 		butSettings = new JButton(tabIcon);
@@ -104,6 +122,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		butSettings.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 		
 		butRecord.addActionListener( this );
+		butUncoil.addActionListener( this );
 		butSettings.addActionListener( this );
 				
 		cr.gridx=0;
@@ -114,6 +133,11 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
 		sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
 		panAnimTools.add(sp,cr);
+		
+		//uncoil
+		cr.gridx++;
+		panAnimTools.add(butUncoil,cr);
+		
 		//filler
 		cr.gridx++;
 		cr.weightx = 0.01;
@@ -314,6 +338,25 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			deleteSelectedKeyFrame();
 		}
 		
+		if(e.getSource() == butUncoil)
+		{
+			if (bt.roiManager.jlist.getSelectedIndex()>-1)
+			{	
+				Roi3D selROI = bt.roiManager.rois.get(bt.roiManager.jlist.getSelectedIndex());
+				if(selROI.getType()==Roi3D.LINE_TRACE || selROI.getType()==Roi3D.POLYLINE)
+				{
+					dialUnCoilAnimation(selROI);
+				}
+				else
+				{
+					bt.btPanel.progressBar.setString("ROI should be a polyline or trace.");
+				}
+			}
+			else
+			{
+				bt.btPanel.progressBar.setString("Please select a curve-type ROI first.");
+			}
+		}
 	}
 
 	@Override
@@ -363,10 +406,12 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		{
 			float nTimeMovie = listModel.get( nInd ).fMovieTimePoint;
 			KeyFrame newKeyFrame = new KeyFrame(bt.getCurrentScene(),nTimeMovie);
+			newKeyFrame.nIndex = nInd;
 			listModel.set( nInd, newKeyFrame );
 			kfAnim.updateTransitionTimeline();
 		}
 	}
+	
 	void deleteSelectedKeyFrame()
 	{
 		int nInd = jlist.getSelectedIndex();
@@ -545,7 +590,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 
 	void updateScene()
 	{			
-		if(listModel.size()>0)
+		if(listModel.size()>1)
 		{
 			float fTimePoint = (kfAnim.getTotalTime())*(timeSlider.getValue()/(float)tsSpan);
 			bt.setScene( kfAnim.getScene( fTimePoint ) );
@@ -558,6 +603,151 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		{
 			updateScene();
 		}
+		
+	}
+	
+	public void dialUnCoilAnimation(final Roi3D roiIn)
+	{
+		
+		int nUnCoilTask;
+		int nTotFramesUnCoil;
+		boolean bFinalVector;
+		boolean bCleanVolume;
+		
+		final JPanel unCoilSettings = new JPanel();
+		unCoilSettings.setLayout(new GridBagLayout());
+		
+		GridBagConstraints cd = new GridBagConstraints();
+		GBCHelper.alighLeft(cd);
+		
+		
+		final String[] sUnCoilTask = { "Generate ROIs only", "Generate ROIs and volumes", "Generate only volumes"};
+		JComboBox<String> cbUnCoilTask = new JComboBox<>(sUnCoilTask);
+		cbUnCoilTask.setSelectedIndex((int)Prefs.get("BigTrace.nUnCoilTask", 0));
+		cd.gridx=0;
+		cd.gridy=0;	
+		unCoilSettings.add(new JLabel("Straighten/Uncoil task:"),cd);
+		cd.gridx++;
+		unCoilSettings.add(cbUnCoilTask, cd);	
+		
+		final NumberField nfTotFrames = new NumberField(4);
+		nfTotFrames.setIntegersOnly(true);
+		nfTotFrames.setText(Integer.toString((int)Prefs.get("BigTrace.nTotFramesUnCoil", 60)));
+		cd.gridy++;
+		cd.gridx=0;
+		unCoilSettings.add(new JLabel("Total number of frames (>=2):"),cd);
+		cd.gridx++;
+		unCoilSettings.add(nfTotFrames,cd);
+
+		JCheckBox cbFinalVector = new JCheckBox();
+		cbFinalVector.setSelected( Prefs.get("BigTrace.bFinalVector", false) );
+		cd.gridy++;
+		cd.gridx=0;
+		unCoilSettings.add(new JLabel("Specify final orientation vector?"),cd);
+		cd.gridx++;
+		unCoilSettings.add(cbFinalVector,cd);
+		
+		JCheckBox cbAddCleanVolume = new JCheckBox();
+		cbAddCleanVolume.setSelected( Prefs.get("BigTrace.bCleanVolume", false) );
+		cd.gridy++;
+		cd.gridx=0;
+		unCoilSettings.add(new JLabel("Use modified straight volume?"),cd);
+		cd.gridx++;
+		unCoilSettings.add(cbAddCleanVolume,cd);
+		
+		int reply = JOptionPane.showConfirmDialog(null, unCoilSettings, "Straighten animation", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			nUnCoilTask = cbUnCoilTask.getSelectedIndex();
+			Prefs.set("BigTrace.nUnCoilTask", nUnCoilTask);
+			
+			nTotFramesUnCoil = Math.max( 2,Math.abs( Integer.parseInt(nfTotFrames.getText())));
+			Prefs.set("BigTrace.nTotFramesUnCoil", nTotFramesUnCoil);
+			
+			bFinalVector = cbFinalVector.isSelected();
+			Prefs.set("BigTrace.bFinalVector", bFinalVector);
+			
+			bCleanVolume = cbAddCleanVolume.isSelected();
+			Prefs.set("BigTrace.bCleanVolume", bCleanVolume);
+			
+			double [] dFinalOrientation = null;
+			
+			if(bFinalVector)
+			{
+				dFinalOrientation =  dialFinalVector();
+				if(dFinalOrientation == null)
+				{
+					bt.btPanel.progressBar.setString("straightening animation aborted.");
+					return;
+				}
+			}
+			
+			//if saving, ask for the path
+			String sSaveDir = "";
+			if(nUnCoilTask > 0)
+			{
+				sSaveDir = IJ.getDirectory("Save animation TIFs to..");
+				if(sSaveDir == null)
+				{
+					bt.btPanel.progressBar.setString("straightening animation aborted.");
+					return;
+				}
+			}
+			
+			UnCurveAnimation<T> unAnim = new UnCurveAnimation<>(bt);
+			unAnim.inputROI = ( AbstractCurve3D ) roiIn;
+			unAnim.nFrames = nTotFramesUnCoil;
+			unAnim.nUnCoilTask = nUnCoilTask;
+			unAnim.finalOrientation = dFinalOrientation;
+			unAnim.sSaveFolderPath = sSaveDir;
+			unAnim.execute();
+		}
+	}
+	public double[] dialFinalVector()
+	{
+		JPanel pFinalVector = new JPanel(new GridLayout(0,2,6,0));
+		double [] dFinalVector = new double[3];
+		ArrayList<NumberField> nfCoalignVector = new ArrayList<>();
+		int d;
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
+		for(d=0;d<3;d++)
+		{
+			nfCoalignVector.add( new NumberField(4));
+			nfCoalignVector.get(d).setText(df.format(Prefs.get("BigTrace.finalVec"+Integer.toString(d),1.0)));
+		}
+		pFinalVector.add(new JLabel("X coord: "));
+		pFinalVector.add(nfCoalignVector.get(0));
+		pFinalVector.add(new JLabel("Y coord: "));
+		pFinalVector.add(nfCoalignVector.get(1));
+		pFinalVector.add(new JLabel("Z coord: "));
+		pFinalVector.add(nfCoalignVector.get(2));
+		
+		int reply = JOptionPane.showConfirmDialog(null, pFinalVector, "Coalignment vector coordinates", 
+		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			double [] inVector = new double[3];
+			for(d=0;d<3;d++)
+				inVector[d] = Double.parseDouble(nfCoalignVector.get(d).getText());
+			double len = LinAlgHelpers.length(inVector);
+			if(len<0.000001)
+			{
+				IJ.error("Vector length should be more than zero!");
+				return null;
+			}
+			LinAlgHelpers.normalize(inVector);
+			for(d=0;d<3;d++)
+			{
+				dFinalVector[d] = inVector[d];
+				Prefs.set("BigTrace.finalVec"+Integer.toString(d), dFinalVector[d]);				
+			}
+			return dFinalVector;
+			
+		}
+		return null;
 		
 	}
 }
