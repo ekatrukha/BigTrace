@@ -1,8 +1,13 @@
 package bigtrace.animation;
 
+import io.scif.FormatException;
+import io.scif.Metadata;
+import io.scif.SCIFIO;
 import io.scif.codec.CompressionType;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgSaver;
+import io.scif.img.SCIFIOImgPlus;
+import io.scif.io.location.TestImgLocation;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 import javax.swing.SwingWorker;
 
 import net.imagej.ImgPlus;
+import net.imagej.ImgPlusMetadata;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imglib2.FinalInterval;
@@ -32,6 +38,8 @@ import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
+
+import org.scijava.io.location.Location;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
@@ -77,6 +85,7 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 	ArrayList <AbstractCurve3D> alRois;
 	double [] finalOrientation = null;
 	public String sSaveFolderPath;
+	private static final SCIFIO scifio = new SCIFIO();
 	
 	public UnCurveAnimation(final BigTrace<T> bt_)
 	{
@@ -300,7 +309,8 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 //			System.out.println( allInt.dimension( d ) );
 //		}
 //		
-		
+		//add channel dimension to the final interval
+		allInt = Intervals.addDimension( allInt, 0, bt.btData.nTotalChannels-1 );
 	}
 	
 	public void testRMFrames()
@@ -333,11 +343,11 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		
 	}
 	
-	public boolean generateSingleVolume(int nInd, String sOutputPath)
+	public boolean generateSingleVolume(int nInd, String sOutputPath) throws IOException, FormatException
 	{
 		
 		FinalInterval roiIntervBox = Intervals.expand( alRois.get(nInd).getBoundingBox(),2);
-		Intervals.addDimension( roiIntervBox, 0, bt.btData.nTotalChannels-1 );
+		roiIntervBox = Intervals.addDimension( roiIntervBox, 0, bt.btData.nTotalChannels-1 );
 		//FinalInterval test = Intervals.expand( allInt,2);
 	
 		RandomAccessibleInterval<T> all_RAI =  bt.btData.getAllDataRAI();
@@ -345,7 +355,9 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		Img<T> out1 = Util.getSuitableImgFactory(roiIntervBox, Util.getTypeFromInterval(all_RAI) ).create(roiIntervBox);
 		IntervalView<T> outS = Views.translate( out1, roiIntervBox.minAsLongArray() );
 		
-		RealRandomAccessible<T> interpolate = Views.interpolate( Views.extendZero(all_RAI), bt.btData.nInterpolatorFactory);
+		// get only timePoint of the ROI
+		IntervalView< T > data_read = Views.hyperSlice( all_RAI, 3, inputROI.getTimePoint() );
+		RealRandomAccessible<T> interpolate = Views.interpolate( Views.extendZero(data_read), bt.btData.nInterpolatorFactory);
 		RealRandomAccess<T> ra = interpolate.realRandomAccess();
 		RandomAccess<T> ra_out = outS.randomAccess();
 
@@ -357,9 +369,9 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		double [] current_point_new = new double [3];
 
 		double[] curr_XY_zero = new double [3];
-		double [] currXY_zero_mCh = new double[all_RAI.numDimensions()];
+		double [] currXY_zero_mCh = new double[data_read.numDimensions()];
 		double[] curr_XY_new = new double [3];
-		long [] posInt = new long[3];
+		long [] posInt = new long[data_read.numDimensions()];
 		double newVal;
 		double oldVal;
 		for (int nPoint = 0;nPoint<alSegments.get( 0 ).size();nPoint++)
@@ -379,20 +391,25 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 				
 				planeNormNew.get(i).getB().localize( curr_XY_new );
 				curr_XY_new = Roi3D.scaleGlobInv(curr_XY_new, BigTraceData.globCal);
-				
+
 				for(int d=0;d<3;d++)
 				{
 					currXY_zero_mCh[d]=curr_XY_zero[d];
 					posInt[d] = Math.round( curr_XY_new[d]);
 				}
-				ra.setPosition(currXY_zero_mCh);
-				ra_out.setPosition( posInt );
-				T posFill = ra_out.get(); 
-				newVal = ra.get().getRealDouble();
-				oldVal = posFill.getRealDouble();
-				if(newVal>oldVal)
+				for(int nCh=0;nCh<bt.btData.nTotalChannels; nCh++)
 				{
-					posFill.setReal(newVal);
+					posInt[3] = nCh;
+					currXY_zero_mCh[3] = nCh;
+					ra.setPosition(currXY_zero_mCh);
+					ra_out.setPosition( posInt );
+					T posFill = ra_out.get(); 
+					newVal = ra.get().getRealDouble();
+					oldVal = posFill.getRealDouble();
+					if(newVal>oldVal)
+					{
+						posFill.setReal(newVal);
+					}
 				}
 				
 			}
@@ -404,8 +421,7 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		cal.pixelHeight= BigTraceData.dMinVoxelSize;
 		cal.pixelDepth= BigTraceData.dMinVoxelSize;
 		final SCIFIOConfig config = new SCIFIOConfig();
-		config.writerSetCompression(CompressionType.LZW.getCompression());
-		
+		//config.writerSetCompression(CompressionType.LZW.getCompression());
 		ImgSaver saver = new ImgSaver();
 		String sPathOutTif = sOutputPath+"/vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd) +".tif";
 		File outTif = new File(sPathOutTif);
@@ -424,11 +440,20 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 			exc.printStackTrace();
 			return false;
 		}
+		
+		AxisType[] axisTypes = new AxisType[]{ Axes.X, Axes.Y, Axes.Z, Axes.CHANNEL};
+		Img< T > imgout = ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt )));
 
-		AxisType[] axisTypes = new AxisType[]{ Axes.X, Axes.Y, Axes.Z };
-		ImgPlus<?> sourceImg = new ImgPlus<>(ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt ))),"test",axisTypes);
+		
+		//ImgPlus<?> sourceImg = new ImgPlus<>(ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt ))),"test",axisTypes);
+		
+		SCIFIOImgPlus<?> sourceImg = new SCIFIOImgPlus<>(imgout,"test",axisTypes);
+
+		//SCIFIOImgPlus<?> sourceImg = new SCIFIOImgPlus<>(ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt ))),"test", axisTypes);
+
 		//saver.saveImg( sPathOutTif, ImageJFunctions.wrap( VolumeMisc.wrapImgImagePlusCal(Views.interval( Views.extendZero( outS),allInt ),"test",cal)), config );
-		saver.saveImg( sPathOutTif,sourceImg, config );
+		saver.saveImg( sPathOutTif, sourceImg, config );
+		//saver.saveImg( sPathOutTif,ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt ))), config );
 
 		//IJ.saveAsTiff(VolumeMisc.wrapImgImagePlusCal(Views.interval( Views.extendZero( outS),allInt ),"test",cal),sPathOutTif);
 		//ImageJFunctions.show( outS );
@@ -552,7 +577,20 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 			setProgressState("generating frame ("+Integer.toString(i+1)+"/"+Integer.toString(nFrames)+")");
 			if(template==null)
 			{
-				generateSingleVolume(i, sOutputPath);				
+				try
+				{
+					generateSingleVolume(i, sOutputPath);
+				}
+				catch ( IOException exc )
+				{
+					// TODO Auto-generated catch block
+					exc.printStackTrace();
+				}
+				catch ( FormatException exc )
+				{
+					// TODO Auto-generated catch block
+					exc.printStackTrace();
+				}				
 			}
 			else
 			{
@@ -608,7 +646,8 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		LinAlgHelpers.subtract( p3.positionAsDoubleArray(), p2.positionAsDoubleArray(), vect2 );
 		LinAlgHelpers.normalize( vect1 );
 		LinAlgHelpers.normalize( vect2 );
-		return Math.PI-Math.acos( LinAlgHelpers.dot( vect1, vect2 ));
+		double dDot = Math.min( Math.max( LinAlgHelpers.dot( vect1, vect2 ),-1.0),1.0);
+		return Math.PI-Math.acos(dDot);
 		
 	}
 	
