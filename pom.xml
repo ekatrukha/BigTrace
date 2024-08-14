@@ -133,6 +133,7 @@
 			<groupId>io.scif</groupId>
 			<artifactId>scifio</artifactId>
 		</dependency>
+
 		
 		<!-- Bioformats opener -->
 		<dependency>

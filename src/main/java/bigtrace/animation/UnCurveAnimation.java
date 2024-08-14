@@ -423,7 +423,7 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		final SCIFIOConfig config = new SCIFIOConfig();
 		//config.writerSetCompression(CompressionType.LZW.getCompression());
 		ImgSaver saver = new ImgSaver();
-		String sPathOutTif = sOutputPath+"/vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd) +".tif";
+		String sPathOutTif = sOutputPath+"/vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd) +".ome.tif";
 		File outTif = new File(sPathOutTif);
 
 		try
@@ -442,12 +442,12 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		}
 		
 		AxisType[] axisTypes = new AxisType[]{ Axes.X, Axes.Y, Axes.Z, Axes.CHANNEL};
-		Img< T > imgout = ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt )));
+		//Img< T > imgout = ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt )));
 
 		
-		//ImgPlus<?> sourceImg = new ImgPlus<>(ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt ))),"test",axisTypes);
+		ImgPlus<?> sourceImg = new ImgPlus<>(ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt ))),"test",axisTypes);
 		
-		SCIFIOImgPlus<?> sourceImg = new SCIFIOImgPlus<>(imgout,"test",axisTypes);
+		//SCIFIOImgPlus<?> sourceImg = new SCIFIOImgPlus<>(imgout,"test",axisTypes);
 
 		//SCIFIOImgPlus<?> sourceImg = new SCIFIOImgPlus<>(ImgView.wrap(Views.zeroMin(  Views.interval( Views.extendZero( outS),allInt ))),"test", axisTypes);
 
