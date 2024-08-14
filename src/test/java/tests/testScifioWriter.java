@@ -66,7 +66,7 @@ public class testScifioWriter
 		//SCIFIOImgPlus 
 		SCIFIOImgPlus<?> scImg4D = new SCIFIOImgPlus<>(imgViewWrap4D,"test4D",axisTypes4D);
 
-		//no problems here 
+		//without SCIFIOImgPlus there are no errors, but channel information is lost
 		saver.saveImg( sPathOutTif4d, img4D, config );
 		//without SCIFIOImgPlus there are no errors, but channel information is lost
 		saver.saveImg( sPathOutTif4dext, imgViewWrap4D, config );
