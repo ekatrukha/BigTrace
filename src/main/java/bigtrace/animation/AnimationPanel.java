@@ -56,6 +56,7 @@ import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.Roi3D;
 import ij.IJ;
 import ij.Prefs;
+import ij.io.OpenDialog;
 
 public class AnimationPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener,  NumberField.Listener, ChangeListener, ActionListener
 {
@@ -613,6 +614,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		int nTotFramesUnCoil;
 		boolean bFinalVector;
 		boolean bCleanVolume;
+		boolean bSaveCompressedTIFF;
 		
 		final JPanel unCoilSettings = new JPanel();
 		unCoilSettings.setLayout(new GridBagLayout());
@@ -654,6 +656,14 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		unCoilSettings.add(new JLabel("Use modified straight volume?"),cd);
 		cd.gridx++;
 		unCoilSettings.add(cbAddCleanVolume,cd);
+
+		JCheckBox cbUseCompression = new JCheckBox();
+		cbUseCompression.setSelected( Prefs.get("BigTrace.bSaveCompressedTIFF", false) );
+		cd.gridy++;
+		cd.gridx=0;
+		unCoilSettings.add(new JLabel("Use compression for TIFF?"),cd);
+		cd.gridx++;
+		unCoilSettings.add(cbUseCompression,cd);
 		
 		int reply = JOptionPane.showConfirmDialog(null, unCoilSettings, "Straighten animation", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -671,6 +681,9 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			bCleanVolume = cbAddCleanVolume.isSelected();
 			Prefs.set("BigTrace.bCleanVolume", bCleanVolume);
 			
+			bSaveCompressedTIFF = cbUseCompression.isSelected();
+			Prefs.set("BigTrace.bSaveCompressedTIFF", bSaveCompressedTIFF);
+			
 			double [] dFinalOrientation = null;
 			
 			if(bFinalVector)
@@ -681,6 +694,18 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 					bt.btPanel.progressBar.setString("straightening animation aborted.");
 					return;
 				}
+			}
+			//if need to provide clean volume
+			String filenameCleanTIF = null;
+			if(bCleanVolume)
+			{
+				OpenDialog openDial = new OpenDialog("Load modified straightened TIF","", "*.tif");
+				
+		        String path = openDial.getDirectory();
+		        if (path==null)
+		        	return;
+
+		        filenameCleanTIF = path+openDial.getFileName();
 			}
 			
 			//if saving, ask for the path
@@ -701,6 +726,14 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			unAnim.nUnCoilTask = nUnCoilTask;
 			unAnim.finalOrientation = dFinalOrientation;
 			unAnim.sSaveFolderPath = sSaveDir;
+			unAnim.bUseCompression = bSaveCompressedTIFF;
+			if(bCleanVolume)
+			{
+				unAnim.bUseTemplate = true;
+				if(!unAnim.loadTemplate( filenameCleanTIF ))
+					return;
+			}
+			unAnim.addPropertyChangeListener(bt.btPanel);
 			unAnim.execute();
 		}
 	}

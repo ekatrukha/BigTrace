@@ -31,7 +31,7 @@ public class ROIsMeasureBG extends SwingWorker<Void, String> implements BigTrace
 	@Override
 	protected Void doInBackground() throws Exception {
 		bt.bInputLock = true;
-    	bt.roiManager.setLockMode(true);
+    	bt.setLockMode(true);
     	final int nRoiN = rois.size();
     	vals = new ArrayList<>();
     	setProgressState("measuring ROIs...");
@@ -79,7 +79,7 @@ public class ROIsMeasureBG extends SwingWorker<Void, String> implements BigTrace
     	}
 		//unlock user interaction
     	bt.bInputLock = false;
-    	bt.roiManager.setLockMode(false);
+    	bt.setLockMode(false);
 		setProgress(100);
 		setProgressState("measuring ROIs done.");
     }

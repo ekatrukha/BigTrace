@@ -37,7 +37,7 @@ public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends Sw
 		int nRoi, nRoiN;		
 
 		bt.bInputLock = true;
-    	bt.roiManager.setLockMode(true);
+    	bt.setLockMode(true);
     	
     	//get the group manager to save groups
     	Roi3DGroupManager<T> roiGM = new Roi3DGroupManager<>(bt.roiManager);
@@ -92,7 +92,7 @@ public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends Sw
     {
 		//unlock user interaction
     	bt.bInputLock = false;
-    	bt.roiManager.setLockMode(false);
+    	bt.setLockMode(false);
 		setProgress(100);
 		setProgressState("saving ROIs done.");
     }

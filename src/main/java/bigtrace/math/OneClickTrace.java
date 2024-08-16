@@ -867,7 +867,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
     	if(bUnlockInTheEnd)
     	{
     		//unlock user interaction  	
-    		bt.roiManager.setLockMode(false);
+    		bt.setLockMode(false);
         	bt.bInputLock = false;
         	// bvv_trace = BvvFunctions.show(btdata.trace_weights, "weights", Bvv.options().addTo(bvv_main));
     	}

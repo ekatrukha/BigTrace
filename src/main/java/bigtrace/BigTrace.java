@@ -70,6 +70,7 @@ import bigtrace.geometry.Cuboid3D;
 import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
+import bigtrace.gui.GuiMisc;
 import bigtrace.math.OneClickTrace;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
@@ -416,6 +417,18 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		return Views.interval(full_int, full_int);
 	}
 		
+	public synchronized void setLockMode(boolean bLockMode)
+	{
+		 		 
+		 	 boolean bState = !bLockMode;
+		 	 
+		 	 GuiMisc.setPanelStatusAllComponents(roiManager, bState);
+		 	 GuiMisc.setPanelStatusAllComponents(btPanel.roiMeasure, bState);
+		 	 GuiMisc.setPanelStatusAllComponents(btPanel.btTracksPanel, bState);
+		 	 GuiMisc.setPanelStatusAllComponents(btPanel.btAniPanel, bState);
+		 	 //keep it on
+		 	 roiManager.butShowAll.setEnabled(true);
+	}
 	/** calculate optimal path **/
 	public void getSemiAutoTrace(RealPoint target)
 	{
@@ -659,7 +672,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	public void setTraceBoxMode(boolean bStatus)
 	{
 		bTraceMode = bStatus;								
-		roiManager.setLockMode(bStatus);
+		setLockMode(bStatus);
 		//entering trace mode, 
 		//let's save current view
 		if(bStatus)

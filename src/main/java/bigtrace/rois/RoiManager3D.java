@@ -50,7 +50,6 @@ import net.imglib2.util.Intervals;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
-import bigtrace.gui.GuiMisc;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.measure.RoiMeasure3D;
@@ -105,7 +104,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	JButton butRename;
 	JButton butDeselect;
 	JButton butProperties;
-	JToggleButton butShowAll;
+	public JToggleButton butShowAll;
 	JButton butSaveROIs;
 	JButton butLoadROIs;
 	JButton butROIGroups;
@@ -871,43 +870,19 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			 bt.repaintBVV();
 		 }
 	 }
-	 public synchronized void setLockMode(boolean bLockMode)
-	 {
-		 
-		 
-		 	 boolean bState = !bLockMode;
-		 	 
-		 	 GuiMisc.setPanelStatusAllComponents(this, bState);
-		 	 GuiMisc.setPanelStatusAllComponents(roiMeasure, bState);
-		 	 GuiMisc.setPanelStatusAllComponents(btTracksPanel, bState);
-		 	 
-		 	 //keep it on
-		 	 butShowAll.setEnabled(true);
-		 	 /*
-			 roiPointMode.setEnabled(bState);
-			 roiPolyLineMode.setEnabled(bState);
-			 roiPolySemiAMode.setEnabled(bState);
-			 roiPlaneMode.setEnabled(bState);
-			 roiSettings.setEnabled(bState);
-			 butDelete.setEnabled(bState);
-			 butRename.setEnabled(bState);
-			 butDeselect.setEnabled(bState);
-			 butProperties.setEnabled(bState);
-			 butSaveROIs.setEnabled(bState);
-			 butLoadROIs.setEnabled(bState);
-			 butROIGroups.setEnabled(bState);
-			 cbActiveChannel.setEnabled(bState);
-			 cbActiveGroup.setEnabled(bState);
-			 butApplyGroup.setEnabled(bState);
-			 butDisplayGroup.setEnabled(bState);
-			 listScroller.setEnabled(bState);			 
-			 jlist.setEnabled(bState);
-			 
-			 */
-			 
-			 
-
-	 }
+//	 public synchronized void setLockMode(boolean bLockMode)
+//	 {
+//		 		 
+//		 	 boolean bState = !bLockMode;
+//		 	 
+//		 	 GuiMisc.setPanelStatusAllComponents(this, bState);
+//		 	 GuiMisc.setPanelStatusAllComponents(roiMeasure, bState);
+//		 	 GuiMisc.setPanelStatusAllComponents(btTracksPanel, bState);
+//		 	 GuiMisc.setPanelStatusAllComponents(this, bState);
+//		 	 //keep it on
+//		 	 butShowAll.setEnabled(true);
+//
+//	 }
 	 public synchronized void unselect()
 	 {
 		 activeRoi.set(-1);
@@ -1335,7 +1310,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         if (path==null)
         	return;
         filename = path+sd.getFileName();
-        bt.roiManager.setLockMode(true);
+        bt.setLockMode(true);
         bt.bInputLock = true;
         
         //this.setLockMode(true);

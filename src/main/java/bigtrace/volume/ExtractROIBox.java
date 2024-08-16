@@ -76,7 +76,7 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 	{
 
         bt.bInputLock = true;
-        bt.roiManager.setLockMode(true);
+        bt.setLockMode(true);
         
 
         try 
@@ -271,7 +271,7 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
     	}
 		//unlock user interaction
     	bt.bInputLock = false;
-        bt.roiManager.setLockMode(false);
+        bt.setLockMode(false);
 
     }
 }

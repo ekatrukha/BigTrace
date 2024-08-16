@@ -62,7 +62,7 @@ public class SplitVolumePlane < T extends RealType< T > & NativeType< T > > exte
 			return null;
 		
         bt.bInputLock = true;
-        bt.roiManager.setLockMode(true);
+        bt.setLockMode(true);
         
 
 		try {
@@ -219,7 +219,7 @@ public class SplitVolumePlane < T extends RealType< T > & NativeType< T > > exte
     {
 		//unlock user interaction
     	bt.bInputLock = false;
-        bt.roiManager.setLockMode(false);
+        bt.setLockMode(false);
 
     }
 

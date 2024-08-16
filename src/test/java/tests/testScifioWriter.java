@@ -3,17 +3,11 @@ package tests;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 
-import io.scif.FormatException;
-import io.scif.Writer;
-import io.scif.config.SCIFIOConfig;
-import io.scif.img.ImgIOException;
-import io.scif.img.ImgSaver;
-import io.scif.img.SCIFIOImgPlus;
-import io.scif.services.DefaultFormatService;
-import io.scif.services.FormatService;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import io.scif.config.SCIFIOConfig;
+
+import io.scif.img.ImgSaver;
+
 import java.util.ArrayList;
 
 import javax.swing.UIManager;
@@ -32,17 +26,6 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-import net.imglib2.view.composite.CompositeIntervalView;
-import net.imglib2.view.composite.GenericComposite;
-import net.imglib2.view.composite.NumericComposite;
-
-import org.scijava.io.location.DefaultLocationService;
-import org.scijava.io.location.FileLocation;
-import org.scijava.io.location.FileLocationResolver;
-import org.scijava.io.location.Location;
-import org.scijava.io.location.LocationService;
-
-import ij.ImageJ;
 
 
 public class testScifioWriter
@@ -65,8 +48,8 @@ public class testScifioWriter
 
 		String saveFolder = "/home/eugene/Desktop/";
 		
-		String sPathOutTif4d = saveFolder + "test4d.tif";
-		String sPathOutTif4dext = saveFolder + "test4dext.tif";
+		//String sPathOutTif4d = saveFolder + "test4d.tif";
+		//String sPathOutTif4dext = saveFolder + "test4dext.tif";
 		String sPathOutTif4dextMeta = saveFolder + "test4dextMeta.tif";
 		
 		long [] dim4D = new long [4];
@@ -92,12 +75,11 @@ public class testScifioWriter
 		//CompositeIntervalView< UnsignedByteType, NumericComposite< UnsignedByteType > > z2 = Views.collapseNumeric( z1 );
 		//Img< UnsignedByteType > imgViewWrap4D = ImgView.wrap(Views.interval( Views.extendZero( img4D ),new long[4],dim4Dext));
 		
-		ArrayList< RandomAccessibleInterval< UnsignedByteType > > allZC = new ArrayList<RandomAccessibleInterval< UnsignedByteType >>();
-		
-		for(int c=0;c<z1.dimension( 3 );c++)
-		{
+		ArrayList< RandomAccessibleInterval< UnsignedByteType > > allZC = new ArrayList<>();
 
-			for(int z=0;z<z1.dimension( 2 );z++)
+		for(int z=0;z<z1.dimension( 2 );z++)
+		{
+			for(int c=0;c<z1.dimension( 3 );c++)
 			{
 				allZC.add( Views.hyperSlice(Views.hyperSlice( z1, 3, c ),2,z) );
 			}
@@ -107,7 +89,6 @@ public class testScifioWriter
 
 		//SCIFIOImgPlus 
 		ImgPlus<?> scImg4D = new ImgPlus<>(imgViewWrap4D,"test4D",axisTypes4D);
-		//scImg4D.setCompositeChannelCount((int) imgViewWrap4D.dimension( 3 ) );
 		scImg4D.setCompositeChannelCount((int)z1.dimension(3));
 
 		//without SCIFIOImgPlus there are no errors, but channel information is lost

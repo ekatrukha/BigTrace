@@ -417,7 +417,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 			int nBoxExpand = Integer.parseInt(nfBoxExpand.getText());
 			
 			bt.bInputLock = true;
-			bt.roiManager.setLockMode(true);
+			bt.setLockMode(true);
 			butTrack.setEnabled( true );
 			Prefs.set("BigTrace.nTrackExpandBox", nBoxExpand);	
 			btTracker.nNextFrame=nNextFrame;

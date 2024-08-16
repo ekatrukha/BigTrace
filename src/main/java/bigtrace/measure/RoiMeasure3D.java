@@ -616,7 +616,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
         if (path==null)
         	return;
         filename = path+sd.getFileName();
-        bt.roiManager.setLockMode(true);
+        bt.setLockMode(true);
         bt.bInputLock = true;
         final File file = new File(filename);
         
@@ -664,7 +664,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			IJ.log(e.getMessage());
 			//e.printStackTrace();
 		}
-        bt.roiManager.setLockMode(false);
+        bt.setLockMode(false);
         bt.bInputLock = false;
         bt.btPanel.progressBar.setValue(100);
         bt.btPanel.progressBar.setString("Measured and saved coalignment angles of "+Integer.toString(bt.roiManager.rois.size())+" ROIs");
