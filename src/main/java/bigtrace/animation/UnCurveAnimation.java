@@ -335,11 +335,14 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 			alRois.add( newROI );
 			allInt = Intervals.union( allInt, newROI.getBoundingBox() );
 		}
-//		for (int d=0;d<3; d++)
-//		{
-//			System.out.println( allInt.dimension( d ) );
-//		}
-//		
+		//ouput final size
+		String sTotDims = "Final volume dimensions, voxels: " + Long.toString( allInt.dimension( 0 ) );
+		for (int d=1;d<3; d++)
+		{
+			sTotDims = sTotDims + "x"+ Long.toString( allInt.dimension( d ) );
+		}
+		System.out.println( sTotDims  );
+		
 		//add channel dimension to the final interval
 		allInt = Intervals.addDimension( allInt, 0, bt.btData.nTotalChannels-1 );
 		return true;
@@ -467,7 +470,7 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		config.imgSaverSetWriteRGB(false);
 		if(bUseCompression)
 		{
-			config.writerSetCompression(CompressionType.LZW.getCompression());
+			config.writerSetCompression(CompressionType.ZLIB.getCompression());
 		}
 		ImgSaver saver = new ImgSaver();
 		String sPathOutTif = sOutputPath+"/vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd) +".tif";
@@ -519,6 +522,8 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		final ImagePlus imp = IJ.openImage( sTemplateTIF );
 		Img<T> templateImg = ImageJFunctions.wrap( imp );
 		boolean bTemplateFine = true;
+		
+		
 		//do some basic checks on dimensions
 		// sizes will be additionally checked later during ROI generation
 		if(templateImg.numDimensions()<3 || templateImg.numDimensions()>4)
