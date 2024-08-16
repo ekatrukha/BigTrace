@@ -26,6 +26,8 @@ import net.imglib2.img.ImgView;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Util;
@@ -520,8 +522,33 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 	public boolean loadTemplate(String sTemplateTIF)
 	{
 		final ImagePlus imp = IJ.openImage( sTemplateTIF );
+		
+		int nBitD = imp.getBitDepth();
+		T ff = Util.getTypeFromInterval( bt.btData.getAllDataRAI() );
+		
+		if(ff instanceof UnsignedByteType)
+		{
+			if(nBitD!=8)
+			{
+				IJ.log("Provided template bit depth ("+Integer.toString( nBitD )+") does"
+						+ " not match dataset bit depth (8)");
+				return false;
+			}
+		}
+		if(ff instanceof UnsignedShortType)
+		{
+			if(nBitD!=16)
+			{
+				IJ.log("Provided template bit depth ("+Integer.toString( nBitD )+") does"
+						+ " not match dataset bit depth (16)");
+				return false;
+			}
+		}
+
+		
 		Img<T> templateImg = ImageJFunctions.wrap( imp );
 		boolean bTemplateFine = true;
+		
 		
 		
 		//do some basic checks on dimensions
