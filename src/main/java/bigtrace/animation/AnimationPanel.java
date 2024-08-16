@@ -697,7 +697,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			}
 			//if need to provide clean volume
 			String filenameCleanTIF = null;
-			if(bCleanVolume)
+			if(bCleanVolume && nUnCoilTask>0)
 			{
 				OpenDialog openDial = new OpenDialog("Load modified straightened TIF","", "*.tif");
 				
@@ -727,7 +727,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			unAnim.finalOrientation = dFinalOrientation;
 			unAnim.sSaveFolderPath = sSaveDir;
 			unAnim.bUseCompression = bSaveCompressedTIFF;
-			if(bCleanVolume)
+			if(bCleanVolume && nUnCoilTask>0)
 			{
 				unAnim.bUseTemplate = true;
 				if(!unAnim.loadTemplate( filenameCleanTIF ))

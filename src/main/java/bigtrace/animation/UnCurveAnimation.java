@@ -472,7 +472,7 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		config.imgSaverSetWriteRGB(false);
 		if(bUseCompression)
 		{
-			config.writerSetCompression(CompressionType.ZLIB.getCompression());
+			config.writerSetCompression(CompressionType.LZW.getCompression());
 		}
 		ImgSaver saver = new ImgSaver();
 		String sPathOutTif = sOutputPath+"/vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd) +".tif";
