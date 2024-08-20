@@ -133,6 +133,10 @@
 			<groupId>io.scif</groupId>
 			<artifactId>scifio</artifactId>
 		</dependency>
+		<dependency>
+  			<groupId>sc.fiji</groupId>
+  			<artifactId>bigdataviewer_fiji</artifactId>
+		</dependency>
 
 		
 		<!-- Bioformats opener -->

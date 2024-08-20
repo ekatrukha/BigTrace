@@ -720,7 +720,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 				}
 			}
 			
-			UnCurveAnimation<T> unAnim = new UnCurveAnimation<>(bt);
+			UncoilAnimation<T> unAnim = new UncoilAnimation<>(bt);
 			unAnim.inputROI = ( AbstractCurve3D ) roiIn;
 			unAnim.nFrames = nTotFramesUnCoil;
 			unAnim.nUnCoilTask = nUnCoilTask;

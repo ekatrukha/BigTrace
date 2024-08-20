@@ -1,5 +1,6 @@
 package bigtrace.animation;
 
+
 import io.scif.codec.CompressionType;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgSaver;
@@ -30,6 +31,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
+import net.imglib2.util.StopWatch;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.IntervalView;
@@ -44,11 +46,12 @@ import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.volume.StraightenCurve;
+import bigtrace.volume.VolumeMisc;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.Calibration;
 
-public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
+public class UncoilAnimation < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
 	
 	private String progressState;
@@ -83,11 +86,11 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 	
 	public String sSaveFolderPath;
 
-	private RandomAccess<T> ra_template;
+	//private RandomAccess<T> ra_template;
 	
 	public boolean bUseCompression = true;
 	
-	public UnCurveAnimation(final BigTrace<T> bt_)
+	public UncoilAnimation(final BigTrace<T> bt_)
 	{
 		bt = bt_;	
 	}
@@ -117,7 +120,7 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
         catch (InterruptedException ignore) {}
         setProgress(1);
         setProgressState("Creating uncoil animation...");
-        
+
 		//generate only rois for show
 		if(nUnCoilTask==0)
 		{
@@ -132,7 +135,7 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 			//need to edit ROIs to fit the new volumes
 			if(!generateROIs(inputROI))
 				return null;
-			generateAllVolumes(sSaveFolderPath);
+			generateAllVolumes();
 		}
 		//generate only volumes
 		if(nUnCoilTask==2)
@@ -140,7 +143,7 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 			bAddROIs = false;
 			if(!generateROIs(inputROI))
 				return null;
-			generateAllVolumes(sSaveFolderPath);
+			generateAllVolumes();
 		}
 		return null;
 		
@@ -380,7 +383,8 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		
 	}
 	
-	public boolean generateSingleVolume(int nInd, String sOutputPath)
+	@SuppressWarnings( "null" )
+	public IntervalView<T> generateSingleVolume(int nInd)
 	{
 		
 		FinalInterval roiIntervBox = Intervals.expand( alRois.get(nInd).getBoundingBox(),2);
@@ -389,15 +393,15 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 	
 		RandomAccessibleInterval<T> all_RAI =  bt.btData.getAllDataRAI();
 		
-		Img<T> out1 = Util.getSuitableImgFactory(roiIntervBox, Util.getTypeFromInterval(all_RAI) ).create(roiIntervBox);
-		IntervalView<T> outS = Views.translate( out1, roiIntervBox.minAsLongArray() );
+		Img<T> outImg = Util.getSuitableImgFactory(roiIntervBox, Util.getTypeFromInterval(all_RAI) ).create(roiIntervBox);
+		IntervalView<T> outInterval = Views.translate( outImg, roiIntervBox.minAsLongArray() );
 		
 		// get only timePoint of the ROI
 		IntervalView< T > data_read = Views.hyperSlice( all_RAI, 3, inputROI.getTimePoint() );
 		RealRandomAccessible<T> interpolate = Views.interpolate( Views.extendZero(data_read), bt.btData.nInterpolatorFactory);
 		RealRandomAccess<T> ra = interpolate.realRandomAccess();
-		RandomAccess<T> ra_out = outS.randomAccess();
-		ra_template = null;
+		RandomAccess<T> ra_out = outInterval.randomAccess();
+		RandomAccess<T> ra_template = null;
 		if(bUseTemplate)
 		{
 			ra_template = template.randomAccess();
@@ -462,61 +466,35 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 				
 			}
 		}
-		final Calibration cal = new Calibration();
-		cal.setUnit(bt.btData.sVoxelUnit);
-		cal.setTimeUnit(bt.btData.sTimeUnit);
-		cal.pixelWidth= BigTraceData.dMinVoxelSize;
-		cal.pixelHeight= BigTraceData.dMinVoxelSize;
-		cal.pixelDepth= BigTraceData.dMinVoxelSize;
-		final SCIFIOConfig config = new SCIFIOConfig();
-		config.imgSaverSetWriteRGB(false);
-		if(bUseCompression)
-		{
-			config.writerSetCompression(CompressionType.LZW.getCompression());
-		}
-		ImgSaver saver = new ImgSaver();
-		String sPathOutTif = sOutputPath+"/vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd) +".tif";
-		File outTif = new File(sPathOutTif);
-
-		try
-		{
-			boolean result = Files.deleteIfExists(outTif.toPath());
-			if(result)
-			{
-				IJ.log( "Overwriting "+ sPathOutTif +".");
-			}
-		}
-		catch ( IOException exc )
-		{
-			IJ.log(exc.getMessage());
-			exc.printStackTrace();
-			return false;
-		}
 		
-		AxisType[] axisTypes = new AxisType[]{ Axes.X, Axes.Y, Axes.Z, Axes.CHANNEL};
+		return outInterval;
 
-		IntervalView< T > imgOut = Views.zeroMin(  Views.interval( Views.extendZero( outS ),allInt ));
-		
-		ImgPlus<?> saveImg = new ImgPlus<>(wrapIntervalForSCIFIO(imgOut),"test",axisTypes);
-		saveImg.setCompositeChannelCount((int)imgOut.dimension(3));
-		saver.saveImg( sPathOutTif, saveImg, config );
-
-		return true;
 	}
 	
-	public void generateAllVolumes(String sOutputPath)
+	public void generateAllVolumes()
 	{
 		
+		int i;
         setProgress(0);
         setProgressState("Generating volumes...");
 
-		for(int i=0;i<nFrames;i++)
+		for(i=0;i<nFrames;i++)
 		{
 
 			setProgress(100*i/(nFrames-1));
 			setProgressState("generating/saving frame ("+Integer.toString(i+1)+"/"+Integer.toString(nFrames)+")");
-			generateSingleVolume(i, sOutputPath);					
+
+			final IntervalView< T > outInt = generateSingleVolume(i);	
+			if(bUseCompression)
+			{
+				saveCompressedTIFF(outInt,i);
+			}
+			else
+			{
+				saveUncompressedTIFF(outInt,i);
+			}
 		}
+
 	}
 	
 	public boolean loadTemplate(String sTemplateTIF)
@@ -583,6 +561,69 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 		}
 		return bTemplateFine;
 	}
+	public boolean saveUncompressedTIFF(final IntervalView<T> outInterval, final int nInd)
+	{
+		final Calibration cal = new Calibration();
+		cal.setUnit(bt.btData.sVoxelUnit);
+		cal.setTimeUnit(bt.btData.sTimeUnit);
+		cal.pixelWidth = BigTraceData.globCal[0];
+		cal.pixelHeight = BigTraceData.globCal[1];
+		cal.pixelDepth = BigTraceData.globCal[2];
+		
+		final IntervalView< T > imgOut = Views.zeroMin(  Views.interval( Views.extendZero( outInterval ),allInt ));
+		final ImagePlus ip = VolumeMisc.wrapImgImagePlusCal(imgOut, inputROI.getName() + "_vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd),cal);
+		IJ.saveAsTiff(ip, sSaveFolderPath+ip.getTitle());
+
+		return true;
+	}
+	
+	public boolean saveCompressedTIFF(final IntervalView<T> outInterval, final int nInd)
+	{
+//		final Calibration cal = new Calibration();
+//		cal.setUnit(bt.btData.sVoxelUnit);
+//		cal.setTimeUnit(bt.btData.sTimeUnit);
+//		cal.pixelWidth= BigTraceData.dMinVoxelSize;
+//		cal.pixelHeight= BigTraceData.dMinVoxelSize;
+//		cal.pixelDepth= BigTraceData.dMinVoxelSize;
+		final SCIFIOConfig config = new SCIFIOConfig();
+		config.imgSaverSetWriteRGB(false);
+		if(bUseCompression)
+		{
+			//config.writerSetCompression(CompressionType.LZW.getCompression());
+			config.writerSetCompression(CompressionType.ZLIB.getCompression());
+		}
+		ImgSaver saver = new ImgSaver();
+		String sPathOutTif = sSaveFolderPath+"/"+inputROI.getName()+"_vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd) +".tif";
+		File outTif = new File(sPathOutTif);
+
+		try
+		{
+			boolean result = Files.deleteIfExists(outTif.toPath());
+			if(result)
+			{
+				IJ.log( "Overwriting "+ sPathOutTif +".");
+			}
+		}
+		catch ( IOException exc )
+		{
+			IJ.log(exc.getMessage());
+			exc.printStackTrace();
+			return false;
+		}
+		
+		final AxisType[] axisTypes = new AxisType[]{ Axes.X, Axes.Y, Axes.Z, Axes.CHANNEL};
+
+		final IntervalView< T > imgOut = Views.zeroMin(  Views.interval( Views.extendZero( outInterval ),allInt ));
+		
+		final ImgPlus<?> saveImg = new ImgPlus<>(wrapIntervalForSCIFIO(imgOut),"test",axisTypes);
+		
+		saveImg.setCompositeChannelCount((int)imgOut.dimension(3));
+		StopWatch stopwatch = StopWatch.createAndStart();
+		saver.saveImg( sPathOutTif, saveImg, config );
+		System.out.println( "saving time: " + stopwatch );
+
+		return true;
+	}
 	
 	public Img< T > wrapIntervalForSCIFIO(IntervalView<T> intView)
 	{
@@ -607,6 +648,8 @@ public class UnCurveAnimation < T extends RealType< T > & NativeType< T > > exte
 				allZC.add( Views.hyperSlice(Views.hyperSlice( intView, 3, c ),2,z) );
 			}
 		}
+		
+		//make a version using Views.concatenate( ) ???
 		return ImgView.wrap( Views.stack( allZC ));
 	}
 	
