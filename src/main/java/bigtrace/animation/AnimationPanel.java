@@ -614,7 +614,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		int nTotFramesUnCoil;
 		boolean bFinalVector;
 		boolean bCleanVolume;
-		boolean bSaveCompressedTIFF;
+		int nUnCoilExport;
 		
 		final JPanel unCoilSettings = new JPanel();
 		unCoilSettings.setLayout(new GridBagLayout());
@@ -623,7 +623,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		GBCHelper.alighLeft(cd);
 		
 		
-		final String[] sUnCoilTask = { "Generate ROIs only", "Generate ROIs and volumes", "Generate only volumes"};
+		final String[] sUnCoilTask = { "Generate ROIs only", "Generate ROIs and volumes"};
 		JComboBox<String> cbUnCoilTask = new JComboBox<>(sUnCoilTask);
 		cbUnCoilTask.setSelectedIndex((int)Prefs.get("BigTrace.nUnCoilTask", 0));
 		cd.gridx=0;
@@ -657,13 +657,15 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		cd.gridx++;
 		unCoilSettings.add(cbAddCleanVolume,cd);
 
-		JCheckBox cbUseCompression = new JCheckBox();
-		cbUseCompression.setSelected( Prefs.get("BigTrace.bSaveCompressedTIFF", false) );
+		final String[] sUnCoilExport = { "Export as BDV HDF5", "Export as TIF","Export as compressed TIF"};
+		JComboBox<String> cbUnCoilExport = new JComboBox<>(sUnCoilExport);
+		cbUnCoilExport.setSelectedIndex((int)Prefs.get("BigTrace.sUnCoilExport", 0));
+		
 		cd.gridy++;
 		cd.gridx=0;
 		unCoilSettings.add(new JLabel("Use compression for TIFF?"),cd);
 		cd.gridx++;
-		unCoilSettings.add(cbUseCompression,cd);
+		unCoilSettings.add(cbUnCoilExport,cd);
 		
 		int reply = JOptionPane.showConfirmDialog(null, unCoilSettings, "Straighten animation", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -681,8 +683,8 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			bCleanVolume = cbAddCleanVolume.isSelected();
 			Prefs.set("BigTrace.bCleanVolume", bCleanVolume);
 			
-			bSaveCompressedTIFF = cbUseCompression.isSelected();
-			Prefs.set("BigTrace.bSaveCompressedTIFF", bSaveCompressedTIFF);
+			nUnCoilExport = cbUnCoilExport.getSelectedIndex();
+			Prefs.set("BigTrace.nUnCoilExport", nUnCoilExport);
 			
 			double [] dFinalOrientation = null;
 			
@@ -712,7 +714,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			String sSaveDir = "";
 			if(nUnCoilTask > 0)
 			{
-				sSaveDir = IJ.getDirectory("Save animation TIFs to..");
+				sSaveDir = IJ.getDirectory("Save animation volumes to..");
 				if(sSaveDir == null)
 				{
 					bt.btPanel.progressBar.setString("straightening animation aborted.");
@@ -720,13 +722,13 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 				}
 			}
 			
-			UncoilAnimation<T> unAnim = new UncoilAnimation<>(bt);
+			UnCoilAnimation<T> unAnim = new UnCoilAnimation<>(bt);
 			unAnim.inputROI = ( AbstractCurve3D ) roiIn;
 			unAnim.nFrames = nTotFramesUnCoil;
 			unAnim.nUnCoilTask = nUnCoilTask;
 			unAnim.finalOrientation = dFinalOrientation;
 			unAnim.sSaveFolderPath = sSaveDir;
-			unAnim.bUseCompression = bSaveCompressedTIFF;
+			unAnim.nUnCoilExport = nUnCoilExport;
 			if(bCleanVolume && nUnCoilTask>0)
 			{
 				unAnim.bUseTemplate = true;

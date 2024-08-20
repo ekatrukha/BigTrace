@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+
 import javax.swing.JOptionPane;
 
 
@@ -33,7 +35,9 @@ import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.sequence.SequenceDescription;
+import mpicbg.spim.data.sequence.ViewSetup;
 
+import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
@@ -43,6 +47,7 @@ import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
 
 import bigtrace.volume.VolumeMisc;
@@ -87,7 +92,12 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		
 		FinalInterval rai_int = new FinalInterval(seq.getImgLoader().getSetupImgLoader(0).getImage(0));
-
+		List< ViewSetup > allViewSetups = seq.getViewSetupsOrdered();
+		for (int nV = 0; nV<allViewSetups.size();nV++)
+		{
+			Dimensions nDim = allViewSetups.get( nV ).getSize();
+			rai_int = Intervals.union( rai_int, new FinalInterval(new long[3],nDim.dimensionsAsLongArray()) );
+		}
 		rai_int.min( btdata.nDimIni[0] );
 		rai_int.max( btdata.nDimIni[1] );
 		rai_int.min( BigTraceData.nDimCurr[0] );

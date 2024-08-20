@@ -522,6 +522,56 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 		return new FinalInterval(bBox[0],bBox[1]);
 	}
 	
+	public Interval getBoundingBoxMeasure() 
+	{
+		final ArrayList<RealPoint> allvertices = new ArrayList<>();
+		
+		//in VOXEL coordinates
+		if(this.vertices.size()==1)
+		{
+
+			double [] pos = vertices.get(0).positionAsDoubleArray();
+			long [][] lPos = new long[2][3];
+			for (int d=0;d<3;d++)
+			{
+				lPos[0][d] = Math.round(pos[d] - pointSize);
+				lPos[1][d] = Math.round(pos[d] + pointSize);
+			}
+			return new FinalInterval(lPos[0],lPos[1]);
+		}
+		
+		final ArrayList<ArrayList< RealPoint >> point_contours  = Pipe3D.getCountours(interpolator.getVerticesResample(), interpolator.getTangentsResample(), BigTraceData.sectorN, 0.5*lineThickness*BigTraceData.dMinVoxelSize);
+		for(int i=0; i<point_contours.size(); i++)
+		{
+			allvertices.addAll(Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
+		}
+		
+		long [][] bBox = new long [2][3];
+		for (int d = 0; d<3;d++)
+		{
+			bBox[0][d] = Long.MAX_VALUE; 
+			bBox[1][d]= (-1)* Long.MAX_VALUE; 
+		}
+		double [] currPoint = new double [3];
+		for (int i = 0; i<allvertices.size();i++)
+		{
+			allvertices.get(i).localize(currPoint);
+			for (int d=0;d<3;d++)
+			{
+				if(currPoint[d]<bBox[0][d])
+				{
+					bBox[0][d] = Math.round(currPoint[d]);
+				}
+				if(currPoint[d]>bBox[1][d])
+				{
+					bBox[1][d] = Math.round(currPoint[d]);
+				}
+
+			}
+		}
+		return new FinalInterval(bBox[0],bBox[1]);
+	}
+	
 	@Override
 	public Interval getBoundingBoxVisual() 
 	{

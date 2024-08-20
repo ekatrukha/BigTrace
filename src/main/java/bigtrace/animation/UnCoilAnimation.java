@@ -51,7 +51,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.Calibration;
 
-public class UncoilAnimation < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
+public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
 	
 	private String progressState;
@@ -61,18 +61,20 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 	/** total number of intermediate frames **/
 	public int nFrames = 100;
 	
+	/** 0 - generate ROIs only, 1 - ROIs and volumes **/
 	public int nUnCoilTask = 0;
 	
 	/** interval containing all ROIs **/
-	FinalInterval allInt;
+	FinalInterval unionInterval;
 	
 	/** plugin instance **/
 	BigTrace<T> bt;
 	
 	/** frames of unbending ROIs **/
-	ArrayList <double [][][]> alFrames;
+	ArrayList <double [][][]> allFrames;
+	
 	/** frames of unbending ROIs **/
-	ArrayList <ArrayList<RealPoint>> alSegments;
+	ArrayList <ArrayList<RealPoint>> allSegments;
 	
 	public boolean bUseTemplate = false;
 
@@ -80,17 +82,20 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 	
 	boolean bAddROIs = false;
 	
-	ArrayList <AbstractCurve3D> alRois;
+	
+	ArrayList <AbstractCurve3D> allRois;
+	
+	/** all intervals for all ROIs **/
+	ArrayList <FinalInterval> allIntervals;
 	
 	double [] finalOrientation = null;
 	
 	public String sSaveFolderPath;
 
-	//private RandomAccess<T> ra_template;
+	/** 0 - BDV HDF5, 1 - standard TIF, 2 - compressed TIF **/
+	public int nUnCoilExport = 0;
 	
-	public boolean bUseCompression = true;
-	
-	public UncoilAnimation(final BigTrace<T> bt_)
+	public UnCoilAnimation(final BigTrace<T> bt_)
 	{
 		bt = bt_;	
 	}
@@ -119,7 +124,7 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
         } 
         catch (InterruptedException ignore) {}
         setProgress(1);
-        setProgressState("Creating uncoil animation...");
+        setProgressState("creating straighten animation...");
 
 		//generate only rois for show
 		if(nUnCoilTask==0)
@@ -132,19 +137,23 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		if(nUnCoilTask == 1)
 		{
 			bAddROIs = true;
+			
 			//need to edit ROIs to fit the new volumes
 			if(!generateROIs(inputROI))
 				return null;
-			generateAllVolumes();
+			if(nUnCoilExport == 0)
+			{
+				setProgress(0);
+			    setProgressState("saving HDF5 (see log)...");
+				HDF5UnCoilSaver<T> saveH5 = new HDF5UnCoilSaver<>(this, bt);
+				saveH5.exportUnCoil();
+			}
+			else
+			{
+				generateAllVolumesTIFF();
+			}
 		}
-		//generate only volumes
-		if(nUnCoilTask==2)
-		{
-			bAddROIs = false;
-			if(!generateROIs(inputROI))
-				return null;
-			generateAllVolumes();
-		}
+
 		return null;
 		
 	}
@@ -167,6 +176,8 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
     	} catch (InterruptedException e) {
     		// Process e here
     	}
+    	setProgress(100);
+        setProgressState("straighten animation done.");
 		//unlock user interaction
     	bt.bInputLock = false;
         bt.setLockMode(false);
@@ -181,21 +192,21 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		
         setProgress(0);
         setProgressState("Generating ROIs...");
-		alRois = new ArrayList<>();
-		alRois.add( firstLine );
+		allRois = new ArrayList<>();
+		allRois.add( firstLine );
 		
 		ArrayList<double []> tangents = firstLine.getJointSegmentTangentsResampled();
 		
 		//get all the points along the line with pixel sampling in scaled coords
 		ArrayList<RealPoint> segment = firstLine.getJointSegmentResampled();
-		alSegments = new ArrayList<>();
-		alSegments.add( segment );
+		allSegments = new ArrayList<>();
+		allSegments.add( segment );
 		
 		//get a frame around line in SCALED
 		double [][][] rsVect =  Pipe3D.rotationMinimizingFrame(segment, tangents);
 
-		alFrames = new ArrayList<>();
-		alFrames.add( rsVect );
+		allFrames = new ArrayList<>();
+		allFrames.add( rsVect );
 		
 		//get all the points along the line with pixel sampling in UNSCALED coords
 		segment = Roi3D.scaleGlobInv(segment,BigTraceData.globCal);
@@ -234,9 +245,7 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 				return false;
 			}
 		}
-		
-		allInt = Intervals.union( firstLine.getBoundingBox(), firstLine.getBoundingBox() );
-		
+				
 		//specify the final starting end orientation.
 		// it is a vector added in the beginning,
 		// which specifies, where the final straight line ROI is gonna point.
@@ -280,7 +289,6 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		double [] moved = new double [3];
 		double [] rotated = new double [3];
 		
-		//for (int i=1; i<20; i++)
 		for (int i=1; i<nFrames ; i++)
 		{
 			setProgress(100*i/(nFrames-1));
@@ -299,76 +307,141 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 			
 			for(int nTrio = nTotPoints-2; nTrio>=0; nTrio--)
 			{
-				LinAlgHelpers.quaternionFromAngleAxis(planes[nTrio].n, lineAngles[nTrio]*i/(nFrames-1), q);
-				//LinAlgHelpers.quaternionFromAngleAxis(planes[nTrio].n, lineAngles[nTrio], q);
-				segment_new.get(nTrio).localize( joint );
-				for(int nPoint = nTrio+1; nPoint<nTotPoints; nPoint++)
+				//if already rotated, no need to rotate
+				if(Math.abs( lineAngles[nTrio])>0.000000001)
 				{
-					segment_new.get( nPoint ).localize( notrotated );
-					LinAlgHelpers.subtract( notrotated, joint, moved );
-					LinAlgHelpers.quaternionApply( q, moved, rotated );
-					LinAlgHelpers.add( rotated, joint, rotated );
-					segment_new.set(nPoint, new RealPoint (rotated) );
-					//taking care of the frame
-					for(int nFr = 0; nFr<2;nFr++)
+					LinAlgHelpers.quaternionFromAngleAxis(planes[nTrio].n, lineAngles[nTrio]*i/(nFrames-1), q);
+					//LinAlgHelpers.quaternionFromAngleAxis(planes[nTrio].n, lineAngles[nTrio], q);
+					segment_new.get(nTrio).localize( joint );
+					for(int nPoint = nTrio+1; nPoint<nTotPoints; nPoint++)
 					{
-						//in SPACED UNITS, add POINT
-						LinAlgHelpers.add(newFrame[nFr][nPoint],Roi3D.scaleGlob(notrotated,BigTraceData.globCal),newFrame[nFr][nPoint]);
+						segment_new.get( nPoint ).localize( notrotated );
+						LinAlgHelpers.subtract( notrotated, joint, moved );
+						LinAlgHelpers.quaternionApply( q, moved, rotated );
+						LinAlgHelpers.add( rotated, joint, rotated );
 
-						//subtract rotation center
-						LinAlgHelpers.subtract( newFrame[nFr][nPoint],Roi3D.scaleGlob( joint,BigTraceData.globCal), newFrame[nFr][nPoint] );
-						
-						//go to UNSCALED
-						newFrame[nFr][nPoint] =  Roi3D.scaleGlobInv(newFrame[nFr][nPoint],BigTraceData.globCal);
-						//rotate
-						LinAlgHelpers.quaternionApply( q, newFrame[nFr][nPoint], newFrame[nFr][nPoint] );
-						
-						//move back to 
-						//move back rotation center
-						LinAlgHelpers.add( newFrame[nFr][nPoint], joint, newFrame[nFr][nPoint] );
-						//subtract new position of the point
-						LinAlgHelpers.subtract(newFrame[nFr][nPoint],rotated,newFrame[nFr][nPoint]);
-						//move back to scaled
-						newFrame[nFr][nPoint] =  Roi3D.scaleGlob(newFrame[nFr][nPoint],BigTraceData.globCal);
+						segment_new.set(nPoint, new RealPoint (rotated) );
+						//taking care of the frame
+						for(int nFr = 0; nFr<2;nFr++)
+						{
+							//in SPACED UNITS, add POINT
+							LinAlgHelpers.add(newFrame[nFr][nPoint],Roi3D.scaleGlob(notrotated,BigTraceData.globCal),newFrame[nFr][nPoint]);
+
+							//subtract rotation center
+							LinAlgHelpers.subtract( newFrame[nFr][nPoint],Roi3D.scaleGlob( joint,BigTraceData.globCal), newFrame[nFr][nPoint] );
+
+							//go to UNSCALED
+							newFrame[nFr][nPoint] =  Roi3D.scaleGlobInv(newFrame[nFr][nPoint],BigTraceData.globCal);
+							//rotate
+							LinAlgHelpers.quaternionApply( q, newFrame[nFr][nPoint], newFrame[nFr][nPoint] );
+
+							//move back to 
+							//move back rotation center
+							LinAlgHelpers.add( newFrame[nFr][nPoint], joint, newFrame[nFr][nPoint] );
+							//subtract new position of the point
+							LinAlgHelpers.subtract(newFrame[nFr][nPoint],rotated,newFrame[nFr][nPoint]);
+							//move back to scaled
+							newFrame[nFr][nPoint] =  Roi3D.scaleGlob(newFrame[nFr][nPoint],BigTraceData.globCal);
+						}
 					}
 				}
 			}
-			alFrames.add( newFrame );
-			alSegments.add(  Roi3D.scaleGlob(segment_new,BigTraceData.globCal) );
+			allFrames.add( newFrame );
+			allSegments.add(  Roi3D.scaleGlob(segment_new,BigTraceData.globCal) );
 			//LineTrace3D newROI = addROIsegment(bt, segment_new, i, ( int ) firstLine.getLineThickness());
 			LineTrace3D newROI = addROIsegment(bt, segment_new,firstLine.getTimePoint(), ( int ) firstLine.getLineThickness(), bAddROIs);
-			alRois.add( newROI );
-			allInt = Intervals.union( allInt, newROI.getBoundingBox() );
+			allRois.add( newROI );
+			//allInt = Intervals.union( allInt, newROI.getBoundingBoxMeasure() );
 		}
-		//ouput final size
-		String sTotDims = "Final volume dimensions, voxels: " + Long.toString( allInt.dimension( 0 ) );
-		for (int d=1;d<3; d++)
+		if(nUnCoilTask>0)
 		{
-			sTotDims = sTotDims + "x"+ Long.toString( allInt.dimension( d ) );
+			calculateIntervals();
+	
+			//add channel dimension to the final interval
+			unionInterval = Intervals.addDimension( unionInterval, 0, bt.btData.nTotalChannels-1 );
+	
+			//output final size
+			String sTotDims = "Final volume dimensions, voxels: " + Long.toString( unionInterval.dimension( 0 ) );
+			for (int d=1;d<unionInterval.numDimensions(); d++)
+			{
+				sTotDims = sTotDims + "x"+ Long.toString( unionInterval.dimension( d ) );
+			}
+			System.out.println( sTotDims  );
+			
+			long[] alld = unionInterval.dimensionsAsLongArray();
+			long nTotBytes = alld[0];
+			for(int d=1; d<unionInterval.numDimensions();d++)
+			{
+				 nTotBytes*=alld[d];
+			}
+			nTotBytes*=2; //in bytes
+			IJ.log( "required max memory is at least " +Double.toString( nTotBytes/1000000000.0 )+" Gb" );
+			IJ.log( "available memory is " + Double.toString(IJ.maxMemory()/1000000000.0) +" Gb" );
 		}
-		System.out.println( sTotDims  );
-		
-		//add channel dimension to the final interval
-		allInt = Intervals.addDimension( allInt, 0, bt.btData.nTotalChannels-1 );
 		return true;
+	}
+	
+	public void calculateIntervals()
+	{
+		allIntervals = new ArrayList<>();
+		double [] current_point_new = new double [3];
+		final int nRadius = (int) Math.round(0.5*allRois.get(0).getLineThickness());
+		ArrayList< ValuePair< int[],RealPoint>  > planeNormNew;
+		long [] posInt = new long[3];
+		double[] curr_XY_new = new double [3];
+		//make an "empty" interval
+		//union function will take the "proper one"
+		unionInterval =  new FinalInterval(new long [] {10,10,10},new long [] {0,0,0});
+		//unionInterval =  new FinalInterval(new long [3],new long [3] );
+		for(int nTP = 0; nTP<nFrames;nTP++)
+		{
+			setProgress(100*nTP/(nFrames-1));
+			setProgressState("estimating intervals ("+Integer.toString(nTP+1)+"/"+Integer.toString(nFrames)+")");
+			//make an "empty" interval
+			//union function will take the "proper one"
+			FinalInterval currInt = new FinalInterval(new long [] {10,10,10},new long [] {0,0,0});
+			//FinalInterval currInt = new FinalInterval(new long [3],new long [3] );
+
+			for (int nPoint = 0;nPoint<allSegments.get( 0 ).size();nPoint++)
+			{
+				allSegments.get( nTP ).get(nPoint).localize(current_point_new); 
+				planeNormNew = StraightenCurve.getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,allFrames.get( nTP )[0][nPoint],allFrames.get( nTP )[1][nPoint], current_point_new);
+				for(int i=0;i<planeNormNew.size();i++)
+				{
+					planeNormNew.get(i).getB().localize( curr_XY_new );
+					curr_XY_new = Roi3D.scaleGlobInv(curr_XY_new, BigTraceData.globCal);
+					for(int d=0;d<3;d++)
+					{
+						posInt[d] = Math.round( curr_XY_new[d]);
+					}
+					
+					currInt = Intervals.union(currInt,new FinalInterval(posInt,posInt));
+					
+				}
+			}
+			allIntervals.add( currInt );
+
+			unionInterval = Intervals.union( unionInterval, currInt );				
+			
+		}
 	}
 	
 	public void testRMFrames()
 	{
-		for (int nFrame = 0; nFrame<alFrames.size();nFrame++)
+		for (int nFrame = 0; nFrame<allFrames.size();nFrame++)
 		{
 			ArrayList<RealPoint> frameX1 = new ArrayList<>();
 			ArrayList<RealPoint> frameX2 = new ArrayList<>();
 			double [] pos = new double[3];
 			double [] comp =  new double[3];
 			double [] addition = new double[3];
-			for(int nPoint = 0;nPoint<alSegments.get( nFrame ).size();nPoint++)
+			for(int nPoint = 0;nPoint<allSegments.get( nFrame ).size();nPoint++)
 			{
-				alSegments.get( nFrame ).get( nPoint ).localize( pos );
-				LinAlgHelpers.scale( alFrames.get( nFrame )[0][nPoint], 20*BigTraceData.dMinVoxelSize, addition );
+				allSegments.get( nFrame ).get( nPoint ).localize( pos );
+				LinAlgHelpers.scale( allFrames.get( nFrame )[0][nPoint], 20*BigTraceData.dMinVoxelSize, addition );
 				LinAlgHelpers.add( addition, pos, comp );
 				frameX1.add( new RealPoint(Roi3D.scaleGlobInv(comp,BigTraceData.globCal)));
-				LinAlgHelpers.scale( alFrames.get( nFrame )[1][nPoint], 20*BigTraceData.dMinVoxelSize, addition );
+				LinAlgHelpers.scale( allFrames.get( nFrame )[1][nPoint], 20*BigTraceData.dMinVoxelSize, addition );
 				LinAlgHelpers.add( addition, pos, comp );
 				frameX2.add( new RealPoint(Roi3D.scaleGlobInv(comp,BigTraceData.globCal)));
 
@@ -383,17 +456,34 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		
 	}
 	
-	@SuppressWarnings( "null" )
 	public IntervalView<T> generateSingleVolume(int nInd)
 	{
+		if(bt.btData.nTotalChannels==1)
+		{
+			return generateSingleVolumeSetup(nInd, 0);
+		}
 		
-		FinalInterval roiIntervBox = Intervals.expand( alRois.get(nInd).getBoundingBox(),2);
+		ArrayList<IntervalView<T>> nCh_RAI = new ArrayList<>();
+		for (int nCh=0;nCh<bt.btData.nTotalChannels; nCh++)
+		{
+			nCh_RAI.add( generateSingleVolumeSetup(nInd, nCh) );
+		}
+		RandomAccessibleInterval< T > outRAI = Views.stack( nCh_RAI );
+		return Views.interval( outRAI, outRAI );
+	}
+	
+	@SuppressWarnings( "null" )
+	public IntervalView<T> generateSingleVolumev(int nInd)
+	{
+		
+		FinalInterval roiIntervBox = allIntervals.get( nInd );
 		roiIntervBox = Intervals.addDimension( roiIntervBox, 0, bt.btData.nTotalChannels-1 );
 		//FinalInterval test = Intervals.expand( allInt,2);
 	
 		RandomAccessibleInterval<T> all_RAI =  bt.btData.getAllDataRAI();
 		
 		Img<T> outImg = Util.getSuitableImgFactory(roiIntervBox, Util.getTypeFromInterval(all_RAI) ).create(roiIntervBox);
+	
 		IntervalView<T> outInterval = Views.translate( outImg, roiIntervBox.minAsLongArray() );
 		
 		// get only timePoint of the ROI
@@ -406,7 +496,7 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		{
 			ra_template = template.randomAccess();
 		}	
-		int nRadius = (int) Math.round(0.5*alRois.get(0).getLineThickness());
+		int nRadius = (int) Math.round(0.5*allRois.get(0).getLineThickness());
 		ArrayList< ValuePair< int[],RealPoint>  > planeNormZero;
 		ArrayList< ValuePair< int[],RealPoint>  > planeNormNew;
 		double [] current_point_zero = new double [3];
@@ -418,13 +508,13 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		long [] posInt = new long[data_read.numDimensions()];
 		double newVal;
 		double oldVal;
-		for (int nPoint = 0;nPoint<alSegments.get( 0 ).size();nPoint++)
+		for (int nPoint = 0;nPoint<allSegments.get( 0 ).size();nPoint++)
 		{
-			alSegments.get( 0 ).get(nPoint).localize(current_point_zero); 
-			planeNormZero = StraightenCurve.getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,alFrames.get( 0 )[0][nPoint],alFrames.get( 0 )[1][nPoint], current_point_zero);
+			allSegments.get( 0 ).get(nPoint).localize(current_point_zero); 
+			planeNormZero = StraightenCurve.getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,allFrames.get( 0 )[0][nPoint],allFrames.get( 0 )[1][nPoint], current_point_zero);
 			
-			alSegments.get( nInd ).get(nPoint).localize(current_point_new); 
-			planeNormNew = StraightenCurve.getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,alFrames.get( nInd )[0][nPoint],alFrames.get( nInd )[1][nPoint], current_point_new);
+			allSegments.get( nInd ).get(nPoint).localize(current_point_new); 
+			planeNormNew = StraightenCurve.getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,allFrames.get( nInd )[0][nPoint],allFrames.get( nInd )[1][nPoint], current_point_new);
 			//double teee1 = LinAlgHelpers.dot( alFrames.get( 0)[0][nPoint],alFrames.get( 0)[1][nPoint]);
 
 			//double teee = LinAlgHelpers.dot( alFrames.get( nInd )[0][nPoint],alFrames.get( nInd )[1][nPoint]);
@@ -457,7 +547,34 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 						ra.setPosition(currXY_zero_mCh);
 						newVal = ra.get().getRealDouble();
 					}
-					oldVal = posFill.getRealDouble();
+					oldVal = 0.0;
+					try 
+					{
+						oldVal = posFill.getRealDouble();
+					}
+					catch(ArrayIndexOutOfBoundsException exception) 
+					{
+						
+						System.out.print( "posInt " );
+						for(int d = 0; d< posInt.length;d++)
+						{
+							System.out.print(Long.toString( posInt[d] )+" ");
+						}
+						System.out.print( " \n" );
+						System.out.print( "interval min" );
+						for(int d = 0; d< posInt.length;d++)
+						{
+							System.out.print(Long.toString(outInterval.min( d ) )+" ");
+						}
+						System.out.print( " \n" );
+						System.out.print( "interval max" );
+						for(int d = 0; d< posInt.length;d++)
+						{
+							System.out.print(Long.toString(outInterval.max( d ) )+" ");
+						}
+						System.out.print( " \n" );
+						return null;
+					}
 					if(newVal>oldVal)
 					{
 						posFill.setReal(newVal);
@@ -471,7 +588,94 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 
 	}
 	
-	public void generateAllVolumes()
+	@SuppressWarnings( "null" )
+	public IntervalView<T> generateSingleVolumeSetup(int nInd, int nChannel)
+	{
+		
+		FinalInterval roiIntervBox = allIntervals.get( nInd );
+		//roiIntervBox = Intervals.addDimension( roiIntervBox, 0, bt.btData.nTotalChannels-1 );
+		//FinalInterval test = Intervals.expand( allInt,2);
+	
+		RandomAccessibleInterval<T> all_RAI =  bt.btData.getAllDataRAI();
+		
+		Img<T> outImg = Util.getSuitableImgFactory(roiIntervBox, Util.getTypeFromInterval(all_RAI) ).create(roiIntervBox);
+	
+		IntervalView<T> outInterval = Views.translate( outImg, roiIntervBox.minAsLongArray() );
+		
+		// get only timePoint and channel of the ROI
+		IntervalView< T > data_read = Views.hyperSlice( Views.hyperSlice( all_RAI, 3, inputROI.getTimePoint()),3,nChannel);
+		RealRandomAccessible<T> interpolate = Views.interpolate( Views.extendZero(data_read), bt.btData.nInterpolatorFactory);
+		RealRandomAccess<T> ra = interpolate.realRandomAccess();
+		RandomAccess<T> ra_out = outInterval.randomAccess();
+		RandomAccess<T> ra_template = null;
+		
+		if(bUseTemplate)
+		{
+			ra_template = template.randomAccess();
+		}	
+		int nRadius = (int) Math.round(0.5*allRois.get(0).getLineThickness());
+		ArrayList< ValuePair< int[],RealPoint>  > planeNormZero;
+		ArrayList< ValuePair< int[],RealPoint>  > planeNormNew;
+		double [] current_point_zero = new double [3];
+		double [] current_point_new = new double [3];
+
+		double[] curr_XY_zero = new double [3];
+		double [] currXY_zero_mCh = new double[data_read.numDimensions()];
+		double[] curr_XY_new = new double [3];
+		long [] posInt = new long[outInterval.numDimensions()];
+		double newVal;
+		double oldVal;
+		for (int nPoint = 0;nPoint<allSegments.get( 0 ).size();nPoint++)
+		{
+			allSegments.get( 0 ).get(nPoint).localize(current_point_zero); 
+			planeNormZero = StraightenCurve.getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,allFrames.get( 0 )[0][nPoint],allFrames.get( 0 )[1][nPoint], current_point_zero);
+			
+			allSegments.get( nInd ).get(nPoint).localize(current_point_new); 
+			planeNormNew = StraightenCurve.getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,allFrames.get( nInd )[0][nPoint],allFrames.get( nInd )[1][nPoint], current_point_new);
+
+			for(int i=0;i<planeNormZero.size();i++)
+			{
+				planeNormZero.get(i).getB().localize( curr_XY_zero );
+				curr_XY_zero = Roi3D.scaleGlobInv(curr_XY_zero, BigTraceData.globCal);
+				
+				planeNormNew.get(i).getB().localize( curr_XY_new );
+				curr_XY_new = Roi3D.scaleGlobInv(curr_XY_new, BigTraceData.globCal);
+
+				for(int d=0;d<3;d++)
+				{
+					currXY_zero_mCh[d] = curr_XY_zero[d];
+					posInt[d] = Math.round( curr_XY_new[d]);
+				}
+
+				ra_out.setPosition( posInt );
+				T posFill = ra_out.get();
+				if(bUseTemplate)
+				{
+					ra_template.setPosition( new int [] {nPoint,planeNormNew.get(i).getA()[1],planeNormNew.get(i).getA()[0], nChannel} );
+					newVal = ra_template.get().getRealDouble();
+				}
+				else
+				{
+					ra.setPosition(currXY_zero_mCh);
+					newVal = ra.get().getRealDouble();
+				}
+
+				oldVal = posFill.getRealDouble();
+
+				if(newVal>oldVal)
+				{
+					posFill.setReal(newVal);
+				}
+
+				
+			}
+		}
+		
+		return outInterval;
+
+	}
+	
+	public void generateAllVolumesTIFF()
 	{
 		
 		int i;
@@ -485,7 +689,8 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 			setProgressState("generating/saving frame ("+Integer.toString(i+1)+"/"+Integer.toString(nFrames)+")");
 
 			final IntervalView< T > outInt = generateSingleVolume(i);	
-			if(bUseCompression)
+			//IJ.log( "Processed frame "+ Integer.toString( i ));
+			if(nUnCoilExport == 2)
 			{
 				saveCompressedTIFF(outInt,i);
 			}
@@ -570,7 +775,7 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		cal.pixelHeight = BigTraceData.globCal[1];
 		cal.pixelDepth = BigTraceData.globCal[2];
 		
-		final IntervalView< T > imgOut = Views.zeroMin(  Views.interval( Views.extendZero( outInterval ),allInt ));
+		final IntervalView< T > imgOut = Views.zeroMin(  Views.interval( Views.extendZero( outInterval ),unionInterval ));
 		final ImagePlus ip = VolumeMisc.wrapImgImagePlusCal(imgOut, inputROI.getName() + "_vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd),cal);
 		IJ.saveAsTiff(ip, sSaveFolderPath+ip.getTitle());
 
@@ -587,11 +792,9 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 //		cal.pixelDepth= BigTraceData.dMinVoxelSize;
 		final SCIFIOConfig config = new SCIFIOConfig();
 		config.imgSaverSetWriteRGB(false);
-		if(bUseCompression)
-		{
-			//config.writerSetCompression(CompressionType.LZW.getCompression());
-			config.writerSetCompression(CompressionType.ZLIB.getCompression());
-		}
+
+		config.writerSetCompression(CompressionType.ZLIB.getCompression());
+		
 		ImgSaver saver = new ImgSaver();
 		String sPathOutTif = sSaveFolderPath+"/"+inputROI.getName()+"_vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd) +".tif";
 		File outTif = new File(sPathOutTif);
@@ -613,7 +816,7 @@ public class UncoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		
 		final AxisType[] axisTypes = new AxisType[]{ Axes.X, Axes.Y, Axes.Z, Axes.CHANNEL};
 
-		final IntervalView< T > imgOut = Views.zeroMin(  Views.interval( Views.extendZero( outInterval ),allInt ));
+		final IntervalView< T > imgOut = Views.zeroMin(  Views.interval( Views.extendZero( outInterval ),unionInterval ));
 		
 		final ImgPlus<?> saveImg = new ImgPlus<>(wrapIntervalForSCIFIO(imgOut),"test",axisTypes);
 		
