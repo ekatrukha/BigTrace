@@ -145,7 +145,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 			{
 				setProgress(0);
 			    setProgressState("saving HDF5 (see log)...");
-				HDF5UnCoilSaver<T> saveH5 = new HDF5UnCoilSaver<>(this, bt);
+				UnCoilHDF5Saver<T> saveH5 = new UnCoilHDF5Saver<>(this, bt);
 				saveH5.exportUnCoil();
 			}
 			else
@@ -311,7 +311,6 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 				if(Math.abs( lineAngles[nTrio])>0.000000001)
 				{
 					LinAlgHelpers.quaternionFromAngleAxis(planes[nTrio].n, lineAngles[nTrio]*i/(nFrames-1), q);
-					//LinAlgHelpers.quaternionFromAngleAxis(planes[nTrio].n, lineAngles[nTrio], q);
 					segment_new.get(nTrio).localize( joint );
 					for(int nPoint = nTrio+1; nPoint<nTotPoints; nPoint++)
 					{
@@ -351,7 +350,6 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 			//LineTrace3D newROI = addROIsegment(bt, segment_new, i, ( int ) firstLine.getLineThickness());
 			LineTrace3D newROI = addROIsegment(bt, segment_new,firstLine.getTimePoint(), ( int ) firstLine.getLineThickness(), bAddROIs);
 			allRois.add( newROI );
-			//allInt = Intervals.union( allInt, newROI.getBoundingBoxMeasure() );
 		}
 		if(nUnCoilTask>0)
 		{
@@ -400,7 +398,6 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 			//make an "empty" interval
 			//union function will take the "proper one"
 			FinalInterval currInt = new FinalInterval(new long [] {10,10,10},new long [] {0,0,0});
-			//FinalInterval currInt = new FinalInterval(new long [3],new long [3] );
 
 			for (int nPoint = 0;nPoint<allSegments.get( 0 ).size();nPoint++)
 			{
@@ -458,7 +455,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 	
 	public IntervalView<T> generateSingleVolume(int nInd)
 	{
-		if(bt.btData.nTotalChannels==1)
+		if(bt.btData.nTotalChannels == 1)
 		{
 			return generateSingleVolumeSetup(nInd, 0);
 		}
@@ -472,121 +469,6 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		return Views.interval( outRAI, outRAI );
 	}
 	
-	@SuppressWarnings( "null" )
-	public IntervalView<T> generateSingleVolumev(int nInd)
-	{
-		
-		FinalInterval roiIntervBox = allIntervals.get( nInd );
-		roiIntervBox = Intervals.addDimension( roiIntervBox, 0, bt.btData.nTotalChannels-1 );
-		//FinalInterval test = Intervals.expand( allInt,2);
-	
-		RandomAccessibleInterval<T> all_RAI =  bt.btData.getAllDataRAI();
-		
-		Img<T> outImg = Util.getSuitableImgFactory(roiIntervBox, Util.getTypeFromInterval(all_RAI) ).create(roiIntervBox);
-	
-		IntervalView<T> outInterval = Views.translate( outImg, roiIntervBox.minAsLongArray() );
-		
-		// get only timePoint of the ROI
-		IntervalView< T > data_read = Views.hyperSlice( all_RAI, 3, inputROI.getTimePoint() );
-		RealRandomAccessible<T> interpolate = Views.interpolate( Views.extendZero(data_read), bt.btData.nInterpolatorFactory);
-		RealRandomAccess<T> ra = interpolate.realRandomAccess();
-		RandomAccess<T> ra_out = outInterval.randomAccess();
-		RandomAccess<T> ra_template = null;
-		if(bUseTemplate)
-		{
-			ra_template = template.randomAccess();
-		}	
-		int nRadius = (int) Math.round(0.5*allRois.get(0).getLineThickness());
-		ArrayList< ValuePair< int[],RealPoint>  > planeNormZero;
-		ArrayList< ValuePair< int[],RealPoint>  > planeNormNew;
-		double [] current_point_zero = new double [3];
-		double [] current_point_new = new double [3];
-
-		double[] curr_XY_zero = new double [3];
-		double [] currXY_zero_mCh = new double[data_read.numDimensions()];
-		double[] curr_XY_new = new double [3];
-		long [] posInt = new long[data_read.numDimensions()];
-		double newVal;
-		double oldVal;
-		for (int nPoint = 0;nPoint<allSegments.get( 0 ).size();nPoint++)
-		{
-			allSegments.get( 0 ).get(nPoint).localize(current_point_zero); 
-			planeNormZero = StraightenCurve.getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,allFrames.get( 0 )[0][nPoint],allFrames.get( 0 )[1][nPoint], current_point_zero);
-			
-			allSegments.get( nInd ).get(nPoint).localize(current_point_new); 
-			planeNormNew = StraightenCurve.getNormCircleGridXYPairs(nRadius, BigTraceData.dMinVoxelSize,allFrames.get( nInd )[0][nPoint],allFrames.get( nInd )[1][nPoint], current_point_new);
-			//double teee1 = LinAlgHelpers.dot( alFrames.get( 0)[0][nPoint],alFrames.get( 0)[1][nPoint]);
-
-			//double teee = LinAlgHelpers.dot( alFrames.get( nInd )[0][nPoint],alFrames.get( nInd )[1][nPoint]);
-			for(int i=0;i<planeNormZero.size();i++)
-			{
-				planeNormZero.get(i).getB().localize( curr_XY_zero );
-				curr_XY_zero = Roi3D.scaleGlobInv(curr_XY_zero, BigTraceData.globCal);
-				
-				planeNormNew.get(i).getB().localize( curr_XY_new );
-				curr_XY_new = Roi3D.scaleGlobInv(curr_XY_new, BigTraceData.globCal);
-
-				for(int d=0;d<3;d++)
-				{
-					currXY_zero_mCh[d] = curr_XY_zero[d];
-					posInt[d] = Math.round( curr_XY_new[d]);
-				}
-				for(int nCh=0; nCh<bt.btData.nTotalChannels; nCh++)
-				{
-					posInt[3] = nCh;
-					currXY_zero_mCh[3] = nCh;
-					ra_out.setPosition( posInt );
-					T posFill = ra_out.get();
-					if(bUseTemplate)
-					{
-						ra_template.setPosition( new int [] {nPoint,planeNormNew.get(i).getA()[1],planeNormNew.get(i).getA()[0], nCh} );
-						newVal = ra_template.get().getRealDouble();
-					}
-					else
-					{
-						ra.setPosition(currXY_zero_mCh);
-						newVal = ra.get().getRealDouble();
-					}
-					oldVal = 0.0;
-					try 
-					{
-						oldVal = posFill.getRealDouble();
-					}
-					catch(ArrayIndexOutOfBoundsException exception) 
-					{
-						
-						System.out.print( "posInt " );
-						for(int d = 0; d< posInt.length;d++)
-						{
-							System.out.print(Long.toString( posInt[d] )+" ");
-						}
-						System.out.print( " \n" );
-						System.out.print( "interval min" );
-						for(int d = 0; d< posInt.length;d++)
-						{
-							System.out.print(Long.toString(outInterval.min( d ) )+" ");
-						}
-						System.out.print( " \n" );
-						System.out.print( "interval max" );
-						for(int d = 0; d< posInt.length;d++)
-						{
-							System.out.print(Long.toString(outInterval.max( d ) )+" ");
-						}
-						System.out.print( " \n" );
-						return null;
-					}
-					if(newVal>oldVal)
-					{
-						posFill.setReal(newVal);
-					}
-				}
-				
-			}
-		}
-		
-		return outInterval;
-
-	}
 	
 	@SuppressWarnings( "null" )
 	public IntervalView<T> generateSingleVolumeSetup(int nInd, int nChannel)

@@ -38,12 +38,12 @@ import mpicbg.spim.data.sequence.TimePoints;
 import mpicbg.spim.data.sequence.ViewId;
 
 
-public class HDF5UnCoilSaver < T extends RealType< T > & NativeType< T > >
+public class UnCoilHDF5Saver < T extends RealType< T > & NativeType< T > >
 {
 	final UnCoilAnimation<T> unCoil;
 	final BigTrace<T> bt;
 
-	public HDF5UnCoilSaver(final UnCoilAnimation<T> unCoil_, final BigTrace<T> bt_)
+	public UnCoilHDF5Saver(final UnCoilAnimation<T> unCoil_, final BigTrace<T> bt_)
 	{
 		bt = bt_;
 		unCoil = unCoil_;		
