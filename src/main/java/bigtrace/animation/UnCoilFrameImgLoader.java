@@ -33,10 +33,6 @@ public class UnCoilFrameImgLoader < T extends RealType< T > & NativeType< T > > 
 	@Override
 	public BasicSetupImgLoader< UnsignedShortType> getSetupImgLoader( int setupId )
 	{
-		//final int nTPInternal = ( int ) Math.floor(setupId/(double)(bt.btData.nTotalChannels));
-		//final int nCh = setupId - nTPInternal* bt.btData.nTotalChannels;
-		final int nCh = ( int ) Math.floor(setupId/(double)(unCoil.nFrames));
-		final int nTPInternal = setupId - nCh*unCoil.nFrames;
 		
 		return new SetupImgLoader< UnsignedShortType >()
 		{
@@ -46,7 +42,7 @@ public class UnCoilFrameImgLoader < T extends RealType< T > & NativeType< T > > 
 			public RandomAccessibleInterval< UnsignedShortType > getImage( int timepointId, ImgLoaderHint... hints )
 			{
 				final RandomAccessibleInterval< ? > raiXYZ
-				= Views.zeroMin(unCoil.generateSingleVolumeSetup( nTPInternal, nCh ));
+				= Views.zeroMin(unCoil.generateSingleVolumeSetup( timepointId, setupId ));
 				if ( Util.getTypeFromInterval( raiXYZ ) instanceof UnsignedShortType )
 				{
 					return (RandomAccessibleInterval <UnsignedShortType >) raiXYZ;
@@ -80,7 +76,7 @@ public class UnCoilFrameImgLoader < T extends RealType< T > & NativeType< T > > 
 			@Override
 			public Dimensions getImageSize( int timepointId )
 			{
-				final FinalInterval currInt = unCoil.allIntervals.get( nTPInternal );
+				final FinalInterval currInt = unCoil.allIntervals.get( setupId );
 				return new FinalDimensions(currInt.dimension( 0 ),
 										   currInt.dimension( 1 ),
 										   currInt.dimension( 2 ));

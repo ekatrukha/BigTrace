@@ -32,10 +32,8 @@ import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
-import mpicbg.spim.data.sequence.MissingViews;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.TimePoints;
-import mpicbg.spim.data.sequence.ViewId;
 
 
 public class UnCoilHDF5Saver < T extends RealType< T > & NativeType< T > >
@@ -63,42 +61,23 @@ public class UnCoilHDF5Saver < T extends RealType< T > & NativeType< T > >
 		progressWriter.out().println( "starting export..." );
 		final UnCoilFrameImgLoader< T > imgLoader = new UnCoilFrameImgLoader<>(unCoil, bt);
 		final int numTimepoints = unCoil.nFrames;
-		final int numSetups = unCoil.nFrames*bt.btData.nTotalChannels;
+		final int numSetups = bt.btData.nTotalChannels;
 		
 		// write hdf5
 		final HashMap< Integer, BasicViewSetup > setups = new HashMap<>( numSetups );
 		
 		for ( int s = 0; s < numSetups; ++s )
 		{
-			//final int nTPInternal = ( int ) Math.floor(s/(double)(bt.btData.nTotalChannels));
-			//final int nCh = s - nTPInternal* bt.btData.nTotalChannels;
-			final int nCh = ( int ) Math.floor(s/(double)(unCoil.nFrames));
-			final int nTPInternal = s - nCh*unCoil.nFrames;
-			final BasicViewSetup setup = new BasicViewSetup( s, String.format( "tp %d ch %d", nTPInternal, nCh + 1 ), size, voxelSize );
-			setup.setAttribute( new Channel( nCh + 1 ) );
+
+			final BasicViewSetup setup = new BasicViewSetup( s, String.format( "channel %d", s + 1 ), size, voxelSize );
+			setup.setAttribute( new Channel( s + 1 ) );
 			setups.put( s, setup );
 		}
 		final ArrayList< TimePoint > timepoints = new ArrayList<>( numTimepoints );
 		for ( int t = 0; t < numTimepoints; ++t )
 			timepoints.add( new TimePoint( t ) );
-		//fill missing views
-		final ArrayList<ViewId> listMissingViews = new ArrayList<>();
-		for(int nTP = 0; nTP<numTimepoints; nTP++)
-		{
-			for(int nCh = 0; nCh<bt.btData.nTotalChannels; nCh++)
-			{
-				final int viewID = nTP + nCh*unCoil.nFrames;
-				for(int nTPv = 0; nTPv<numTimepoints; nTPv++)
-				{
-					if(nTPv!=nTP)
-					{
-						listMissingViews.add(new ViewId( nTPv, viewID) );
-					}
-				}
-			}
-		}
-		MissingViews missingViews = new MissingViews(listMissingViews);
-		final SequenceDescriptionMinimal seq = new SequenceDescriptionMinimal( new TimePoints( timepoints ), setups, imgLoader, missingViews );
+
+		final SequenceDescriptionMinimal seq = new SequenceDescriptionMinimal( new TimePoints( timepoints ), setups, imgLoader, null );
 		final Map< Integer, ExportMipmapInfo > perSetupExportMipmapInfo = new HashMap<>();
 		final ExportMipmapInfo mipmapInfo = autoMipmapSettings;
 		for ( final BasicViewSetup setup : seq.getViewSetupsOrdered() )
