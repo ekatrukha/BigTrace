@@ -63,6 +63,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	final BigTrace<T> bt;
 	
 	final JButton butRecord;
+	final JButton butPlayStop;
 	final JButton butUncoil;
 	final JButton butSettings;
 	final JSlider timeSlider;
@@ -84,6 +85,10 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	final KeyFrameAnimation<T> kfAnim;
 	
 	int tsSpan = 100;
+	AnimationPlayer<T> player;
+	
+	ImageIcon tabIconPlay;
+	ImageIcon tabIconStop;
 
 	public AnimationPanel(final BigTrace<T> bt)
 	{
@@ -96,6 +101,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		
 		kfAnim = new KeyFrameAnimation<>(bt,listModel);
 		kfAnim.setTotalTime( nInitialTotalTime );
+		this.player = null;
 		
 		JPanel panAnimTools = new JPanel(new GridBagLayout());  
 		panAnimTools.setBorder(new PanelTitle(" Animation "));
@@ -104,11 +110,29 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		GridBagConstraints cr = new GridBagConstraints();
 
 		
-		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/camera.png");
+		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/render.png");
 		ImageIcon tabIcon = new ImageIcon(icon_path);		
 		butRecord = new JButton(tabIcon);
-		butRecord.setToolTipText("Record video");
+		butRecord.setToolTipText("Render");
 		butRecord.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
+		
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/play.png");
+		tabIconPlay = new ImageIcon(icon_path);		
+		butPlayStop = new JButton(tabIconPlay);
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/cancel.png");
+		tabIconStop = new ImageIcon(icon_path);		
+		butPlayStop.setToolTipText("Play");
+		butPlayStop.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
+		
+		butPlayStop.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent evt) {
+				if (evt.getClickCount() == 2) 
+				{
+					 dialPlayerSettings();
+				} 
+			}
+		});
 		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/uncoil.png");
 		tabIcon = new ImageIcon(icon_path);		
@@ -123,12 +147,16 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		butSettings.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 		
 		butRecord.addActionListener( this );
+		butPlayStop.addActionListener( this );
 		butUncoil.addActionListener( this );
 		butSettings.addActionListener( this );
 				
 		cr.gridx=0;
 		cr.gridy=0;
 		panAnimTools.add(butRecord,cr);
+		
+		cr.gridx++;
+		panAnimTools.add(butPlayStop,cr);
 		
 		cr.gridx++;
 		JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
@@ -319,10 +347,43 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		cr.weighty = 0.01;
 		add(new JLabel(), cr);    
 	}
+	void runPlayer()
+	{
+		player = new AnimationPlayer< >(bt, this);
+		bt.bInputLock = true;
+		bt.setLockMode(true);
+		player.addPropertyChangeListener( bt.btPanel );
+		
+		butPlayStop.setEnabled( true );
+		butPlayStop.setIcon( tabIconStop );
+		butPlayStop.setToolTipText( "Stop playing" );
+		player.butPlayStop = butPlayStop;
+		player.tabIconPlay = tabIconPlay; 
+		player.execute();
+	}
 	
 	@Override
 	public void actionPerformed( ActionEvent e )
 	{
+		
+		// RUN TRACKING
+		if(e.getSource() == butPlayStop)
+		{
+			if(listModel.size()>0)
+			{
+				if(!bt.bInputLock )
+				{
+					runPlayer();
+				}
+				else
+				{
+					if(bt.bInputLock && butPlayStop.isEnabled() && player!=null && !player.isCancelled() && !player.isDone())
+					{
+						player.cancel( false );
+					}
+				}
+			}
+		}
 		//add keyframe
 		if(e.getSource() == butAdd)
 		{
@@ -605,6 +666,15 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			updateScene();
 		}
 		
+	}
+	
+	void dialPlayerSettings()
+	{
+		final JPanel panPlayerSettings = new JPanel();
+		panPlayerSettings.setLayout(new GridBagLayout());
+		
+		final NumberField nfFPS = new NumberField(4);
+		nfFPS.setText(Integer.toString((int)Prefs.get("BigTrace.dPlayerFPS", 24)));
 	}
 	
 	public void dialUnCoilAnimation(final Roi3D roiIn)

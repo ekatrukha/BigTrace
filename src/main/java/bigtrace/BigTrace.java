@@ -838,6 +838,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		{
 			shiftTR[d]=Double.MAX_VALUE;
 		}
+		
 		for ( SourceAndConverter< ? > source : viewer.state().getSources() )
 		{
 			AffineTransform3D transformSource = new AffineTransform3D();
@@ -864,7 +865,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		}
 		transformTranslation.identity();
 		transformTranslation.translate(shiftTR);
-		//AffineTransform3D transformfin = new AffineTransform3D();
+
+
 		// Remove voxel scale for all sources.
 		// We needed it, because later voxel size transform is applied to the general ViewerPanel.
 		for ( SourceAndConverter< ? > source : viewer.state().getSources() )
@@ -874,23 +876,15 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			(( TransformedSource< ? > ) source.getSpimSource() ).getSourceTransform(0, 0, transformSource);
 			
 			AffineTransform3D transformScale = new AffineTransform3D();
-			//AffineTransform3D transformTranslation = new AffineTransform3D();
 
-			//double [] shiftTR = new double [3];
 			for(int j=0;j<3;j++)
-			{
-				//BigTraceData.globCal[j] = transformSource.get(j, j);
+			{	
 				transformScale.set(1.0/BigTraceData.globCal[j], j, j);
-				//shiftTR[j]= (-1.0)*transformSource.get(j, 3);
 			}
-			//transformTranslation.identity();
-			//transformTranslation.translate(shiftTR);
-			//AffineTransform3D transformFinal = transformScale.concatenate(transformTranslation);
+
 			AffineTransform3D transformFinal = transformScale.concatenate(transformTranslation);
 			(( TransformedSource< ? > ) source.getSpimSource() ).setFixedTransform(transformFinal);
-//			(( TransformedSource< ? > ) source.getSpimSource() ).setIncrementalTransform(transformFinal);
-			
-			//(( TransformedSource< ? > ) source.getSpimSource() ).getSourceTransform(0, 0, transformfin);
+
 		}
 
 		if(bApplyLLSTransform)
