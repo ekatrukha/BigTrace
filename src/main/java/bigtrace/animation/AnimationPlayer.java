@@ -18,6 +18,8 @@ public class AnimationPlayer < T extends RealType< T > & NativeType< T > >  exte
 	final BigTrace<T> bt;
 	final AnimationPanel< T > aPanel;
 	final JSlider timeSlider;
+	
+	public boolean bLoopBackAndForth = false;
 
 	JButton butPlayStop = null;
 	ImageIcon tabIconPlay = null;
@@ -45,24 +47,36 @@ public class AnimationPlayer < T extends RealType< T > & NativeType< T > >  exte
 	protected Void doInBackground() throws Exception
 	{
 		int currVal = timeSlider.getValue();
-		float dNorm = (float)(aPanel.tsSpan)/aPanel.kfAnim.getTotalTime();
-		float currentTime = (timeSlider.getValue())*dNorm;
-		float dT = 1.0f/24.0f;
-		
+		long dWaitPure = Math.round( 1000.0f*aPanel.kfAnim.getTotalTime()/aPanel.tsSpan);
+		int dInc = 1;
+		long dWait;
 		//float dT = 0.5f;
-		
 		while(true)
 		{
-			Thread.sleep(Math.round( dT*1000.0f ));
-			currentTime += dT;
-			currVal  = Math.round( dNorm*currentTime );
-			//currVal ++;
+			dWait = Math.round( dWaitPure / aPanel.fPlaySpeedFactor);
+			Thread.sleep(Math.round( dWait));
+			currVal += dInc;
 			if(currVal >timeSlider.getMaximum())
 			{
-				currVal = timeSlider.getMinimum();
-				currentTime = 0.0f;
+				if(!aPanel.bPlayerBackForth)
+				{
+					currVal = timeSlider.getMinimum();
+				}
+				else
+				{
+					dInc = -1;
+					currVal = timeSlider.getMaximum()-1;
+				}
 			}
+			if(currVal <timeSlider.getMinimum())
+			{
+				dInc = 1;
+				currVal = 1;
+			}
+			
+			
 			timeSlider.setValue( currVal );
+			
 			if(isCancelled())
 			{
 				return null;	

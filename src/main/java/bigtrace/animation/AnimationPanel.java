@@ -89,6 +89,9 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	
 	ImageIcon tabIconPlay;
 	ImageIcon tabIconStop;
+	
+	float fPlaySpeedFactor  = 1.0f ;
+	boolean bPlayerBackForth = Prefs.get("BigTrace.bPlayerBackForth", false);
 
 	public AnimationPanel(final BigTrace<T> bt)
 	{
@@ -127,7 +130,8 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		butPlayStop.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent evt) {
-				if (evt.getClickCount() == 2) 
+				if (SwingUtilities.isRightMouseButton(evt))
+				//if (evt.getClickCount() == 2) 
 				{
 					 dialPlayerSettings();
 				} 
@@ -673,8 +677,43 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		final JPanel panPlayerSettings = new JPanel();
 		panPlayerSettings.setLayout(new GridBagLayout());
 		
-		final NumberField nfFPS = new NumberField(4);
-		nfFPS.setText(Integer.toString((int)Prefs.get("BigTrace.dPlayerFPS", 24)));
+		GridBagConstraints cd = new GridBagConstraints();
+		GBCHelper.alighLeft(cd);
+
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
+		
+		final NumberField nfSpeedFactor = new NumberField(4);
+		nfSpeedFactor.setText(df.format(fPlaySpeedFactor));
+		
+		cd.gridx=0;
+		cd.gridy=0;	
+		panPlayerSettings.add(new JLabel("Play speed (0.01-100):"),cd);
+		cd.gridx++;
+		panPlayerSettings.add(nfSpeedFactor, cd);	
+		
+		JCheckBox cbBackForth = new JCheckBox();
+		cbBackForth.setSelected( Prefs.get("BigTrace.bPlayerBackForth", false) );
+		cd.gridy++;
+		cd.gridx=0;
+		panPlayerSettings.add(new JLabel("Loop back and forth"),cd);
+		cd.gridx++;
+		panPlayerSettings.add(cbBackForth,cd);
+		
+		int reply = JOptionPane.showConfirmDialog(null, panPlayerSettings, "Play preview ettings", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			
+			fPlaySpeedFactor = ( float ) Math.min(Math.max( 0.01,Math.abs( Float.parseFloat( nfSpeedFactor.getText()))),100);
+			
+			bPlayerBackForth = cbBackForth.isSelected();
+			Prefs.set("BigTrace.bPlayerBackForth", bPlayerBackForth);
+			
+			
+		
+		}
 	}
 	
 	public void dialUnCoilAnimation(final Roi3D roiIn)
