@@ -822,7 +822,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			dialSettings();
 		}
 		//extract clipped view
-		if(e.getSource() ==clipPanel.butExtractClipped)
+		if(e.getSource() == clipPanel.butExtractClipped)
 		{
 			extractClippedView();
 		}

@@ -35,6 +35,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
+import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -72,6 +73,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	final JButton butReplace;
 	final JButton butEdit;
 	final JButton butDelete;
+	final JToggleButton butUpdateSlider;
 	
 	//keyFrame list
 	final public DefaultListModel<KeyFrame> listModel; 
@@ -92,6 +94,8 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	
 	float fPlaySpeedFactor  = 1.0f ;
 	boolean bPlayerBackForth = Prefs.get("BigTrace.bPlayerBackForth", false);
+	
+	boolean bUpdateSlider = true;
 
 	public AnimationPanel(final BigTrace<T> bt)
 	{
@@ -280,13 +284,18 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		cr.gridy++;
 		butEdit = new JButton("Edit");
 		butEdit.addActionListener(this);
-		panAnimPlot.add( butEdit, cr );
-		
+		panAnimPlot.add( butEdit, cr );		
 		
 		cr.gridy++;
 		butDelete = new JButton("Delete");
 		butDelete.addActionListener(this);
 		panAnimPlot.add( butDelete, cr );
+		
+		cr.gridy++;
+		butUpdateSlider = new JToggleButton("<html><center>Slider<br>update</center></html>");
+		butUpdateSlider.setSelected( true );
+		butUpdateSlider.addActionListener(this);
+		panAnimPlot.add( butUpdateSlider, cr );
 		
 		// a solution for now
 		final Dimension butDim = butReplace.getPreferredSize();
@@ -303,7 +312,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		// Blank/filler component
 		cr.gridy++;
 		cr.weightx = 0.01;
-		cr.weighty = 0.01;
+		cr.weighty = 0.05;
 		panAnimPlot.add(new JLabel(), cr);	
 		
 		
@@ -404,6 +413,13 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			deleteSelectedKeyFrame();
 		}
 		
+		//toggle update slider
+		if(e.getSource() == butUpdateSlider)
+		{
+			bUpdateSlider = butUpdateSlider.isSelected();
+		}
+		
+		//uncoil animation
 		if(e.getSource() == butUncoil)
 		{
 			if (bt.roiManager.jlist.getSelectedIndex()>-1)
@@ -665,9 +681,12 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	@Override
 	public void stateChanged( ChangeEvent e )
 	{
-		if(e.getSource()==timeSlider)
+		if(e.getSource() == timeSlider)
 		{
-			updateScene();
+			if(bUpdateSlider)
+			{
+				updateScene();
+			}
 		}
 		
 	}

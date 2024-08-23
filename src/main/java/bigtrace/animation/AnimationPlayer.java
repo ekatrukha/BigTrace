@@ -23,6 +23,7 @@ public class AnimationPlayer < T extends RealType< T > & NativeType< T > >  exte
 
 	JButton butPlayStop = null;
 	ImageIcon tabIconPlay = null;
+	boolean bUpdateSliderOff = true;
 	
 	@Override
 	public String getProgressState()
@@ -50,6 +51,15 @@ public class AnimationPlayer < T extends RealType< T > & NativeType< T > >  exte
 		long dWaitPure = Math.round( 1000.0f*aPanel.kfAnim.getTotalTime()/aPanel.tsSpan);
 		int dInc = 1;
 		long dWait;
+		if(aPanel.bUpdateSlider == false)
+		{
+			bUpdateSliderOff = true;
+			aPanel.bUpdateSlider = true;
+		}
+		else
+		{
+			bUpdateSliderOff = false;
+		}
 		//float dT = 0.5f;
 		while(true)
 		{
@@ -117,6 +127,10 @@ public class AnimationPlayer < T extends RealType< T > & NativeType< T > >  exte
     	{
     		butPlayStop.setIcon( tabIconPlay );
     		butPlayStop.setToolTipText( "Play" );
+    		if(bUpdateSliderOff)
+    		{
+    			aPanel.bUpdateSlider = false;
+    		}
     	}
 
     	//unlock user interaction

@@ -426,6 +426,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		 	 GuiMisc.setPanelStatusAllComponents(btPanel.roiMeasure, bState);
 		 	 GuiMisc.setPanelStatusAllComponents(btPanel.btTracksPanel, bState);
 		 	 GuiMisc.setPanelStatusAllComponents(btPanel.btAniPanel, bState);
+		 	 btPanel.voxelSizePanel.allowVoxelSizeChange(bState);
+		 	 btPanel.clipPanel.butExtractClipped.setEnabled( bState );
 		 	 //keep it on
 		 	 roiManager.butShowAll.setEnabled(true);
 	}
