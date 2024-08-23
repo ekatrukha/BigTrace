@@ -73,7 +73,6 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	final JButton butReplace;
 	final JButton butEdit;
 	final JButton butDelete;
-	final JToggleButton butUpdateSlider;
 	
 	//keyFrame list
 	final public DefaultListModel<KeyFrame> listModel; 
@@ -83,16 +82,25 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	final DrawKeyPoints keyMarks;
 	
 	NumberField nfTotalTime;
+	public static final int ANIMTIME_START=0, ANIMTIME_END=1, ANIMTIME_STRETCH=2;
+	
+	int nChangeTotalTimeMode = (int)Prefs.get("BigTrace.nChangeTotalTimeMode", ANIMTIME_END);
 	
 	final KeyFrameAnimation<T> kfAnim;
 	
+	final JToggleButton butUpdateSlider;
+
+	/** slider span in slider units**/
 	int tsSpan = 100;
+	
+	/** play preview **/
 	AnimationPlayer<T> player;
 	
 	ImageIcon tabIconPlay;
 	ImageIcon tabIconStop;
 	
 	float fPlaySpeedFactor  = 1.0f ;
+	
 	boolean bPlayerBackForth = Prefs.get("BigTrace.bPlayerBackForth", false);
 	
 	boolean bUpdateSlider = true;
@@ -328,6 +336,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		nfTotalTime.setText(Integer.toString( (int)Math.ceil( kfAnim.getTotalTime())));
 		nfTotalTime.setMinimumSize(nfTotalTime.getPreferredSize());
 		nfTotalTime.addListener(this);
+		
 		panTotTime.add(nfTotalTime,cr);
 		
 		
@@ -507,24 +516,57 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		}
 	}
 
+	/** total time of the animation changed **/
 	@Override
 	public void valueChanged( double v )
 	{
+		int nOldTime = kfAnim.nTotalTime;
+		int nNewTime = ( int ) Math.round( Math.abs( v ) );
 		
-		int nNewTime= ( int ) Math.round( Math.abs( v ) );
-		//int nOldTime = kfAnim.getTotalTime();
-		kfAnim.setTotalTime(nNewTime );
-		setSliderTotalTime();
-		//check that keyframes are still in range
-		for (int i=0;i<listModel.size(); i++)
+		if(listModel.size()>0)
 		{
-			if(listModel.get( i ).fMovieTimePoint>nNewTime)
+		
+			dialChangeTotalTime(nNewTime>=nOldTime);
+			
+
+			kfAnim.setTotalTime(nNewTime);
+			setSliderTotalTime();
+			
+			switch(nChangeTotalTimeMode)
 			{
-				listModel.get( i ).fMovieTimePoint = nNewTime;
+
+			case ANIMTIME_START:
+				for (int i=0;i<listModel.size(); i++)
+				{
+					listModel.get( i ).fMovieTimePoint += nNewTime - nOldTime;
+				}
+				break;
+			case ANIMTIME_STRETCH:
+				for (int i=0;i<listModel.size(); i++)
+				{
+					listModel.get( i ).fMovieTimePoint *=(nNewTime/(float)(nOldTime));
+				}
+				break;
 			}
+			if(nChangeTotalTimeMode!=ANIMTIME_STRETCH)
+			{
+				//check that keyframes are still in range
+				for (int i=0;i<listModel.size(); i++)
+				{
+					if(listModel.get( i ).fMovieTimePoint>nNewTime)
+					{
+						listModel.get( i ).fMovieTimePoint = nNewTime;
+					}
+					if(listModel.get( i ).fMovieTimePoint<0)
+					{
+						listModel.get( i ).fMovieTimePoint = 0;
+					}
+				}
+			}
+
+			updateKeyMarks();
+			kfAnim.updateTransitionTimeline();
 		}
-		updateKeyMarks();
-		kfAnim.updateTransitionTimeline();
 	}
 	
 	public void setSliderTotalTime()
@@ -678,6 +720,10 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			bt.setScene( kfAnim.getScene( fTimePoint ) );
 		}
 	}
+	
+
+	
+	
 	@Override
 	public void stateChanged( ChangeEvent e )
 	{
@@ -733,6 +779,40 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			
 		
 		}
+	}
+	
+	void dialChangeTotalTime(boolean bLarger)
+	{
+		final JPanel panelTotTimeSettings = new JPanel();
+		panelTotTimeSettings.setLayout(new GridBagLayout());
+		
+		GridBagConstraints cd = new GridBagConstraints();
+		GBCHelper.alighLeft(cd);
+		
+		final String[] sTotTimeOptionsL  = { "Add at the start", "Add at the end", "Stretch"};
+		final String[] sTotTimeOptionsS = { "Cut at the start", "Cut at the end", "Compress"};
+		final JComboBox<String> cbTotTimeOptions;
+		if(bLarger)
+		{
+			cbTotTimeOptions = new JComboBox<>(sTotTimeOptionsL);
+		}
+		else
+		{
+			cbTotTimeOptions = new JComboBox<>(sTotTimeOptionsS);
+		}
+		cbTotTimeOptions.setSelectedIndex(nChangeTotalTimeMode);
+		cd.gridx=0;
+		cd.gridy=0;	
+
+		panelTotTimeSettings.add(cbTotTimeOptions, cd);	
+		int reply = JOptionPane.showConfirmDialog(null, panelTotTimeSettings, "Change total time", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			nChangeTotalTimeMode = cbTotTimeOptions.getSelectedIndex();
+			Prefs.set("BigTrace.nChangeTotalTimeMode", nChangeTotalTimeMode);
+		}
+		
 	}
 	
 	public void dialUnCoilAnimation(final Roi3D roiIn)
