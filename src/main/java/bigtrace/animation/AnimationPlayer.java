@@ -123,7 +123,7 @@ public class AnimationPlayer < T extends RealType< T > & NativeType< T > >  exte
     	}
 	
 
-    	if(butPlayStop!= null && tabIconPlay!= null)
+    	if(butPlayStop != null && tabIconPlay!= null)
     	{
     		butPlayStop.setIcon( tabIconPlay );
     		butPlayStop.setToolTipText( "Play" );

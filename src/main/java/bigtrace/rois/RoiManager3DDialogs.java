@@ -26,15 +26,14 @@ import ij.Prefs;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
-public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
-	final BigTrace<T> bt;
+public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > 
+{	
 	
-	
+	final BigTrace<T> bt;	
 
 	public RoiManager3DDialogs(BigTrace<T> bt_)
 	{
 		bt = bt_;
-		
 	}
 	
 	public void dialSemiAutoProperties()

@@ -75,7 +75,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	final RoiManager3D<T> roiManager;
 	final RoiMeasure3D<T> roiMeasure;
 	TrackingPanel<T> btTracksPanel;
-	AnimationPanel <T> btAniPanel;
+	public AnimationPanel <T> btAniPanel;
 
 	double [][] nDisplayMinMax;
 

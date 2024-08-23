@@ -9,7 +9,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -18,24 +17,18 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
-import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -48,17 +41,12 @@ import javax.swing.event.ListSelectionListener;
 
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.util.LinAlgHelpers;
 
 import bigtrace.BigTrace;
-import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
-import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.Roi3D;
-import ij.IJ;
 import ij.Prefs;
-import ij.io.OpenDialog;
 
 public class AnimationPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener,  NumberField.Listener, ChangeListener, ActionListener
 {
@@ -77,12 +65,15 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	
 	//keyFrame list
 	final public DefaultListModel<KeyFrame> listModel; 
+	
 	final public JList<KeyFrame> jlist;
+	
 	final JScrollPane listScroller;
 	
 	final DrawKeyPoints keyMarks;
 	
 	NumberField nfTotalTime;
+	
 	public static final int ANIMTIME_START=0, ANIMTIME_END=1, ANIMTIME_STRETCH=2;
 	
 	int nChangeTotalTimeMode = (int)Prefs.get("BigTrace.nChangeTotalTimeMode", ANIMTIME_END);
@@ -97,7 +88,10 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	/** play preview **/
 	AnimationPlayer<T> player;
 	
+	ImageIcon tabIconRecord;
+	
 	ImageIcon tabIconPlay;
+	
 	ImageIcon tabIconStop;
 	
 	float fPlaySpeedFactor  = 1.0f ;
@@ -105,10 +99,23 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	boolean bPlayerBackForth = Prefs.get("BigTrace.bPlayerBackForth", false);
 	
 	boolean bUpdateSlider = true;
+	
+	/** keyframe render **/
+	AnimationRender<T> render;
+	
+	int nRenderFPS = (int)Prefs.get("BigTrace.nRenderFPS", 24.0);
+	int nRenderWidth = 1280;
+	int nRenderHeight = 720;
+	
+	String sRenderSavePath = null;
+	
+	final AnimationPanelDialogs<T> dialogsAnim;
 
 	public AnimationPanel(final BigTrace<T> bt)
 	{
 		this.bt = bt;
+		
+		dialogsAnim = new AnimationPanelDialogs<>(bt, this);
 		
 		int nInitialTotalTime = 5;
 		
@@ -127,14 +134,15 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 
 		
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/render.png");
-		ImageIcon tabIcon = new ImageIcon(icon_path);		
-		butRecord = new JButton(tabIcon);
+		tabIconRecord = new ImageIcon(icon_path);
+		butRecord = new JButton(tabIconRecord);
 		butRecord.setToolTipText("Render");
 		butRecord.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/play.png");
 		tabIconPlay = new ImageIcon(icon_path);		
 		butPlayStop = new JButton(tabIconPlay);
+		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/cancel.png");
 		tabIconStop = new ImageIcon(icon_path);		
 		butPlayStop.setToolTipText("Play");
@@ -146,13 +154,13 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 				if (SwingUtilities.isRightMouseButton(evt))
 				//if (evt.getClickCount() == 2) 
 				{
-					 dialPlayerSettings();
+					dialogsAnim.dialPlayerSettings();
 				} 
 			}
 		});
 		
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/uncoil.png");
-		tabIcon = new ImageIcon(icon_path);		
+		ImageIcon tabIcon = new ImageIcon(icon_path);		
 		butUncoil = new JButton(tabIcon);
 		butUncoil.setToolTipText("Straighten animation");
 		butUncoil.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
@@ -370,6 +378,22 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		cr.weighty = 0.01;
 		add(new JLabel(), cr);    
 	}
+	
+	void runRender()
+	{
+		render = new AnimationRender< >(bt, this);
+		bt.bInputLock = true;
+		bt.setLockMode(true);
+		render.addPropertyChangeListener( bt.btPanel );
+		
+		butRecord.setEnabled( true );
+		butRecord.setIcon( tabIconStop );
+		butRecord.setToolTipText( "Stop render" );
+		render.butRecord = butRecord;
+		render.tabIconRecord = tabIconRecord; 
+		render.execute();
+	}
+	
 	void runPlayer()
 	{
 		player = new AnimationPlayer< >(bt, this);
@@ -388,6 +412,28 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	@Override
 	public void actionPerformed( ActionEvent e )
 	{
+		
+		//run render
+		if(e.getSource() == butRecord)
+		{
+			if(listModel.size()>0)
+			{
+				if(!bt.bInputLock )
+				{
+					if(dialogsAnim.dialRenderSettings())
+					{
+						runRender();
+					}
+				}
+				else
+				{
+					if(bt.bInputLock && butRecord.isEnabled() && render!=null && !render.isCancelled() && !render.isDone())
+					{
+						render.cancel( false );
+					}
+				}
+			}
+		}
 		
 		//run player
 		if(e.getSource() == butPlayStop)
@@ -442,7 +488,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 				Roi3D selROI = bt.roiManager.rois.get(bt.roiManager.jlist.getSelectedIndex());
 				if(selROI.getType()==Roi3D.LINE_TRACE || selROI.getType()==Roi3D.POLYLINE)
 				{
-					dialUnCoilAnimation(selROI);
+					dialogsAnim.dialUnCoilAnimation(selROI);
 				}
 				else
 				{
@@ -516,7 +562,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		int nInd = jlist.getSelectedIndex();
 		if(nInd>=0)
 		{
-			if(dialEditKeyFrame(nInd))
+			if(dialogsAnim.dialEditKeyFrame(nInd))
 			{
 				updateKeyIndices();
 				updateKeyMarks();
@@ -548,28 +594,29 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		if(listModel.size()>0)
 		{
 		
-			dialChangeTotalTime(nNewTime>=nOldTime);
+			dialogsAnim.dialChangeTotalTime(nNewTime>=nOldTime);
 			
-
 			kfAnim.setTotalTime(nNewTime);
+			
 			setSliderTotalTime();
 			
 			switch(nChangeTotalTimeMode)
 			{
-
-			case ANIMTIME_START:
-				for (int i=0;i<listModel.size(); i++)
-				{
-					listModel.get( i ).fMovieTimePoint += nNewTime - nOldTime;
-				}
-				break;
-			case ANIMTIME_STRETCH:
-				for (int i=0;i<listModel.size(); i++)
-				{
-					listModel.get( i ).fMovieTimePoint *=(nNewTime/(float)(nOldTime));
-				}
-				break;
+				case ANIMTIME_START:
+					for (int i=0;i<listModel.size(); i++)
+					{
+						listModel.get( i ).fMovieTimePoint += nNewTime - nOldTime;
+					}
+					break;
+					
+				case ANIMTIME_STRETCH:
+					for (int i=0;i<listModel.size(); i++)
+					{
+						listModel.get( i ).fMovieTimePoint *=(nNewTime/(float)(nOldTime));
+					}
+					break;
 			}
+			
 			if(nChangeTotalTimeMode!=ANIMTIME_STRETCH)
 			{
 				//check that keyframes are still in range
@@ -600,12 +647,13 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			tsSpan = kfAnim.getTotalTime()*10;
 		else
 			tsSpan = kfAnim.getTotalTime();
+		
 		timeSlider.setMaximum( tsSpan );
 		
 		int oneTick = Math.round(nTickTime* tsSpan/kfAnim.getTotalTime() );
+		
 		timeSlider.setMajorTickSpacing(oneTick);
-		//timeSlider.setMajorTickSpacing(oneSec);
-		//timeSlider.setMinorTickSpacing(Math.round( oneSec/2 ));
+
 		Hashtable< Integer, JLabel > labelTable = new Hashtable<>();
 		
 		for(int i = 0;i<=kfAnim.getTotalTime();i+=nTickTime)
@@ -613,7 +661,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			int kk = i* tsSpan/kfAnim.getTotalTime();
 			labelTable.put( new Integer(kk ), new JLabel(Integer.toString( i )) );	
 		}
-		//labelTable.put( new Integer(13 ), new JLabel("test") );	
+
 		timeSlider.setLabelTable( labelTable );
 	}
 	
@@ -743,8 +791,6 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		}
 	}
 	
-
-	
 	
 	@Override
 	public void stateChanged( ChangeEvent e )
@@ -759,312 +805,6 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		
 	}
 	
-	boolean dialEditKeyFrame(final int nInd)
-	{
-		
-		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
-		decimalFormatSymbols.setDecimalSeparator('.');
-		DecimalFormat df = new DecimalFormat("0.0", decimalFormatSymbols);
-		
-		final JPanel panEdit = new JPanel();
-		panEdit.setLayout(new GridBagLayout());
-		
-		GridBagConstraints cd = new GridBagConstraints();
-		GBCHelper.alighLeft(cd);
-		
-		JTextField tfName = new JTextField(listModel.get( nInd ).name); 
-		
-		NumberField nfTimePoint = new NumberField(4);		
-		nfTimePoint.setText(df.format(listModel.get( nInd ).fMovieTimePoint));
-		
-		cd.gridx=0;
-		cd.gridy=0;	
-		panEdit.add(new JLabel("Name:"),cd);
-		cd.gridx++;
-		panEdit.add(tfName, cd);	
-		
-		cd.gridx=0;
-		cd.gridy++;	
-		panEdit.add(new JLabel("Time position:"),cd);
-		cd.gridx++;
-		panEdit.add(nfTimePoint, cd);	
-		
-		
-		int reply = JOptionPane.showConfirmDialog(null, panEdit, "Edit KeyFrame", 
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-				
-		if (reply == JOptionPane.OK_OPTION) 
-		{
-		
-			if(tfName.getText().length()>0)
-			{
-				listModel.get( nInd ).name = tfName.getText();
-			}
-			float fNewTime = Math.min(Math.max(0, Float.parseFloat( nfTimePoint.getText())), kfAnim.nTotalTime);
-			if(Math.abs( listModel.get( nInd ).fMovieTimePoint - fNewTime)>0.001)
-			{
-				listModel.get( nInd ).fMovieTimePoint = fNewTime;
-				return true;
-			}
-			return false;
-		}
-		return false;
-	}
-	
-	void dialPlayerSettings()
-	{
-		final JPanel panPlayerSettings = new JPanel();
-		panPlayerSettings.setLayout(new GridBagLayout());
-		
-		GridBagConstraints cd = new GridBagConstraints();
-		GBCHelper.alighLeft(cd);
 
-		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
-		decimalFormatSymbols.setDecimalSeparator('.');
-		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
-		
-		final NumberField nfSpeedFactor = new NumberField(4);
-		nfSpeedFactor.setText(df.format(fPlaySpeedFactor));
-		
-		cd.gridx=0;
-		cd.gridy=0;	
-		panPlayerSettings.add(new JLabel("Play speed (0.01-100):"),cd);
-		cd.gridx++;
-		panPlayerSettings.add(nfSpeedFactor, cd);	
-		
-		JCheckBox cbBackForth = new JCheckBox();
-		cbBackForth.setSelected( Prefs.get("BigTrace.bPlayerBackForth", false) );
-		cd.gridy++;
-		cd.gridx=0;
-		panPlayerSettings.add(new JLabel("Loop back and forth"),cd);
-		cd.gridx++;
-		panPlayerSettings.add(cbBackForth,cd);
-		
-		int reply = JOptionPane.showConfirmDialog(null, panPlayerSettings, "Play preview ettings", 
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (reply == JOptionPane.OK_OPTION) 
-		{
-			
-			fPlaySpeedFactor = ( float ) Math.min(Math.max( 0.01,Math.abs( Float.parseFloat( nfSpeedFactor.getText()))),100);
-			
-			bPlayerBackForth = cbBackForth.isSelected();
-			Prefs.set("BigTrace.bPlayerBackForth", bPlayerBackForth);
-			
-			
-		
-		}
-	}
-	
-	void dialChangeTotalTime(boolean bLarger)
-	{
-		final JPanel panelTotTimeSettings = new JPanel();
-		panelTotTimeSettings.setLayout(new GridBagLayout());
-		
-		GridBagConstraints cd = new GridBagConstraints();
-		GBCHelper.alighLeft(cd);
-		
-		final String[] sTotTimeOptionsL  = { "Add at the start", "Add at the end", "Stretch"};
-		final String[] sTotTimeOptionsS = { "Cut at the start", "Cut at the end", "Compress"};
-		final JComboBox<String> cbTotTimeOptions;
-		if(bLarger)
-		{
-			cbTotTimeOptions = new JComboBox<>(sTotTimeOptionsL);
-		}
-		else
-		{
-			cbTotTimeOptions = new JComboBox<>(sTotTimeOptionsS);
-		}
-		cbTotTimeOptions.setSelectedIndex(nChangeTotalTimeMode);
-		cd.gridx=0;
-		cd.gridy=0;	
 
-		panelTotTimeSettings.add(cbTotTimeOptions, cd);	
-		int reply = JOptionPane.showConfirmDialog(null, panelTotTimeSettings, "Change total time", 
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (reply == JOptionPane.OK_OPTION) 
-		{
-			nChangeTotalTimeMode = cbTotTimeOptions.getSelectedIndex();
-			Prefs.set("BigTrace.nChangeTotalTimeMode", nChangeTotalTimeMode);
-		}
-		
-	}
-	
-	public void dialUnCoilAnimation(final Roi3D roiIn)
-	{
-		
-		int nUnCoilTask;
-		int nTotFramesUnCoil;
-		boolean bFinalVector;
-		boolean bCleanVolume;
-		int nUnCoilExport;
-		
-		final JPanel unCoilSettings = new JPanel();
-		unCoilSettings.setLayout(new GridBagLayout());
-		
-		GridBagConstraints cd = new GridBagConstraints();
-		GBCHelper.alighLeft(cd);
-		
-		
-		final String[] sUnCoilTask = { "Generate ROIs only", "Generate ROIs and volumes"};
-		JComboBox<String> cbUnCoilTask = new JComboBox<>(sUnCoilTask);
-		cbUnCoilTask.setSelectedIndex((int)Prefs.get("BigTrace.nUnCoilTask", 0));
-		cd.gridx=0;
-		cd.gridy=0;	
-		unCoilSettings.add(new JLabel("Straighten/Uncoil task:"),cd);
-		cd.gridx++;
-		unCoilSettings.add(cbUnCoilTask, cd);	
-		
-		final NumberField nfTotFrames = new NumberField(4);
-		nfTotFrames.setIntegersOnly(true);
-		nfTotFrames.setText(Integer.toString((int)Prefs.get("BigTrace.nTotFramesUnCoil", 60)));
-		cd.gridy++;
-		cd.gridx=0;
-		unCoilSettings.add(new JLabel("Total number of frames (>=2):"),cd);
-		cd.gridx++;
-		unCoilSettings.add(nfTotFrames,cd);
-
-		JCheckBox cbFinalVector = new JCheckBox();
-		cbFinalVector.setSelected( Prefs.get("BigTrace.bFinalVector", false) );
-		cd.gridy++;
-		cd.gridx=0;
-		unCoilSettings.add(new JLabel("Specify final orientation vector?"),cd);
-		cd.gridx++;
-		unCoilSettings.add(cbFinalVector,cd);
-		
-		JCheckBox cbAddCleanVolume = new JCheckBox();
-		cbAddCleanVolume.setSelected( Prefs.get("BigTrace.bCleanVolume", false) );
-		cd.gridy++;
-		cd.gridx=0;
-		unCoilSettings.add(new JLabel("Use modified straight volume?"),cd);
-		cd.gridx++;
-		unCoilSettings.add(cbAddCleanVolume,cd);
-
-		final String[] sUnCoilExport = { "Export as BDV HDF5", "Export as TIF","Export as compressed TIF"};
-		JComboBox<String> cbUnCoilExport = new JComboBox<>(sUnCoilExport);
-		cbUnCoilExport.setSelectedIndex((int)Prefs.get("BigTrace.sUnCoilExport", 0));
-		
-		cd.gridy++;
-		cd.gridx=0;
-		unCoilSettings.add(new JLabel("Use compression for TIFF?"),cd);
-		cd.gridx++;
-		unCoilSettings.add(cbUnCoilExport,cd);
-		
-		int reply = JOptionPane.showConfirmDialog(null, unCoilSettings, "Straighten animation", 
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (reply == JOptionPane.OK_OPTION) 
-		{
-			nUnCoilTask = cbUnCoilTask.getSelectedIndex();
-			Prefs.set("BigTrace.nUnCoilTask", nUnCoilTask);
-			
-			nTotFramesUnCoil = Math.max( 2,Math.abs( Integer.parseInt(nfTotFrames.getText())));
-			Prefs.set("BigTrace.nTotFramesUnCoil", nTotFramesUnCoil);
-			
-			bFinalVector = cbFinalVector.isSelected();
-			Prefs.set("BigTrace.bFinalVector", bFinalVector);
-			
-			bCleanVolume = cbAddCleanVolume.isSelected();
-			Prefs.set("BigTrace.bCleanVolume", bCleanVolume);
-			
-			nUnCoilExport = cbUnCoilExport.getSelectedIndex();
-			Prefs.set("BigTrace.nUnCoilExport", nUnCoilExport);
-			
-			double [] dFinalOrientation = null;
-			
-			if(bFinalVector)
-			{
-				dFinalOrientation =  dialFinalVector();
-				if(dFinalOrientation == null)
-				{
-					bt.btPanel.progressBar.setString("straightening animation aborted.");
-					return;
-				}
-			}
-			//if need to provide clean volume
-			String filenameCleanTIF = null;
-			if(bCleanVolume && nUnCoilTask>0)
-			{
-				OpenDialog openDial = new OpenDialog("Load modified straightened TIF","", "*.tif");
-				
-		        String path = openDial.getDirectory();
-		        if (path==null)
-		        	return;
-
-		        filenameCleanTIF = path+openDial.getFileName();
-			}
-			
-			//if saving, ask for the path
-			String sSaveDir = "";
-			if(nUnCoilTask > 0)
-			{
-				sSaveDir = IJ.getDirectory("Save animation volumes to..");
-				if(sSaveDir == null)
-				{
-					bt.btPanel.progressBar.setString("straightening animation aborted.");
-					return;
-				}
-			}
-			
-			UnCoilAnimation<T> unAnim = new UnCoilAnimation<>(bt);
-			unAnim.inputROI = ( AbstractCurve3D ) roiIn;
-			unAnim.nFrames = nTotFramesUnCoil;
-			unAnim.nUnCoilTask = nUnCoilTask;
-			unAnim.finalOrientation = dFinalOrientation;
-			unAnim.sSaveFolderPath = sSaveDir;
-			unAnim.nUnCoilExport = nUnCoilExport;
-			if(bCleanVolume && nUnCoilTask>0)
-			{
-				unAnim.bUseTemplate = true;
-				if(!unAnim.loadTemplate( filenameCleanTIF ))
-					return;
-			}
-			unAnim.addPropertyChangeListener(bt.btPanel);
-			unAnim.execute();
-		}
-	}
-	public double[] dialFinalVector()
-	{
-		JPanel pFinalVector = new JPanel(new GridLayout(0,2,6,0));
-		double [] dFinalVector = new double[3];
-		ArrayList<NumberField> nfCoalignVector = new ArrayList<>();
-		int d;
-		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
-		decimalFormatSymbols.setDecimalSeparator('.');
-		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
-		for(d=0;d<3;d++)
-		{
-			nfCoalignVector.add( new NumberField(4));
-			nfCoalignVector.get(d).setText(df.format(Prefs.get("BigTrace.finalVec"+Integer.toString(d),1.0)));
-		}
-		pFinalVector.add(new JLabel("X coord: "));
-		pFinalVector.add(nfCoalignVector.get(0));
-		pFinalVector.add(new JLabel("Y coord: "));
-		pFinalVector.add(nfCoalignVector.get(1));
-		pFinalVector.add(new JLabel("Z coord: "));
-		pFinalVector.add(nfCoalignVector.get(2));
-		
-		int reply = JOptionPane.showConfirmDialog(null, pFinalVector, "Coalignment vector coordinates", 
-		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (reply == JOptionPane.OK_OPTION) 
-		{
-			double [] inVector = new double[3];
-			for(d=0;d<3;d++)
-				inVector[d] = Double.parseDouble(nfCoalignVector.get(d).getText());
-			double len = LinAlgHelpers.length(inVector);
-			if(len<0.000001)
-			{
-				IJ.error("Vector length should be more than zero!");
-				return null;
-			}
-			LinAlgHelpers.normalize(inVector);
-			for(d=0;d<3;d++)
-			{
-				dFinalVector[d] = inVector[d];
-				Prefs.set("BigTrace.finalVec"+Integer.toString(d), dFinalVector[d]);				
-			}
-			return dFinalVector;
-			
-		}
-		return null;
-		
-	}
 }
