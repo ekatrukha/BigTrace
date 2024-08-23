@@ -909,7 +909,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 fireActiveRoiChanged(activeRoi.intValue()); 
 	 }
 	 
-	 public void renameActiveROIDialog()
+	 public void dialRenameActiveROI()
 	 {
 			String s = (String)JOptionPane.showInputDialog(
 					this,
@@ -929,7 +929,9 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 				return;
 			}
 	 }
-	 public void addRoiManager3DListener(Listener l) {
+	 
+	 public void addRoiManager3DListener(Listener l) 
+	 {
 		 listeners.add(l);
 	 }
 	 
@@ -1097,7 +1099,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			//RENAME
 			if(e.getSource() == butRename)
 			{
-				renameActiveROIDialog();
+				dialRenameActiveROI();
 
 			}
 			//DESELECT

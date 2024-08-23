@@ -471,7 +471,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		//RENAME
 		if(e.getSource() == butRename)
 		{
-			bt.roiManager.renameActiveROIDialog();
+			bt.roiManager.dialRenameActiveROI();
 		}
 		
 		//Settings

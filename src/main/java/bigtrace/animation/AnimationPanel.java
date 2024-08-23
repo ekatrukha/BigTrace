@@ -35,6 +35,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -388,7 +389,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	public void actionPerformed( ActionEvent e )
 	{
 		
-		// RUN TRACKING
+		//run player
 		if(e.getSource() == butPlayStop)
 		{
 			if(listModel.size()>0)
@@ -415,6 +416,11 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		if(e.getSource() == butReplace)
 		{
 			replaceSelectedKeyFrame();
+		}
+		//edit keyframe
+		if(e.getSource() == butEdit)
+		{
+			editSelectedKeyFrame();
 		}
 		//delete keyframe
 		if(e.getSource() == butDelete)
@@ -496,10 +502,26 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		if(nInd>=0)
 		{
 			float nTimeMovie = listModel.get( nInd ).fMovieTimePoint;
+			String sName = listModel.get( nInd ).name;
 			KeyFrame newKeyFrame = new KeyFrame(bt.getCurrentScene(),nTimeMovie);
 			newKeyFrame.nIndex = nInd;
+			newKeyFrame.name = sName;
 			listModel.set( nInd, newKeyFrame );
 			kfAnim.updateTransitionTimeline();
+		}
+	}
+	
+	void editSelectedKeyFrame()
+	{
+		int nInd = jlist.getSelectedIndex();
+		if(nInd>=0)
+		{
+			if(dialEditKeyFrame(nInd))
+			{
+				updateKeyIndices();
+				updateKeyMarks();
+				kfAnim.updateTransitionTimeline();			
+			}
 		}
 	}
 	
@@ -572,8 +594,8 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	public void setSliderTotalTime()
 	{
 		
-		//int nTickTime = ( int ) Math.ceil( kfAnim.getTotalTime()/10. );
 		int nTickTime = getTickTime();
+		
 		if( kfAnim.getTotalTime()<100)
 			tsSpan = kfAnim.getTotalTime()*10;
 		else
@@ -735,6 +757,58 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			}
 		}
 		
+	}
+	
+	boolean dialEditKeyFrame(final int nInd)
+	{
+		
+		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
+		decimalFormatSymbols.setDecimalSeparator('.');
+		DecimalFormat df = new DecimalFormat("0.0", decimalFormatSymbols);
+		
+		final JPanel panEdit = new JPanel();
+		panEdit.setLayout(new GridBagLayout());
+		
+		GridBagConstraints cd = new GridBagConstraints();
+		GBCHelper.alighLeft(cd);
+		
+		JTextField tfName = new JTextField(listModel.get( nInd ).name); 
+		
+		NumberField nfTimePoint = new NumberField(4);		
+		nfTimePoint.setText(df.format(listModel.get( nInd ).fMovieTimePoint));
+		
+		cd.gridx=0;
+		cd.gridy=0;	
+		panEdit.add(new JLabel("Name:"),cd);
+		cd.gridx++;
+		panEdit.add(tfName, cd);	
+		
+		cd.gridx=0;
+		cd.gridy++;	
+		panEdit.add(new JLabel("Time position:"),cd);
+		cd.gridx++;
+		panEdit.add(nfTimePoint, cd);	
+		
+		
+		int reply = JOptionPane.showConfirmDialog(null, panEdit, "Edit KeyFrame", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+				
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+		
+			if(tfName.getText().length()>0)
+			{
+				listModel.get( nInd ).name = tfName.getText();
+			}
+			float fNewTime = Math.min(Math.max(0, Float.parseFloat( nfTimePoint.getText())), kfAnim.nTotalTime);
+			if(Math.abs( listModel.get( nInd ).fMovieTimePoint - fNewTime)>0.001)
+			{
+				listModel.get( nInd ).fMovieTimePoint = fNewTime;
+				return true;
+			}
+			return false;
+		}
+		return false;
 	}
 	
 	void dialPlayerSettings()
