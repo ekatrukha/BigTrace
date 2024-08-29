@@ -22,6 +22,8 @@ import bdv.util.Prefs;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
+import btbvv.core.render.VolumeRenderer.RepaintType;
+import ij.IJ;
 
 
 
@@ -66,8 +68,8 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 			return null;
 		}
 
-		boolean bSaveMultiBox = Prefs.showMultibox();
-		boolean bSaveTextOverlay = Prefs.showTextOverlay();
+		bSaveMultiBox = Prefs.showMultibox();
+		bSaveTextOverlay = Prefs.showTextOverlay();
 		int nTotFrames = aPanel.kfAnim.nTotalTime*aPanel.nRenderFPS;
 		
 		Prefs.showMultibox(false);
@@ -81,6 +83,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
                                     BufferedImage.TYPE_INT_ARGB);
 		float fTimePoint;
 		float dT = aPanel.kfAnim.nTotalTime/(float)(nTotFrames-1);
+		bt.viewer.setRenderMode( true );
 		for(int nFr = 0; nFr<nTotFrames; nFr++)
 		{
 			setProgress(nFr*100/(nTotFrames-1));
@@ -89,17 +92,34 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 			fTimePoint = nFr*dT;
 			bt.setScene(aPanel.kfAnim.getScene(fTimePoint));
 			
-			Thread.sleep( 2000 );
-//			while(bt.viewer.getRepaintStatus() ! =RepaintType.NONE)
-//			{
-//				Thread.sleep( 1 );
-//			}
+			//Thread.sleep( 2000 );
+			RepaintType status = bt.viewer.getRepaintStatus();
+			long nTotalTime = 0;
+			long nWaitTime = 30;
+			boolean bWait = (bt.viewer.getRepaintStatus() != RepaintType.NONE);
+			//while(bt.viewer.getRepaintStatus() != RepaintType.NONE)
+			while(bWait)
+			{
+				
+				System.out.println(status);
+				Thread.sleep( nWaitTime );
+				status = bt.viewer.getRepaintStatus();
+				nTotalTime += nWaitTime;
+				if(bt.viewer.getRepaintStatus() == RepaintType.NONE)
+					{bWait = false;}
+				if (nTotalTime>60000)
+				{
+					bWait = false;
+					IJ.log( "Rendering of frame "+Integer.toString( nFr+1 )+" took more than a minute, proceeding with current result." );
+				}
+			}
 	        component.paint(bi.getGraphics());
 			//final BufferedImage bi = target.renderResult.getBufferedImage();
 			//ImageIO.write( bi, "png", new File( String.format( "%s/img-%03d.png", dir, timepoint ) ) );
 			ImageIO.write( bi, "png", new File( aPanel.sRenderSavePath+String.format("%0"+String.valueOf(nTotFrames).length()+"d", nFr)+".png") );
 			if(isCancelled())
 			{
+				bt.viewer.setRenderMode( false );
 				return null;	
 			}	
 		}
@@ -126,6 +146,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
     		String msg = String.format("Unexpected error during animation render: %s", 
     				e.getCause().toString());
     		System.out.println(msg);
+    		bt.viewer.setRenderMode( false );
     	} 
     	catch (InterruptedException e) 
     	{
@@ -135,10 +156,11 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
     	{
 
     		System.out.println("Animation render interrupted by user.");
+    		bt.viewer.setRenderMode( false );
         	setProgress(100);	
         	setProgressState("Render interrupted by user.");
     	}	
-    	
+    	bt.viewer.setRenderMode( false );
     	if(butRecord != null && tabIconRecord!= null)
     	{
     		butRecord.setIcon( tabIconRecord );
