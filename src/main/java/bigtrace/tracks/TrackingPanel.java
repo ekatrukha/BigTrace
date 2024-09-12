@@ -455,7 +455,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		//Groups Manager
 		if(e.getSource() == butGroups)
 		{
-			bt.roiManager.showGroupsDialog();
+			bt.roiManager.dialShowGroups();
 			
 		}
 		//ALIGN ROIs in a GROUP

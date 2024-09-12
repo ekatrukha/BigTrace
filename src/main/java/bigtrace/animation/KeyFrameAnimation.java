@@ -27,6 +27,14 @@ public class KeyFrameAnimation < T extends RealType< T > & NativeType< T > >
 		keyFrames = keyFrames_;
 	}
 	
+	public void setListModel(final DefaultListModel<KeyFrame> keyFrames_)
+	{
+		keyFrames.clear(); 
+		for(int i =0;i<keyFrames_.size(); i++)
+		{
+			keyFrames.addElement( keyFrames_.get( i ));
+		}
+	}
 	public void setTotalTime(int t)
 	{
 		nTotalTime = t;

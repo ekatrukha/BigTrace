@@ -122,7 +122,7 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 	}
 	
 	
-	void dialChangeTotalTime(boolean bLarger)
+	boolean dialChangeTotalTime(boolean bLarger)
 	{
 		final JPanel panelTotTimeSettings = new JPanel();
 		panelTotTimeSettings.setLayout(new GridBagLayout());
@@ -147,12 +147,14 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 
 		panelTotTimeSettings.add(cbTotTimeOptions, cd);	
 		int reply = JOptionPane.showConfirmDialog(null, panelTotTimeSettings, "Change total time", 
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+				JOptionPane.OK_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (reply == JOptionPane.OK_OPTION) 
 		{
 			pan.nChangeTotalTimeMode = cbTotTimeOptions.getSelectedIndex();
 			Prefs.set("BigTrace.nChangeTotalTimeMode", pan.nChangeTotalTimeMode);
+			return true;
 		}
+		return false;
 		
 	}
 	

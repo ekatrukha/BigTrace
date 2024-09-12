@@ -47,6 +47,8 @@ import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.rois.Roi3D;
 import ij.Prefs;
+import ij.io.OpenDialog;
+import ij.io.SaveDialog;
 
 public class AnimationPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener,  NumberField.Listener, ChangeListener, ActionListener
 {
@@ -62,6 +64,8 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	final JButton butReplace;
 	final JButton butEdit;
 	final JButton butDelete;
+	final JButton butSave;
+	final JButton butLoad;
 	
 	//keyFrame list
 	final public DefaultListModel<KeyFrame> listModel; 
@@ -72,7 +76,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	
 	final DrawKeyPoints keyMarks;
 	
-	NumberField nfTotalTime;
+	final public NumberField nfTotalTime;
 	
 	public static final int ANIMTIME_START=0, ANIMTIME_END=1, ANIMTIME_STRETCH=2;
 	
@@ -224,7 +228,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		cr = new GridBagConstraints();
 		cr.gridx=0;
 		cr.gridy=0;
-		cr.gridheight = 5;
+		cr.gridheight = 7;
 		//cr.gridheight = GridBagConstraints.REMAINDER;
 
 		cr.fill  = GridBagConstraints.BOTH;
@@ -252,30 +256,25 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		jlist.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent evt) {
-				if (evt.getClickCount() == 2) {
-
+				if (evt.getClickCount() == 2) 
+				{
 					// Double-click detected
-					//int index = jlist.locationToIndex(evt.getPoint());
 					bt.setScene( jlist.getSelectedValue().getScene());
 					int nPos = Math.round( tsSpan*(jlist.getSelectedValue().fMovieTimePoint/kfAnim.getTotalTime()));
 					timeSlider.setValue( nPos);
-					//focusOnRoi(rois.get(index));
+			
 				} 
 				if (SwingUtilities.isRightMouseButton(evt))
 				{
+					editSelectedKeyFrame();
 				}
 			}
-		});
-		
-		
+		});		
 		
 		listScroller = new JScrollPane(jlist);
 		listScroller.setPreferredSize(new Dimension(170, 250));
-		//listScroller.setMinimumSize(new Dimension(170, 250));
-		
-		
-		
-		
+		//listScroller.setMinimumSize(new Dimension(170, 250));		
+	
 		cr.weightx=0.5;
 		//cr.weighty=0.5;
 		panAnimPlot.add(listScroller,cr);
@@ -284,11 +283,11 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		cr = new GridBagConstraints();
 		//cr.weightx = 0;
 		//cr.weighty = 0;
-		cr.gridy=0;
-		cr.gridx=3;
+		cr.gridy = 0;
+		cr.gridx = 3;
 		cr.fill = GridBagConstraints.NONE;
 
-		cr.gridheight = 1;
+		
 		butAdd = new JButton("Add");
 		butAdd.addActionListener(this);
 		panAnimPlot.add( butAdd, cr );
@@ -307,6 +306,16 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		butDelete = new JButton("Delete");
 		butDelete.addActionListener(this);
 		panAnimPlot.add( butDelete, cr );
+
+		cr.gridy++;
+		butSave = new JButton("Save");
+		butSave.addActionListener(this);
+		panAnimPlot.add( butSave, cr );
+		
+		cr.gridy++;
+		butLoad = new JButton("Load");
+		butLoad.addActionListener(this);
+		panAnimPlot.add( butLoad, cr );
 		
 		cr.gridy++;
 		butUpdateSlider = new JToggleButton("<html><center>Slider<br>update</center></html>");
@@ -324,7 +333,10 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		butEdit.setPreferredSize(butDim); 
 		butDelete.setMinimumSize(butDim);
 		butDelete.setPreferredSize(butDim); 
-		
+		butSave.setMinimumSize(butDim);
+		butSave.setPreferredSize(butDim); 		
+		butLoad.setMinimumSize(butDim);
+		butLoad.setPreferredSize(butDim); 
 		
 		// Blank/filler component
 		cr.gridy++;
@@ -473,7 +485,16 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		{
 			deleteSelectedKeyFrame();
 		}
-		
+		//save storyline
+		if(e.getSource() == butSave)
+		{
+			dialStorylineSave();
+		}	
+		//load storyline
+		if(e.getSource() == butLoad)
+		{
+			dialStorylineLoad();
+		}	
 		//toggle update slider
 		if(e.getSource() == butUpdateSlider)
 		{
@@ -509,7 +530,6 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		
 	}
 	
-
 
 	void addCurrentKeyFrame()
 	{
@@ -587,16 +607,21 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	/** total time of the animation changed **/
 	@Override
 	public void valueChanged( double v )
+	{		
+		setNewTotalTime(( int ) Math.round( Math.abs( v ) ));
+	}
+	
+	public void setNewTotalTime(int nNewTime)
 	{
 		int nOldTime = kfAnim.nTotalTime;
-		int nNewTime = ( int ) Math.round( Math.abs( v ) );
-		
+				
 		if(listModel.size()>0)
 		{
 		
-			dialogsAnim.dialChangeTotalTime(nNewTime>=nOldTime);
+			if(!dialogsAnim.dialChangeTotalTime(nNewTime>=nOldTime))
+				return;
 			
-			kfAnim.setTotalTime(nNewTime);
+			kfAnim.setTotalTime(nNewTime);			
 			
 			setSliderTotalTime();
 			
@@ -632,9 +657,17 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 					}
 				}
 			}
+			
+
 
 			updateKeyMarks();
 			kfAnim.updateTransitionTimeline();
+		}
+		else
+		{
+			kfAnim.setTotalTime(nNewTime);			
+			
+			setSliderTotalTime();
 		}
 	}
 	
@@ -681,7 +714,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		
 	}
 	
-
+	/** updates timeline display **/
 	void updateKeyMarks()
 	{
 		ArrayList<Float> keyPoints = new ArrayList<>();
@@ -693,6 +726,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		keyMarks.repaint();
 	}
 	
+	/** updates numbering of keyframes **/
 	void updateKeyIndices()
 	{
 		for(int i=0;i<listModel.size(); i++)
@@ -805,6 +839,45 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		
 	}
 	
+	void dialStorylineSave()
+	{
+		if(listModel.size()>0)
+		{
+			String filename;
+			
+			filename = bt.btData.sFileNameFullImg + "_btstory";
+			SaveDialog sd = new SaveDialog("Save storyline ", filename, ".csv");
+	        String path = sd.getDirectory();
+	        if (path==null)
+	        	return;
+	        filename = path+sd.getFileName();
+	        
+	        bt.setLockMode(true);
+	        bt.bInputLock = true;
+	        StorylineSave<T> stSave  = new StorylineSave<>(bt, this);
+	        stSave.saveAnimation( filename );
+	        bt.setLockMode(false);
+	        bt.bInputLock = false;
+	        
+		}
+	}
+	void dialStorylineLoad()
+	{
+		String filename;
+		
+		OpenDialog openDial = new OpenDialog("Load BigTrace storyline","", "*.csv");
+		
+        String path = openDial.getDirectory();
+        if (path==null)
+        	return;
 
+        filename = path+openDial.getFileName();	
+        bt.setLockMode(true);
+        bt.bInputLock = true;
+        StorylineLoad<T> stLoad  = new StorylineLoad<>(bt, this);
+        stLoad.loadAnimation( filename );
+        bt.setLockMode(false);
+        bt.bInputLock = false;
+	}
 
 }

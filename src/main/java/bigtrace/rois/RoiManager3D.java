@@ -40,8 +40,6 @@ import com.jogamp.opengl.GL3;
 
 import bdv.tools.brightness.ColorIcon;
 import ij.Prefs;
-import ij.io.OpenDialog;
-import ij.io.SaveDialog;
 import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 import net.imglib2.type.NativeType;
@@ -1062,30 +1060,30 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			
 			if(e.getSource() == butSaveROIs)
 			{
-				diagSaveROIs();
+				rmDiag.diagSaveROIs();
 			}
 		}
 		//LOAD ROIS
 		if(e.getSource() == butLoadROIs)
 		{
-			diagLoadROIs();
+			rmDiag.diagLoadROIs();
 		}
 		//IMPORT ROIS
 		if(e.getSource() == roiImport)
 		{
-			diagImportROIs();
+			rmDiag.diagImportROIs();
 		}
 		
 		//Groups Manager
 		if(e.getSource() == butROIGroups)
 		{
-			showGroupsDialog();
+			dialShowGroups();
 			
 		}
 		//GROUP VISIBILITY
 		if(e.getSource() == butDisplayGroup)
 		{
-			dialGroupVisibility();
+			rmDiag.dialGroupVisibility();
 		}
 		
 		///SIDE ROI SPECIFIC LIST BUTTONS
@@ -1301,63 +1299,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		}
 	}
 	
-	/** Save ROIS dialog and saving **/
-	public void diagSaveROIs()
-	{
-		String filename;
-		
-		filename = bt.btData.sFileNameFullImg + "_btrois";
-		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
-        String path = sd.getDirectory();
-        if (path==null)
-        	return;
-        filename = path+sd.getFileName();
-        bt.setLockMode(true);
-        bt.bInputLock = true;
-        
-        //this.setLockMode(true);
-        ROIsSaveBG<T> saveTask = new ROIsSaveBG<>();
-        saveTask.sFilename=filename;
-        saveTask.bt=this.bt;
-        saveTask.addPropertyChangeListener(bt.btPanel);
-        saveTask.execute();
-        //this.setLockMode(false);
-	}
-	
-	/** Load ROIS dialog and saving **/
-    void diagLoadROIs()
-	{
-		String filename;
-		
-		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs","", "*.csv");
-		
-        String path = openDial.getDirectory();
-        if (path==null)
-        	return;
-
-        filename = path+openDial.getFileName();
-     
-        String [] sRoiLoadOptions = new String [] {"Clean load ROIs and groups","Append ROIs as undefined group"};	
-        String input = (String) JOptionPane.showInputDialog(this, "Loading ROIs",
-                "Load mode:", JOptionPane.QUESTION_MESSAGE, null,
-                sRoiLoadOptions, // Array of choices
-                sRoiLoadOptions[(int)Prefs.get("BigTrace.LoadRoisMode", 0)]);
-        
-        if(input == null)
-        	 return;
-        int nLoadMode;
-        if(input.equals("Clean load ROIs and groups"))
-        {
-        	nLoadMode = 0;
-        }
-        else
-        {
-        	nLoadMode = 1;
-        }
-        
-        Prefs.set("BigTrace.LoadRoisMode", nLoadMode);
-        loadROIs(filename, nLoadMode);        
-	}
 	
 	public void loadROIs(String filename, int nLoadMode)
 	{
@@ -1377,80 +1318,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         loadTask.execute();	
 	}
 	
-	/** Import ROIs dialog **/
-	public void diagImportROIs()
-	{
-	
-	      
-        String [] sRoiImportOptions = new String [] {"Points from TrackMate XML (Export)","Points from CSV (coming soon)"};
-		
-        String input = (String) JOptionPane.showInputDialog(this, "Importing ROIs",
-                "Import:", JOptionPane.QUESTION_MESSAGE, null, // Use default icon
-                sRoiImportOptions, // Array of choices
-                sRoiImportOptions[(int)Prefs.get("BigTrace.ImportRoisMode", 0)]);
-
-        if(input == null)
-        	return;
-        if(input.isEmpty())
-        	return;
-        int nImportMode;
-        if(input.equals("Points from TrackMate XML (Export)"))
-        {
-        	nImportMode = 0;
-        	diagImportTrackMate();
-        }
-        else
-        {
-        	nImportMode = 1;
-        }
-        Prefs.set("BigTrace.ImportRoisMode", nImportMode);
-	}
-	
-	public void diagImportTrackMate()
-	{
-		String filename;
-		OpenDialog openDial = new OpenDialog("Import TrackMate XML","", "*.xml");
-		
-        String path = openDial.getDirectory();
-        if (path==null)
-        	return;
-        
-        filename = path+openDial.getFileName();
-        
-        String [] sTMColorOptions = new String [] {"Random color per track","Current active group color"};
-		
-        String inputColor = (String) JOptionPane.showInputDialog(this, "Coloring ROIs",
-                "For color, use:", JOptionPane.QUESTION_MESSAGE, null, // Use
-                                                                                // default
-                                                                                // icon
-                sTMColorOptions, // Array of choices
-                sTMColorOptions[(int)Prefs.get("BigTrace.ImportTMColorMode", 0)]);
-        
-        if(inputColor == null)
-        	return;
-        if(inputColor.isEmpty())
-        	return;
-        int nImportColor;
-        if(inputColor.equals("Random color per track"))
-        {
-        	nImportColor = 0;
-        }
-        else
-        {
-        	nImportColor = 1;
-        }
-        Prefs.set("BigTrace.ImportTMColorMode", nImportColor);
-		
-
-       	this.rois = new ArrayList< >();
-        listModel.clear();
-        ROIsImportTrackMateBG importTask = new ROIsImportTrackMateBG();
-        importTask.nImportColor = nImportColor;
-        importTask.sFilename = filename;
-        importTask.bt = this.bt;
-        importTask.addPropertyChangeListener(bt.btPanel);
-        importTask.execute();
-	}
 
 	/** updates ROIs image for a specific group **/
 	void updateROIsGroupDisplay(int nGroupN)
@@ -1575,7 +1442,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		listModel.setElementAt(getGroupPrefixRoiName(currROI), nRoiIndex);
 	}
 	
-	public void showGroupsDialog()
+	public void dialShowGroups()
 	{
 		Roi3DGroupManager<T> dialGroup = new Roi3DGroupManager<>(this);
 		dialGroup.initGUI();
@@ -1622,12 +1489,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		jlist.clearSelection();
 	}
 	
-	/** show Group visibility dialog **/
-	public void dialGroupVisibility()
-	{
-		Roi3DGroupVisibility<T> groupVis = new Roi3DGroupVisibility<>(this);
-		groupVis.show();
-	}
 	
 	public void updateGroupsList()
 	{
