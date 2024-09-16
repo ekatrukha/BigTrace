@@ -273,7 +273,6 @@ public class VisPolyLineMesh {
 	
 	/** given contours coordinates, returns a mesh with open ends**/
 	private BufferMesh initMeshOpenEnds(final ArrayList<ArrayList< RealPoint >> allContours )
-	//private void initMesh(final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 	
 		BufferMesh meshOut = null;
@@ -321,93 +320,6 @@ public class VisPolyLineMesh {
 					addTriangle(meshOut, triangle);
 				}
 
-			}
-
-			//nMeshTrianglesSize = meshOut.triangles().size();
-		}
-		return meshOut;
-	}
-	
-	/** given contours and centerline coordinates, returns a mesh with capped (closed) ends**/
-	public static BufferMesh initMeshCappedEnds(final ArrayList<ArrayList< RealPoint >> allContours, ArrayList< RealPoint > centerline )
-	{
-	
-		BufferMesh meshOut = null;
-		int i,j, iPoint;
-		
-		final int nPointsCurveN = allContours.size();
-		if(nPointsCurveN==0)
-			return meshOut;
-		
-		final int nSectorN = allContours.get( 0 ).size();
-		
-		float [][] triangle = new float[3][3];
-		int nMeshTrianglesN = (nPointsCurveN-1)*nSectorN*2+nSectorN*2;
-		//int nMeshTrianglesN = (nPointsN-1)*nSectorN*2;
-		if(nPointsCurveN>1)
-		{
-			//calculate total number of triangles
-			meshOut = new BufferMesh( nMeshTrianglesN*3, nMeshTrianglesN, true );
-	
-			//all vertices
-			//vertices = new float [2*(nSectorN+1)*3*nPointsN];
-			for (iPoint=1;iPoint<nPointsCurveN;iPoint++)
-			{
-				//add to drawing vertices triangles
-				//nmesh.triangles().addf(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z)
-				for (i=0;i<nSectorN; i++)
-				{
-					for (j=0;j<3; j++)
-					{
-						
-						triangle[0][j] = allContours.get(iPoint-1).get(i).getFloatPosition(j);
-						triangle[1][j] = allContours.get(iPoint-1).get((i+1)%nSectorN).getFloatPosition(j);
-						triangle[2][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
-						
-					}	
-					
-					addTriangle(meshOut, triangle);
-					for (j=0;j<3; j++)
-					{
-						
-						triangle[0][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
-						triangle[1][j] = allContours.get(iPoint-1).get((i+1)%nSectorN).getFloatPosition(j);
-						triangle[2][j] = allContours.get(iPoint).get((i+1)%nSectorN).getFloatPosition(j);
-						
-					}	
-					addTriangle(meshOut, triangle);
-				}
-
-			}
-			
-			//"lids" of the mesh, beginning
-			for (i=0;i<nSectorN; i++)
-			{
-				for (j=0;j<3; j++)
-				{
-					
-					triangle[0][j] = allContours.get(0).get((i+1)%nSectorN).getFloatPosition(j);
-					triangle[1][j] = allContours.get(0).get(i).getFloatPosition(j);
-					triangle[2][j] = centerline.get(0).getFloatPosition(j);
-					
-				}	
-				
-				addTriangle(meshOut, triangle);
-			}
-			
-			//"lids" of the mesh, end 
-			for (i=0;i<nSectorN; i++)
-			{
-				for (j=0;j<3; j++)
-				{
-					
-					triangle[0][j] = allContours.get(nPointsCurveN-1).get(i).getFloatPosition(j);
-					triangle[1][j] = allContours.get(nPointsCurveN-1).get((i+1)%nSectorN).getFloatPosition(j);
-					triangle[2][j] = centerline.get(nPointsCurveN-1).getFloatPosition(j);
-					
-				}	
-				
-				addTriangle(meshOut, triangle);
 			}
 
 			//nMeshTrianglesSize = meshOut.triangles().size();
