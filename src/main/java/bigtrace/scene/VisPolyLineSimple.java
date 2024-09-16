@@ -12,6 +12,7 @@ import java.util.ArrayList;
 
 
 import org.joml.Matrix4fc;
+import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 import btbvv.core.backend.jogl.JoglGpuContext;
@@ -224,26 +225,7 @@ public class VisPolyLineSimple
 		gl.glEnableVertexAttribArray( 3 );
 		
 		gl.glBindVertexArray( 0 );
-		
-//		// ..:: VERTEX BUFFER ::..
-//
-//		final int[] tmp = new int[ 2 ];
-//		gl.glGenBuffers( 1, tmp, 0 );
-//		final int vbo = tmp[ 0 ];
-//		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-//		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
-//		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
-//
-//
-//		// ..:: VERTEX ARRAY OBJECT ::..
-//
-//		gl.glGenVertexArrays( 1, tmp, 0 );
-//		vao = tmp[ 0 ];
-//		gl.glBindVertexArray( vao );
-//		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-//		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-//		gl.glEnableVertexAttribArray( 0 );
-//		gl.glBindVertexArray( 0 );
+
 		
 	}
 
@@ -253,8 +235,14 @@ public class VisPolyLineSimple
 			init( gl );
 
 		JoglGpuContext context = JoglGpuContext.get( gl );
-		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-//		
+		
+		
+		int noffset = 0;
+		int[] sizeVP = new int[4];
+		gl.glGetIntegerv( GL.GL_VIEWPORT, sizeVP, noffset );
+		Vector2f viewPort =  new Vector2f(sizeVP[2],sizeVP[3]);
+		prog.getUniform2f("viewport").set(viewPort);
+		prog.getUniformMatrix4f( "pvm" ).set( pvm );	
 		prog.getUniform4f("color").set(l_color);
 		prog.getUniform1f( "linelength" ).set( lineLength );
 		//prog.getUniform1f( "thickness" ).set(3 );
@@ -267,7 +255,7 @@ public class VisPolyLineSimple
 		//gl.glDepthFunc( GL.GL_ALWAYS);
 		//gl.glDepthFunc( GL.GL_LESS);
 		gl.glEnable(GL.GL_BLEND);
-		gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA); 
+		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA); 
 		//gl.glEnable( GL.GL_BLEND );
 		gl.glBindVertexArray( vao );
 		gl.glDepthMask(false);

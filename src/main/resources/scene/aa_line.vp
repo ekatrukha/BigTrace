@@ -5,6 +5,7 @@ layout (location = 3) in vec2 uv;
 
 uniform vec4 colorin;
 uniform mat4 pvm;
+uniform vec2 viewport;
 uniform float linelength;
 uniform float antialias; 
 uniform float thickness;
@@ -12,7 +13,6 @@ out vec2 v_uv;
 
 void main()
 {
-	vec2 viewport = vec2(800,600);
 
 	vec4 NDC_prev = pvm * vec4(prev.xyz, 1.0);
     vec4 NDC_curr = pvm * vec4(curr.xyz, 1.0);
@@ -34,12 +34,14 @@ void main()
     {
         //v_uv.x = -w;
         //position = screen_curr.xy - w*t1 + uv.y*w*n1;
+        //not rounded ends
         position = screen_curr.xy + uv.y*w*n1;
     } 
     else if (curr.xyz == next.xyz) 
     {
-       // v_uv.x = linelength+w;
+        //v_uv.x = linelength+w;
         //position = screen_curr.xy + w*t0 + uv.y*w*n0;
+        //not rounded ends
         position = screen_curr.xy + uv.y*w*n0;
         
     } 

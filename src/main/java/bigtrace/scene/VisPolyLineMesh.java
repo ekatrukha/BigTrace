@@ -32,6 +32,7 @@ import net.imglib2.mesh.impl.nio.BufferMesh;
 public class VisPolyLineMesh {
 	
 	private final Shader prog;
+	
 	private final Shader progMesh;
 
 	private int vao;
@@ -51,13 +52,14 @@ public class VisPolyLineMesh {
 	private BufferMesh mesh = null;
 	
 	private long nMeshTrianglesSize = 0;
+	
 	volatile boolean bLocked = false;
 
 	public VisPolyLineMesh()
 	{
-		final Segment pointVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.fp" ).instantiate();		
-		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
+		final Segment clipLineVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.vp" ).instantiate();
+		final Segment clipLineFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.fp" ).instantiate();		
+		prog = new DefaultShader( clipLineVp.getCode(), clipLineFp.getCode() );
 		
 		final Segment meshVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.vp" ).instantiate();
 		final Segment meshFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.fp" ).instantiate();
@@ -96,13 +98,12 @@ public class VisPolyLineMesh {
 	
 	public void setRenderType(int nRenderType_)
 	{
-		renderType = nRenderType_;
-		
+		renderType = nRenderType_;		
 	}
+	
 	public int getRenderType()
 	{
-		return renderType;
-		
+		return renderType;		
 	}
 	
 	public synchronized void setVertices( final ArrayList< RealPoint > points_, final ArrayList<double[]> tangents_)
@@ -127,7 +128,6 @@ public class VisPolyLineMesh {
 		}
 		else
 		{
-
 			//build a pipe in scaled space
 			ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points_, tangents_, BigTraceData.sectorN, 0.5*fLineThickness*BigTraceData.dMinVoxelSize);
 			//return to voxel space	for the render		
@@ -155,17 +155,15 @@ public class VisPolyLineMesh {
 		initialized = false;
 		bLocked  = false;
 		
-	}
-
+	}	
 	
-	
-	/** simple polyline, not cylindrical **/
+	/** simple central polyline, not cylindrical **/
 	public void setVerticesCenterLine(final ArrayList< RealPoint > points)
 	{
 		
 		int i,j;
 		
-		nPointsN=points.size();
+		nPointsN = points.size();
 		
 		vertices = new float [nPointsN*3];//assume 3D	
 
@@ -213,7 +211,6 @@ public class VisPolyLineMesh {
 				}
 			}
 		}
-
 	
 	}
 	
@@ -247,7 +244,7 @@ public class VisPolyLineMesh {
 	}
 	
 	/** for the WIRE mode, generates a set of lines running along the main path,
-	 * assuming that transverse contours already generated and put to vertices **/
+	 * assuming that transverse contours already generated and stored in the vertices array**/
 	private void addLinesAlong()
 	{
 		final int nSectorN = BigTraceData.sectorN;
@@ -267,16 +264,12 @@ public class VisPolyLineMesh {
 		bLocked  = true;
 		if(renderType == Roi3D.SURFACE)
 		{
-			//initMesh();
-			return initMeshShader(gl);
-	
+			return initGPUBufferMesh(gl);	
 		}
-		initLineShader( gl );
+		initGPUBufferLine( gl );
 		bLocked  = false;
 		return true;
 	}
-	
-
 	
 	/** given contours coordinates, returns a mesh with open ends**/
 	private BufferMesh initMeshOpenEnds(final ArrayList<ArrayList< RealPoint >> allContours )
@@ -337,7 +330,6 @@ public class VisPolyLineMesh {
 	
 	/** given contours and centerline coordinates, returns a mesh with capped (closed) ends**/
 	public static BufferMesh initMeshCappedEnds(final ArrayList<ArrayList< RealPoint >> allContours, ArrayList< RealPoint > centerline )
-	//private void initMesh(final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 	
 		BufferMesh meshOut = null;
@@ -425,7 +417,6 @@ public class VisPolyLineMesh {
 	
 	/** given contours and centerline coordinates, returns a mesh with capped (closed) ends**/
 	public static BufferMesh initClosedVolumeMesh(final ArrayList<ArrayList< RealPoint >> allContours, ArrayList< RealPoint > centerline )
-	//private void initMesh(final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 	
 		BufferMesh meshOut = null;
@@ -510,8 +501,9 @@ public class VisPolyLineMesh {
 		}
 		return meshOut;
 	}
-	/** OpenGL buffer binding, etc thing **/
-	private void initLineShader( final GL3 gl )
+	
+	/** centerline and wire vertices upload to GPU **/
+	private void initGPUBufferLine( final GL3 gl )
 	{
 		initialized = true;
 		if(nPointsN>1)
@@ -525,8 +517,7 @@ public class VisPolyLineMesh {
 			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
 			gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
 			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
-	
-	
+		
 			// ..:: VERTEX ARRAY OBJECT ::..
 	
 			gl.glGenVertexArrays( 1, tmp, 0 );
@@ -539,7 +530,8 @@ public class VisPolyLineMesh {
 		}
 	}
 	
-	private boolean initMeshShader( GL3 gl )
+	/** upload MeshData to GPU **/
+	private boolean initGPUBufferMesh( GL3 gl )
 	{
 		initialized = true;
 
@@ -574,7 +566,6 @@ public class VisPolyLineMesh {
 		gl.glBindBuffer( GL.GL_ELEMENT_ARRAY_BUFFER, 0 );
 
 
-
 		gl.glGenVertexArrays( 1, tmp, 0 );
 		vao = tmp[ 0 ];
 		gl.glBindVertexArray( vao );
@@ -600,7 +591,6 @@ public class VisPolyLineMesh {
 			}
 			catch ( InterruptedException exc )
 			{
-				// TODO Auto-generated catch block
 				exc.printStackTrace();
 			}
 		}
@@ -643,15 +633,10 @@ public class VisPolyLineMesh {
 					gl.glDepthFunc( GL.GL_ALWAYS);
 				}
 
-				gl.glBindVertexArray( vao );
-				//gl.glEnable( GL.GL_CULL_FACE );
-				//gl.glCullFace( GL.GL_BACK );
-				//gl.glCullFace( GL.GL_FRONT );
-				//gl.glFrontFace( GL.GL_CW );
 				//gl.glEnable(GL.GL_BLEND);
 				//gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA); 
-
 				
+				gl.glBindVertexArray( vao );			
 				gl.glDrawElements( GL_TRIANGLES, ( int ) nMeshTrianglesSize * 3, GL_UNSIGNED_INT, 0 );
 				gl.glBindVertexArray( 0 );
 			}
@@ -667,11 +652,6 @@ public class VisPolyLineMesh {
 				prog.use( context );		
 				gl.glBindVertexArray( vao );
 		
-	
-	//			gl.glEnable(GL3.GL_LINE_SMOOTH_HINT);
-	//			gl.glEnable(GL3.GL_POLYGON_SMOOTH);
-	//			gl.glHint(GL3.GL_LINE_SMOOTH_HINT, GL3.GL_NICEST );
-	//			gl.glHint(GL3.GL_POLYGON_SMOOTH_HINT, GL3.GL_NICEST );
 	//			gl.glEnable(GL3.GL_BLEND);
 	//			gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
 	//			gl.glDepthFunc(GL3.GL_ALWAYS);
@@ -685,6 +665,7 @@ public class VisPolyLineMesh {
 				{
 	
 					gl.glLineWidth(1.0f);
+					
 					//contours
 					for(nPointIt=0;nPointIt<nPointsN;nPointIt+=BigTraceData.wireCountourStep)
 					{
@@ -702,23 +683,15 @@ public class VisPolyLineMesh {
 					for(nPointIt=0;nPointIt<nSectorN;nPointIt+=1)
 					{
 						gl.glDrawArrays( GL.GL_LINE_STRIP, nShift+nPointIt*nPointsN, nPointsN);
-						//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
 					}
 				}
-//				if(renderType == Roi3D.SURFACE)
-//				{
-//					gl.glLineWidth(1.0f);
-//					for(nPointIt=0;nPointIt<(nPointsN-1);nPointIt+=1)
-//					{
-//						gl.glDrawArrays( GL.GL_TRIANGLE_STRIP, nPointIt*(nSectorN+1)*2, (nSectorN+1)*2);
-//					}
-//				}
 	
 				gl.glBindVertexArray( 0 );
 				gl.glDepthFunc( GL.GL_LESS);
 			}
 		}
 	}
+	
 	public static float[] getNormal(float [][] triangle)
 	{
         final float v10x = triangle[1][0] - triangle[0][0];
@@ -749,6 +722,7 @@ public class VisPolyLineMesh {
 		}
 		return out;
 	}
+	
 	public static void addTriangle(final BufferMesh mesh_in, final float[][] triangle)
 	{
 		final float [] normale = getNormal(triangle);
@@ -763,6 +737,7 @@ public class VisPolyLineMesh {
 		}
 		mesh_in.triangles().add(index[0], index[1], index[2], normale[0], normale[1], normale[2]);
 	}
+	
 	public static void addTriangleWithoutNormale(final BufferMesh mesh_in, final float[][] triangle)
 	{
 		long [] index = new long[3];
