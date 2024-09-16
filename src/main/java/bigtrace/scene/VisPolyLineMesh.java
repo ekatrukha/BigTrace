@@ -57,6 +57,8 @@ public class VisPolyLineMesh {
 	
 	VisPolyLineSimple centerLine = null;
 	
+	ArrayList<VisPolyLineSimple> wireLine = null;
+	
 
 	public VisPolyLineMesh()
 	{
@@ -83,21 +85,31 @@ public class VisPolyLineMesh {
 	public void setThickness(float fLineThickness_)
 	{
 		fLineThickness = fLineThickness_;
+		if(centerLine!=null)
+			centerLine.setThickness( fLineThickness );
 	}
 	
 	public void setColor(Color color_in)
 	{
 		l_color = new Vector4f(color_in.getComponents(null));
+		if(centerLine != null)
+			centerLine.setColor( l_color );
+		if(wireLine!=null)
+		{
+			 for (VisPolyLineSimple segment : wireLine)
+				 segment.setColor( l_color ); 
+			
+		}
 	}
 
 
-	public void setParams(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final Color color_in)
-	{
-		
-		fLineThickness= fLineThickness_;		
-		l_color = new Vector4f(color_in.getComponents(null));		
-		setVertices(points, tangents);
-	}
+//	public void setParams(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final Color color_in)
+//	{
+//		
+//		fLineThickness= fLineThickness_;		
+//		l_color = new Vector4f(color_in.getComponents(null));		
+//		setVertices(points, tangents);
+//	}
 	
 	public void setRenderType(int nRenderType_)
 	{
@@ -120,7 +132,6 @@ public class VisPolyLineMesh {
 			}
 			catch ( InterruptedException exc )
 			{
-				// TODO Auto-generated catch block
 				exc.printStackTrace();
 			}
 		}
@@ -128,9 +139,12 @@ public class VisPolyLineMesh {
 		if(renderType == Roi3D.OUTLINE)
 		{
 			setVerticesCenterLine(Roi3D.scaleGlobInv(points_, BigTraceData.globCal));
+			wireLine = null;
 		}
 		else
 		{
+			centerLine = null;
+			
 			//build a pipe in scaled space
 			ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points_, tangents_, BigTraceData.sectorN, 0.5*fLineThickness*BigTraceData.dMinVoxelSize);
 			//return to voxel space	for the render		
@@ -146,6 +160,7 @@ public class VisPolyLineMesh {
 			else
 			//(renderType == Roi3D.SURFACE)
 			{
+					wireLine = null;
 					//initMesh(point_contours);
 					nMeshTrianglesSize = 0;
 					mesh = initMeshOpenEnds(point_contours);
@@ -162,8 +177,7 @@ public class VisPolyLineMesh {
 	
 	/** simple central polyline, not cylindrical **/
 	public void setVerticesCenterLine(final ArrayList< RealPoint > points)
-	{
-		
+	{		
 		centerLine = new VisPolyLineSimple(points, fLineThickness, l_color);
 		centerLine.bIncludeClip = true;
 	}
@@ -209,46 +223,59 @@ public class VisPolyLineMesh {
 	public void setVerticesWire( final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 		int i,j, iPoint;
-		int vertShift;
-
+		wireLine = new ArrayList<>();
 		final int nSectorN = BigTraceData.sectorN;
 		nPointsN = allContours.size();
 		if(nPointsN>1)
 		{
-			//all vertices
-			vertices = new float [2*nSectorN*3*nPointsN];
-			for (iPoint=0;iPoint<nPointsN;iPoint++)
+			for (iPoint=0;iPoint<nPointsN;iPoint+=BigTraceData.wireCountourStep)
 			{
-				//drawing contours around each point
-				vertShift = iPoint*nSectorN*3;
+				
+				ArrayList<RealPoint> contour_arr = new  ArrayList<>();
+
 				for (i=0;i<nSectorN; i++)
 				{
-					for (j=0;j<3; j++)
-					{
-						vertices[vertShift+i*3+j]=allContours.get(iPoint).get(i).getFloatPosition(j);
-					}				
+					contour_arr.add( allContours.get(iPoint).get(i));			
 				}
+				contour_arr.add( allContours.get(iPoint).get(0));
+				VisPolyLineSimple contour = new VisPolyLineSimple(contour_arr, 2.0f, l_color) ;
+				contour.bIncludeClip = true;
+				wireLine.add( contour );
+				
 			}
-			//lines along the pipe
-			addLinesAlong();
+			
+			//the last contour
+			if((iPoint-BigTraceData.wireCountourStep)!=(nPointsN-1))
+			{
+				iPoint = nPointsN-1;
+				
+				ArrayList<RealPoint> contour_arr = new  ArrayList<>();
+				for (i=0;i<nSectorN; i++)
+				{
+					contour_arr.add( allContours.get(iPoint).get(i));
+				}
+				contour_arr.add( allContours.get(iPoint).get(0));
+				VisPolyLineSimple contour = new VisPolyLineSimple(contour_arr, 2.0f, l_color) ;
+				contour.bIncludeClip = true;
+				wireLine.add( contour );
+			}
+			
+
+			for (i=0;i<nSectorN;i++)
+			{
+				ArrayList<RealPoint> line_arr = new  ArrayList<>();
+				for(j=0;j<nPointsN;j++)
+				{
+					line_arr.add( allContours.get(j).get(i));
+				}
+				VisPolyLineSimple line = new VisPolyLineSimple(line_arr, 2.0f, l_color) ;
+				line.bIncludeClip = true;
+				wireLine.add( line );
+			}
+			
 		}
 	}
 	
-	/** for the WIRE mode, generates a set of lines running along the main path,
-	 * assuming that transverse contours already generated and stored in the vertices array**/
-	private void addLinesAlong()
-	{
-		final int nSectorN = BigTraceData.sectorN;
-		int nShift = nSectorN*3*nPointsN;
-		int i,j,k;
-		for (i=0;i<nSectorN;i++)
-			for(j=0;j<nPointsN;j++)
-				for(k=0;k<3;k++)
-				{
-					vertices[nShift+3*i*nPointsN+j*3+k]=vertices[i*3+3*j*nSectorN+k];
-				}
-		
-	}
 	
 	private boolean init( final GL3 gl )
 	{
@@ -258,10 +285,6 @@ public class VisPolyLineMesh {
 			return initGPUBufferMesh(gl);	
 		}
 		
-		if(renderType == Roi3D.WIRE)
-		{
-			initGPUBufferLine( gl );
-		}
 		bLocked  = false;
 		return true;
 	}
@@ -409,34 +432,6 @@ public class VisPolyLineMesh {
 		return meshOut;
 	}
 	
-	/** centerline and wire vertices upload to GPU **/
-	private void initGPUBufferLine( final GL3 gl )
-	{
-		initialized = true;
-		if(nPointsN>1)
-		{
-
-			// ..:: VERTEX BUFFER ::..
-	
-			final int[] tmp = new int[ 2 ];
-			gl.glGenBuffers( 1, tmp, 0 );
-			final int vbo = tmp[ 0 ];
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-			gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
-		
-			// ..:: VERTEX ARRAY OBJECT ::..
-	
-			gl.glGenVertexArrays( 1, tmp, 0 );
-			vao = tmp[ 0 ];
-			gl.glBindVertexArray( vao );
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-			gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-			gl.glEnableVertexAttribArray( 0 );
-			gl.glBindVertexArray( 0 );
-		}
-	}
-	
 	/** upload MeshData to GPU **/
 	private boolean initGPUBufferMesh( GL3 gl )
 	{
@@ -489,7 +484,7 @@ public class VisPolyLineMesh {
 
 	public void draw( final GL3 gl, final Matrix4fc pvm, Matrix4fc vm )
 	{
-		int nPointIt;
+		
 		while (bLocked)
 		{
 			try
@@ -514,7 +509,7 @@ public class VisPolyLineMesh {
 
 		if(nPointsN>1)
 		{
-			final int nSectorN = BigTraceData.sectorN;
+			
 			JoglGpuContext context = JoglGpuContext.get( gl );
 			
 			gl.glDepthFunc( GL.GL_LESS);
@@ -564,34 +559,16 @@ public class VisPolyLineMesh {
 	//			gl.glDepthFunc(GL3.GL_ALWAYS);
 				if(renderType == Roi3D.OUTLINE)
 				{
-					centerLine.setColor( l_color );
-					centerLine.setThickness( fLineThickness );
+
 					centerLine.draw( gl, pvm );
 
 				}
 				
 				if(renderType == Roi3D.WIRE)
-				{
-	
-					gl.glLineWidth(1.0f);
-					
-					//contours
-					for(nPointIt=0;nPointIt<nPointsN;nPointIt+=BigTraceData.wireCountourStep)
+				{					
+					for (int nS = 0;nS<wireLine.size(); nS++)
 					{
-						gl.glDrawArrays( GL.GL_LINE_LOOP, nPointIt*nSectorN, nSectorN);
-						//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
-					}
-					//the last contour
-					if((nPointIt-BigTraceData.wireCountourStep)!=(nPointsN-1))
-					{
-						gl.glDrawArrays( GL.GL_LINE_LOOP, (nPointsN-1)*nSectorN, nSectorN);
-					}
-					//lines along the pipe
-					int nShift = nSectorN*nPointsN;
-					
-					for(nPointIt=0;nPointIt<nSectorN;nPointIt+=1)
-					{
-						gl.glDrawArrays( GL.GL_LINE_STRIP, nShift+nPointIt*nPointsN, nPointsN);
+						wireLine.get( nS ).draw( gl, pvm );
 					}
 				}
 	

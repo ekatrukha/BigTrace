@@ -268,8 +268,9 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			basis.move((-1.0)*axis_length, i);
 			float [] color_orig = new float[3];
 			color_orig[i] = 1.0f;
-			originVis.add(new VisPolyLineSimple( point_coords, 3.0f,new Color(color_orig[0],color_orig[1],color_orig[2])));						
+			originVis.add(new VisPolyLineSimple( point_coords, 5.0f,new Color(color_orig[0],color_orig[1],color_orig[2])));						
 		}
+		
 		float [][] nDimBox = new float [2][3];
 		
 		for(i=0;i<3;i++)
