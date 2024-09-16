@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
@@ -57,12 +56,14 @@ import bdv.viewer.TimePointListener;
 import bdv.viewer.ViewerState;
 
 import btbvv.vistools.BvvFunctions;
+import btbvv.vistools.BvvHandleFrame;
 import btbvv.vistools.Bvv;
 import btbvv.vistools.BvvStackSource;
 import btbvv.core.render.RenderData;
 import btbvv.core.render.VolumeRenderer.RepaintType;
 import btbvv.btuitools.BvvGamma;
 import btbvv.btuitools.GammaConverterSetup;
+import btbvv.core.VolumeViewerFrame;
 import btbvv.core.VolumeViewerPanel;
 import btbvv.core.util.MatrixMath;
 import bigtrace.animation.Scene;
@@ -109,6 +110,9 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 
 	/** Panel of BigVolumeViewer **/
 	public VolumeViewerPanel viewer;
+
+	/** Frame of BigVolumeViewer **/
+	public VolumeViewerFrame bvvFrame;
 	
 	/** flag to check if user interface is frozen **/
 	public volatile boolean bInputLock = false;
@@ -275,6 +279,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			nDimBox[0][i]=btData.nDimIni[0][i]+0.5f;
 			nDimBox[1][i]=(btData.nDimIni[1][i]-1.0f);
 		}
+		
 		volumeBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 		clipBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 	}
@@ -304,23 +309,25 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	{
 		btPanel = new BigTraceControlPanel<>(this, btData,roiManager);
 		btPanel.finFrame = new JFrame("BigTrace");
-
-		btPanel.bvv_frame=(JFrame) SwingUtilities.getWindowAncestor(viewer);
-	 	
 		btPanel.finFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		btPanel.bvv_frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+
+		
+		bvvFrame = ((BvvHandleFrame)bvv_main.getBvvHandle()).getBigVolumeViewer().getViewerFrame();
+		
+		bvvFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
 		btPanel.finFrame.add(btPanel);
 		
         //Display the window.
 		btPanel.finFrame.setSize(400,600);
 		btPanel.finFrame.setVisible(true);
-	    java.awt.Point bvv_p = btPanel.bvv_frame.getLocationOnScreen();
-	    java.awt.Dimension bvv_d = btPanel.bvv_frame.getSize();
+	    java.awt.Point bvv_p = bvvFrame.getLocationOnScreen();
+	    java.awt.Dimension bvv_d = bvvFrame.getSize();
 	
 	    btPanel.finFrame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
 	    btPanel.finFrame.addWindowListener(this);
-	    btPanel.bvv_frame.addWindowListener(this);
+	    bvvFrame.addWindowListener(this);
+	    
 		bInputLock = false;
 	}
 	
@@ -723,7 +730,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			{
 				for (int i=0;i<3;i++)
 				{
-					originVis.get(i).draw(gl, pvm);
+					originVis.get(i).draw(gl, pvm, camview);
 				}
 			}
 			
@@ -1499,13 +1506,14 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		}	
 	}
 
-	/** get current scene **/
+	/** get current scene (view transform + crop for now) **/
 	public Scene getCurrentScene()
 	{
 		final AffineTransform3D transform = new AffineTransform3D();
 		viewer.state().getViewerTransform(transform);
 		return new Scene(transform, BigTraceData.nDimCurr, btData.nCurrTimepoint);
 	} 
+	
 	public void setScene(final Scene scene)
 	{
 		
@@ -1563,9 +1571,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	
 	public void closeWindows()
 	{
-	
 		viewer.stop();
-		btPanel.bvv_frame.dispose();		
+		bvvFrame.dispose();		
 		btPanel.finFrame.dispose();
 	}
 	
@@ -1642,10 +1649,10 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		testI.run("");
-		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
+		//testI.run("");
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
 		///testI.run("/home/eugene/Desktop/projects/BigTrace/BT_tracks/Snejana_small_example.tif");
-		
+		//testI.run("/home/eugene/Desktop/bend/test_bend_2ch/output/trace1514947168.xml");
 
 		///macros test
 //		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT_8bit.tif");

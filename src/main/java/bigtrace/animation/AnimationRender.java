@@ -17,7 +17,7 @@ import javax.imageio.ImageIO;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
-
+import bdv.ui.splitpanel.SplitPanel;
 import bdv.util.Prefs;
 
 import bigtrace.BigTrace;
@@ -72,18 +72,34 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		bSaveTextOverlay = Prefs.showTextOverlay();
 		int nTotFrames = aPanel.kfAnim.nTotalTime*aPanel.nRenderFPS;
 		
-		Prefs.showMultibox(false);
+		//Prefs.showMultibox(false);
 		Prefs.showTextOverlay(false);
 
-		Component component = bt.viewer.getDisplayComponent();
 
-		Rectangle rect = component.getBounds();
+		float fTimePoint;
+		float dT = aPanel.kfAnim.nTotalTime/(float)(nTotFrames-1);
+
+		bt.viewer.setRenderMode( true );
+
+		SplitPanel splitPanel = (SplitPanel) bt.viewer.getParent();
+		
+		if(!splitPanel.isCollapsed())
+		{
+			splitPanel.setCollapsed( true );
+		}
+		//check if there is time slider => +25 in height
+		//splitPanel.setPreferredSize( new Dimension(300, 300 ));
+	
+		bt.bvvFrame.pack();	
+		bt.bvvFrame.setResizable( false );
+		bt.bvvFrame.setEnabled( false );
+		
+		
+		Component component = bt.viewer.getDisplayComponent();
+		Rectangle rect = bt.viewer.getDisplayComponent().getBounds();
 		BufferedImage bi =
                 new BufferedImage(rect.width, rect.height,
                                     BufferedImage.TYPE_INT_ARGB);
-		float fTimePoint;
-		float dT = aPanel.kfAnim.nTotalTime/(float)(nTotFrames-1);
-		bt.viewer.setRenderMode( true );
 		for(int nFr = 0; nFr<nTotFrames; nFr++)
 		{
 			setProgress(nFr*100/(nTotFrames-1));
@@ -91,9 +107,8 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 
 			fTimePoint = nFr*dT;
 			bt.setScene(aPanel.kfAnim.getScene(fTimePoint));
-			
-			//Thread.sleep( 2000 );
-			RepaintType status = bt.viewer.getRepaintStatus();
+
+			//RepaintType status = bt.viewer.getRepaintStatus();
 			long nTotalTime = 0;
 			long nWaitTime = 30;
 			boolean bWait = (bt.viewer.getRepaintStatus() != RepaintType.NONE);
@@ -101,9 +116,9 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 			while(bWait)
 			{
 				
-				System.out.println(status);
+				//System.out.println(status);
 				Thread.sleep( nWaitTime );
-				status = bt.viewer.getRepaintStatus();
+				//status = bt.viewer.getRepaintStatus();
 				nTotalTime += nWaitTime;
 				if(bt.viewer.getRepaintStatus() == RepaintType.NONE)
 					{bWait = false;}
@@ -112,14 +127,15 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 					bWait = false;
 					IJ.log( "Rendering of frame "+Integer.toString( nFr+1 )+" took more than a minute, proceeding with current result." );
 				}
+				if(isCancelled())
+				{
+					return null;	
+				}	
 			}
 	        component.paint(bi.getGraphics());
-			//final BufferedImage bi = target.renderResult.getBufferedImage();
-			//ImageIO.write( bi, "png", new File( String.format( "%s/img-%03d.png", dir, timepoint ) ) );
 			ImageIO.write( bi, "png", new File( aPanel.sRenderSavePath+String.format("%0"+String.valueOf(nTotFrames).length()+"d", nFr)+".png") );
 			if(isCancelled())
 			{
-				bt.viewer.setRenderMode( false );
 				return null;	
 			}	
 		}
@@ -160,15 +176,18 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
         	setProgress(100);	
         	setProgressState("Render interrupted by user.");
     	}	
+    	
     	bt.viewer.setRenderMode( false );
+		bt.bvvFrame.setResizable( true );
+		bt.bvvFrame.setEnabled( true );
     	if(butRecord != null && tabIconRecord!= null)
     	{
     		butRecord.setIcon( tabIconRecord );
     		butRecord.setToolTipText( "Render" );
-
     	}
 		Prefs.showMultibox(bSaveMultiBox);
 		Prefs.showTextOverlay(bSaveTextOverlay);
+		
     	//unlock user interaction
     	bt.bInputLock = false;
     	bt.setLockMode(false);

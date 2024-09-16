@@ -10,7 +10,10 @@ import java.awt.Color;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 import btbvv.core.backend.jogl.JoglGpuContext;
@@ -45,6 +48,8 @@ public class VisPolyLineSimple
 
 	public VisPolyLineSimple()
 	{
+		//final Segment pointVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/antialiased_line.vp" ).instantiate();
+		//final Segment pointFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/antialiased_line.fp" ).instantiate();
 		final Segment pointVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.vp" ).instantiate();
 		final Segment pointFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.fp" ).instantiate();
 	
@@ -56,7 +61,7 @@ public class VisPolyLineSimple
 	public VisPolyLineSimple(final ArrayList< RealPoint > points, final float fLineThickness_,final Color color_in)
 	{
 		this();
-		fLineThickness= fLineThickness_;		
+		fLineThickness = fLineThickness_;		
 		l_color = new Vector4f(color_in.getComponents(null));		
 		setVertices(points);
 		
@@ -121,16 +126,19 @@ public class VisPolyLineSimple
 		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
 		gl.glEnableVertexAttribArray( 0 );
 		gl.glBindVertexArray( 0 );
+		
 	}
 
-	public void draw( GL3 gl, Matrix4fc pvm )
+	public void draw( GL3 gl, Matrix4fc pvm, Matrix4fc vm )
 	{
 		if ( !initialized )
 			init( gl );
 
 
 		JoglGpuContext context = JoglGpuContext.get( gl );
-
+		
+		prog.getUniformMatrix4f( "pvm" ).set( pvm );
+		
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
 		prog.getUniform4f("colorin").set(l_color);
 		prog.setUniforms( context );
@@ -141,5 +149,28 @@ public class VisPolyLineSimple
 		gl.glLineWidth(fLineThickness);
 		gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
 		gl.glBindVertexArray( 0 );
+		
+//		prog.getUniformMatrix4f( "vm" ).set( pvm );
+//		prog.getUniform4f("colorin").set(l_color);
+//		int noffset = 0;
+//		int[] sizeVP = new int[4];
+//		gl.glGetIntegerv( GL.GL_VIEWPORT, sizeVP, noffset );
+//		Vector2f viewPort =  new Vector2f(sizeVP[2],sizeVP[3]);
+//		prog.getUniform2f("uViewPort").set(viewPort);
+//		prog.setUniforms( context );
+//		prog.use( context );
+//
+//		
+//		gl.glBindVertexArray( vao );
+//
+//		gl.glEnable( GL.GL_BLEND );
+//		gl.glEnable(GL.GL_DEPTH_TEST);
+//		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA); 
+//
+//		gl.glDepthFunc( GL.GL_ALWAYS);
+//		gl.glLineWidth(10);
+//		gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
+//
+//		gl.glBindVertexArray( 0 );
 	}
 }

@@ -101,7 +101,7 @@ public class Box3D extends AbstractRoi3D
 	
 		for (int i=0;i<edgesVis.size();i++)
 		{
-			edgesVis.get(i).draw(gl, pvm);
+			edgesVis.get(i).draw(gl, pvm, vm);
 		}
 	}
 	

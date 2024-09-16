@@ -172,7 +172,7 @@ public class VisPointsScaled
 		gl.glBindVertexArray( 0 );
 	}
 
-	public void draw(final GL3 gl,final Matrix4fc pvm,final int [] screen_size )
+	public void draw(final GL3 gl, final Matrix4fc pvm, final int [] screen_size )
 	{
 		
 		if (fPointSize<0.0001)

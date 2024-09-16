@@ -1,0 +1,19 @@
+layout (location = 0) in vec3 aPos;
+
+uniform vec2 uViewPort;
+uniform mat4 pvm;
+uniform mat4 vm;
+
+out vec2 vLineCenter;
+
+void main()
+{
+	gl_Position =  pvm * vec4( aPos, 1.0 );
+	
+	vec3 ndc = vec3(gl_Position.xyz/gl_Position.w);
+
+  	vLineCenter = 0.5*(ndc.xy + 1.0)*uViewPort;
+
+
+
+}

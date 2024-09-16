@@ -79,7 +79,6 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 
 	double [][] nDisplayMinMax;
 
-	public JFrame bvv_frame;
 	public JFrame finFrame;
 	public JProgressBar progressBar;
 	JButton butSettings;
