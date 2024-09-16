@@ -32,13 +32,16 @@ void main()
     v_uv = vec2(uv.x, uv.y*w);
     if (prev.xyz == curr.xyz) 
     {
-        v_uv.x = -w;
-        position = screen_curr.xy - w*t1 + uv.y*w*n1;
+        //v_uv.x = -w;
+        //position = screen_curr.xy - w*t1 + uv.y*w*n1;
+        position = screen_curr.xy + uv.y*w*n1;
     } 
     else if (curr.xyz == next.xyz) 
     {
-        v_uv.x = linelength+w;
-        position = screen_curr.xy + w*t0 + uv.y*w*n0;
+       // v_uv.x = linelength+w;
+        //position = screen_curr.xy + w*t0 + uv.y*w*n0;
+        position = screen_curr.xy + uv.y*w*n0;
+        
     } 
     else 
     {

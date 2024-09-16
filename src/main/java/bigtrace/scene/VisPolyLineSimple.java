@@ -257,13 +257,15 @@ public class VisPolyLineSimple
 //		
 		prog.getUniform4f("color").set(l_color);
 		prog.getUniform1f( "linelength" ).set( lineLength );
+		//prog.getUniform1f( "thickness" ).set(3 );
 		prog.getUniform1f( "thickness" ).set( fLineThickness );
-		prog.getUniform1f( "antialias" ).set( 3.5f);
+		prog.getUniform1f( "antialias" ).set( 1.5f);
 		prog.setUniforms( context );
 		prog.use( context );
 //
 //
-		gl.glDepthFunc( GL.GL_ALWAYS);
+		//gl.glDepthFunc( GL.GL_ALWAYS);
+		//gl.glDepthFunc( GL.GL_LESS);
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA); 
 		//gl.glEnable( GL.GL_BLEND );

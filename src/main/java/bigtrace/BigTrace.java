@@ -280,8 +280,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			nDimBox[1][i]=(btData.nDimIni[1][i]-1.0f);
 		}
 		
-		volumeBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
-		clipBox = new Box3D(nDimBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		volumeBox = new Box3D(nDimBox,1.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		clipBox = new Box3D(nDimBox,1.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 	}
 	public void initSourcesCanvas(double origin_axis_length)
 	{

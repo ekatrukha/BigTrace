@@ -556,7 +556,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//IntervalView<FloatType> gradient = Views.translate(gradFloat, nShift);
 		IntervalView<FloatType> hessian = Views.translate(hessFloat, minV);
 		
-		bt.visBox= new Box3D(currentBox,0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		bt.visBox= new Box3D(currentBox,1.0f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
 
 	/*
 		double [][] kernels;
