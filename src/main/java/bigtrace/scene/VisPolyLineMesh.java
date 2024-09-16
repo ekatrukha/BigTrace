@@ -698,6 +698,7 @@ public class VisPolyLineMesh {
 					}
 					//lines along the pipe
 					int nShift = nSectorN*nPointsN;
+					
 					for(nPointIt=0;nPointIt<nSectorN;nPointIt+=1)
 					{
 						gl.glDrawArrays( GL.GL_LINE_STRIP, nShift+nPointIt*nPointsN, nPointsN);

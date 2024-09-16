@@ -732,6 +732,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 				{
 					originVis.get(i).draw(gl, pvm);
 				}
+
+
 			}
 			
 			//render a box around  the volume 

@@ -37,22 +37,27 @@ public class VisPolyLineSimple
 
 	public float fLineThickness;
 	
+	float lineLength = 0.0f;
+	
 	//private final ArrayList< Point > points = new ArrayList<>();
 	
 	float vertices[]; 
+	
 	private int nPointsN;
+	
+	int nTotVert = 0 ;
 
 	private boolean initialized;
 
 	public VisPolyLineSimple()
 	{
-		//final Segment pointVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/antialiased_line.vp" ).instantiate();
-		//final Segment pointFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/antialiased_line.fp" ).instantiate();
-		final Segment pointVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.fp" ).instantiate();
+		final Segment lineVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/aa_line.vp" ).instantiate();
+		final Segment lineFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/aa_line.fp" ).instantiate();
+		//final Segment pointVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.vp" ).instantiate();
+		//final Segment pointFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.fp" ).instantiate();
 	
 		
-		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
+		prog = new DefaultShader( lineVp.getCode(), lineFp.getCode() );
 	}
 	
 	
@@ -87,7 +92,7 @@ public class VisPolyLineSimple
 		int i,j;
 		
 		
-		nPointsN=points.size();
+		nPointsN = points.size();
 		vertices = new float [nPointsN*3];//assume 3D	
 
 		for (i=0;i<nPointsN; i++)
@@ -98,32 +103,147 @@ public class VisPolyLineSimple
 			}
 			
 		}
-		initialized=false;
+		initialized =false;
 	}
 
 	private void init( GL3 gl )
 	{
 		initialized = true;
+		
+		int nTotLength = (nPointsN)*3*2;
+		nTotVert = nPointsN*2;
+		float [] nCumLength = new float [nPointsN];
+		float [] UV = new float [nPointsN*2*2];
+		//calculate new arrays
+		float [] vertAll = new float [nTotLength+2*3*2];
+		float [] vertCurr = new float [nTotLength];
+		float [] vertPrev = new float [nTotLength];
+		float [] vertNext = new float [nTotLength];
+		
+	
+		for(int nV = 1; nV<nPointsN+1; nV++)
+		{
+			for(int nDup = 0; nDup<2; nDup++)
+			{
+				for (int d=0;d<3; d++)
+				{	
+					vertAll[nV*6+nDup*3+d] = vertices[(nV-1)*3+d];
+				}
+			}
+		}
+		for(int nDup = 0; nDup<2; nDup++)
+		{
+			for (int d=0;d<3; d++)
+			{	
+				vertAll[nDup*3+d] = vertices[d];
+			}
+		}
+		for(int nDup = 0; nDup<2; nDup++)
+		{
+			for (int d=0;d<3; d++)
+			{	
+				vertAll[(nPointsN+1)*6+nDup*3+d] = vertices[(nPointsN-1)*3+d];
+			}
+		}
+		for(int i = 0; i<nTotLength; i++)
+		{
+			vertCurr[i] =vertAll[i+6];
+			vertPrev[i] =vertAll[i];
+			vertNext[i] =vertAll[i+12];
+		}
+		
+		//cumulative length
+		for(int i = 1; i<nPointsN;i++)
+		{
+			double dLen = 0;
+			for(int d =0; d<3;d++)
+			{
+				dLen+=Math.pow( vertices[i*3+d]-vertices[(i-1)*3+d], 2 );
+			}
+			nCumLength[i] = ( float ) Math.sqrt(dLen)+nCumLength[i]-1;
+		}
+		
+		lineLength = nCumLength[nPointsN-1];
+		for(int nV = 0; nV<nPointsN; nV++)
+		{
+				UV[nV*4] = nCumLength[nV];
+				UV[nV*4+1] = 1.0f;
+				UV[nV*4+2] = nCumLength[nV];
+				UV[nV*4+3] = -1.0f;
+		}
+
 
 		// ..:: VERTEX BUFFER ::..
 
-		final int[] tmp = new int[ 2 ];
-		gl.glGenBuffers( 1, tmp, 0 );
-		final int vbo = tmp[ 0 ];
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
+		final int[] tmp = new int[ 4 ];
+		gl.glGenBuffers( 4, tmp, 0 );
+		final int currVbo = tmp[ 0 ];
+		final int prevVbo = tmp[ 1 ];
+		final int nextVbo = tmp[ 2 ];
+		final int uvVbo   = tmp[ 3 ];
+
+		
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, currVbo );
+		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertCurr.length * Float.BYTES, FloatBuffer.wrap( vertCurr ), GL.GL_STATIC_DRAW );
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
 
-
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, prevVbo );
+		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertPrev.length * Float.BYTES, FloatBuffer.wrap( vertPrev ), GL.GL_STATIC_DRAW );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+		
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, nextVbo );
+		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertNext.length * Float.BYTES, FloatBuffer.wrap( vertNext ), GL.GL_STATIC_DRAW );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+		
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, uvVbo );
+		gl.glBufferData( GL.GL_ARRAY_BUFFER, UV.length * Float.BYTES, FloatBuffer.wrap( UV ), GL.GL_STATIC_DRAW );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+		
+		
 		// ..:: VERTEX ARRAY OBJECT ::..
 
+		
 		gl.glGenVertexArrays( 1, tmp, 0 );
 		vao = tmp[ 0 ];
 		gl.glBindVertexArray( vao );
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+		
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, currVbo );
 		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
 		gl.glEnableVertexAttribArray( 0 );
+		
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, prevVbo );
+		gl.glVertexAttribPointer( 1, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+		gl.glEnableVertexAttribArray( 1 );
+
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, nextVbo );
+		gl.glVertexAttribPointer( 2, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+		gl.glEnableVertexAttribArray( 2 );
+
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, uvVbo );
+		gl.glVertexAttribPointer( 3, 2, GL_FLOAT, false, 2 * Float.BYTES, 0 );
+		gl.glEnableVertexAttribArray( 3 );
+		
 		gl.glBindVertexArray( 0 );
+		
+//		// ..:: VERTEX BUFFER ::..
+//
+//		final int[] tmp = new int[ 2 ];
+//		gl.glGenBuffers( 1, tmp, 0 );
+//		final int vbo = tmp[ 0 ];
+//		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+//		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
+//		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+//
+//
+//		// ..:: VERTEX ARRAY OBJECT ::..
+//
+//		gl.glGenVertexArrays( 1, tmp, 0 );
+//		vao = tmp[ 0 ];
+//		gl.glBindVertexArray( vao );
+//		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+//		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+//		gl.glEnableVertexAttribArray( 0 );
+//		gl.glBindVertexArray( 0 );
 		
 	}
 
@@ -132,43 +252,28 @@ public class VisPolyLineSimple
 		if ( !initialized )
 			init( gl );
 
-
 		JoglGpuContext context = JoglGpuContext.get( gl );
-		
 		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-		
-		prog.getUniformMatrix4f( "pvm" ).set( pvm );
-		prog.getUniform4f("colorin").set(l_color);
+//		
+		prog.getUniform4f("color").set(l_color);
+		prog.getUniform1f( "linelength" ).set( lineLength );
+		prog.getUniform1f( "thickness" ).set( fLineThickness );
+		prog.getUniform1f( "antialias" ).set( 3.5f);
 		prog.setUniforms( context );
 		prog.use( context );
-
-
+//
+//
+		gl.glDepthFunc( GL.GL_ALWAYS);
+		gl.glEnable(GL.GL_BLEND);
+		gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA); 
+		//gl.glEnable( GL.GL_BLEND );
 		gl.glBindVertexArray( vao );
-		gl.glLineWidth(fLineThickness);
-		gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
+		gl.glDepthMask(false);
+//		gl.glLineWidth(fLineThickness);
+		gl.glDrawArrays( GL.GL_TRIANGLE_STRIP, 0, nTotVert);
 		gl.glBindVertexArray( 0 );
+		gl.glDepthMask(true);
 		
-//		prog.getUniformMatrix4f( "vm" ).set( pvm );
-//		prog.getUniform4f("colorin").set(l_color);
-//		int noffset = 0;
-//		int[] sizeVP = new int[4];
-//		gl.glGetIntegerv( GL.GL_VIEWPORT, sizeVP, noffset );
-//		Vector2f viewPort =  new Vector2f(sizeVP[2],sizeVP[3]);
-//		prog.getUniform2f("uViewPort").set(viewPort);
-//		prog.setUniforms( context );
-//		prog.use( context );
-//
-//		
-//		gl.glBindVertexArray( vao );
-//
-//		gl.glEnable( GL.GL_BLEND );
-//		gl.glEnable(GL.GL_DEPTH_TEST);
-//		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA); 
-//
-//		gl.glDepthFunc( GL.GL_ALWAYS);
-//		gl.glLineWidth(10);
-//		gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
-//
-//		gl.glBindVertexArray( 0 );
+
 	}
 }
