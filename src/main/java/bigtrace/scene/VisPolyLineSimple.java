@@ -10,10 +10,8 @@ import java.awt.Color;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
+
 import org.joml.Matrix4fc;
-import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 import btbvv.core.backend.jogl.JoglGpuContext;
@@ -129,7 +127,7 @@ public class VisPolyLineSimple
 		
 	}
 
-	public void draw( GL3 gl, Matrix4fc pvm, Matrix4fc vm )
+	public void draw( GL3 gl, Matrix4fc pvm)
 	{
 		if ( !initialized )
 			init( gl );

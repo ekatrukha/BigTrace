@@ -276,34 +276,7 @@ public class VisPolyLineMesh {
 		return true;
 	}
 	
-	/** OpenGL buffer binding, etc thing **/
-	private void initLineShader( final GL3 gl )
-	{
-		initialized = true;
-		if(nPointsN>1)
-		{
 
-			// ..:: VERTEX BUFFER ::..
-	
-			final int[] tmp = new int[ 2 ];
-			gl.glGenBuffers( 1, tmp, 0 );
-			final int vbo = tmp[ 0 ];
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-			gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
-	
-	
-			// ..:: VERTEX ARRAY OBJECT ::..
-	
-			gl.glGenVertexArrays( 1, tmp, 0 );
-			vao = tmp[ 0 ];
-			gl.glBindVertexArray( vao );
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-			gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-			gl.glEnableVertexAttribArray( 0 );
-			gl.glBindVertexArray( 0 );
-		}
-	}
 	
 	/** given contours coordinates, returns a mesh with open ends**/
 	private BufferMesh initMeshOpenEnds(final ArrayList<ArrayList< RealPoint >> allContours )
@@ -536,6 +509,34 @@ public class VisPolyLineMesh {
 			//nMeshTrianglesSize = meshOut.triangles().size();
 		}
 		return meshOut;
+	}
+	/** OpenGL buffer binding, etc thing **/
+	private void initLineShader( final GL3 gl )
+	{
+		initialized = true;
+		if(nPointsN>1)
+		{
+
+			// ..:: VERTEX BUFFER ::..
+	
+			final int[] tmp = new int[ 2 ];
+			gl.glGenBuffers( 1, tmp, 0 );
+			final int vbo = tmp[ 0 ];
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+			gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+	
+	
+			// ..:: VERTEX ARRAY OBJECT ::..
+	
+			gl.glGenVertexArrays( 1, tmp, 0 );
+			vao = tmp[ 0 ];
+			gl.glBindVertexArray( vao );
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+			gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+			gl.glEnableVertexAttribArray( 0 );
+			gl.glBindVertexArray( 0 );
+		}
 	}
 	
 	private boolean initMeshShader( GL3 gl )

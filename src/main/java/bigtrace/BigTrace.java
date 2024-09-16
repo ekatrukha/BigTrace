@@ -730,7 +730,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			{
 				for (int i=0;i<3;i++)
 				{
-					originVis.get(i).draw(gl, pvm, camview);
+					originVis.get(i).draw(gl, pvm);
 				}
 			}
 			
