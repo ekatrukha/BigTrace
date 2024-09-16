@@ -13,8 +13,10 @@ import java.util.ArrayList;
 
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import bigtrace.BigTraceData;
 import btbvv.core.backend.jogl.JoglGpuContext;
 import btbvv.core.shadergen.DefaultShader;
 import btbvv.core.shadergen.Shader;
@@ -34,11 +36,12 @@ public class VisPolyLineSimple
 	private int vao;
 	
 	private Vector4f l_color;
-	
 
 	public float fLineThickness;
 	
 	float lineLength = 0.0f;
+	
+	public boolean bIncludeClip = false;
 	
 	//private final ArrayList< Point > points = new ArrayList<>();
 	
@@ -54,9 +57,6 @@ public class VisPolyLineSimple
 	{
 		final Segment lineVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/aa_line.vp" ).instantiate();
 		final Segment lineFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/aa_line.fp" ).instantiate();
-		//final Segment pointVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.vp" ).instantiate();
-		//final Segment pointFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/simple_color.fp" ).instantiate();
-	
 		
 		prog = new DefaultShader( lineVp.getCode(), lineFp.getCode() );
 	}
@@ -71,6 +71,15 @@ public class VisPolyLineSimple
 		
 	}
 	
+	public VisPolyLineSimple(final ArrayList< RealPoint > points, final float fLineThickness_, final Vector4f l_color_)
+	{
+		this();
+		fLineThickness = fLineThickness_;		
+		l_color = new Vector4f(l_color_);		
+		setVertices(points);
+		
+	}
+	
 	public void setThickness(float fLineThickness_)
 	{
 		fLineThickness= fLineThickness_;
@@ -81,6 +90,11 @@ public class VisPolyLineSimple
 		l_color = new Vector4f(color_in.getComponents(null));
 	}
 	
+	public void setColor(final Vector4f l_color_)
+	{
+		l_color = new Vector4f(l_color_);
+	}
+		
 	public void setParams(final ArrayList< RealPoint > points, final float fLineThickness_, final Color color_in)
 	{
 
@@ -88,6 +102,7 @@ public class VisPolyLineSimple
 		l_color = new Vector4f(color_in.getComponents(null));		
 		setVertices(points);
 	}
+	
 	public void setVertices( ArrayList< RealPoint > points)
 	{
 		int i,j;
@@ -104,7 +119,7 @@ public class VisPolyLineSimple
 			}
 			
 		}
-		initialized =false;
+		initialized = false;
 	}
 
 	private void init( GL3 gl )
@@ -157,9 +172,9 @@ public class VisPolyLineSimple
 		for(int i = 1; i<nPointsN;i++)
 		{
 			double dLen = 0;
-			for(int d =0; d<3;d++)
+			for(int d=0; d<3; d++)
 			{
-				dLen+=Math.pow( vertices[i*3+d]-vertices[(i-1)*3+d], 2 );
+				dLen += Math.pow( vertices[i*3+d]-vertices[(i-1)*3+d], 2 );
 			}
 			nCumLength[i] = ( float ) Math.sqrt(dLen)+nCumLength[i]-1;
 		}
@@ -247,7 +262,18 @@ public class VisPolyLineSimple
 		prog.getUniform1f( "linelength" ).set( lineLength );
 		//prog.getUniform1f( "thickness" ).set(3 );
 		prog.getUniform1f( "thickness" ).set( fLineThickness );
-		prog.getUniform1f( "antialias" ).set( 1.5f);
+		prog.getUniform1f( "antialias" ).set( 2.0f);
+		if(bIncludeClip)
+		{
+			prog.getUniform1i("clipactive").set(BigTraceData.nClipROI);
+			prog.getUniform3f("clipmin").set(new Vector3f(BigTraceData.nDimCurr[0][0],BigTraceData.nDimCurr[0][1],BigTraceData.nDimCurr[0][2]));
+			prog.getUniform3f("clipmax").set(new Vector3f(BigTraceData.nDimCurr[1][0],BigTraceData.nDimCurr[1][1],BigTraceData.nDimCurr[1][2]));
+
+		}
+		else
+		{
+			prog.getUniform1i("clipactive").set(0);
+		}
 		prog.setUniforms( context );
 		prog.use( context );
 //

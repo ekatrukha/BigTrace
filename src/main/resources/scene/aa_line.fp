@@ -3,10 +3,25 @@ uniform float antialias;
 uniform float thickness;
 uniform float linelength;
 in vec2 v_uv;
+
+in vec3 posW;
+uniform vec3 clipmin;
+uniform vec3 clipmax;
+uniform int clipactive;
 out vec4 fragColor;
 
 void main()
 {
+    //ROI clipping
+	if(clipactive>0)
+	{
+		vec3 s = step(clipmin, posW) - step(clipmax, posW);
+		if(s.x * s.y * s.z == 0.0)
+		{
+			discard;
+		}
+	}
+	
     float d = 0;
     float w = thickness/2.0 - antialias;
 
@@ -30,12 +45,12 @@ void main()
         
     if( d < 0) 
     {
-       fragColor = vec4(color.xyz, 1.0);     
+       fragColor = vec4(color);     
     } 
     else 
     {
         d /= antialias;
-        fragColor = vec4(color.xyz, exp(-d*d));
+        fragColor = vec4(color.xyz, color.a*exp(-d*d));
     }
 	
 }

@@ -54,13 +54,16 @@ public class VisPolyLineMesh {
 	private long nMeshTrianglesSize = 0;
 	
 	volatile boolean bLocked = false;
+	
+	VisPolyLineSimple centerLine = null;
+	
 
 	public VisPolyLineMesh()
 	{
 		final Segment clipLineVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.vp" ).instantiate();
 		final Segment clipLineFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.fp" ).instantiate();		
 		prog = new DefaultShader( clipLineVp.getCode(), clipLineFp.getCode() );
-		
+				
 		final Segment meshVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.vp" ).instantiate();
 		final Segment meshFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.fp" ).instantiate();
 		progMesh = new DefaultShader( meshVp.getCode(), meshFp.getCode() );
@@ -79,7 +82,7 @@ public class VisPolyLineMesh {
 	
 	public void setThickness(float fLineThickness_)
 	{
-		fLineThickness= fLineThickness_;
+		fLineThickness = fLineThickness_;
 	}
 	
 	public void setColor(Color color_in)
@@ -161,20 +164,8 @@ public class VisPolyLineMesh {
 	public void setVerticesCenterLine(final ArrayList< RealPoint > points)
 	{
 		
-		int i,j;
-		
-		nPointsN = points.size();
-		
-		vertices = new float [nPointsN*3];//assume 3D	
-
-		for (i=0;i<nPointsN; i++)
-		{
-			for (j=0;j<3; j++)
-			{
-				vertices[i*3+j]=points.get(i).getFloatPosition(j);
-			}			
-		}
-		
+		centerLine = new VisPolyLineSimple(points, fLineThickness, l_color);
+		centerLine.bIncludeClip = true;
 	}
 	
 	/** generates triangulated surface mesh of a pipe around provided points **/
@@ -266,7 +257,11 @@ public class VisPolyLineMesh {
 		{
 			return initGPUBufferMesh(gl);	
 		}
-		initGPUBufferLine( gl );
+		
+		if(renderType == Roi3D.WIRE)
+		{
+			initGPUBufferLine( gl );
+		}
 		bLocked  = false;
 		return true;
 	}
@@ -569,8 +564,10 @@ public class VisPolyLineMesh {
 	//			gl.glDepthFunc(GL3.GL_ALWAYS);
 				if(renderType == Roi3D.OUTLINE)
 				{
-					gl.glLineWidth(fLineThickness);
-					gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
+					centerLine.setColor( l_color );
+					centerLine.setThickness( fLineThickness );
+					centerLine.draw( gl, pvm );
+
 				}
 				
 				if(renderType == Roi3D.WIRE)

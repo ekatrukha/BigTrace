@@ -35,11 +35,15 @@ public class VisPolygonFlat {
 	private int vao;
 	
 	private float vertices[]; 
+	
 	private int nPointsN=0;
+	
 	private int nGridEdges=0;
 
 	public int renderType = Roi3D.WIRE;
+	
 	private Vector4f l_color;	
+	
 	public float fLineThickness;
 
 
@@ -52,7 +56,6 @@ public class VisPolygonFlat {
 		final Segment pointVp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color_clip.vp" ).instantiate();
 		final Segment pointFp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color_depth.fp" ).instantiate();
 	
-		
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 	}
 	
@@ -109,6 +112,7 @@ public class VisPolygonFlat {
 		{
 			setVerticesWire(points);
 		}
+		
 		if(renderType == Roi3D.SURFACE)
 		{
 			setVerticesCenterLine(points);
@@ -130,7 +134,7 @@ public class VisPolygonFlat {
 				vertices[i*3+j]=points.get(i).getFloatPosition(j);
 			}			
 		}
-		initialized=false;
+		initialized = false;
 	}
 	
 
@@ -143,13 +147,14 @@ public class VisPolygonFlat {
 
 		double nGridStep = BigTraceData.crossSectionGridStep;
 		
-		nPointsN=points.size();
+		nPointsN = points.size();
 		
 		if (nPointsN<3)
 			return;
 		
 		//get a plane of the polygon
 		Plane3D plane = new Plane3D(points.get(1),points.get(0),points.get(2));
+		
 		//get edges of the polygon
 		ArrayList<ArrayList< RealPoint >> edges = getPolygonEdgesPairPoints(points);
 		
@@ -250,17 +255,14 @@ public class VisPolygonFlat {
 					
 				}
 			}
-		}
-
-		
+		}	
 		
 		nGridEdges = gridLines.size();
 
 		vertices = new float [nPointsN*3 + nGridEdges*6];//assume 3D	
 		//vertices = new float [nGridEdges*6];//assume 3D	
 
-		//outline
-		
+		//outline		
 		for (i=0;i<nPointsN; i++)
 		{
 			for (j=0;j<3; j++)
@@ -268,23 +270,20 @@ public class VisPolygonFlat {
 				vertices[i*3+j]=points.get(i).getFloatPosition(j);
 			}			
 		}
-		//grid lines
 		
+		//grid lines		
 		for (i=0;i<nGridEdges; i++)
 		{
 			for (j=0;j<3; j++)
 			{
 				vertices[nPointsN*3+i*6+j]=gridLines.get(i).get(0).getFloatPosition(j);
 				vertices[nPointsN*3+i*6+3+j]=gridLines.get(i).get(1).getFloatPosition(j);
-				//vertices[i*6+j]=gridLines.get(i).get(0).getFloatPosition(j);
-				//vertices[i*6+3+j]=gridLines.get(i).get(1).getFloatPosition(j);
 
 			}	
 		}
-		initialized=false;
+		
+		initialized = false;
 	}
-	
-
 	
 	/** OpenGL buffer binding, etc thing **/
 	private void init( GL3 gl )
@@ -372,7 +371,7 @@ public class VisPolygonFlat {
 				
 				for(nGridIt = 0;nGridIt<nGridEdges;nGridIt++)
 				{
-					gl.glDrawArrays( GL.GL_LINE_STRIP, nPointsN+nGridIt*2, 2);
+					gl.glDrawArrays( GL.GL_LINE_STRIP, nPointsN + nGridIt*2, 2);
 				}
 			}
 

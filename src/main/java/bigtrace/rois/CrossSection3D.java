@@ -35,12 +35,16 @@ public class CrossSection3D extends AbstractRoi3D
 	
 	/** vertices provided by user (plane is fitted to them) **/
 	public ArrayList<RealPoint> vertices;
+	
 	/** visualization of user-provided vertices**/
 	public VisPointsScaled verticesVis;
+	
 	/** cross-section visualization**/
 	public VisPolygonFlat planeVis;
+	
 	/** coordinates of polygon **/
 	public ArrayList<RealPoint> polygonVert;
+	
 	public float [][] nDimBox;
 	
 	public Plane3D fittedPlane = null;
@@ -51,7 +55,7 @@ public class CrossSection3D extends AbstractRoi3D
 		type = Roi3D.PLANE;
 		
 		pointSize = preset_in.pointSize;
-		lineThickness=preset_in.lineThickness;
+		lineThickness = preset_in.lineThickness;
 		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
@@ -77,6 +81,7 @@ public class CrossSection3D extends AbstractRoi3D
 				nDimBox[i][j]=nDimIni_[i][j];
 
 	}
+	
 	/** adds initial vertex **/
 	public void addPoint(final RealPoint in_)
 	{
@@ -150,14 +155,16 @@ public class CrossSection3D extends AbstractRoi3D
 
 
 	@Override
-	public void setPointColor(Color pointColor_) {
+	public void setPointColor(Color pointColor_) 
+	{
 		
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
 		verticesVis.setColor(pointColor);
 	}
 	
 	@Override
-	public void setLineColor(Color lineColor_) {
+	public void setLineColor(Color lineColor_) 
+	{
 		
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 		planeVis.setColor(lineColor);
@@ -165,7 +172,8 @@ public class CrossSection3D extends AbstractRoi3D
 
 
 	@Override
-	public void reversePoints() {
+	public void reversePoints() 
+	{
 		vertices = Roi3D.reverseArrayRP(vertices); 		
 		updateRenderVertices();
 		return;		
@@ -173,17 +181,17 @@ public class CrossSection3D extends AbstractRoi3D
 
 
 	@Override
-	public void setLineThickness(float line_thickness) {
+	public void setLineThickness(float line_thickness) 
+	{
 
 		lineThickness=line_thickness;
 		planeVis.setThickness(lineThickness);
 		updateRenderVertices();
 	}
 
-
-
 	@Override
-	public void setPointSize(float point_size) {
+	public void setPointSize(float point_size) 
+	{
 
 		pointSize=point_size;
 		verticesVis.setSize(pointSize);
@@ -200,7 +208,8 @@ public class CrossSection3D extends AbstractRoi3D
 	}
 
 	@Override
-	public void saveRoi(FileWriter writer) {
+	public void saveRoi(FileWriter writer) 
+	{
 		int i, iPoint;
 		float [] vert;
 		
