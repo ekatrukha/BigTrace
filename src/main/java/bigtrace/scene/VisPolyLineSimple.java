@@ -278,10 +278,10 @@ public class VisPolyLineSimple
 		prog.use( context );
 //
 //
-		//gl.glDepthFunc( GL.GL_ALWAYS);
+		gl.glDepthFunc( GL.GL_ALWAYS);
 		//gl.glDepthFunc( GL.GL_LESS);
-		//gl.glEnable(GL.GL_BLEND);
-		//gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA); 
+		gl.glEnable(GL.GL_BLEND);
+		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA); 
 		//gl.glEnable( GL.GL_BLEND );
 		gl.glBindVertexArray( vao );
 		gl.glDepthMask(false);

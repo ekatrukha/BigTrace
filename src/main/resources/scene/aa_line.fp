@@ -52,5 +52,5 @@ void main()
         d /= antialias;
         fragColor = vec4(color.xyz, color.a*exp(-d*d));
     }
-	
+	//gl_FragDepth = 1.0;
 }

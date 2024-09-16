@@ -31,7 +31,6 @@ import net.imglib2.mesh.impl.nio.BufferMesh;
 
 public class VisPolyLineMesh {
 	
-	private final Shader prog;
 	
 	private final Shader progMesh;
 
@@ -62,9 +61,6 @@ public class VisPolyLineMesh {
 
 	public VisPolyLineMesh()
 	{
-		final Segment clipLineVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.vp" ).instantiate();
-		final Segment clipLineFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.fp" ).instantiate();		
-		prog = new DefaultShader( clipLineVp.getCode(), clipLineFp.getCode() );
 				
 		final Segment meshVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.vp" ).instantiate();
 		final Segment meshFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.fp" ).instantiate();
@@ -544,16 +540,9 @@ public class VisPolyLineMesh {
 			}
 			else
 			{
-	
-				prog.getUniformMatrix4f( "pvm" ).set( pvm );
-				prog.getUniform4f("colorin").set(l_color);
-				prog.getUniform1i("clipactive").set(BigTraceData.nClipROI);
-				prog.getUniform3f("clipmin").set(new Vector3f(BigTraceData.nDimCurr[0][0],BigTraceData.nDimCurr[0][1],BigTraceData.nDimCurr[0][2]));
-				prog.getUniform3f("clipmax").set(new Vector3f(BigTraceData.nDimCurr[1][0],BigTraceData.nDimCurr[1][1],BigTraceData.nDimCurr[1][2]));
-				prog.setUniforms( context );
-				prog.use( context );		
-				gl.glBindVertexArray( vao );
-		
+
+			    //gl.glDepthFunc( GL.GL_LESS);
+			    gl.glDepthFunc( GL.GL_ALWAYS);
 	//			gl.glEnable(GL3.GL_BLEND);
 	//			gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
 	//			gl.glDepthFunc(GL3.GL_ALWAYS);
@@ -571,10 +560,9 @@ public class VisPolyLineMesh {
 						wireLine.get( nS ).draw( gl, pvm );
 					}
 				}
-	
-				gl.glBindVertexArray( 0 );
-				gl.glDepthFunc( GL.GL_LESS);
+				
 			}
+			gl.glDepthFunc( GL.GL_LESS);
 		}
 	}
 	
