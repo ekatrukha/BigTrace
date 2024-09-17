@@ -12,13 +12,15 @@ public class Scene
 	final AffineTransform3D viewerTransform;
 	final long [][] clipBox;	
 	int nTimeFrame;
+
 	
-	public Scene(final AffineTransform3D viewerTransform_, final long [][] clipBox_, int nTimeFrame_)
+	public Scene(final AffineTransform3D viewerTransform_, final long [][] clipBox_, int nTimeFrame_ )
 	{
 		viewerTransform = new AffineTransform3D();
 		viewerTransform.set( viewerTransform_ );
 		clipBox = new long [2][3];
 		nTimeFrame = nTimeFrame_;
+
 		for(int i=0;i<2;i++)
 			for(int j=0;j<3;j++)
 				clipBox[i][j]=clipBox_[i][j];
@@ -62,7 +64,7 @@ public class Scene
 		nTimeFrame = nTimeFrame_;
 		return;
 	}
-	
+
 	public void save(final FileWriter writer)
 	{
 		DecimalFormatSymbols symbols = new DecimalFormatSymbols();

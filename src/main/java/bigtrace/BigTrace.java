@@ -302,6 +302,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		
 		viewer = bvv_main.getBvvHandle().getViewerPanel();
 		viewer.setRenderScene(this::renderScene);
+		
 		btActions  = new BigTraceActions<>(this);
 		setInitialTransform();
 		viewer.addTimePointListener(this);
@@ -1516,13 +1517,25 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	{
 		final AffineTransform3D transform = new AffineTransform3D();
 		viewer.state().getViewerTransform(transform);
+		int canvasW = viewer.getWidth();
+		int canvasH = viewer.getHeight();
+		transform.set( transform.get( 0, 3 ) - canvasW / 2, 0, 3 );
+		transform.set( transform.get( 1, 3 ) - canvasH / 2, 1, 3 );
+		transform.scale( 1.0/ canvasW );
+		
 		return new Scene(transform, BigTraceData.nDimCurr, btData.nCurrTimepoint);
 	} 
 	
 	public void setScene(final Scene scene)
 	{
-		
-		viewer.state().setViewerTransform( scene.getViewerTransform() );
+		final AffineTransform3D affine = new AffineTransform3D();
+		affine.set( scene.getViewerTransform());
+		int width = viewer.getWidth();
+		int height = viewer.getHeight();
+		affine.scale( width );
+		affine.set( affine.get( 0, 3 ) + width / 2, 0, 3 );
+		affine.set( affine.get( 1, 3 ) + height / 2, 1, 3 );
+		viewer.state().setViewerTransform( affine );
 		int nTimePoint = scene.getTimeFrame();
 		if(nTimePoint<BigTraceData.nNumTimepoints)
 		{
@@ -1530,6 +1543,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		}
 		btPanel.clipPanel.setBoundingBox( scene.getClipBox());
 	} 
+ 
 
 	@Override
 	public void windowActivated(WindowEvent arg0) {

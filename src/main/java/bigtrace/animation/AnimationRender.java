@@ -39,7 +39,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 	private String progressState;
 	
 	JButton butRecord = null;
-	
+	Dimension dimsIni;
 	ImageIcon tabIconRecord = null;
 	boolean bSaveMultiBox = true;
 	boolean bSaveTextOverlay = true;
@@ -79,9 +79,11 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 
 		float fTimePoint;
 		float dT = aPanel.kfAnim.nTotalTime/(float)(nTotFrames-1);
-
+		
+		dimsIni = bt.bvvFrame.getContentPane().getSize();
 		bt.viewer.setRenderMode( true );
-
+		bt.bvvFrame.setResizable( false );
+		bt.bvvFrame.setEnabled( false );
 		SplitPanel splitPanel = (SplitPanel) bt.viewer.getParent();
 		
 		if(!splitPanel.isCollapsed())
@@ -91,12 +93,19 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		//check if there is time slider => +25 in height
 		//splitPanel.setPreferredSize( new Dimension(200, 200 ));
 		//bt.viewer.setCanvasSize( 200, 200 );
+		int nWidthRender = 200;
+		int nHeightRender = 200;
+
+		
+		
+		Dimension nRenderDim = new Dimension(nWidthRender, nHeightRender );
+		bt.bvvFrame.getContentPane().setPreferredSize( nRenderDim);	
+		bt.bvvFrame.getContentPane().setSize(nRenderDim);		
 		bt.bvvFrame.pack();	
-		bt.bvvFrame.setResizable( false );
-		bt.bvvFrame.setEnabled( false );
+		bt.viewer.setCanvasSize( nRenderDim.width, nRenderDim.height);
+
+		Component component = bt.viewer.getDisplayComponent();				
 		
-		
-		Component component = bt.viewer.getDisplayComponent();
 		Rectangle rect = bt.viewer.getDisplayComponent().getBounds();
 		BufferedImage bi =
                 new BufferedImage(rect.width, rect.height,
@@ -108,8 +117,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 
 			fTimePoint = nFr*dT;
 			bt.setScene(aPanel.kfAnim.getScene(fTimePoint));
-
-			//RepaintType status = bt.viewer.getRepaintStatus();
+			
 			long nTotalTime = 0;
 			long nWaitTime = 30;
 			boolean bWait = (bt.viewer.getRepaintStatus() != RepaintType.NONE);
@@ -179,9 +187,17 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
     	}	
     	
     	bt.viewer.setRenderMode( false );
+		bt.viewer.setCanvasSize( dimsIni.width, dimsIni.height);
+		bt.bvvFrame.getContentPane().setPreferredSize( dimsIni);	
+		bt.bvvFrame.getContentPane().setSize(dimsIni);		
+		bt.bvvFrame.pack();
 		bt.bvvFrame.setResizable( true );
 		bt.bvvFrame.setEnabled( true );
-    	if(butRecord != null && tabIconRecord!= null)
+		
+	
+
+    	
+		if(butRecord != null && tabIconRecord!= null)
     	{
     		butRecord.setIcon( tabIconRecord );
     		butRecord.setToolTipText( "Render" );
