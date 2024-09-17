@@ -149,7 +149,10 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	/** number of segments in the cylinder cross-section (for polyline/trace ROIs),
 	 *  3 = prism, 4 = cuboid, etc.
 	 *  The more the number, more smooth is surface **/
-	public static int sectorN = (int) Prefs.get("BigTrace.nSectorN", 32);
+	public static int sectorN = (int) Prefs.get("BigTrace.nSectorN", 32);	
+	
+	/** whether to render wire countour using antialiased lines **/
+	public static boolean wireAntiAliasing = Prefs.get( "BigTrace.wireAntiAliasing", true );
 	
 	/** approximate distance between contours along the pipe visualizing a curve
 	 *  in minimum voxel size units **/

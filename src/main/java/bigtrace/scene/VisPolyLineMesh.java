@@ -31,6 +31,7 @@ import net.imglib2.mesh.impl.nio.BufferMesh;
 
 public class VisPolyLineMesh {
 	
+	private final Shader progLine;
 	
 	private final Shader progMesh;
 
@@ -45,6 +46,8 @@ public class VisPolyLineMesh {
 	private Vector4f l_color;	
 	
 	public float fLineThickness;
+	
+	public final float fWireLineThickness = 1.0f;
 
 	private boolean initialized;
 	
@@ -61,6 +64,9 @@ public class VisPolyLineMesh {
 
 	public VisPolyLineMesh()
 	{
+		final Segment lineVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.vp" ).instantiate();
+		final Segment lineFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.fp" ).instantiate();		
+		progLine = new DefaultShader( lineVp.getCode(), lineFp.getCode() );
 				
 		final Segment meshVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.vp" ).instantiate();
 		final Segment meshFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.fp" ).instantiate();
@@ -97,15 +103,6 @@ public class VisPolyLineMesh {
 			
 		}
 	}
-
-
-//	public void setParams(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final Color color_in)
-//	{
-//		
-//		fLineThickness= fLineThickness_;		
-//		l_color = new Vector4f(color_in.getComponents(null));		
-//		setVertices(points, tangents);
-//	}
 	
 	public void setRenderType(int nRenderType_)
 	{
@@ -174,8 +171,25 @@ public class VisPolyLineMesh {
 	/** simple central polyline, not cylindrical **/
 	public void setVerticesCenterLine(final ArrayList< RealPoint > points)
 	{		
-		centerLine = new VisPolyLineSimple(points, fLineThickness, l_color);
-		centerLine.bIncludeClip = true;
+		if(BigTraceData.wireAntiAliasing)
+		{
+			centerLine = new VisPolyLineSimple(points, fLineThickness, l_color);
+			centerLine.bIncludeClip = true;
+		}
+		else
+		{
+			nPointsN=points.size();
+			
+			vertices = new float [nPointsN*3];//assume 3D	
+
+			for (int i=0;i<nPointsN; i++)
+			{
+				for (int d=0;d<3; d++)
+				{
+					vertices[i*3+d]=points.get(i).getFloatPosition(d);
+				}			
+			}
+		}
 	}
 	
 	/** generates triangulated surface mesh of a pipe around provided points **/
@@ -218,6 +232,18 @@ public class VisPolyLineMesh {
 	/** generates a wireframe mesh of a pipe around provided points **/
 	public void setVerticesWire( final ArrayList<ArrayList< RealPoint >> allContours)
 	{
+		if(BigTraceData.wireAntiAliasing)
+		{
+			setVerticesWireAA(allContours);
+		}
+		else
+		{
+			setVerticesWireSharp(allContours);
+		}
+	}
+	/** generates a wireframe mesh of a pipe around provided points **/
+	public void setVerticesWireAA( final ArrayList<ArrayList< RealPoint >> allContours)
+	{
 		int i,j, iPoint;
 		wireLine = new ArrayList<>();
 		final int nSectorN = BigTraceData.sectorN;
@@ -234,7 +260,7 @@ public class VisPolyLineMesh {
 					contour_arr.add( allContours.get(iPoint).get(i));			
 				}
 				contour_arr.add( allContours.get(iPoint).get(0));
-				VisPolyLineSimple contour = new VisPolyLineSimple(contour_arr, 2.0f, l_color) ;
+				VisPolyLineSimple contour = new VisPolyLineSimple(contour_arr,fWireLineThickness, l_color) ;
 				contour.bIncludeClip = true;
 				wireLine.add( contour );
 				
@@ -251,7 +277,7 @@ public class VisPolyLineMesh {
 					contour_arr.add( allContours.get(iPoint).get(i));
 				}
 				contour_arr.add( allContours.get(iPoint).get(0));
-				VisPolyLineSimple contour = new VisPolyLineSimple(contour_arr, 2.0f, l_color) ;
+				VisPolyLineSimple contour = new VisPolyLineSimple(contour_arr, fWireLineThickness, l_color) ;
 				contour.bIncludeClip = true;
 				wireLine.add( contour );
 			}
@@ -264,15 +290,45 @@ public class VisPolyLineMesh {
 				{
 					line_arr.add( allContours.get(j).get(i));
 				}
-				VisPolyLineSimple line = new VisPolyLineSimple(line_arr, 2.0f, l_color) ;
+				VisPolyLineSimple line = new VisPolyLineSimple(line_arr, fWireLineThickness, l_color) ;
 				line.bIncludeClip = true;
 				wireLine.add( line );
 			}
 			
 		}
 	}
-	
-	
+	public void setVerticesWireSharp( final ArrayList<ArrayList< RealPoint >> allContours)
+	{
+		int i,j, iPoint;
+		int vertShift;
+
+		final int nSectorN = BigTraceData.sectorN;
+		nPointsN = allContours.size();
+		if(nPointsN>1)
+		{
+			//all vertices
+			vertices = new float [2*nSectorN*3*nPointsN];
+			for (iPoint=0;iPoint<nPointsN;iPoint++)
+			{
+				//drawing contours around each point
+				vertShift = iPoint*nSectorN*3;
+				for (i=0;i<nSectorN; i++)
+				{
+					for (j=0;j<3; j++)
+					{
+						vertices[vertShift+i*3+j]=allContours.get(iPoint).get(i).getFloatPosition(j);
+					}				
+				}
+			}
+			final int nShift = nSectorN*3*nPointsN;
+			for (i=0;i<nSectorN;i++)
+				for(j=0;j<nPointsN;j++)
+					for(int k=0;k<3;k++)
+					{
+						vertices[nShift+3*i*nPointsN+j*3+k]=vertices[i*3+3*j*nSectorN+k];
+					}
+		}
+	}
 	private boolean init( final GL3 gl )
 	{
 		bLocked  = true;
@@ -281,8 +337,41 @@ public class VisPolyLineMesh {
 			return initGPUBufferMesh(gl);	
 		}
 		
+		if(!BigTraceData.wireAntiAliasing)
+		{
+			initGPUBufferWire( gl );
+		}
+		
 		bLocked  = false;
 		return true;
+	}
+	
+	private void initGPUBufferWire( final GL3 gl )
+	{
+		initialized = true;
+		if(nPointsN>1)
+		{
+
+			// ..:: VERTEX BUFFER ::..
+	
+			final int[] tmp = new int[ 2 ];
+			gl.glGenBuffers( 1, tmp, 0 );
+			final int vbo = tmp[ 0 ];
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+			gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+	
+	
+			// ..:: VERTEX ARRAY OBJECT ::..
+	
+			gl.glGenVertexArrays( 1, tmp, 0 );
+			vao = tmp[ 0 ];
+			gl.glBindVertexArray( vao );
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+			gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+			gl.glEnableVertexAttribArray( 0 );
+			gl.glBindVertexArray( 0 );
+		}
 	}
 	
 	/** given contours coordinates, returns a mesh with open ends**/
@@ -540,25 +629,71 @@ public class VisPolyLineMesh {
 			}
 			else
 			{
-
-			    //gl.glDepthFunc( GL.GL_LESS);
-			    gl.glDepthFunc( GL.GL_ALWAYS);
-	//			gl.glEnable(GL3.GL_BLEND);
-	//			gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
-	//			gl.glDepthFunc(GL3.GL_ALWAYS);
-				if(renderType == Roi3D.OUTLINE)
+				if(BigTraceData.wireAntiAliasing)
 				{
-
-					centerLine.draw( gl, pvm );
-
-				}
-				
-				if(renderType == Roi3D.WIRE)
-				{					
-					for (int nS = 0;nS<wireLine.size(); nS++)
+				    //gl.glDepthFunc( GL.GL_LESS);
+				    gl.glDepthFunc( GL.GL_ALWAYS);
+		//			gl.glEnable(GL3.GL_BLEND);
+		//			gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
+		//			gl.glDepthFunc(GL3.GL_ALWAYS);
+					if(renderType == Roi3D.OUTLINE)
 					{
-						wireLine.get( nS ).draw( gl, pvm );
+						centerLine.draw( gl, pvm );
 					}
+					
+					if(renderType == Roi3D.WIRE)
+					{					
+						for (int nS = 0;nS<wireLine.size(); nS++)
+						{
+							wireLine.get( nS ).draw( gl, pvm );
+						}
+					}
+				}
+				/// no antialiasing
+				else
+				{
+					progLine.getUniformMatrix4f( "pvm" ).set( pvm );
+					progLine.getUniform4f("colorin").set(l_color);
+					progLine.getUniform1i("clipactive").set(BigTraceData.nClipROI);
+					progLine.getUniform3f("clipmin").set(new Vector3f(BigTraceData.nDimCurr[0][0],BigTraceData.nDimCurr[0][1],BigTraceData.nDimCurr[0][2]));
+					progLine.getUniform3f("clipmax").set(new Vector3f(BigTraceData.nDimCurr[1][0],BigTraceData.nDimCurr[1][1],BigTraceData.nDimCurr[1][2]));
+					progLine.setUniforms( context );
+					progLine.use( context );		
+					gl.glBindVertexArray( vao );	
+					
+					//			gl.glDepthFunc(GL3.GL_ALWAYS);
+					if(renderType == Roi3D.OUTLINE)
+					{
+						gl.glLineWidth(fLineThickness);
+						gl.glDrawArrays( GL.GL_LINE_STRIP, 0, nPointsN);
+					}
+					
+					if(renderType == Roi3D.WIRE)
+					{
+						int nPointIt;
+						final int nSectorN = BigTraceData.sectorN;
+	
+						gl.glLineWidth(1.0f);
+						//contours
+						for(nPointIt=0;nPointIt<nPointsN;nPointIt+=BigTraceData.wireCountourStep)
+						{
+							gl.glDrawArrays( GL.GL_LINE_LOOP, nPointIt*nSectorN, nSectorN);
+							//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
+						}
+						//the last contour
+						if((nPointIt-BigTraceData.wireCountourStep)!=(nPointsN-1))
+						{
+							gl.glDrawArrays( GL.GL_LINE_LOOP, (nPointsN-1)*nSectorN, nSectorN);
+						}
+						//lines along the pipe
+						int nShift = nSectorN*nPointsN;
+						for(nPointIt=0;nPointIt<nSectorN;nPointIt+=1)
+						{
+							gl.glDrawArrays( GL.GL_LINE_STRIP, nShift+nPointIt*nPointsN, nPointsN);
+							//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
+						}
+					}
+					gl.glBindVertexArray( 0 );	
 				}
 				
 			}

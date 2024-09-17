@@ -4,6 +4,7 @@ package bigtrace.animation;
 import java.io.File;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ExecutionException;
@@ -88,8 +89,8 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 			splitPanel.setCollapsed( true );
 		}
 		//check if there is time slider => +25 in height
-		//splitPanel.setPreferredSize( new Dimension(300, 300 ));
-	
+		//splitPanel.setPreferredSize( new Dimension(200, 200 ));
+		//bt.viewer.setCanvasSize( 200, 200 );
 		bt.bvvFrame.pack();	
 		bt.bvvFrame.setResizable( false );
 		bt.bvvFrame.setEnabled( false );

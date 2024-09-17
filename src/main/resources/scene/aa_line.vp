@@ -56,5 +56,6 @@ void main()
 
     // Back to NDC coordinates
     gl_Position = vec4(2.0*position/viewport-1.0, NDC_curr.z/NDC_curr.w, 1.0);
+   
     posW = curr;
 }

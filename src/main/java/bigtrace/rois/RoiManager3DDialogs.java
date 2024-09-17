@@ -453,6 +453,9 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		nfSectorNLines.setIntegersOnly(true);
 		nfSectorNLines.setText(Integer.toString(BigTraceData.sectorN));
 		
+		JCheckBox cbWireAA = new JCheckBox();
+		cbWireAA.setSelected( BigTraceData.wireAntiAliasing );
+		
 		NumberField nfWireContourStep = new NumberField(4);
 		nfWireContourStep.setIntegersOnly(true);
 		nfWireContourStep.setText(Integer.toString(BigTraceData.wireCountourStep));
@@ -481,6 +484,12 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		pROIsurface.add(new JLabel("<html>----  <B>Wire</B> mode  ----</html>"),cd);
 		cd.gridwidth=1;
 		cd.anchor = GridBagConstraints.WEST;
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIsurface.add(new JLabel("Use anti-aliased lines :"),cd);
+		cd.gridx++;
+		pROIsurface.add(cbWireAA,cd);
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -562,6 +571,14 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 				Prefs.set("BigTrace.nSectorN", BigTraceData.sectorN);
 				bUpdateROIs  = true;
 			}
+			
+			if(BigTraceData.wireAntiAliasing != cbWireAA.isSelected())
+			{
+				BigTraceData.wireAntiAliasing = cbWireAA.isSelected();
+				Prefs.set("BigTrace.wireAntiAliasing", BigTraceData.wireAntiAliasing);
+				bUpdateROIs  = true;
+			}
+			
 			if(BigTraceData.wireCountourStep!= Integer.parseInt(nfWireContourStep.getText()))
 			{
 				BigTraceData.wireCountourStep= Integer.parseInt(nfWireContourStep.getText());
