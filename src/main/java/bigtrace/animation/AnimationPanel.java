@@ -108,8 +108,8 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	AnimationRender<T> render;
 	
 	int nRenderFPS = (int)Prefs.get("BigTrace.nRenderFPS", 24.0);
-	int nRenderWidth = 1280;
-	int nRenderHeight = 720;
+	int nRenderWidth = (int)Prefs.get("BigTrace.nRenderWidth", 1280);
+	int nRenderHeight = (int)Prefs.get("BigTrace.nRenderHeight", 720);
 	
 	String sRenderSavePath = null;
 	

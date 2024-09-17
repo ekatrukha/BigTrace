@@ -51,12 +51,30 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 		final NumberField nfFPS = new NumberField(4);
 		nfFPS.setIntegersOnly( true );
 		nfFPS.setText(Integer.toString( pan.nRenderFPS ));
+		final NumberField nfWidth = new NumberField(4);
+		nfWidth.setIntegersOnly( true );
+		nfWidth.setText(Integer.toString( pan.nRenderWidth ));
+		final NumberField nfHeight = new NumberField(4);
+		nfHeight.setIntegersOnly( true );
+		nfHeight.setText(Integer.toString( pan.nRenderHeight));
 		
 		cd.gridx=0;
 		cd.gridy=0;	
 		panRenderSettings.add(new JLabel("Render FPS:"),cd);
 		cd.gridx++;
 		panRenderSettings.add(nfFPS, cd);	
+		
+		cd.gridx=0;
+		cd.gridy++;	
+		panRenderSettings.add(new JLabel("Render width (px):"),cd);
+		cd.gridx++;
+		panRenderSettings.add(nfWidth, cd);			
+		
+		cd.gridx=0;
+		cd.gridy++;	
+		panRenderSettings.add(new JLabel("Render height (px):"),cd);
+		cd.gridx++;
+		panRenderSettings.add(nfHeight, cd);			
 		
 		int reply = JOptionPane.showConfirmDialog(null, panRenderSettings, "Render settings", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -65,7 +83,14 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 			pan.nRenderFPS = Integer.parseInt( nfFPS.getText());
 			Prefs.set("BigTrace.nRenderFPS", (double)pan.nRenderFPS);
 			
-			pan.sRenderSavePath = IJ.getDirectory("Save animation volumes to..");
+			pan.nRenderWidth = Integer.parseInt( nfWidth.getText());
+			Prefs.set("BigTrace.nRenderWidth", (double)pan.nRenderWidth);
+			
+			pan.nRenderHeight = Integer.parseInt( nfHeight.getText());
+			Prefs.set("BigTrace.nRenderHeight", (double)pan.nRenderHeight);
+			
+			pan.sRenderSavePath = IJ.getDirectory("Save animation frames to..");
+			
 			if(pan.sRenderSavePath == null)
 			{
 				bt.btPanel.progressBar.setString("animation aborted.");
