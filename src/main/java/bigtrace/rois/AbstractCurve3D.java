@@ -8,7 +8,7 @@ import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.measure.Circle2DMeasure;
 import bigtrace.measure.MeasureValues;
-import bigtrace.scene.VisPolyLineMesh;
+import bigtrace.scene.VisWireMesh;
 
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
@@ -579,7 +579,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 			{
 				point_contours.set(i, Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
 			}
-			BufferMesh meshx = VisPolyLineMesh.initClosedVolumeMesh(point_contours, Roi3D.scaleGlobInv(points, BigTraceData.globCal) );
+			BufferMesh meshx = VisWireMesh.initClosedVolumeMesh(point_contours, Roi3D.scaleGlobInv(points, BigTraceData.globCal) );
 			volumeMesh = Meshes.removeDuplicateVertices( meshx, 2 );
 			bMeshInit = true;
 		}

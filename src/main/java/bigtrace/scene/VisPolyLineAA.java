@@ -27,9 +27,8 @@ import btbvv.core.shadergen.generate.SegmentTemplate;
 import static com.jogamp.opengl.GL.GL_FLOAT;
 
 
-public class VisPolyLineSimple
+public class VisPolyLineAA
 {
-	//private final String imageFilename;
 
 	private final Shader prog;
 
@@ -42,9 +41,7 @@ public class VisPolyLineSimple
 	float lineLength = 0.0f;
 	
 	public boolean bIncludeClip = false;
-	
-	//private final ArrayList< Point > points = new ArrayList<>();
-	
+		
 	float vertices[]; 
 	
 	private int nPointsN;
@@ -53,16 +50,16 @@ public class VisPolyLineSimple
 
 	private boolean initialized;
 
-	public VisPolyLineSimple()
+	public VisPolyLineAA()
 	{
-		final Segment lineVp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/aa_line.vp" ).instantiate();
-		final Segment lineFp = new SegmentTemplate( VisPolyLineSimple.class, "/scene/aa_line.fp" ).instantiate();
+		final Segment lineVp = new SegmentTemplate( VisPolyLineAA.class, "/scene/aa_line.vp" ).instantiate();
+		final Segment lineFp = new SegmentTemplate( VisPolyLineAA.class, "/scene/aa_line.fp" ).instantiate();
 		
 		prog = new DefaultShader( lineVp.getCode(), lineFp.getCode() );
 	}
 	
 	
-	public VisPolyLineSimple(final ArrayList< RealPoint > points, final float fLineThickness_,final Color color_in)
+	public VisPolyLineAA(final ArrayList< RealPoint > points, final float fLineThickness_,final Color color_in)
 	{
 		this();
 		fLineThickness = fLineThickness_;		
@@ -71,7 +68,7 @@ public class VisPolyLineSimple
 		
 	}
 	
-	public VisPolyLineSimple(final ArrayList< RealPoint > points, final float fLineThickness_, final Vector4f l_color_)
+	public VisPolyLineAA(final ArrayList< RealPoint > points, final float fLineThickness_, final Vector4f l_color_)
 	{
 		this();
 		fLineThickness = fLineThickness_;		
@@ -125,6 +122,12 @@ public class VisPolyLineSimple
 	private void init( GL3 gl )
 	{
 		initialized = true;
+		
+		// drawing of antialiased 3D lines
+		// taken and adapted from 
+		// https://www.labri.fr/perso/nrougier/python-opengl/#d-lines
+		// Python & OpenGL for Scientific Visualization
+		// Copyright (c) 2018 - Nicolas P. Rougier <Nicolas.Rougier@inria.fr>
 		
 		int nTotLength = (nPointsN)*3*2;
 		nTotVert = nPointsN*2;

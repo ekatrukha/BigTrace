@@ -22,6 +22,12 @@ void main()
 		}
 	}
 	
+	// drawing of antialiased 3D lines
+	// taken and adapted from 
+	// https://www.labri.fr/perso/nrougier/python-opengl/#d-lines
+	// Python & OpenGL for Scientific Visualization
+	// Copyright (c) 2018 - Nicolas P. Rougier <Nicolas.Rougier@inria.fr>
+	
     float d = 0;
     float w = thickness/2.0 - antialias;
 
@@ -52,5 +58,4 @@ void main()
         d /= antialias;
         fragColor = vec4(color.xyz, color.a*exp(-d*d));
     }
-	//gl_FragDepth = 1.0;
 }

@@ -13,7 +13,7 @@ import com.jogamp.opengl.GL3;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
-import bigtrace.scene.VisPolyLineSimple;
+import bigtrace.scene.VisPolyLineAA;
 import net.imglib2.AbstractInterval;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
@@ -30,7 +30,7 @@ public class Box3D extends AbstractRoi3D
 	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> edges;
 	public ArrayList<VisPointsScaled> verticesVis;
-	public ArrayList<VisPolyLineSimple> edgesVis;
+	public ArrayList<VisPolyLineAA> edgesVis;
 
 	
 	public Box3D(final Roi3DGroup preset_in, final int nTimePoint_)
@@ -62,7 +62,7 @@ public class Box3D extends AbstractRoi3D
 		ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
 		for(i=0;i<edgesPairPoints.size(); i++)
 		{
-			edgesVis.add(new VisPolyLineSimple(edgesPairPoints.get(i), lineThickness,lineColor));
+			edgesVis.add(new VisPolyLineAA(edgesPairPoints.get(i), lineThickness,lineColor));
 		}
 	}
 
@@ -93,7 +93,7 @@ public class Box3D extends AbstractRoi3D
 		ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
 		for(i=0;i<edgesPairPoints.size(); i++)
 		{
-			edgesVis.add(new VisPolyLineSimple(edgesPairPoints.get(i), lineThickness,lineColor));
+			edgesVis.add(new VisPolyLineAA(edgesPairPoints.get(i), lineThickness,lineColor));
 		}
 	}
 	@Override

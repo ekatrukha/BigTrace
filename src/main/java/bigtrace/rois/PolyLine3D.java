@@ -17,7 +17,7 @@ import bigtrace.BigTraceData;
 import bigtrace.geometry.CurveShapeInterpolation;
 import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
-import bigtrace.scene.VisPolyLineMesh;
+import bigtrace.scene.VisWireMesh;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.Masks;
@@ -32,7 +32,7 @@ public class PolyLine3D extends AbstractCurve3D implements WritablePolyline
 {	
 
 	public VisPointsScaled verticesVis;
-	public VisPolyLineMesh edgesVis;
+	public VisWireMesh edgesVis;
 	
 
 	public PolyLine3D(final Roi3DGroup preset_in, final int nTimePoint_)
@@ -53,7 +53,7 @@ public class PolyLine3D extends AbstractCurve3D implements WritablePolyline
 		verticesVis.setSize(pointSize);
 		verticesVis.setRenderType(renderType);
 		//edgesVis = new VisPolyLineScaled();
-		edgesVis = new VisPolyLineMesh();
+		edgesVis = new VisWireMesh();
 	
 		edgesVis.setColor(lineColor);
 		edgesVis.setThickness(lineThickness);

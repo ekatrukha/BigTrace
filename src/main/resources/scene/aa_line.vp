@@ -14,6 +14,11 @@ out vec3 posW;
 
 void main()
 {
+	// drawing of antialiased 3D lines
+	// taken and adapted from 
+	// https://www.labri.fr/perso/nrougier/python-opengl/#d-lines
+	// Python & OpenGL for Scientific Visualization
+	// Copyright (c) 2018 - Nicolas P. Rougier <Nicolas.Rougier@inria.fr>
 
 	vec4 NDC_prev = pvm * vec4(prev.xyz, 1.0);
     vec4 NDC_curr = pvm * vec4(curr.xyz, 1.0);

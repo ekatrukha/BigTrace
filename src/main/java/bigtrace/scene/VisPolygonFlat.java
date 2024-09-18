@@ -53,8 +53,8 @@ public class VisPolygonFlat {
 
 	public VisPolygonFlat()
 	{
-		final Segment pointVp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color_clip.vp" ).instantiate();
-		final Segment pointFp = new SegmentTemplate( VisPolyLineScaled.class, "/scene/simple_color_depth.fp" ).instantiate();
+		final Segment pointVp = new SegmentTemplate( VisPolygonFlat.class, "/scene/simple_color_clip.vp" ).instantiate();
+		final Segment pointFp = new SegmentTemplate( VisPolygonFlat.class, "/scene/simple_color_depth.fp" ).instantiate();
 	
 		prog = new DefaultShader( pointVp.getCode(), pointFp.getCode() );
 	}

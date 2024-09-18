@@ -29,7 +29,7 @@ import btbvv.core.shadergen.generate.SegmentTemplate;
 import net.imglib2.RealPoint;
 import net.imglib2.mesh.impl.nio.BufferMesh;
 
-public class VisPolyLineMesh {
+public class VisWireMesh {
 	
 	private final Shader progLine;
 	
@@ -57,23 +57,23 @@ public class VisPolyLineMesh {
 	
 	volatile boolean bLocked = false;
 	
-	VisPolyLineSimple centerLine = null;
+	VisPolyLineAA centerLine = null;
 	
-	ArrayList<VisPolyLineSimple> wireLine = null;
+	ArrayList<VisPolyLineAA> wireLine = null;
 	
 
-	public VisPolyLineMesh()
+	public VisWireMesh()
 	{
-		final Segment lineVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.vp" ).instantiate();
-		final Segment lineFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/simple_color_clip.fp" ).instantiate();		
+		final Segment lineVp = new SegmentTemplate( VisWireMesh.class, "/scene/simple_color_clip.vp" ).instantiate();
+		final Segment lineFp = new SegmentTemplate( VisWireMesh.class, "/scene/simple_color_clip.fp" ).instantiate();		
 		progLine = new DefaultShader( lineVp.getCode(), lineFp.getCode() );
 				
-		final Segment meshVp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.vp" ).instantiate();
-		final Segment meshFp = new SegmentTemplate( VisPolyLineMesh.class, "/scene/mesh.fp" ).instantiate();
+		final Segment meshVp = new SegmentTemplate( VisWireMesh.class, "/scene/mesh.vp" ).instantiate();
+		final Segment meshFp = new SegmentTemplate( VisWireMesh.class, "/scene/mesh.fp" ).instantiate();
 		progMesh = new DefaultShader( meshVp.getCode(), meshFp.getCode() );
 	}
 	
-	public VisPolyLineMesh(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final Color color_in, final int nRenderType)
+	public VisWireMesh(final ArrayList< RealPoint > points, final ArrayList< double [] > tangents, final float fLineThickness_, final Color color_in, final int nRenderType)
 	{
 		this();
 		
@@ -98,7 +98,7 @@ public class VisPolyLineMesh {
 			centerLine.setColor( l_color );
 		if(wireLine!=null)
 		{
-			 for (VisPolyLineSimple segment : wireLine)
+			 for (VisPolyLineAA segment : wireLine)
 				 segment.setColor( l_color ); 
 			
 		}
@@ -173,7 +173,7 @@ public class VisPolyLineMesh {
 	{		
 		if(BigTraceData.wireAntiAliasing)
 		{
-			centerLine = new VisPolyLineSimple(points, fLineThickness, l_color);
+			centerLine = new VisPolyLineAA(points, fLineThickness, l_color);
 			centerLine.bIncludeClip = true;
 		}
 		else
@@ -260,7 +260,7 @@ public class VisPolyLineMesh {
 					contour_arr.add( allContours.get(iPoint).get(i));			
 				}
 				contour_arr.add( allContours.get(iPoint).get(0));
-				VisPolyLineSimple contour = new VisPolyLineSimple(contour_arr,fWireLineThickness, l_color) ;
+				VisPolyLineAA contour = new VisPolyLineAA(contour_arr,fWireLineThickness, l_color) ;
 				contour.bIncludeClip = true;
 				wireLine.add( contour );
 				
@@ -277,7 +277,7 @@ public class VisPolyLineMesh {
 					contour_arr.add( allContours.get(iPoint).get(i));
 				}
 				contour_arr.add( allContours.get(iPoint).get(0));
-				VisPolyLineSimple contour = new VisPolyLineSimple(contour_arr, fWireLineThickness, l_color) ;
+				VisPolyLineAA contour = new VisPolyLineAA(contour_arr, fWireLineThickness, l_color) ;
 				contour.bIncludeClip = true;
 				wireLine.add( contour );
 			}
@@ -290,7 +290,7 @@ public class VisPolyLineMesh {
 				{
 					line_arr.add( allContours.get(j).get(i));
 				}
-				VisPolyLineSimple line = new VisPolyLineSimple(line_arr, fWireLineThickness, l_color) ;
+				VisPolyLineAA line = new VisPolyLineAA(line_arr, fWireLineThickness, l_color) ;
 				line.bIncludeClip = true;
 				wireLine.add( line );
 			}
