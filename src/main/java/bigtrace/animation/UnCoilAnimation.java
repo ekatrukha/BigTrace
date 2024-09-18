@@ -209,7 +209,10 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		allFrames.add( rsVect );
 		
 		//get all the points along the line with pixel sampling in UNSCALED coords
-		segment = Roi3D.scaleGlobInv(segment,BigTraceData.globCal);
+		//segment = Roi3D.scaleGlobInv(segment,BigTraceData.globCal);
+		
+		//DEBUG NORMALES
+		//addNormalROI(segment,rsVect,firstLine.getLineThickness());
 		
 		int nTotPoints = segment.size();
 		
@@ -308,7 +311,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 			for(int nTrio = nTotPoints-2; nTrio>=0; nTrio--)
 			{
 				//if already rotated, no need to rotate
-				if(Math.abs( lineAngles[nTrio])>0.000000001)
+				if(Math.abs( lineAngles[nTrio])>2.*Double.MIN_VALUE)
 				{
 					LinAlgHelpers.quaternionFromAngleAxis(planes[nTrio].n, lineAngles[nTrio]*i/(nFrames-1), q);
 					segment_new.get(nTrio).localize( joint );
@@ -323,14 +326,12 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 						//taking care of the frame
 						for(int nFr = 0; nFr<2;nFr++)
 						{
-							//in SPACED UNITS, add POINT
-							LinAlgHelpers.add(newFrame[nFr][nPoint],Roi3D.scaleGlob(notrotated,BigTraceData.globCal),newFrame[nFr][nPoint]);
+							// add POINT
+							LinAlgHelpers.add(newFrame[nFr][nPoint],notrotated,newFrame[nFr][nPoint]);
 
 							//subtract rotation center
-							LinAlgHelpers.subtract( newFrame[nFr][nPoint],Roi3D.scaleGlob( joint,BigTraceData.globCal), newFrame[nFr][nPoint] );
+							LinAlgHelpers.subtract( newFrame[nFr][nPoint],joint, newFrame[nFr][nPoint] );
 
-							//go to UNSCALED
-							newFrame[nFr][nPoint] =  Roi3D.scaleGlobInv(newFrame[nFr][nPoint],BigTraceData.globCal);
 							//rotate
 							LinAlgHelpers.quaternionApply( q, newFrame[nFr][nPoint], newFrame[nFr][nPoint] );
 
@@ -339,17 +340,18 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 							LinAlgHelpers.add( newFrame[nFr][nPoint], joint, newFrame[nFr][nPoint] );
 							//subtract new position of the point
 							LinAlgHelpers.subtract(newFrame[nFr][nPoint],rotated,newFrame[nFr][nPoint]);
-							//move back to scaled
-							newFrame[nFr][nPoint] =  Roi3D.scaleGlob(newFrame[nFr][nPoint],BigTraceData.globCal);
 						}
 					}
 				}
+				//addNormalROI(segment_new,newFrame,firstLine.getLineThickness());
 			}
 			allFrames.add( newFrame );
-			allSegments.add(  Roi3D.scaleGlob(segment_new,BigTraceData.globCal) );
+			allSegments.add( segment_new);
 			//LineTrace3D newROI = addROIsegment(bt, segment_new, i, ( int ) firstLine.getLineThickness());
-			LineTrace3D newROI = addROIsegment(bt, segment_new,firstLine.getTimePoint(), ( int ) firstLine.getLineThickness(), bAddROIs);
+			LineTrace3D newROI = addROIsegment(bt, Roi3D.scaleGlobInv( segment_new, BigTraceData.globCal ),firstLine.getTimePoint(), ( int ) firstLine.getLineThickness(), bAddROIs);
 			allRois.add( newROI );
+			
+
 		}
 		if(nUnCoilTask>0)
 		{
@@ -378,7 +380,30 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		}
 		return true;
 	}
-	
+	//debug
+	void addNormalROI (final ArrayList<RealPoint> segment_, final double [][][]rsVect, float nThickness)
+	{
+		ArrayList<RealPoint> segment = Roi3D.scaleGlobInv( segment_, BigTraceData.globCal );
+		int nTotPoints = segment.size();
+		ArrayList<RealPoint> norm1 = new ArrayList<> ();
+		double [] bvect = new double [3];
+		double [] bnorm = new double [3];
+		for (int nPoint = 0; nPoint<nTotPoints; nPoint++)
+		{
+			segment.get( nPoint ).localize( bvect );
+			bvect = Roi3D.scaleGlob(bvect,BigTraceData.globCal);
+			for (int d =0; d<3; d++)
+			{
+				bnorm[d] =rsVect[0][nPoint][d];
+			}
+			LinAlgHelpers.scale( bnorm, nThickness*0.5*BigTraceData.dMinVoxelSize, bnorm );
+			LinAlgHelpers.add( bvect, bnorm, bvect );
+			//norm1.add( new RealPoint(Roi3D.scaleGlobInv(bvect,BigTraceData.globCal)));
+			norm1.add( new RealPoint(Roi3D.scaleGlobInv(bvect,BigTraceData.globCal)));
+		}
+		addROIsegment(bt, norm1,0, 1, true);
+
+	}
 	public void calculateIntervals()
 	{
 		allIntervals = new ArrayList<>();
