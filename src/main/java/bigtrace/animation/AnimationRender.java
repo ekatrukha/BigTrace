@@ -87,18 +87,12 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		dimsIni = bt.bvvFrame.getContentPane().getSize();
 		iniRect = bt.bvvFrame.getBounds();
 		bt.viewer.setRenderMode( true );
-		bt.bvvFrame.setResizable( false );
-		bt.bvvFrame.setEnabled( false );
-		SplitPanel splitPanel = (SplitPanel) bt.viewer.getParent();
+		SplitPanel splitPanel =  bt.bvvFrame.getSplitPanel();
 		
 		if(!splitPanel.isCollapsed())
 		{
 			splitPanel.setCollapsed( true );
 		}
-		//check if there is time slider => +25 in height
-		//splitPanel.setPreferredSize( new Dimension(200, 200 ));
-		//bt.viewer.setCanvasSize( 200, 200 );
-
 
 		Component component = bt.viewer.getDisplayComponent();	
 		int nHeight = aPanel.nRenderHeight;
@@ -107,15 +101,16 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		{
 			nHeight += 25;
 		}
-		Dimension nRenderDim = new Dimension(aPanel.nRenderWidth, nHeight);
-		//bt.bvvFrame.setVisible( false );
-		bt.bvvFrame.getContentPane().setPreferredSize( nRenderDim);	
 		
-		//bt.bvvFrame.getContentPane().setSize(nRenderDim);		
+		Dimension nRenderDim = new Dimension(aPanel.nRenderWidth, nHeight);
+		bt.bvvFrame.getContentPane().setPreferredSize( nRenderDim);	
+        bt.bvvFrame.setResizable( false );
+        bt.bvvFrame.setEnabled( false );	
 		bt.bvvFrame.pack();	
 		
-		bt.viewer.setCanvasSize( nRenderDim.width, nRenderDim.height);
-		
+		//bt.viewer.setCanvasSize( nRenderDim.width, nRenderDim.height);
+//            }
+//         });
 		//bt.bvvFrame.setVisible( true );
 		Thread.sleep( 2000 );
 					
@@ -202,19 +197,34 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
     	}	
     	
     	bt.viewer.setRenderMode( false );
-		bt.bvvFrame.setResizable( true );
-		bt.bvvFrame.setEnabled( true );
-		bt.viewer.setCanvasSize( dimsIni.width, dimsIni.height);
-		bt.bvvFrame.setLocationRelativeTo( null );
-		bt.bvvFrame.getContentPane().setSize(dimsIni);	
-		bt.bvvFrame.getContentPane().setPreferredSize( dimsIni);
-		bt.bvvFrame.setBounds( iniRect );
-		bt.bvvFrame.revalidate();
-		bt.bvvFrame.pack();
-		bt.bvvFrame.repaint();
+//    	javax.swing.SwingUtilities.invokeLater(new Runnable() {
+//            @Override
+//			public void run() {
 
+        
+        bt.bvvFrame.getContentPane().setPreferredSize( dimsIni);
+        //bt.bvvFrame.getContentPane().setMinimumSize( dimsIni );
+		//bt.bvvFrame.getContentPane().setSize(dimsIni);	
+	//	bt.viewer.setCanvasSize( dimsIni.width, dimsIni.height);
+
+		//bt.bvvFrame.setBounds( iniRect );
+	//	bt.bvvFrame.revalidate();
+
+		bt.bvvFrame.pack();
+		System.out.println(bt.bvvFrame.getContentPane().getWidth());
+		while (bt.bvvFrame.getContentPane().getWidth() != dimsIni.width) 
+		{
+			bt.bvvFrame.pack();
+		    }
+        bt.bvvFrame.setResizable( true );
+        bt.bvvFrame.setEnabled( true );
+
+		//bt.bvvFrame.repaint();
+//            }
+//         });
+//  
 		IJ.log( Integer.toString( dimsIni.width ) );
-		IJ.log( Integer.toString(  dimsIni.height ) );
+		IJ.log( Integer.toString( dimsIni.height ) );
 
     	
 		if(butRecord != null && tabIconRecord!= null)

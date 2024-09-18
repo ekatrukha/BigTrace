@@ -320,6 +320,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		
 		bvvFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
+
 		btPanel.finFrame.add(btPanel);
 		
         //Display the window.
@@ -331,7 +332,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	    btPanel.finFrame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
 	    btPanel.finFrame.addWindowListener(this);
 	    bvvFrame.addWindowListener(this);
-	    
+
+
 		bInputLock = false;
 	}
 	
