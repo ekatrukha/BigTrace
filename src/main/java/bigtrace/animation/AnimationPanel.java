@@ -108,8 +108,14 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	AnimationRender<T> render;
 	
 	int nRenderFPS = (int)Prefs.get("BigTrace.nRenderFPS", 24.0);
+	
 	int nRenderWidth = (int)Prefs.get("BigTrace.nRenderWidth", 1280);
+	
 	int nRenderHeight = (int)Prefs.get("BigTrace.nRenderHeight", 720);
+	
+	boolean bRenderMultiBox =  Prefs.get("BigTrace.bRenderMultiBox", false);
+	
+	int nRenderFrameTimeLimit = (int)Prefs.get("BigTrace.nRenderFrameTimeLimit", 60);
 	
 	String sRenderSavePath = null;
 	
@@ -465,6 +471,12 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 				}
 			}
 		}
+		
+		//settings
+		if(e.getSource() == butSettings)
+		{		
+			dialogsAnim.dialPanelSettings();
+		}
 		//add keyframe
 		if(e.getSource() == butAdd)
 		{
@@ -495,6 +507,8 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 		{
 			dialStorylineLoad();
 		}	
+		
+	
 		//toggle update slider
 		if(e.getSource() == butUpdateSlider)
 		{

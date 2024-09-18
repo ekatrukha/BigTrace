@@ -44,9 +44,6 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 	
 	ImageIcon tabIconRecord = null;
 	
-	boolean bSaveMultiBox = true;
-	
-	boolean bSaveTextOverlay = true;
 
 	@Override
 	public String getProgressState()
@@ -73,11 +70,12 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 			return null;
 		}
 
-		bSaveMultiBox = Prefs.showMultibox();
-		bSaveTextOverlay = Prefs.showTextOverlay();
 		int nTotFrames = aPanel.kfAnim.nTotalTime*aPanel.nRenderFPS;
 		
-		//Prefs.showMultibox(false);
+		if(!aPanel.bRenderMultiBox)
+		{
+			Prefs.showMultibox(false);
+		}
 		Prefs.showTextOverlay(false);
 
 		float fTimePoint;
@@ -126,7 +124,8 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 			bt.setScene(aPanel.kfAnim.getScene(fTimePoint));
 			//bt.repaintBVV();
 			long nTotalTime = 0;
-			long nWaitTime = 30;
+			final long nWaitTime = 30;
+			final long nTimeLimitmS = aPanel.nRenderFrameTimeLimit *1000;
 			boolean bWait = (bt.viewer.getRepaintStatus() != RepaintType.NONE);
 			//while(bt.viewer.getRepaintStatus() != RepaintType.NONE)
 			while(bWait)
@@ -138,7 +137,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 				nTotalTime += nWaitTime;
 				if(status == RepaintType.NONE)
 					{bWait = false;}
-				if (nTotalTime>60000)
+				if (nTotalTime>nTimeLimitmS)
 				{
 					bWait = false;
 					IJ.log( "Rendering of frame "+Integer.toString( nFr+1 )+" took more than a minute, proceeding with current result." );
@@ -211,8 +210,11 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
     		butRecord.setIcon( tabIconRecord );
     		butRecord.setToolTipText( "Render" );
     	}
-		Prefs.showMultibox(bSaveMultiBox);
-		Prefs.showTextOverlay(bSaveTextOverlay);
+		if(!aPanel.bRenderMultiBox)
+		{
+			Prefs.showMultibox(true);
+		}
+		Prefs.showTextOverlay(true);
 		
     	//unlock user interaction
     	bt.bInputLock = false;

@@ -20,6 +20,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.LinAlgHelpers;
 
 import bigtrace.BigTrace;
+import bigtrace.BigTraceData;
 import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
 import bigtrace.rois.AbstractCurve3D;
@@ -416,5 +417,56 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 		}
 		return null;
 		
+	}
+	
+	void dialPanelSettings()
+	{
+		JPanel pAnimSettings = new JPanel();
+		
+		GridBagConstraints cd = new GridBagConstraints();
+	
+		pAnimSettings.setLayout(new GridBagLayout());
+		
+		JCheckBox cbMultiBox = new JCheckBox();
+		cbMultiBox.setSelected( pan.bRenderMultiBox);
+		
+		NumberField nfFrameRenderMax = new NumberField(4);
+		nfFrameRenderMax.setIntegersOnly(true);
+		nfFrameRenderMax.setText(Integer.toString(pan.nRenderFrameTimeLimit));
+		
+		cd.gridx=0;
+		cd.gridy=0;	
+		GBCHelper.alighLoose(cd);
+		pAnimSettings.add(new JLabel("Render BVV MultiBox: "),cd);
+		cd.gridx++;
+		pAnimSettings.add(cbMultiBox,cd);
+	
+		cd.gridx=0;
+		cd.gridy++;
+		pAnimSettings.add(new JLabel("Maximum frame render limit (s): "),cd);
+		cd.gridx++;
+		pAnimSettings.add(nfFrameRenderMax,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
+		cd.gridwidth = 2;
+		pAnimSettings.add(new JLabel("OpenGL viewport resolution "+ 
+				Integer.toString( BigTraceData.renderParams.renderWidth )
+				+"x"+Integer.toString( BigTraceData.renderParams.renderHeight) + " (px)"),cd);
+		
+		int reply = JOptionPane.showConfirmDialog(null, pAnimSettings, "Animation Settings", 
+		        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			//ZOOM BOX
+			pan.bRenderMultiBox = cbMultiBox.isSelected();
+			Prefs.set("BigTrace.bRenderMultiBox", pan.bRenderMultiBox );
+
+			pan.nRenderFrameTimeLimit = Integer.parseInt(nfFrameRenderMax.getText());
+			Prefs.set("BigTrace.nRenderFrameTimeLimit", pan.nRenderFrameTimeLimit);
+		}
+	
 	}
 }
