@@ -40,7 +40,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 	
 	JButton butRecord = null;
 	Dimension dimsIni;
-	Rectangle iniRect; 
+
 	
 	ImageIcon tabIconRecord = null;
 	
@@ -80,13 +80,12 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		//Prefs.showMultibox(false);
 		Prefs.showTextOverlay(false);
 
-
 		float fTimePoint;
-		float dT = aPanel.kfAnim.nTotalTime/(float)(nTotFrames-1);
 		
-		dimsIni = bt.bvvFrame.getContentPane().getSize();
-		iniRect = bt.bvvFrame.getBounds();
+		float dT = aPanel.kfAnim.nTotalTime/(float)(nTotFrames-1);		
+
 		bt.viewer.setRenderMode( true );
+		
 		SplitPanel splitPanel =  bt.bvvFrame.getSplitPanel();
 		
 		if(!splitPanel.isCollapsed())
@@ -95,6 +94,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		}
 
 		Component component = bt.viewer.getDisplayComponent();	
+		
 		int nHeight = aPanel.nRenderHeight;
 		//check if there is time slider => +25 in height
 		if(BigTraceData.nNumTimepoints>1)
@@ -108,10 +108,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
         bt.bvvFrame.setEnabled( false );	
 		bt.bvvFrame.pack();	
 		
-		//bt.viewer.setCanvasSize( nRenderDim.width, nRenderDim.height);
-//            }
-//         });
-		//bt.bvvFrame.setVisible( true );
+		//wait for the window to update
 		Thread.sleep( 2000 );
 					
 		
@@ -197,35 +194,17 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
     	}	
     	
     	bt.viewer.setRenderMode( false );
-//    	javax.swing.SwingUtilities.invokeLater(new Runnable() {
-//            @Override
-//			public void run() {
 
-        
-        bt.bvvFrame.getContentPane().setPreferredSize( dimsIni);
-        //bt.bvvFrame.getContentPane().setMinimumSize( dimsIni );
-		//bt.bvvFrame.getContentPane().setSize(dimsIni);	
-	//	bt.viewer.setCanvasSize( dimsIni.width, dimsIni.height);
-
-		//bt.bvvFrame.setBounds( iniRect );
-	//	bt.bvvFrame.revalidate();
+    	bt.bvvFrame.getContentPane().setPreferredSize( dimsIni);
 
 		bt.bvvFrame.pack();
-		System.out.println(bt.bvvFrame.getContentPane().getWidth());
-		while (bt.bvvFrame.getContentPane().getWidth() != dimsIni.width) 
-		{
-			bt.bvvFrame.pack();
-		    }
-        bt.bvvFrame.setResizable( true );
+        
+		bt.bvvFrame.setResizable( true );
+        
         bt.bvvFrame.setEnabled( true );
 
-		//bt.bvvFrame.repaint();
-//            }
-//         });
-//  
-		IJ.log( Integer.toString( dimsIni.width ) );
-		IJ.log( Integer.toString( dimsIni.height ) );
-
+		//IJ.log( Integer.toString( dimsIni.width ) );
+		//IJ.log( Integer.toString( dimsIni.height ) );
     	
 		if(butRecord != null && tabIconRecord!= null)
     	{
