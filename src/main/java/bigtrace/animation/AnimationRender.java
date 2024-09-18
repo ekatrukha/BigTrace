@@ -149,7 +149,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 				}	
 			}
 	        component.paint(bi.getGraphics());
-			ImageIO.write( bi, "png", new File( aPanel.sRenderSavePath+String.format("%0"+String.valueOf(nTotFrames).length()+"d", nFr)+".png") );
+			ImageIO.write( bi, "png", new File( aPanel.sRenderSavePath+String.format("%0"+String.valueOf(nTotFrames).length()+"d", nFr+1)+".png") );
 			if(isCancelled())
 			{
 				return null;	
