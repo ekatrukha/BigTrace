@@ -76,8 +76,14 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		{
 			Prefs.showMultibox(false);
 		}
-		Prefs.showTextOverlay(false);
+		if(aPanel.bRenderScaleBar)
+		{
+			Prefs.showScaleBar(true);
+			Prefs.showScaleBarInMovie( true );
+		}
 
+		Prefs.showTextOverlay(false);
+		
 		float fTimePoint;
 		
 		float dT = aPanel.kfAnim.nTotalTime/(float)(nTotFrames-1);		
@@ -213,6 +219,11 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		if(!aPanel.bRenderMultiBox)
 		{
 			Prefs.showMultibox(true);
+		}
+		if(aPanel.bRenderScaleBar)
+		{
+			Prefs.showScaleBar(false);
+			Prefs.showScaleBarInMovie( false);
 		}
 		Prefs.showTextOverlay(true);
 		

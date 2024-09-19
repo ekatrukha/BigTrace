@@ -73,7 +73,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 	/** frames of unbending ROIs **/
 	ArrayList <double [][][]> allFrames;
 	
-	/** frames of unbending ROIs **/
+	/** centerlines of unbending ROIs **/
 	ArrayList <ArrayList<RealPoint>> allSegments;
 	
 	public boolean bUseTemplate = false;
@@ -81,8 +81,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 	IntervalView <T> template = null;
 	
 	boolean bAddROIs = false;
-	
-	
+		
 	ArrayList <AbstractCurve3D> allRois;
 	
 	/** all intervals for all ROIs **/
@@ -335,9 +334,9 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 							//rotate
 							LinAlgHelpers.quaternionApply( q, newFrame[nFr][nPoint], newFrame[nFr][nPoint] );
 
-							//move back to 
-							//move back rotation center
+							//add back rotation center
 							LinAlgHelpers.add( newFrame[nFr][nPoint], joint, newFrame[nFr][nPoint] );
+							
 							//subtract new position of the point
 							LinAlgHelpers.subtract(newFrame[nFr][nPoint],rotated,newFrame[nFr][nPoint]);
 						}

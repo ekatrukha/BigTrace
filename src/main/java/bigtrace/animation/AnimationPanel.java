@@ -115,6 +115,8 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	
 	boolean bRenderMultiBox =  Prefs.get("BigTrace.bRenderMultiBox", false);
 	
+	boolean bRenderScaleBar =  Prefs.get("BigTrace.bRenderScaleBar", false);
+	
 	int nRenderFrameTimeLimit = (int)Prefs.get("BigTrace.nRenderFrameTimeLimit", 60);
 	
 	String sRenderSavePath = null;

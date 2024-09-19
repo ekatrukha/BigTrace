@@ -430,6 +430,9 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 		JCheckBox cbMultiBox = new JCheckBox();
 		cbMultiBox.setSelected( pan.bRenderMultiBox);
 		
+		JCheckBox cbScaleBar = new JCheckBox();
+		cbScaleBar.setSelected( pan.bRenderScaleBar);
+		
 		NumberField nfFrameRenderMax = new NumberField(4);
 		nfFrameRenderMax.setIntegersOnly(true);
 		nfFrameRenderMax.setText(Integer.toString(pan.nRenderFrameTimeLimit));
@@ -441,6 +444,13 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 		cd.gridx++;
 		pAnimSettings.add(cbMultiBox,cd);
 	
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pAnimSettings.add(new JLabel("Render scale bar): "),cd);
+		cd.gridx++;
+		pAnimSettings.add(cbScaleBar,cd);
+		
 		cd.gridx=0;
 		cd.gridy++;
 		pAnimSettings.add(new JLabel("Maximum frame render limit (s): "),cd);
@@ -460,10 +470,14 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 
 		if (reply == JOptionPane.OK_OPTION) 
 		{
-			//ZOOM BOX
+			//multibox
 			pan.bRenderMultiBox = cbMultiBox.isSelected();
 			Prefs.set("BigTrace.bRenderMultiBox", pan.bRenderMultiBox );
 
+			//scale bar
+			pan.bRenderScaleBar = cbScaleBar.isSelected();
+			Prefs.set("BigTrace.bRenderScaleBar", pan.bRenderScaleBar );
+			
 			pan.nRenderFrameTimeLimit = Integer.parseInt(nfFrameRenderMax.getText());
 			Prefs.set("BigTrace.nRenderFrameTimeLimit", pan.nRenderFrameTimeLimit);
 		}
