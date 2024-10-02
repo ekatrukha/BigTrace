@@ -265,7 +265,7 @@ public class VisPolyLineAA
 		prog.getUniform1f( "linelength" ).set( lineLength );
 		//prog.getUniform1f( "thickness" ).set(3 );
 		prog.getUniform1f( "thickness" ).set( fLineThickness );
-		prog.getUniform1f( "antialias" ).set( 2.0f);
+		prog.getUniform1f( "antialias" ).set( 1.5f);
 		if(bIncludeClip)
 		{
 			prog.getUniform1i("clipactive").set(BigTraceData.nClipROI);
@@ -277,22 +277,23 @@ public class VisPolyLineAA
 		{
 			prog.getUniform1i("clipactive").set(0);
 		}
+		
 		prog.setUniforms( context );
 		prog.use( context );
-//
-//
+		
+		
+		
 		gl.glDepthFunc( GL.GL_ALWAYS);
 		//gl.glDepthFunc( GL.GL_LESS);
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA); 
-		//gl.glEnable( GL.GL_BLEND );
 		gl.glBindVertexArray( vao );
 		gl.glDepthMask(false);
-//		gl.glLineWidth(fLineThickness);
-		gl.glDrawArrays( GL.GL_TRIANGLE_STRIP, 0, nTotVert);
-		gl.glBindVertexArray( 0 );
-		gl.glDepthMask(true);
 		
-
+		gl.glDrawArrays( GL.GL_TRIANGLE_STRIP, 0, nTotVert);
+		
+		gl.glDepthMask(true);
+		gl.glBindVertexArray( 0 );
+		
 	}
 }

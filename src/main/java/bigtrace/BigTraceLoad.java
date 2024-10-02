@@ -362,14 +362,18 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		
 		if (imp == null)
 		{
-			IJ.showMessage("BigTrace: cannot open selected TIF file. Plugin terminated.");
+			IJ.error("BigTrace: cannot open selected TIF file. Plugin terminated.");
+			return false;
+		}
+		if(imp.getNSlices()==1)
+		{
+			IJ.error("Error, input image has only one Z slice (2D?).\nBigTrace works only with 3D data. Plugin terminated.");			
 			return false;
 		}
 		
-		
 		if(imp.getType()!=ImagePlus.GRAY8 && imp.getType()!=ImagePlus.GRAY16 && imp.getType()!=ImagePlus.GRAY32)
 		{
-			IJ.showMessage("Only 8-, 16- and 32-bit images supported for now.");
+			IJ.error("Only 8-, 16- and 32-bit images supported for now.");
 			return false;
 		}
 
@@ -401,8 +405,8 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		//let's convert it to XYZTC for BVV to understand
 		
 		
-		btdata.nTotalChannels=imp.getNChannels();
-		if(btdata.nTotalChannels==1)
+		btdata.nTotalChannels = imp.getNChannels();
+		if(btdata.nTotalChannels == 1)
 		{
 			//add dimension for the channels
 			bt.all_ch_RAI = Views.addDimension(img_ImageJ, 0, 0);
@@ -479,15 +483,22 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 					}
 
 					compositeImage.setC( c + 1 );
-					channelRanges[0][c]=(int)imp.getDisplayRangeMin();
-					channelRanges[1][c]=(int)imp.getDisplayRangeMax();
 	            }
 	            else
 	            {
 	            	colorsCh[c] = Color.WHITE;
-	            	channelRanges[0][c]=(int)imp.getDisplayRangeMin();
-	            	channelRanges[1][c]=(int)imp.getDisplayRangeMax();
+
 	            }
+            	if(btdata.nBitDepth!=32)
+				{
+            		channelRanges[0][c]=(int)imp.getDisplayRangeMin();
+            		channelRanges[1][c]=(int)imp.getDisplayRangeMax();
+				}
+            	else
+				{
+					channelRanges[0][c]=0;
+					channelRanges[1][c]=65535;						
+				}
 	        }
 	}
 
