@@ -447,7 +447,7 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 		
 		cd.gridx=0;
 		cd.gridy++;
-		pAnimSettings.add(new JLabel("Render scale bar): "),cd);
+		pAnimSettings.add(new JLabel("Render scale bar: "),cd);
 		cd.gridx++;
 		pAnimSettings.add(cbScaleBar,cd);
 		
