@@ -13,7 +13,7 @@ import com.jogamp.opengl.GL3;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
 import bigtrace.scene.VisPointsScaled;
-import bigtrace.scene.VisPolyLineSimple;
+import bigtrace.scene.VisPolyLineAA;
 import net.imglib2.AbstractInterval;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
@@ -30,7 +30,7 @@ public class Box3D extends AbstractRoi3D
 	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> edges;
 	public ArrayList<VisPointsScaled> verticesVis;
-	public ArrayList<VisPolyLineSimple> edgesVis;
+	public ArrayList<VisPolyLineAA> edgesVis;
 
 	
 	public Box3D(final Roi3DGroup preset_in, final int nTimePoint_)
@@ -48,7 +48,7 @@ public class Box3D extends AbstractRoi3D
 	{
 		type = Roi3D.BOX;
 		pointSize = pointSize_;
-		lineThickness=lineThickness_;
+		lineThickness = lineThickness_;
 		
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
@@ -62,7 +62,7 @@ public class Box3D extends AbstractRoi3D
 		ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
 		for(i=0;i<edgesPairPoints.size(); i++)
 		{
-			edgesVis.add(new VisPolyLineSimple(edgesPairPoints.get(i), lineThickness,lineColor));
+			edgesVis.add(new VisPolyLineAA(edgesPairPoints.get(i), lineThickness,lineColor));
 		}
 	}
 
@@ -70,7 +70,7 @@ public class Box3D extends AbstractRoi3D
 	{
 		type = Roi3D.BOX;
 		pointSize = pointSize_;
-		lineThickness=lineThickness_;
+		lineThickness = lineThickness_;
 		
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
@@ -93,7 +93,7 @@ public class Box3D extends AbstractRoi3D
 		ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
 		for(i=0;i<edgesPairPoints.size(); i++)
 		{
-			edgesVis.add(new VisPolyLineSimple(edgesPairPoints.get(i), lineThickness,lineColor));
+			edgesVis.add(new VisPolyLineAA(edgesPairPoints.get(i), lineThickness,lineColor));
 		}
 	}
 	@Override
@@ -107,7 +107,8 @@ public class Box3D extends AbstractRoi3D
 	
 	
 	@Override
-	public void setPointColor(Color pointColor_) {
+	public void setPointColor(Color pointColor_) 
+	{
 		
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());	
 		for(int i =0; i<verticesVis.size();i++)
@@ -117,7 +118,8 @@ public class Box3D extends AbstractRoi3D
 	}
 
 	@Override
-	public void setLineColor(Color lineColor_) {
+	public void setLineColor(Color lineColor_) 
+	{
 		
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 		for(int i =0; i<edgesVis.size();i++)
@@ -128,9 +130,10 @@ public class Box3D extends AbstractRoi3D
 	
 
 	@Override
-	public void setLineThickness(float line_thickness) {
+	public void setLineThickness(float line_thickness) 
+	{
 
-		lineThickness=line_thickness;
+		lineThickness = line_thickness;
 		for(int i =0; i<edgesVis.size();i++)
 		{
 			edgesVis.get(i).setThickness(lineThickness);
@@ -200,7 +203,8 @@ public class Box3D extends AbstractRoi3D
 
 	@Override
 
-	public void setGroup(final Roi3DGroup preset_in) {
+	public void setGroup(final Roi3DGroup preset_in) 
+	{
 		
 		setPointColor(preset_in.pointColor);
 		setLineColor(preset_in.lineColor);
@@ -215,6 +219,7 @@ public class Box3D extends AbstractRoi3D
 		// TODO Auto-generated method stub
 		
 	}
+	
 	/** returns array of paired coordinates for each edge of the box,
 	 * specified by nDimBox[0] - one corner, nDimBox[1] - opposite corner.
 	 * no checks on provided coordinates performed  **/

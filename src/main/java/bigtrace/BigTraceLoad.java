@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+
 import javax.swing.JOptionPane;
 
 
@@ -33,7 +35,9 @@ import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.sequence.SequenceDescription;
+import mpicbg.spim.data.sequence.ViewSetup;
 
+import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
@@ -43,6 +47,7 @@ import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
 
 import bigtrace.volume.VolumeMisc;
@@ -87,7 +92,12 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		
 		FinalInterval rai_int = new FinalInterval(seq.getImgLoader().getSetupImgLoader(0).getImage(0));
-
+		List< ViewSetup > allViewSetups = seq.getViewSetupsOrdered();
+		for (int nV = 0; nV<allViewSetups.size();nV++)
+		{
+			Dimensions nDim = allViewSetups.get( nV ).getSize();
+			rai_int = Intervals.union( rai_int, new FinalInterval(new long[3],nDim.dimensionsAsLongArray()) );
+		}
 		rai_int.min( btdata.nDimIni[0] );
 		rai_int.max( btdata.nDimIni[1] );
 		rai_int.min( BigTraceData.nDimCurr[0] );
@@ -352,14 +362,18 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		
 		if (imp == null)
 		{
-			IJ.showMessage("BigTrace: cannot open selected TIF file. Plugin terminated.");
+			IJ.error("BigTrace: cannot open selected TIF file. Plugin terminated.");
+			return false;
+		}
+		if(imp.getNSlices()==1)
+		{
+			IJ.error("Error, input image has only one Z slice (2D?).\nBigTrace works only with 3D data. Plugin terminated.");			
 			return false;
 		}
 		
-		
 		if(imp.getType()!=ImagePlus.GRAY8 && imp.getType()!=ImagePlus.GRAY16 && imp.getType()!=ImagePlus.GRAY32)
 		{
-			IJ.showMessage("Only 8-, 16- and 32-bit images supported for now.");
+			IJ.error("Only 8-, 16- and 32-bit images supported for now.");
 			return false;
 		}
 
@@ -391,8 +405,8 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		//let's convert it to XYZTC for BVV to understand
 		
 		
-		btdata.nTotalChannels=imp.getNChannels();
-		if(btdata.nTotalChannels==1)
+		btdata.nTotalChannels = imp.getNChannels();
+		if(btdata.nTotalChannels == 1)
 		{
 			//add dimension for the channels
 			bt.all_ch_RAI = Views.addDimension(img_ImageJ, 0, 0);
@@ -469,15 +483,22 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 					}
 
 					compositeImage.setC( c + 1 );
-					channelRanges[0][c]=(int)imp.getDisplayRangeMin();
-					channelRanges[1][c]=(int)imp.getDisplayRangeMax();
 	            }
 	            else
 	            {
 	            	colorsCh[c] = Color.WHITE;
-	            	channelRanges[0][c]=(int)imp.getDisplayRangeMin();
-	            	channelRanges[1][c]=(int)imp.getDisplayRangeMax();
+
 	            }
+            	if(btdata.nBitDepth!=32)
+				{
+            		channelRanges[0][c]=(int)imp.getDisplayRangeMin();
+            		channelRanges[1][c]=(int)imp.getDisplayRangeMax();
+				}
+            	else
+				{
+					channelRanges[0][c]=0;
+					channelRanges[1][c]=65535;						
+				}
 	        }
 	}
 

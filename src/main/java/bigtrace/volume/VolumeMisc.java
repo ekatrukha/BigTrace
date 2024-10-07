@@ -470,7 +470,7 @@ public class VolumeMisc {
 			{
 				outIP = ImageJFunctions.wrap(Views.permute(img,2,3), sTitle);
 				//multichannel
-				if(BigTraceData.nNumTimepoints==0)
+				if(BigTraceData.nNumTimepoints==1)
 				{
 					outIP.setDimensions((int)img.dimension(3), (int)img.dimension(2), 1);
 				}

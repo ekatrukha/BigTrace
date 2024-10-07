@@ -45,7 +45,7 @@ import ij.Prefs;
 
 
 
-public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener
+public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener
 {
 	final BigTrace<T> bt;
 
@@ -62,7 +62,7 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 	ImageIcon tabIconTrain;
 	ImageIcon tabIconCancel;
 	
-	public BigTraceTracksPanel(BigTrace<T> bt)
+	public TrackingPanel(final BigTrace<T> bt)
 	{
 		this.bt = bt;
 		this.btTracker = null;// = new CurveTracker< >(bt);
@@ -100,6 +100,7 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		cr.gridx++;
 		cr.weightx = 0.01;
 		panTrackTools.add(new JLabel(), cr);
+		cr.weightx = 0.0;
 		cr.gridx++;
 		panTrackTools.add(butSettings,cr);
 		
@@ -416,7 +417,7 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 			int nBoxExpand = Integer.parseInt(nfBoxExpand.getText());
 			
 			bt.bInputLock = true;
-			bt.roiManager.setLockMode(true);
+			bt.setLockMode(true);
 			butTrack.setEnabled( true );
 			Prefs.set("BigTrace.nTrackExpandBox", nBoxExpand);	
 			btTracker.nNextFrame=nNextFrame;
@@ -454,7 +455,7 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		//Groups Manager
 		if(e.getSource() == butGroups)
 		{
-			bt.roiManager.showGroupsDialog();
+			bt.roiManager.dialShowGroups();
 			
 		}
 		//ALIGN ROIs in a GROUP
@@ -470,7 +471,7 @@ public class BigTraceTracksPanel < T extends RealType< T > & NativeType< T > > e
 		//RENAME
 		if(e.getSource() == butRename)
 		{
-			bt.roiManager.renameActiveROIDialog();
+			bt.roiManager.dialRenameActiveROI();
 		}
 		
 		//Settings

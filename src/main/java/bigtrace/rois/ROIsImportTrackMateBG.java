@@ -52,7 +52,7 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
 		Color cCurrentTrackColor = null;
 		//enter locked mode
         bt.bInputLock = true;
-        bt.roiManager.setLockMode(true);
+        bt.setLockMode(true);
 		try
         {
 
@@ -148,7 +148,7 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
     {
 		//unlock user interaction
     	bt.bInputLock = false;
-        bt.roiManager.setLockMode(false);
+        bt.setLockMode(false);
         setProgress(100);
         setProgressState(sFinalOut);
         bt.repaintBVV();

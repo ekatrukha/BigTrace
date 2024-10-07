@@ -24,7 +24,7 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 
 	@Override
 	public void setProgressState(String state_) {
-		progressState=state_;
+		progressState = state_;
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class TracingBGVect extends SwingWorker<Void, String> implements BigTrace
 			Thread.sleep(1);
 		} catch (InterruptedException ignore) {}
 
-		bt.roiManager.setLockMode(true);
+		bt.setLockMode(true);
 		
 		//start1 = System.currentTimeMillis();
 		//init Dijkstra from initial click point

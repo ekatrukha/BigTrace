@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -23,18 +24,20 @@ import bigtrace.BigTraceData;
 import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
 import ij.Prefs;
+import ij.io.OpenDialog;
+import ij.io.SaveDialog;
+
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
-public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
-	final BigTrace<T> bt;
+public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > 
+{	
 	
-	
+	final BigTrace<T> bt;	
 
 	public RoiManager3DDialogs(BigTrace<T> bt_)
 	{
 		bt = bt_;
-		
 	}
 	
 	public void dialSemiAutoProperties()
@@ -450,6 +453,9 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		nfSectorNLines.setIntegersOnly(true);
 		nfSectorNLines.setText(Integer.toString(BigTraceData.sectorN));
 		
+		JCheckBox cbWireAA = new JCheckBox();
+		cbWireAA.setSelected( BigTraceData.wireAntiAliasing );
+		
 		NumberField nfWireContourStep = new NumberField(4);
 		nfWireContourStep.setIntegersOnly(true);
 		nfWireContourStep.setText(Integer.toString(BigTraceData.wireCountourStep));
@@ -478,6 +484,12 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 		pROIsurface.add(new JLabel("<html>----  <B>Wire</B> mode  ----</html>"),cd);
 		cd.gridwidth=1;
 		cd.anchor = GridBagConstraints.WEST;
+		
+		cd.gridx=0;
+		cd.gridy++;
+		pROIsurface.add(new JLabel("Use anti-aliased lines :"),cd);
+		cd.gridx++;
+		pROIsurface.add(cbWireAA,cd);
 		
 		cd.gridx=0;
 		cd.gridy++;
@@ -559,6 +571,14 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 				Prefs.set("BigTrace.nSectorN", BigTraceData.sectorN);
 				bUpdateROIs  = true;
 			}
+			
+			if(BigTraceData.wireAntiAliasing != cbWireAA.isSelected())
+			{
+				BigTraceData.wireAntiAliasing = cbWireAA.isSelected();
+				Prefs.set("BigTrace.wireAntiAliasing", BigTraceData.wireAntiAliasing);
+				bUpdateROIs  = true;
+			}
+			
 			if(BigTraceData.wireCountourStep!= Integer.parseInt(nfWireContourStep.getText()))
 			{
 				BigTraceData.wireCountourStep= Integer.parseInt(nfWireContourStep.getText());
@@ -642,5 +662,145 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > > {
 			}
 			
 		}
+	}
+	
+	/** show Group visibility dialog **/
+	public void dialGroupVisibility()
+	{
+		Roi3DGroupVisibility<T> groupVis = new Roi3DGroupVisibility<>(bt.roiManager);
+		groupVis.show();
+	}
+	
+	/** Save ROIS dialog and saving **/
+	public void diagSaveROIs()
+	{
+		String filename;
+		
+		filename = bt.btData.sFileNameFullImg + "_btrois";
+		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
+        String path = sd.getDirectory();
+        if (path==null)
+        	return;
+        filename = path+sd.getFileName();
+        bt.setLockMode(true);
+        bt.bInputLock = true;
+        
+        //this.setLockMode(true);
+        ROIsSaveBG<T> saveTask = new ROIsSaveBG<>();
+        saveTask.sFilename = filename;
+        saveTask.bt = this.bt;
+        saveTask.addPropertyChangeListener(bt.btPanel);
+        saveTask.execute();
+        //this.setLockMode(false);
+	}
+	
+	
+	/** Load ROIS dialog and saving **/
+    void diagLoadROIs()
+	{
+		String filename;
+		
+		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs","", "*.csv");
+		
+        String path = openDial.getDirectory();
+        if (path==null)
+        	return;
+
+        filename = path+openDial.getFileName();
+     
+        String [] sRoiLoadOptions = new String [] {"Clean load ROIs and groups","Append ROIs as undefined group"};	
+        String input = (String) JOptionPane.showInputDialog(bt.roiManager, "Loading ROIs",
+                "Load mode:", JOptionPane.QUESTION_MESSAGE, null,
+                sRoiLoadOptions, // Array of choices
+                sRoiLoadOptions[(int)Prefs.get("BigTrace.LoadRoisMode", 0)]);
+        
+        if(input == null)
+        	 return;
+        int nLoadMode;
+        if(input.equals("Clean load ROIs and groups"))
+        {
+        	nLoadMode = 0;
+        }
+        else
+        {
+        	nLoadMode = 1;
+        }
+        
+        Prefs.set("BigTrace.LoadRoisMode", nLoadMode);
+        bt.roiManager.loadROIs(filename, nLoadMode);        
+	}
+	/** Import ROIs dialog **/
+	public void diagImportROIs()
+	{
+	
+	      
+        String [] sRoiImportOptions = new String [] {"Points from TrackMate XML (Export)","Points from CSV (coming soon)"};
+		
+        String input = (String) JOptionPane.showInputDialog(bt.roiManager, "Importing ROIs",
+                "Import:", JOptionPane.QUESTION_MESSAGE, null, // Use default icon
+                sRoiImportOptions, // Array of choices
+                sRoiImportOptions[(int)Prefs.get("BigTrace.ImportRoisMode", 0)]);
+
+        if(input == null)
+        	return;
+        if(input.isEmpty())
+        	return;
+        int nImportMode;
+        if(input.equals("Points from TrackMate XML (Export)"))
+        {
+        	nImportMode = 0;
+        	diagImportTrackMate();
+        }
+        else
+        {
+        	nImportMode = 1;
+        }
+        Prefs.set("BigTrace.ImportRoisMode", nImportMode);
+	}
+	
+	public void diagImportTrackMate()
+	{
+		String filename;
+		OpenDialog openDial = new OpenDialog("Import TrackMate XML","", "*.xml");
+		
+        String path = openDial.getDirectory();
+        if (path==null)
+        	return;
+        
+        filename = path+openDial.getFileName();
+        
+        String [] sTMColorOptions = new String [] {"Random color per track","Current active group color"};
+		
+        String inputColor = (String) JOptionPane.showInputDialog(bt.roiManager, "Coloring ROIs",
+                "For color, use:", JOptionPane.QUESTION_MESSAGE, null, // Use
+                                                                                // default
+                                                                                // icon
+                sTMColorOptions, // Array of choices
+                sTMColorOptions[(int)Prefs.get("BigTrace.ImportTMColorMode", 0)]);
+        
+        if(inputColor == null)
+        	return;
+        if(inputColor.isEmpty())
+        	return;
+        int nImportColor;
+        if(inputColor.equals("Random color per track"))
+        {
+        	nImportColor = 0;
+        }
+        else
+        {
+        	nImportColor = 1;
+        }
+        Prefs.set("BigTrace.ImportTMColorMode", nImportColor);
+		
+
+       	bt.roiManager.rois = new ArrayList< >();
+        bt.roiManager.listModel.clear();
+        ROIsImportTrackMateBG importTask = new ROIsImportTrackMateBG();
+        importTask.nImportColor = nImportColor;
+        importTask.sFilename = filename;
+        importTask.bt = this.bt;
+        importTask.addPropertyChangeListener(bt.btPanel);
+        importTask.execute();
 	}
 }

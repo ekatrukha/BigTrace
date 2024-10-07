@@ -268,7 +268,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 
     	//unlock user interaction
     	bt.bInputLock = false;
-    	bt.roiManager.setLockMode(false);
+    	bt.setLockMode(false);
 
     }
     

@@ -70,7 +70,7 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
         Roi3DGroupManager<T> roiGM;
 	
         bt.bInputLock = true;
-        bt.roiManager.setLockMode(true);
+        bt.setLockMode(true);
 		try ( BufferedReader br = new BufferedReader(new FileReader(sFilename));) 
 		{
 			       
@@ -349,7 +349,7 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
     {
 		//unlock user interaction
     	bt.bInputLock = false;
-        bt.roiManager.setLockMode(false);
+        bt.setLockMode(false);
         setProgress(100);
         setProgressState(sFinalOut);
 

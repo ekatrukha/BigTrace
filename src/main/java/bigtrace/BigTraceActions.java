@@ -154,7 +154,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 								}
 							}	
 							
-							bt.roiManager.setLockMode(true);
+							bt.setLockMode(true);
 							bt.runOneClickTrace(target, bMakeNewTrace);
 							break;
 						default:

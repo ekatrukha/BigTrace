@@ -40,7 +40,7 @@ public class ExtractClip < T extends RealType< T > & NativeType< T > > extends S
 	@Override
 	protected Void doInBackground() throws Exception {
         bt.bInputLock = true;
-        bt.roiManager.setLockMode(true);
+        bt.setLockMode(true);
 
 		try {
 			  Thread.sleep(1);
@@ -109,7 +109,7 @@ public class ExtractClip < T extends RealType< T > & NativeType< T > > extends S
     {
 		//unlock user interaction
     	bt.bInputLock = false;
-        bt.roiManager.setLockMode(false);
+        bt.setLockMode(false);
 
     }
 }

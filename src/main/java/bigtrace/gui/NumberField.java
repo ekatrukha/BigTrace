@@ -266,7 +266,13 @@ public class NumberField extends JPanel {
 					e.consume();
 				} // VK_DOWN
 				else if(kc == KeyEvent.VK_ENTER)
-					fireValueChanged(Double.parseDouble(getText()));
+				{
+					String input = getText();
+					if(input.length()>0)
+					{
+						fireValueChanged(Double.parseDouble(getText()));
+					}
+				}
 				// fireKeyPressed(e);
 			} // keyPressed
 

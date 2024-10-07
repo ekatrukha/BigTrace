@@ -8,7 +8,7 @@ import bigtrace.gui.RenderSettings;
 import ij.Prefs;
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>BigTrace 0.5.0>Render Settings")
+@Plugin(type = Command.class, menuPath = "Plugins>BigTrace 0.5.0>Volume Render Settings")
 public class BigTraceRenderSettings implements Command {
 
 	
@@ -23,7 +23,7 @@ public class BigTraceRenderSettings implements Command {
 	@Parameter( label = "Dither window size",
 			choices = { "none (always render full resolution)", "2x2", "3x3", "4x4", "5x5", "6x6", "7x7", "8x8" } )
 	//private String dithering = "3x3";
-	private String dithering = sDitherChoices[(int) Prefs.get("BigTrace.ditherWidth", RenderSettings.defDitherWidth)];
+	private String dithering = sDitherChoices[(int) Prefs.get("BigTrace.ditherWidth", RenderSettings.defDitherWidth)-1];
 
 	@Parameter( label = "Number of dither samples",
 			description = "Pixels are interpolated from this many nearest neighbors when dithering. This is not very expensive, it's fine to turn it up to 8.",

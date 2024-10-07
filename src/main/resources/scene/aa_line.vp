@@ -1,0 +1,66 @@
+layout (location = 0) in vec3 curr;
+layout (location = 1) in vec3 prev;
+layout (location = 2) in vec3 next;
+layout (location = 3) in vec2 uv;
+
+uniform vec4 colorin;
+uniform mat4 pvm;
+uniform vec2 viewport;
+uniform float linelength;
+uniform float antialias; 
+uniform float thickness;
+out vec2 v_uv;
+out vec3 posW;
+
+void main()
+{
+	// drawing of antialiased 3D lines
+	// taken and adapted from 
+	// https://www.labri.fr/perso/nrougier/python-opengl/#d-lines
+	// Python & OpenGL for Scientific Visualization
+	// Copyright (c) 2018 - Nicolas P. Rougier <Nicolas.Rougier@inria.fr>
+
+	vec4 NDC_prev = pvm * vec4(prev.xyz, 1.0);
+    vec4 NDC_curr = pvm * vec4(curr.xyz, 1.0);
+    vec4 NDC_next = pvm * vec4(next.xyz, 1.0);
+
+    // Viewport (screen) coordinates
+    vec2 screen_prev = viewport * ((NDC_prev.xy/NDC_prev.w) + 1.0)/2.0;
+    vec2 screen_curr = viewport * ((NDC_curr.xy/NDC_curr.w) + 1.0)/2.0;
+    vec2 screen_next = viewport * ((NDC_next.xy/NDC_next.w) + 1.0)/2.0;
+
+  	vec2 position;
+    float w = thickness/2.0 + antialias;
+    vec2 t0 = normalize(screen_curr.xy - screen_prev.xy);
+    vec2 n0 = vec2(-t0.y, t0.x);
+    vec2 t1 = normalize(screen_next.xy - screen_curr.xy);
+    vec2 n1 = vec2(-t1.y, t1.x);
+    v_uv = vec2(uv.x, uv.y*w);
+    if (prev.xyz == curr.xyz) 
+    {
+        //v_uv.x = -w;
+        //position = screen_curr.xy - w*t1 + uv.y*w*n1;
+        //not rounded ends
+        position = screen_curr.xy + uv.y*w*n1;
+    } 
+    else if (curr.xyz == next.xyz) 
+    {
+        //v_uv.x = linelength+w;
+        //position = screen_curr.xy + w*t0 + uv.y*w*n0;
+        //not rounded ends
+        position = screen_curr.xy + uv.y*w*n0;
+        
+    } 
+    else 
+    {
+        vec2 miter = normalize(n0 + n1);
+        // The max operator avoid glitches when miter is too large
+        float dy = w / max(dot(miter, n1), 1.0);
+        position = screen_curr.xy + dy*uv.y*miter;
+    }
+
+    // Back to NDC coordinates
+    gl_Position = vec4(2.0*position/viewport-1.0, NDC_curr.z/NDC_curr.w, 1.0);
+    
+    posW = curr;
+}

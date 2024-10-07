@@ -77,7 +77,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 	protected Void doInBackground() throws Exception {
 
         bt.bInputLock = true;
-        bt.roiManager.setLockMode(true);
+        bt.setLockMode(true);
         
 
 		try {
@@ -377,7 +377,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
     	}
 		//unlock user interaction
     	bt.bInputLock = false;
-        bt.roiManager.setLockMode(false);
+        bt.setLockMode(false);
         if(bMacroMessage)
         	IJ.log( "BigTrace: done saving straightened volumes to " + sSaveFolderPath);
 

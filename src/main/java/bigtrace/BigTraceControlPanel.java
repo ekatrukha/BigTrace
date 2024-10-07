@@ -29,6 +29,7 @@ import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 
 import bdv.util.Affine3DHelpers;
+import bigtrace.animation.AnimationPanel;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
 import bigtrace.gui.ClipPanel;
 import bigtrace.gui.GBCHelper;
@@ -40,7 +41,7 @@ import bigtrace.gui.VoxelSizePanel;
 import bigtrace.measure.RoiMeasure3D;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.RoiManager3D;
-import bigtrace.tracks.BigTraceTracksPanel;
+import bigtrace.tracks.TrackingPanel;
 import bigtrace.volume.ExtractClip;
 import btbvv.vistools.BvvStackSource;
 import ij.Prefs;
@@ -73,11 +74,11 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	
 	final RoiManager3D<T> roiManager;
 	final RoiMeasure3D<T> roiMeasure;
-	BigTraceTracksPanel<T> btTracksPanel;
+	TrackingPanel<T> btTracksPanel;
+	public AnimationPanel <T> btAniPanel;
 
 	double [][] nDisplayMinMax;
 
-	public JFrame bvv_frame;
 	public JFrame finFrame;
 	public JProgressBar progressBar;
 	JButton butSettings;
@@ -92,9 +93,10 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		bt = bt_;		
 		roiManager = roiManager_;
 		roiMeasure = new RoiMeasure3D<>(bt);
-		btTracksPanel = new BigTraceTracksPanel<>(bt);
+		btTracksPanel = new TrackingPanel<>(bt);
 		roiManager.setRoiMeasure3D(roiMeasure);
 		roiManager.setTracksPanel(btTracksPanel);
+		btAniPanel = new AnimationPanel<>(bt);
 		
 		JTabbedPane tabPane = new JTabbedPane(SwingConstants.LEFT);
 		
@@ -121,6 +123,12 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		    tabPane.addTab("",tabIcon ,btTracksPanel,"Tracking");
 	    }
 	    
+	    //ANIMATION
+	    icon_path = bigtrace.BigTrace.class.getResource("/icons/director.png");
+	    tabIcon = new ImageIcon(icon_path);
+	    tabPane.addTab("",tabIcon ,btAniPanel,"Movie animation");
+	    
+	    //HELP/SHORTCUTS
 	    icon_path = bigtrace.BigTrace.class.getResource("/icons/shortcut.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    tabPane.addTab("",tabIcon ,panelInformation(),"Help/Shortcuts");
@@ -813,7 +821,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			dialSettings();
 		}
 		//extract clipped view
-		if(e.getSource() ==clipPanel.butExtractClipped)
+		if(e.getSource() == clipPanel.butExtractClipped)
 		{
 			extractClippedView();
 		}

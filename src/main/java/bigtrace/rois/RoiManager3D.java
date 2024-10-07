@@ -40,8 +40,6 @@ import com.jogamp.opengl.GL3;
 
 import bdv.tools.brightness.ColorIcon;
 import ij.Prefs;
-import ij.io.OpenDialog;
-import ij.io.SaveDialog;
 import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 import net.imglib2.type.NativeType;
@@ -50,11 +48,10 @@ import net.imglib2.util.Intervals;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
-import bigtrace.gui.GuiMisc;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
 import bigtrace.measure.RoiMeasure3D;
-import bigtrace.tracks.BigTraceTracksPanel;
+import bigtrace.tracks.TrackingPanel;
 
 
 public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener {
@@ -87,7 +84,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	public RoiMeasure3D<T> roiMeasure = null;
 	
 	//TRACKS PANEL
-	public BigTraceTracksPanel<T> btTracksPanel = null;
+	public TrackingPanel<T> btTracksPanel = null;
 	
 	//dialogs
 	public final RoiManager3DDialogs<T> rmDiag;
@@ -105,7 +102,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	JButton butRename;
 	JButton butDeselect;
 	JButton butProperties;
-	JToggleButton butShowAll;
+	public JToggleButton butShowAll;
 	JButton butSaveROIs;
 	JButton butLoadROIs;
 	JButton butROIGroups;
@@ -259,6 +256,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		//ct.gridx++;
 		ct.weightx = 0.01;
 		panTracing.add(new JLabel(), ct);
+		ct.weightx = 0.0;
 		ct.gridx++;
 		panTracing.add(roiImport,ct);
 		ct.gridx++;
@@ -370,16 +368,17 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 
 		// a solution for now
-		butDelete.setMinimumSize(butProperties.getPreferredSize());
-		butDelete.setPreferredSize(butProperties.getPreferredSize());
-		butRename.setMinimumSize(butProperties.getPreferredSize());		 
-		butRename.setPreferredSize(butProperties.getPreferredSize());
-		butDeselect.setMinimumSize(butProperties.getPreferredSize());		 
-		butDeselect.setPreferredSize(butProperties.getPreferredSize());
-		butShowAll.setMinimumSize(butProperties.getPreferredSize());		 
-		butShowAll.setPreferredSize(butProperties.getPreferredSize());
-		butROIGroups.setMinimumSize(butProperties.getPreferredSize());
-		butROIGroups.setPreferredSize(butProperties.getPreferredSize());
+		Dimension butDim = butProperties.getPreferredSize();
+		butDelete.setMinimumSize(butDim);
+		butDelete.setPreferredSize(butDim);
+		butRename.setMinimumSize(butDim);		 
+		butRename.setPreferredSize(butDim);
+		butDeselect.setMinimumSize(butDim);		 
+		butDeselect.setPreferredSize(butDim);
+		butShowAll.setMinimumSize(butDim);		 
+		butShowAll.setPreferredSize(butDim);
+		butROIGroups.setMinimumSize(butDim);
+		butROIGroups.setPreferredSize(butDim);
 
 		JPanel panChannel = new JPanel(new GridBagLayout());
 		panChannel.setBorder(new PanelTitle(""));
@@ -514,7 +513,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 switch (nRoiType)
 		 {
 		 case Roi3D.POINT:
-			 newRoi= new Point3D(groups.get(nActiveGroup), nTimePoint);
+			 newRoi = new Point3D(groups.get(nActiveGroup), nTimePoint);
 			 break;
 		 case Roi3D.POLYLINE:
 			 newRoi = new PolyLine3D(groups.get(nActiveGroup),nTimePoint);
@@ -869,43 +868,19 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			 bt.repaintBVV();
 		 }
 	 }
-	 public synchronized void setLockMode(boolean bLockMode)
-	 {
-		 
-		 
-		 	 boolean bState = !bLockMode;
-		 	 
-		 	 GuiMisc.setPanelStatusAllComponents(this, bState);
-		 	 GuiMisc.setPanelStatusAllComponents(roiMeasure, bState);
-		 	 GuiMisc.setPanelStatusAllComponents(btTracksPanel, bState);
-		 	 
-		 	 //keep it on
-		 	 butShowAll.setEnabled(true);
-		 	 /*
-			 roiPointMode.setEnabled(bState);
-			 roiPolyLineMode.setEnabled(bState);
-			 roiPolySemiAMode.setEnabled(bState);
-			 roiPlaneMode.setEnabled(bState);
-			 roiSettings.setEnabled(bState);
-			 butDelete.setEnabled(bState);
-			 butRename.setEnabled(bState);
-			 butDeselect.setEnabled(bState);
-			 butProperties.setEnabled(bState);
-			 butSaveROIs.setEnabled(bState);
-			 butLoadROIs.setEnabled(bState);
-			 butROIGroups.setEnabled(bState);
-			 cbActiveChannel.setEnabled(bState);
-			 cbActiveGroup.setEnabled(bState);
-			 butApplyGroup.setEnabled(bState);
-			 butDisplayGroup.setEnabled(bState);
-			 listScroller.setEnabled(bState);			 
-			 jlist.setEnabled(bState);
-			 
-			 */
-			 
-			 
-
-	 }
+//	 public synchronized void setLockMode(boolean bLockMode)
+//	 {
+//		 		 
+//		 	 boolean bState = !bLockMode;
+//		 	 
+//		 	 GuiMisc.setPanelStatusAllComponents(this, bState);
+//		 	 GuiMisc.setPanelStatusAllComponents(roiMeasure, bState);
+//		 	 GuiMisc.setPanelStatusAllComponents(btTracksPanel, bState);
+//		 	 GuiMisc.setPanelStatusAllComponents(this, bState);
+//		 	 //keep it on
+//		 	 butShowAll.setEnabled(true);
+//
+//	 }
 	 public synchronized void unselect()
 	 {
 		 activeRoi.set(-1);
@@ -932,7 +907,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 fireActiveRoiChanged(activeRoi.intValue()); 
 	 }
 	 
-	 public void renameActiveROIDialog()
+	 public void dialRenameActiveROI()
 	 {
 			String s = (String)JOptionPane.showInputDialog(
 					this,
@@ -952,7 +927,9 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 				return;
 			}
 	 }
-	 public void addRoiManager3DListener(Listener l) {
+	 
+	 public void addRoiManager3DListener(Listener l) 
+	 {
 		 listeners.add(l);
 	 }
 	 
@@ -1083,30 +1060,30 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			
 			if(e.getSource() == butSaveROIs)
 			{
-				diagSaveROIs();
+				rmDiag.diagSaveROIs();
 			}
 		}
 		//LOAD ROIS
 		if(e.getSource() == butLoadROIs)
 		{
-			diagLoadROIs();
+			rmDiag.diagLoadROIs();
 		}
 		//IMPORT ROIS
 		if(e.getSource() == roiImport)
 		{
-			diagImportROIs();
+			rmDiag.diagImportROIs();
 		}
 		
 		//Groups Manager
 		if(e.getSource() == butROIGroups)
 		{
-			showGroupsDialog();
+			dialShowGroups();
 			
 		}
 		//GROUP VISIBILITY
 		if(e.getSource() == butDisplayGroup)
 		{
-			dialGroupVisibility();
+			rmDiag.dialGroupVisibility();
 		}
 		
 		///SIDE ROI SPECIFIC LIST BUTTONS
@@ -1120,7 +1097,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			//RENAME
 			if(e.getSource() == butRename)
 			{
-				renameActiveROIDialog();
+				dialRenameActiveROI();
 
 			}
 			//DESELECT
@@ -1322,63 +1299,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		}
 	}
 	
-	/** Save ROIS dialog and saving **/
-	public void diagSaveROIs()
-	{
-		String filename;
-		
-		filename = bt.btData.sFileNameFullImg + "_btrois";
-		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
-        String path = sd.getDirectory();
-        if (path==null)
-        	return;
-        filename = path+sd.getFileName();
-        bt.roiManager.setLockMode(true);
-        bt.bInputLock = true;
-        
-        //this.setLockMode(true);
-        ROIsSaveBG<T> saveTask = new ROIsSaveBG<>();
-        saveTask.sFilename=filename;
-        saveTask.bt=this.bt;
-        saveTask.addPropertyChangeListener(bt.btPanel);
-        saveTask.execute();
-        //this.setLockMode(false);
-	}
-	
-	/** Load ROIS dialog and saving **/
-    void diagLoadROIs()
-	{
-		String filename;
-		
-		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs","", "*.csv");
-		
-        String path = openDial.getDirectory();
-        if (path==null)
-        	return;
-
-        filename = path+openDial.getFileName();
-     
-        String [] sRoiLoadOptions = new String [] {"Clean load ROIs and groups","Append ROIs as undefined group"};	
-        String input = (String) JOptionPane.showInputDialog(this, "Loading ROIs",
-                "Load mode:", JOptionPane.QUESTION_MESSAGE, null,
-                sRoiLoadOptions, // Array of choices
-                sRoiLoadOptions[(int)Prefs.get("BigTrace.LoadRoisMode", 0)]);
-        
-        if(input == null)
-        	 return;
-        int nLoadMode;
-        if(input.equals("Clean load ROIs and groups"))
-        {
-        	nLoadMode = 0;
-        }
-        else
-        {
-        	nLoadMode = 1;
-        }
-        
-        Prefs.set("BigTrace.LoadRoisMode", nLoadMode);
-        loadROIs(filename, nLoadMode);        
-	}
 	
 	public void loadROIs(String filename, int nLoadMode)
 	{
@@ -1398,80 +1318,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
         loadTask.execute();	
 	}
 	
-	/** Import ROIs dialog **/
-	public void diagImportROIs()
-	{
-	
-	      
-        String [] sRoiImportOptions = new String [] {"Points from TrackMate XML (Export)","Points from CSV (coming soon)"};
-		
-        String input = (String) JOptionPane.showInputDialog(this, "Importing ROIs",
-                "Import:", JOptionPane.QUESTION_MESSAGE, null, // Use default icon
-                sRoiImportOptions, // Array of choices
-                sRoiImportOptions[(int)Prefs.get("BigTrace.ImportRoisMode", 0)]);
-
-        if(input == null)
-        	return;
-        if(input.isEmpty())
-        	return;
-        int nImportMode;
-        if(input.equals("Points from TrackMate XML (Export)"))
-        {
-        	nImportMode = 0;
-        	diagImportTrackMate();
-        }
-        else
-        {
-        	nImportMode = 1;
-        }
-        Prefs.set("BigTrace.ImportRoisMode", nImportMode);
-	}
-	
-	public void diagImportTrackMate()
-	{
-		String filename;
-		OpenDialog openDial = new OpenDialog("Import TrackMate XML","", "*.xml");
-		
-        String path = openDial.getDirectory();
-        if (path==null)
-        	return;
-        
-        filename = path+openDial.getFileName();
-        
-        String [] sTMColorOptions = new String [] {"Random color per track","Current active group color"};
-		
-        String inputColor = (String) JOptionPane.showInputDialog(this, "Coloring ROIs",
-                "For color, use:", JOptionPane.QUESTION_MESSAGE, null, // Use
-                                                                                // default
-                                                                                // icon
-                sTMColorOptions, // Array of choices
-                sTMColorOptions[(int)Prefs.get("BigTrace.ImportTMColorMode", 0)]);
-        
-        if(inputColor == null)
-        	return;
-        if(inputColor.isEmpty())
-        	return;
-        int nImportColor;
-        if(inputColor.equals("Random color per track"))
-        {
-        	nImportColor = 0;
-        }
-        else
-        {
-        	nImportColor = 1;
-        }
-        Prefs.set("BigTrace.ImportTMColorMode", nImportColor);
-		
-
-       	this.rois = new ArrayList< >();
-        listModel.clear();
-        ROIsImportTrackMateBG importTask = new ROIsImportTrackMateBG();
-        importTask.nImportColor = nImportColor;
-        importTask.sFilename = filename;
-        importTask.bt = this.bt;
-        importTask.addPropertyChangeListener(bt.btPanel);
-        importTask.execute();
-	}
 
 	/** updates ROIs image for a specific group **/
 	void updateROIsGroupDisplay(int nGroupN)
@@ -1596,7 +1442,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		listModel.setElementAt(getGroupPrefixRoiName(currROI), nRoiIndex);
 	}
 	
-	public void showGroupsDialog()
+	public void dialShowGroups()
 	{
 		Roi3DGroupManager<T> dialGroup = new Roi3DGroupManager<>(this);
 		dialGroup.initGUI();
@@ -1643,12 +1489,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		jlist.clearSelection();
 	}
 	
-	/** show Group visibility dialog **/
-	public void dialGroupVisibility()
-	{
-		Roi3DGroupVisibility<T> groupVis = new Roi3DGroupVisibility<>(this);
-		groupVis.show();
-	}
 	
 	public void updateGroupsList()
 	{
@@ -1667,7 +1507,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 this.roiMeasure = roiMeasure_;
 	}
 	
-	public void setTracksPanel( BigTraceTracksPanel<T> btTracksPanel_)
+	public void setTracksPanel( TrackingPanel<T> btTracksPanel_)
 	{
 		 this.btTracksPanel = btTracksPanel_;
 	}

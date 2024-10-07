@@ -202,6 +202,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		cr.gridx++;
 		cr.weightx = 0.01;
 		panLineTools.add(new JLabel(), cr);
+		cr.weightx = 0.0;
 		cr.gridx++;
 		panLineTools.add(butSettings,cr);
 
@@ -615,7 +616,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
         if (path==null)
         	return;
         filename = path+sd.getFileName();
-        bt.roiManager.setLockMode(true);
+        bt.setLockMode(true);
         bt.bInputLock = true;
         final File file = new File(filename);
         
@@ -663,7 +664,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			IJ.log(e.getMessage());
 			//e.printStackTrace();
 		}
-        bt.roiManager.setLockMode(false);
+        bt.setLockMode(false);
         bt.bInputLock = false;
         bt.btPanel.progressBar.setValue(100);
         bt.btPanel.progressBar.setString("Measured and saved coalignment angles of "+Integer.toString(bt.roiManager.rois.size())+" ROIs");
@@ -1244,7 +1245,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			String sSaveDir = "";
 			if(nExtractBoxOutput > 0)
 			{
-				sSaveDir = IJ.getDirectory("Save straightened TIF to..");
+				sSaveDir = IJ.getDirectory("Save box ROI TIF to..");
 				if(sSaveDir == null)
 				{
 					bt.btPanel.progressBar.setString("curve straightening aborted.");
@@ -1597,6 +1598,10 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			{				
 				dialExtractROIBox(bt.roiManager.rois.get(jlist.getSelectedIndex()));
 			}
+			else
+			{
+				bt.btPanel.progressBar.setString("Please select a ROI first.");
+			}
 		}
 		
 		//Straignten
@@ -1608,7 +1613,16 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 					{
 						dialStraightenCurve((AbstractCurve3D)bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					}
+					else
+					{
+						bt.btPanel.progressBar.setString("ROI should be a polyline or trace.");
+					}
 			}
+			else
+			{
+				bt.btPanel.progressBar.setString("Please select a curve-type ROI first.");
+			}
+			
 		}
 		//Slice volume
 		if(e.getSource() == butSlice)
@@ -1632,6 +1646,10 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 					temp.add(bt.roiManager.rois.get(jlist.getSelectedIndex()));
 					measureROIs(temp, false);
 				}
+			}
+			else
+			{
+				bt.btPanel.progressBar.setString("Please select a ROI first.");
 			}
 		}
 		//Measure all
