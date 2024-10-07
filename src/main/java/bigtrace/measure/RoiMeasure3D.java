@@ -1245,7 +1245,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			String sSaveDir = "";
 			if(nExtractBoxOutput > 0)
 			{
-				sSaveDir = IJ.getDirectory("Save straightened TIF to..");
+				sSaveDir = IJ.getDirectory("Save box ROI TIF to..");
 				if(sSaveDir == null)
 				{
 					bt.btPanel.progressBar.setString("curve straightening aborted.");
