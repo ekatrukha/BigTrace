@@ -18,6 +18,7 @@ import org.joml.Vector3f;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 
 import ij.IJ;
@@ -280,10 +281,11 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			nDimBox[0][i]=btData.nDimIni[0][i]+0.5f;
 			nDimBox[1][i]=(btData.nDimIni[1][i]-1.0f);
 		}
-		volumeBox = new Box3D(nDimBox,1.0f,0.0f,Color.WHITE,Color.WHITE, 0);
+		final Color frame = BigTraceData.getInvertedColor(btData.canvasBGColor);
+		volumeBox = new Box3D(nDimBox,1.0f,0.0f,frame,frame, 0);
 		
 //		volumeBox = new Box3D(nDimBox,1.0f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
-		clipBox = new Box3D(nDimBox,1.0f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		clipBox = new Box3D(nDimBox,1.0f,0.0f,frame.darker(),frame.darker(), 0);
 	}
 	
 	public void initSourcesCanvas(double origin_axis_length)
@@ -714,7 +716,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 
 	public void renderScene(final GL3 gl, final RenderData data)
 	{
-		
+		gl.glClearColor(btData.canvasBGColor.getRed()/255.0f, btData.canvasBGColor.getGreen()/255.0f, btData.canvasBGColor.getBlue()/255.0f, 0.0f);
+		gl.glClear(GL.GL_COLOR_BUFFER_BIT);
 		int [] screen_size = new int [] {(int)data.getScreenWidth(), (int) data.getScreenHeight()};
 		//handl.setRenderScene( ( gl, data ) -> {
 		

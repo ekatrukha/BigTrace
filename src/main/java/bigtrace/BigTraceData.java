@@ -97,6 +97,8 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	/** whether or not display color coded origin of coordinates **/
 	public boolean bShowOrigin = true;
 	
+	public Color canvasBGColor = new Color((int)Prefs.get( "BigTrace.canvasBGColor", Color.BLACK.getRGB() ));
+	
 	/** whether or not display a box around volume/image **/
 	public boolean bVolumeBox = true;
 	
@@ -406,5 +408,11 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 				break;
 				
 		}
+	}
+	
+	public static Color getInvertedColor(Color color_in)
+	{
+		
+		return  new Color(255-color_in.getRed(),255-color_in.getGreen(),255-color_in.getBlue(),color_in.getAlpha());
 	}
 }

@@ -241,7 +241,7 @@ public class AnimationPanelDialogs< T extends RealType< T > & NativeType< T > >
 		
 		cd.gridy++;
 		cd.gridx=0;
-		unCoilSettings.add(new JLabel("Use compression for TIFF?"),cd);
+		unCoilSettings.add(new JLabel("Output format:"),cd);
 		cd.gridx++;
 		unCoilSettings.add(cbUnCoilExport,cd);
 		

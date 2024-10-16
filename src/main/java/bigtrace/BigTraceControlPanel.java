@@ -17,6 +17,7 @@ import java.net.URL;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -28,6 +29,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 
+import bdv.tools.brightness.ColorIcon;
 import bdv.util.Affine3DHelpers;
 import bigtrace.animation.AnimationPanel;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
@@ -40,6 +42,7 @@ import bigtrace.gui.RenderMethodPanel;
 import bigtrace.gui.VoxelSizePanel;
 import bigtrace.measure.RoiMeasure3D;
 import bigtrace.rois.Box3D;
+import bigtrace.rois.ColorUserSettings;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.tracks.TrackingPanel;
 import bigtrace.volume.ExtractClip;
@@ -82,6 +85,8 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	public JFrame finFrame;
 	public JProgressBar progressBar;
 	JButton butSettings;
+	
+	public ColorUserSettings selectColors = new ColorUserSettings();
 
 	
 	public BigTraceControlPanel(final BigTrace<T> bt_,final BigTraceData<T> btd_, final RoiManager3D<T> roiManager_)//, int locx, int locy) 
@@ -396,6 +401,19 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	
 		pViewSettings.setLayout(new GridBagLayout());
 		
+		
+		JButton butCanvasBGColor = new JButton( new ColorIcon( bt.btData.canvasBGColor ) );	
+		butCanvasBGColor.addActionListener( e -> {
+			Color newColor = JColorChooser.showDialog(bt.btPanel.finFrame, "Choose background color", bt.btData.canvasBGColor );
+			if (newColor!=null)
+			{
+				selectColors.setColor(newColor, 0);
+
+				butCanvasBGColor.setIcon(new ColorIcon(newColor));
+			}
+			
+		});
+		
 		NumberField nfClickArea = new NumberField(4);
 		nfClickArea.setIntegersOnly(true);
 		nfClickArea.setText(Integer.toString(bt.btData.nHalfClickSizeWindow*2));
@@ -429,6 +447,13 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		cd.gridx=0;
 		cd.gridy=0;	
 		GBCHelper.alighLoose(cd);
+		
+		pViewSettings.add(new JLabel("Background color: "),cd);
+		cd.gridx++;
+		pViewSettings.add(butCanvasBGColor,cd);
+		
+		cd.gridx=0;
+		cd.gridy++;
 		pViewSettings.add(new JLabel("Snap area size on click (screen px): "),cd);
 		cd.gridx++;
 		pViewSettings.add(nfClickArea,cd);
@@ -499,6 +524,18 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 
 		if (reply == JOptionPane.OK_OPTION) 
 		{
+			Color tempC;
+			
+			tempC = selectColors.getColor(0);
+			if(tempC!=null)
+			{
+				bt.btData.canvasBGColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
+				selectColors.setColor(null, 0);
+				Prefs.set("BigTrace.canvasBGColor", tempC.getRGB());
+				final Color frame = BigTraceData.getInvertedColor(tempC);
+				bt.volumeBox.setLineColor( frame );
+				bt.clipBox.setLineColor( frame.darker() );
+			}
 			
 			bt.btData.nHalfClickSizeWindow = (int)(0.5*Integer.parseInt(nfClickArea.getText()));
 			Prefs.set("BigTrace.nHalfClickSizeWindow",bt.btData.nHalfClickSizeWindow);
