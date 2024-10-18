@@ -336,19 +336,22 @@ public class VisPolygonFlat {
 				Vector4f l_color_t = new Vector4f(l_color);
 				l_color_t.w = 0.6f;
 				prog.getUniform4f("colorin").set(l_color_t);
+				prog.getUniform1i("surfaceRender").set(3);
 			}
 			else
 			{
+				
 				prog.getUniform4f("colorin").set(l_color);
-			}
-			if(renderType != Roi3D.SURFACE)
-			{
 				prog.getUniform1i("surfaceRender").set(0);
 			}
-			else
-			{
-				prog.getUniform1i("surfaceRender").set(BigTraceData.surfaceRender);
-			}
+//			if(renderType != Roi3D.SURFACE)
+//			{
+//				prog.getUniform1i("surfaceRender").set(0);
+//			}
+//			else
+//			{
+//				prog.getUniform1i("surfaceRender").set(BigTraceData.surfaceRender);
+//			}
 			prog.setUniforms( context );
 			prog.use( context );
 

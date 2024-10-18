@@ -6,6 +6,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.IndexColorModel;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,9 +36,12 @@ import javax.swing.event.ListSelectionListener;
 import bdv.tools.brightness.ColorIcon;
 import bigtrace.BigTraceData;
 import bigtrace.gui.NumberField;
+import ij.IJ;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
+import ij.plugin.LutLoader;
+
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
@@ -58,6 +62,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 	JButton butCopyNew;
 	JButton butDelete;
 	JButton butMerge;
+	JButton butColor;
 	JButton butSave;
 	JButton butLoad;
 	
@@ -100,6 +105,8 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		 butDelete.addActionListener(this);
 		 butMerge = new JButton("Merge");
 		 butMerge.addActionListener(this);
+		 butColor = new JButton("Color");
+		 butColor.addActionListener(this);
 		 butSave = new JButton("Save");
 		 butSave.addActionListener(this);
 		 butLoad = new JButton("Load");
@@ -125,6 +132,8 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 		 presetList.add(butDelete,cr);
 		 cr.gridy++;
 		 presetList.add(butMerge,cr);
+		 cr.gridy++;
+		 presetList.add(butColor,cr);
 		 cr.gridy++;
 		 presetList.add(butSave,cr);
 		 cr.gridy++;
@@ -209,6 +218,42 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 			{
 				deleteGroupAndCorrectIndex(indList);
 			}
+		}
+	}
+	
+	/** show Group Properties dialog**/
+	void dialogColor(int indList)	
+	{
+		String [] luts = IJ.getLuts();
+		JComboBox<String> cbLUTs = new JComboBox<>(luts);
+		int reply = JOptionPane.showConfirmDialog(null, cbLUTs, "Color ROIs in group using LUT", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);	
+		if (reply == JOptionPane.OK_OPTION) 
+		{
+			
+			String sLUTName = ( String ) cbLUTs.getSelectedItem();
+			ArrayList<Roi3D> groupROI = new ArrayList<>();
+		
+			for (int i=0;i<roiManager.rois.size();i++)
+			{
+				if(roiManager.rois.get(i).getGroupInd() == indList)
+				{
+					groupROI.add(roiManager.rois.get(i));
+				}
+			}
+			final int nTotRois = groupROI.size();
+			IndexColorModel icm = LutLoader.getLut(sLUTName);
+			final int nMapSize = icm.getMapSize();
+			if (nTotRois>0)
+			{
+				for (int i=0;i<nTotRois;i++)
+				{
+					int nIndex = Math.round( i*(nMapSize-1)/(nTotRois-1) );
+					Color newColor = new Color(icm.getRed( nIndex ),icm.getGreen( nIndex ),icm.getBlue( nIndex ),255);
+					groupROI.get( i ).setLineColor( newColor );
+				}
+			}
+			roiManager.bt.repaintBVV();
 		}
 	}
     
@@ -711,6 +756,11 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 			if(ae.getSource() == butMerge)
 			{				
 				dialogMerge(indList);
+			}
+			//Color
+			if(ae.getSource() == butColor)
+			{				
+				dialogColor(indList);
 			}
 			//SAVE
 			if(ae.getSource() == butSave)

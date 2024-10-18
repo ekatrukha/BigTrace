@@ -19,7 +19,7 @@ void main()
 		}
 	}
 	//"silhouette" surface
-	if(surfaceRender==1)
+	if(surfaceRender==3)
 	{
 		gl_FragDepth = 1.0;										
 	}
