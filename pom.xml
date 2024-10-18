@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>38.0.1</version>
+		<version>39.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -87,7 +87,7 @@
 		<dependency>
 		  <groupId>nl.uu.science.cellbiology</groupId>
 		  <artifactId>bvv-playground</artifactId>
-		  <version>0.2.6</version>
+		  <version>0.2.7</version>
 		</dependency>
 		
 		<!-- BIOFORMATS -->
@@ -138,7 +138,7 @@
 		<dependency>
 			<groupId>ch.epfl.biop</groupId>
 			<artifactId>bigdataviewer-image-loaders</artifactId>
-			<version>0.6.4</version> 
+			<version>0.8.6</version> 
 		</dependency>
   		
 		<!-- ImgLib2 dependencies -->
