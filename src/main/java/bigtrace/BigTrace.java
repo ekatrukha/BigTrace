@@ -12,6 +12,8 @@ import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
+import org.janelia.saalfeldlab.control.mcu.MCUBVVControls;
+import org.janelia.saalfeldlab.control.mcu.XTouchMiniMCUControlPanel;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -335,7 +337,23 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	    btPanel.finFrame.addWindowListener(this);
 	    bvvFrame.addWindowListener(this);
 
+		try {
+			final XTouchMiniMCUControlPanel controlPanel = XTouchMiniMCUControlPanel.build();
+			new MCUBVVControls(
+					bvv_main.getBvvHandle().getViewerPanel(),
+					controlPanel);
 
+//			((JFrame)SwingUtilities.getWindowAncestor(source.getBvvHandle().getViewerPanel()))
+//					.addWindowListener(new WindowAdapter() {
+//
+//						@Override
+//						public void windowClosing(final WindowEvent e) {
+//
+//							controlPanel.close();
+//						}
+//
+//					});
+		} catch (final Exception e) {}
 		bInputLock = false;
 	}
 	
