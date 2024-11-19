@@ -46,7 +46,7 @@ import bigtrace.rois.ColorUserSettings;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.tracks.TrackingPanel;
 import bigtrace.volume.ExtractClip;
-import btbvv.vistools.BvvStackSource;
+import bvvpg.vistools.BvvStackSource;
 import ij.Prefs;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;

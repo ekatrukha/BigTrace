@@ -1,7 +1,7 @@
 package bigtrace.gui;
 
-import btbvv.btuitools.RealARGBColorGammaConverterSetup;
-import btbvv.vistools.BvvStackSource;
+import bvvpg.pguitools.RealARGBColorGammaConverterSetup;
+import bvvpg.vistools.BvvStackSource;
 
 /** class to store and apply broghtness and contrast settings **/
 public class BCsettings {

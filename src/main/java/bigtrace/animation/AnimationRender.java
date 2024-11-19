@@ -25,7 +25,7 @@ import bdv.util.Prefs;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
-import btbvv.core.render.VolumeRenderer.RepaintType;
+import bvvpg.core.render.VolumeRenderer.RepaintType;
 import ij.IJ;
 
 

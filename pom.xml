@@ -87,7 +87,7 @@
 		<dependency>
 		  <groupId>nl.uu.science.cellbiology</groupId>
 		  <artifactId>bvv-playground</artifactId>
-		  <version>0.2.7</version>
+		  <version>0.3.0</version>
 		</dependency>
 		
 		<!-- BIOFORMATS -->
@@ -120,13 +120,13 @@
 		<dependency> 
     		<groupId>com.formdev</groupId> 
     		<artifactId>jide-oss</artifactId> 
-    		<version>3.7.12</version>
+    		<version>3.7.15</version>
   		</dependency> 
   		
   		<dependency>
   		<groupId>com.formdev</groupId>
   			<artifactId>flatlaf-jide-oss</artifactId>
-  			<version>2.0</version>
+  			<version>3.5</version>
 		</dependency>
 		<!-- SCIFIO dependencies -->
 		<dependency>
