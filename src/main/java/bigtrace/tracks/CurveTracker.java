@@ -252,7 +252,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
     	catch (Exception e)
     	{
 
-    		System.out.println("Tracking interrupted by user.");
+    		//System.out.println("Tracking interrupted by user.");
     		bt.visBox = null;
         	setProgressState("Tracking interrupted by user.");
         	setProgress(100);	

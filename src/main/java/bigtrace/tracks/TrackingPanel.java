@@ -420,7 +420,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 			bt.setLockMode(true);
 			butTrack.setEnabled( true );
 			Prefs.set("BigTrace.nTrackExpandBox", nBoxExpand);	
-			btTracker.nNextFrame=nNextFrame;
+			btTracker.nNextFrame = nNextFrame;
 			btTracker.nBoxExpand = nBoxExpand;
 			butTrack.setIcon( tabIconCancel );
 			butTrack.setToolTipText( "Stop tracking" );

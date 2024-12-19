@@ -123,7 +123,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	}
 	
 	@Override
-	protected Void doInBackground() throws Exception {
+	protected Void doInBackground() throws Exception 
+	{
 		
 		runTracing ();
 		return null;
@@ -205,7 +206,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			allPointsIntersection = new ArrayList<>();
 			//trace in one direction
 			nTotPoints = traceOneDirection(true, 0);
-			
+			if(nTotPoints<0)
+			{
+				setProgressState("Tracing interrupted by user.");
+				return;
+			}
 			if(bUpdateProgressBar)
 			{
 				setProgress(50);
@@ -223,7 +228,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		}
 		//trace in the other direction
 		nTotPoints = traceOneDirection(false, nTotPoints);
-		
+		if(nTotPoints<0)
+		{
+			setProgressState("Tracing interrupted by user.");
+			return;
+		}
 		//end1 = System.currentTimeMillis();
 		//System.out.println("THREADED Elapsed Time in seconds: "+ 0.001*(end1-start1));
 		
@@ -235,7 +244,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		}
 		return ;
 	}
-	/** traces line in one direction.
+	/** traces line in one direction. Returns number of current found points
+	 * or -1 if it got interrupted.
 	 * @param bFirstTrace 
 	 *        if it is a first trace or continuation of existing 
 	 * @param nCountIn
@@ -325,7 +335,10 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 //				System.out.println(nCountPoints+" "+LinAlgHelpers.dot(saveVector, nextPointD));
 			}
 
-
+			if(isCancelled())
+			{
+				return -1;				
+			}
 		}
 		//adding last part of the trace
 
@@ -843,21 +856,33 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
     {
     	//see if we have some errors
     	 try {
+    		 
              get();
-         	} 
-    	 catch (ExecutionException e) {
+         } 
+    	 catch (ExecutionException e) 
+    	 {
              e.getCause().printStackTrace();
              String msg = String.format("Unexpected problem during one-click tracing: %s", 
                             e.getCause().toString());
              System.out.println(msg);
-         } catch (InterruptedException e) {
+         } 
+    	 catch (InterruptedException e) 
+    	 {
              // Process e here
          }
+     	catch (Exception e)
+     	{
+
+     		//System.out.println("Tracing interrupted by user.");
+         	setProgressState("Tracing interrupted by user.");
+         	setProgress(100);	
+     	}
     	//es.shutdown();
     	releaseMultiThread();
 
     	bt.visBox = null;
-
+    	bt.roiManager.setOneClickTracing( false );
+    	
     	//deselect the trace if we just made it
     	if(bNewTrace)
     	{

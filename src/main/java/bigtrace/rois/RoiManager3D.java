@@ -120,7 +120,9 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	JButton roiImport;
 	JButton roiSettings;
 
-
+	ImageIcon tabIconOCTrace;
+	ImageIcon tabIconCancel;
+	
 	private ArrayList<Listener> listeners = new ArrayList<>();
 
 		
@@ -150,7 +152,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		{roiPointMode.setSelected(true);}
 
 
-		icon_path =bigtrace.BigTrace.class.getResource("/icons/polyline.png");
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/polyline.png");
 		tabIcon = new ImageIcon(icon_path);
 		roiPolyLineMode = new JToggleButton(tabIcon);
 		roiPolyLineMode.setToolTipText("Trace polyline");
@@ -179,11 +181,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		
 
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/oneclicktrace.png");
-		tabIcon = new ImageIcon(icon_path);
-		roiPolyOneClickMode = new JToggleButton(tabIcon);
+		tabIconOCTrace = new ImageIcon(icon_path);
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/cancel.png");
+		tabIconCancel = new ImageIcon(icon_path);
+		roiPolyOneClickMode = new JToggleButton(tabIconOCTrace);
 		roiPolyOneClickMode.setToolTipText("One click trace");
 		roiPolyOneClickMode.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
-		if(mode==RoiManager3D.ADD_POINT_ONECLICKLINE)
+		if(mode == RoiManager3D.ADD_POINT_ONECLICKLINE)
 		{roiPolyOneClickMode.setSelected(true);}		
 		
 		roiPolyOneClickMode.addMouseListener(new MouseAdapter() 
@@ -1007,11 +1011,21 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		}
 		if(e.getSource() == roiPolyOneClickMode)
 		{
-			if(RoiManager3D.mode != RoiManager3D.ADD_POINT_ONECLICKLINE)
+			if(!bt.bInputLock)
 			{
-				RoiManager3D.mode = RoiManager3D.ADD_POINT_ONECLICKLINE;
-				Prefs.set("BigTrace.RoiManagerMode", RoiManager3D.mode);
-				unselect();
+				if(RoiManager3D.mode != RoiManager3D.ADD_POINT_ONECLICKLINE)
+				{
+					RoiManager3D.mode = RoiManager3D.ADD_POINT_ONECLICKLINE;
+					Prefs.set("BigTrace.RoiManagerMode", RoiManager3D.mode);
+					unselect();
+				}
+			}
+			else
+			{
+				if(roiPolyOneClickMode.isEnabled())
+				{
+					bt.cancelOneClickTrace();
+				}
 			}
 		}
 		if(e.getSource() == roiPlaneMode)
@@ -1299,6 +1313,21 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		}
 	}
 	
+	public void setOneClickTracing(boolean bBegin)
+	{
+		if(bBegin)
+		{
+			roiPolyOneClickMode.setIcon( tabIconCancel );
+			roiPolyOneClickMode.setToolTipText( "Stop tracing" );
+			roiPolyOneClickMode.setEnabled( true );
+		}
+		else
+		{
+			roiPolyOneClickMode.setIcon(tabIconOCTrace);
+			roiPolyOneClickMode.setToolTipText("One click trace");
+			
+		}
+	}
 	
 	public void loadROIs(String filename, int nLoadMode)
 	{

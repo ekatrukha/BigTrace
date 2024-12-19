@@ -148,6 +148,9 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	/** BigTrace macro interface**/
 	public BigTraceMacro<T> btMacro;
 	
+	/** One click tracing worker**/
+	OneClickTrace<T> oneClickTrace = null;
+	
 	/**macro extensions **/
 	private ExtensionDescriptor[] extensions = {
 			
@@ -404,19 +407,25 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	{
 		
 		final IntervalView<T> traceIV =  getTraceInterval(btData.bTraceOnlyClipped);	
-//		System.out.println(pclick.getDoublePosition(0));
-//		System.out.println(pclick.getDoublePosition(1));
-//		System.out.println(pclick.getDoublePosition(2));
 
 		bInputLock = true;
-		OneClickTrace<T> calcTask = new OneClickTrace<>();
-		calcTask.fullInput = traceIV;
-		calcTask.bt = this;
-		calcTask.startPoint = pclick;
-		calcTask.bNewTrace = bNewTrace_;
-		calcTask.addPropertyChangeListener(btPanel);
-		calcTask.execute();
+		oneClickTrace = new OneClickTrace<>();
+		oneClickTrace.fullInput = traceIV;
+		oneClickTrace.bt = this;
+		oneClickTrace.startPoint = pclick;
+		oneClickTrace.bNewTrace = bNewTrace_;
+		oneClickTrace.addPropertyChangeListener(btPanel);
+		roiManager.setOneClickTracing( true );
+		oneClickTrace.execute();
 	
+	}
+	
+	public void cancelOneClickTrace()
+	{
+		if(oneClickTrace != null )
+		{
+			oneClickTrace.cancel( false );
+		}
 	}
 	
 	/** returns current Interval for the tracing. If bClippedInterval is true,
@@ -1673,8 +1682,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		testI.run("");
-		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
+		//testI.run("");
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
 		///testI.run("/home/eugene/Desktop/projects/BigTrace/BT_tracks/Snejana_small_example.tif");
 		//testI.run("/home/eugene/Desktop/bend/test_bend_2ch/output/trace1514947168.xml");
 

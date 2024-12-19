@@ -87,7 +87,7 @@
 		<dependency>
 		  <groupId>nl.uu.science.cellbiology</groupId>
 		  <artifactId>bvv-playground</artifactId>
-		  <version>0.3.1</version>
+		  <version>0.3.3</version>
 		</dependency>
 		
 		<!-- BIOFORMATS -->
@@ -126,7 +126,7 @@
   		<dependency>
   		<groupId>com.formdev</groupId>
   			<artifactId>flatlaf-jide-oss</artifactId>
-  			<version>3.5</version>
+  			<version>3.0</version>
 		</dependency>
 		<!-- SCIFIO dependencies -->
 		<dependency>
@@ -138,7 +138,7 @@
 		<dependency>
 			<groupId>ch.epfl.biop</groupId>
 			<artifactId>bigdataviewer-image-loaders</artifactId>
-			<version>0.8.6</version> 
+			<version>0.6.4</version> 
 		</dependency>
   		
 		<!-- ImgLib2 dependencies -->
