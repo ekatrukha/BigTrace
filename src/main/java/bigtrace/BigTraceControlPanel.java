@@ -258,7 +258,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 
 		
 		//VIEW PANEL
-		JPanel panView=new JPanel(new GridBagLayout()); 
+		JPanel panView = new JPanel(new GridBagLayout()); 
 		panView.setBorder(new PanelTitle(" View "));		
 		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/orig.png");
 	    ImageIcon tabIcon = new ImageIcon(icon_path);
@@ -269,11 +269,11 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	
 	    @Override
 		public void itemStateChanged(ItemEvent e) {
-	    	      if(e.getStateChange()==ItemEvent.SELECTED){
-	    	    	  btdata.bShowOrigin=true;
+	    	      if(e.getStateChange() == ItemEvent.SELECTED){
+	    	    	  btdata.bShowOrigin = true;
 	    	    	  bt.repaintBVV();
-	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
-	    	        	btdata.bShowOrigin=false;
+	    	        } else if(e.getStateChange() == ItemEvent.DESELECTED){
+	    	        	btdata.bShowOrigin = false;
 	    	        	bt.repaintBVV();
 	    	        }
 			}
@@ -282,7 +282,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    c.gridy=0;
 		panView.add(butOrigin,c);
 		
-		
+		//BOX AROUND VOLUME
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/boxvolume.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    JToggleButton butVBox = new JToggleButton(tabIcon);
@@ -292,31 +292,46 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	
 	    @Override
 		public void itemStateChanged(ItemEvent e) {
-	    	      if(e.getStateChange()==ItemEvent.SELECTED){
-	    	    	  btdata.bVolumeBox=true;
+	    	      if(e.getStateChange() == ItemEvent.SELECTED){
+	    	    	  btdata.bVolumeBox = true;
 	    	    	  bt.repaintBVV();
 	    	        } else if(e.getStateChange()==ItemEvent.DESELECTED){
-	    	        	btdata.bVolumeBox=false;
+	    	        	btdata.bVolumeBox = false;
 	    	        	bt.repaintBVV();
 	    	        }
 			}
 	    	});
-	    c.gridx++;
 	    
+	    c.gridx++;	    
 		panView.add(butVBox,c);
 		
+		//SAVE AND LOAD BUTTONS
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/save.png");
+	    tabIcon = new ImageIcon(icon_path);
+	    JButton butSave = new JButton(tabIcon);
+	    butSave.setToolTipText( "Save image view" );
+	    c.gridx++;
+		panView.add(butSave,c);	
+
+		icon_path = bigtrace.BigTrace.class.getResource("/icons/load.png");
+	    tabIcon = new ImageIcon(icon_path);
+	    JButton butLoad = new JButton(tabIcon);
+	    butLoad.setToolTipText( "Load image view" );
+	    c.gridx++;
+		panView.add(butLoad,c);	
 		
+		//SETTINGS
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    butSettings = new JButton(tabIcon);
-	    //butWorld.setSelected(btdata.bShowWorldGrid);
 	    butSettings.setToolTipText("Settings");
 	    butSettings.addActionListener(this);
 	    
 	    c.gridx++;
 		panView.add(butSettings,c);
 		
-		
+
+	    
 		//Render method panel
 	    JPanel panRender=new JPanel(new GridBagLayout()); 
 	    panRender.setBorder(new PanelTitle(" Render "));
