@@ -23,6 +23,8 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
+import bigtrace.io.ROIsImportTrackMateBG;
+import bigtrace.io.ROIsSaveBG;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
@@ -679,9 +681,9 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		filename = bt.btData.sFileNameFullImg + "_btrois";
 		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
         String path = sd.getDirectory();
-        if (path==null)
+        if (path == null)
         	return;
-        filename = path+sd.getFileName();
+        filename = path + sd.getFileName();
         bt.setLockMode(true);
         bt.bInputLock = true;
         

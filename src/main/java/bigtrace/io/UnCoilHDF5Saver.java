@@ -1,4 +1,4 @@
-package bigtrace.animation;
+package bigtrace.io;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,6 +27,7 @@ import bdv.spimdata.SpimDataMinimal;
 import bdv.spimdata.XmlIoSpimDataMinimal;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
+import bigtrace.animation.UnCoilAnimation;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;

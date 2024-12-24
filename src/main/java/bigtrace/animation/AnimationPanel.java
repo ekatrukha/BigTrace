@@ -45,6 +45,8 @@ import net.imglib2.type.numeric.RealType;
 import bigtrace.BigTrace;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.io.StorylineLoad;
+import bigtrace.io.StorylineSave;
 import bigtrace.rois.Roi3D;
 import ij.Prefs;
 import ij.io.OpenDialog;
@@ -82,7 +84,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	
 	int nChangeTotalTimeMode = (int)Prefs.get("BigTrace.nChangeTotalTimeMode", ANIMTIME_END);
 	
-	final KeyFrameAnimation<T> kfAnim;
+	final public KeyFrameAnimation<T> kfAnim;
 	
 	final JToggleButton butUpdateSlider;
 
@@ -731,7 +733,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	}
 	
 	/** updates timeline display **/
-	void updateKeyMarks()
+	public void updateKeyMarks()
 	{
 		ArrayList<Float> keyPoints = new ArrayList<>();
 		for (int i=0;i<listModel.size();i++)
@@ -743,7 +745,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	}
 	
 	/** updates numbering of keyframes **/
-	void updateKeyIndices()
+	public void updateKeyIndices()
 	{
 		for(int i=0;i<listModel.size(); i++)
 		{
@@ -832,7 +834,7 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	    }
 	}
 
-	void updateScene()
+	public void updateScene()
 	{			
 		if(listModel.size()>1)
 		{

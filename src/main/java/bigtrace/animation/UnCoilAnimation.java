@@ -42,6 +42,7 @@ import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Pipe3D;
 import bigtrace.geometry.Plane3D;
+import bigtrace.io.UnCoilHDF5Saver;
 import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
@@ -65,7 +66,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 	public int nUnCoilTask = 0;
 	
 	/** interval containing all ROIs **/
-	FinalInterval unionInterval;
+	public FinalInterval unionInterval;
 	
 	/** plugin instance **/
 	BigTrace<T> bt;
@@ -85,7 +86,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 	ArrayList <AbstractCurve3D> allRois;
 	
 	/** all intervals for all ROIs **/
-	ArrayList <FinalInterval> allIntervals;
+	public ArrayList <FinalInterval> allIntervals;
 	
 	double [] finalOrientation = null;
 	

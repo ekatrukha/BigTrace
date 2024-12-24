@@ -1,4 +1,4 @@
-package bigtrace.animation;
+package bigtrace.io;
 
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
@@ -15,6 +15,7 @@ import net.imglib2.view.Views;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
+import bigtrace.animation.UnCoilAnimation;
 import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.generic.sequence.BasicSetupImgLoader;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;

@@ -50,6 +50,7 @@ import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
+import bigtrace.io.ROIsLoadBG;
 import bigtrace.measure.RoiMeasure3D;
 import bigtrace.tracks.TrackingPanel;
 

@@ -1,4 +1,4 @@
-package bigtrace.rois;
+package bigtrace.io;
 
 import java.awt.Color;
 import java.io.FileInputStream;
@@ -13,6 +13,8 @@ import javax.xml.stream.XMLStreamReader;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
+import bigtrace.rois.Point3D;
+import bigtrace.rois.Roi3D;
 import ij.IJ;
 import net.imglib2.RealPoint;
 

@@ -16,7 +16,7 @@ public class KeyFrameAnimation < T extends RealType< T > & NativeType< T > >
 	final BigTrace<T> bt;
 	int nTotalTime;
 	
-	final DefaultListModel<KeyFrame> keyFrames;
+	final public DefaultListModel<KeyFrame> keyFrames;
 	final ArrayList<AnisotropicTransformAnimator3D> viewAnimate  = new ArrayList<>(); 
 	final ArrayList<Float> timeIntervals = new ArrayList<>();
 	final ArrayList<KeyFrame> fullList = new ArrayList<>();
@@ -44,7 +44,7 @@ public class KeyFrameAnimation < T extends RealType< T > & NativeType< T > >
 		return nTotalTime;
 	}
 	
-	void updateTransitionTimeline()
+	public void updateTransitionTimeline()
 	{
 		timeIntervals.clear();
 		viewAnimate.clear();

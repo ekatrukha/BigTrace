@@ -62,6 +62,11 @@ public class KeyFrame
 		return;
 	}
 	
+	public float getMovieTimePoint()
+	{
+		return fMovieTimePoint;
+	}
+	
 	public KeyFrame duplicate()
 	{
 		final KeyFrame out = new KeyFrame(scene, fMovieTimePoint);

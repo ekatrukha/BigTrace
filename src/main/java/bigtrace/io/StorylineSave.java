@@ -1,4 +1,4 @@
-package bigtrace.animation;
+package bigtrace.io;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -11,13 +11,15 @@ import net.imglib2.type.numeric.RealType;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
+import bigtrace.animation.AnimationPanel;
+import bigtrace.animation.KeyFrame;
 import ij.IJ;
 
 public class StorylineSave < T extends RealType< T > & NativeType< T > > 
 {
 	
 	/** plugin instance **/
-	BigTrace<T> bt;
+	final BigTrace<T> bt;
 	final AnimationPanel< T > aPanel;
 	
 	public StorylineSave(final BigTrace<T> bt_, AnimationPanel< T > aPanel_)
@@ -36,7 +38,7 @@ public class StorylineSave < T extends RealType< T > & NativeType< T > >
 			symbols.setDecimalSeparator('.');
 			DecimalFormat df3 = new DecimalFormat ("#.#####", symbols);
 			writer.write("BigTrace_StoryLine,version," + BigTraceData.sVersion + "\n");
-			writer.write("TotalTime," + Integer.toString(aPanel.kfAnim.nTotalTime) + "\n");
+			writer.write("TotalTime," + Integer.toString(aPanel.kfAnim.getTotalTime()) + "\n");
 			final int nTotKeyFramesN = aPanel.kfAnim.keyFrames.size();
 			writer.write("KeyFrameNumber," + Integer.toString(nTotKeyFramesN) + "\n");
 			for(int nKF=0; nKF < nTotKeyFramesN; nKF++)
@@ -44,8 +46,8 @@ public class StorylineSave < T extends RealType< T > & NativeType< T > >
 				KeyFrame currKF =  aPanel.kfAnim.keyFrames.get( nKF );
 				writer.write("KeyFrame,"+Integer.toString(nKF+1)+"\n");
 				writer.write("KeyFrameName,"+currKF.getName()+"\n");
-				writer.write("KeyFrameTime," + df3.format(currKF.fMovieTimePoint) + "\n");
-				currKF.scene.save( writer );
+				writer.write("KeyFrameTime," + df3.format(currKF.getMovieTimePoint()) + "\n");
+				currKF.getScene().save( writer );
 				
 			}
 			writer.write("End of BigTrace Story Line\n");

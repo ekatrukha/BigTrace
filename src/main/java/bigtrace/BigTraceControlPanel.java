@@ -40,6 +40,7 @@ import bigtrace.gui.PanelTitle;
 import bigtrace.gui.RangeSliderTF;
 import bigtrace.gui.RenderMethodPanel;
 import bigtrace.gui.VoxelSizePanel;
+import bigtrace.io.ViewsIO;
 import bigtrace.measure.RoiMeasure3D;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.ColorUserSettings;
@@ -48,6 +49,8 @@ import bigtrace.tracks.TrackingPanel;
 import bigtrace.volume.ExtractClip;
 import bvvpg.vistools.BvvStackSource;
 import ij.Prefs;
+import ij.io.SaveDialog;
+
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -57,8 +60,7 @@ import net.imglib2.util.LinAlgHelpers;
 
 
 public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > extends JPanel
-//public class BigTraceControlPanel extends JFrame
-								implements ActionListener, 
+									implements ActionListener, 
 									PropertyChangeListener {
 	
 	
@@ -84,6 +86,9 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 
 	public JFrame finFrame;
 	public JProgressBar progressBar;
+
+	JButton butSaveView;
+	JButton butLoadView;
 	JButton butSettings;
 	
 	public ColorUserSettings selectColors = new ColorUserSettings();
@@ -308,17 +313,20 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		//SAVE AND LOAD BUTTONS
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/save.png");
 	    tabIcon = new ImageIcon(icon_path);
-	    JButton butSave = new JButton(tabIcon);
-	    butSave.setToolTipText( "Save image view" );
-	    c.gridx++;
-		panView.add(butSave,c);	
+	    butSaveView = new JButton(tabIcon);
+	    butSaveView.setToolTipText( "Save image view" );
+		butSaveView.addActionListener(this);
+		c.gridx++;
+		panView.add(butSaveView,c);	
 
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/load.png");
 	    tabIcon = new ImageIcon(icon_path);
-	    JButton butLoad = new JButton(tabIcon);
-	    butLoad.setToolTipText( "Load image view" );
+	    butLoadView = new JButton(tabIcon);
+	    butLoadView.setToolTipText( "Load image view" );
+		butLoadView.addActionListener(this);
+
 	    c.gridx++;
-		panView.add(butLoad,c);	
+		panView.add(butLoadView,c);	
 		
 		//SETTINGS
 		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
@@ -408,6 +416,21 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		return panNavigation;
 		
 	}
+	
+	public void dialSaveView()
+	{
+		String filename;
+		
+		filename = bt.btData.sFileNameFullImg + "_btview";
+		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
+        String path = sd.getDirectory();
+        if (path == null)
+        	return;
+        filename = path + sd.getFileName();	
+        ViewsIO.saveView( bt, filename );
+	}
+	
+	
 	public void dialSettings()
 	{
 		JPanel pViewSettings = new JPanel();
@@ -583,6 +606,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			bt.repaintBVV();
 		}
 	}
+	
 	public void extractClippedView()
 	{
 		
@@ -866,6 +890,12 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
+
+		//SAVE VIEW
+		if(e.getSource() ==  butSaveView)
+		{
+			dialSaveView();
+		}
 
 		//SETTINGS
 		if(e.getSource() == butSettings)

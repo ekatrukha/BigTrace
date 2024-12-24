@@ -1,4 +1,4 @@
-package bigtrace.rois;
+package bigtrace.io;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -11,6 +11,7 @@ import javax.swing.SwingWorker;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
+import bigtrace.rois.Roi3DGroupManager;
 import ij.IJ;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;

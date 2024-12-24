@@ -1,4 +1,4 @@
-package bigtrace.rois;
+package bigtrace.io;
 
 import java.awt.Color;
 import java.io.BufferedReader;
@@ -13,6 +13,13 @@ import javax.swing.SwingWorker;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
+import bigtrace.rois.CrossSection3D;
+import bigtrace.rois.LineTrace3D;
+import bigtrace.rois.Point3D;
+import bigtrace.rois.PolyLine3D;
+import bigtrace.rois.Roi3D;
+import bigtrace.rois.Roi3DGroup;
+import bigtrace.rois.Roi3DGroupManager;
 
 import net.imglib2.RealPoint;
 import net.imglib2.type.NativeType;
