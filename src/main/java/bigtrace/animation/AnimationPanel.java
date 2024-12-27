@@ -866,9 +866,9 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 			filename = bt.btData.sFileNameFullImg + "_btstory";
 			SaveDialog sd = new SaveDialog("Save storyline ", filename, ".csv");
 	        String path = sd.getDirectory();
-	        if (path==null)
+	        if (path == null)
 	        	return;
-	        filename = path+sd.getFileName();
+	        filename = path + sd.getFileName();
 	        
 	        bt.setLockMode(true);
 	        bt.bInputLock = true;
@@ -883,13 +883,15 @@ public class AnimationPanel < T extends RealType< T > & NativeType< T > > extend
 	{
 		String filename;
 		
-		OpenDialog openDial = new OpenDialog("Load BigTrace storyline","", "*.csv");
+		OpenDialog openDial = new OpenDialog("Load BigTrace storyline",bt.btData.lastDir, "*.csv");
 		
         String path = openDial.getDirectory();
         if (path==null)
         	return;
-
-        filename = path+openDial.getFileName();	
+        bt.btData.lastDir = path;
+        Prefs.set( "BigTrace.lastDir", bt.btData.lastDir );
+        
+        filename = path + openDial.getFileName();	
         bt.setLockMode(true);
         bt.bInputLock = true;
         StorylineLoad<T> stLoad  = new StorylineLoad<>(bt, this);

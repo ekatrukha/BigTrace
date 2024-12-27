@@ -268,6 +268,10 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	/** value of the intensity threshold to stop One click tracing **/
 	public double dOCIntensityThreshold;	
 		
+	//IO default/last folder
+	
+	public String lastDir = Prefs.get( "BigTrace.lastDir", "" );
+	
 	
 	///////////////// DEFAULT SETTINGS FOR UNDEFINED GROUP
 	

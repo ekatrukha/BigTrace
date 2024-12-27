@@ -3,12 +3,14 @@ package bigtrace;
 import java.awt.Color;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
@@ -68,6 +70,7 @@ import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
 import bigtrace.gui.GuiMisc;
+import bigtrace.io.ViewsIO;
 import bigtrace.math.OneClickTrace;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
@@ -198,7 +201,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 
 		if(btData.sFileNameFullImg == null)
 			return;
-		
+		btData.lastDir = Paths.get(btData.sFileNameFullImg ).getParent().toString();
 		//load data sources
 		
 		// TIF files are fully loaded (to RAM) for now
@@ -339,8 +342,19 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		};
 		
 	    btPanel.finFrame.addWindowListener( closeWA );
-	    bvvFrame.addWindowListener(	closeWA);
+	    bvvFrame.addWindowListener(	closeWA );
 		bInputLock = false;
+		
+		//check if there is a saved view
+		File f = new File(btData.sFileNameFullImg+"_btview.csv");
+		if(f.exists() && !f.isDirectory()) 
+		{ 
+			if (JOptionPane.showConfirmDialog(null, "There is a saved view state for this file,\ndo you want to load it?", "Load saved view?",
+			        JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) 
+			{
+				ViewsIO.loadView( this, btData.sFileNameFullImg+"_btview.csv" );
+			} 
+		}
 	}
 		
 	public void closeWindows()
@@ -1487,8 +1501,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		//testI.run("");
-		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
+		testI.run("");
+		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
 		///testI.run("/home/eugene/Desktop/projects/BigTrace/BT_tracks/Snejana_small_example.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/Nefeli_test/20230815_DNAH5_volume_time_Experiment-1397.czi");
 

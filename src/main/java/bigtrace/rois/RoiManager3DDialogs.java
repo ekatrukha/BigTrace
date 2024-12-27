@@ -551,7 +551,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 			}
 			
 			tempC = rm.selectColors.getColor(1);
-			if(tempC!=null)
+			if(tempC != null)
 			{
 				rm.activeLineColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
 				rm.selectColors.setColor(null, 1);
@@ -567,9 +567,9 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 				Prefs.set("BigTrace.nROIDoubleClickClipExpand", BigTraceData.nROIDoubleClickClipExpand);
 			}
 			
-			if(BigTraceData.sectorN!= Integer.parseInt(nfSectorNLines.getText()))
+			if(BigTraceData.sectorN != Integer.parseInt(nfSectorNLines.getText()))
 			{
-				BigTraceData.sectorN= Integer.parseInt(nfSectorNLines.getText());
+				BigTraceData.sectorN = Integer.parseInt(nfSectorNLines.getText());
 				Prefs.set("BigTrace.nSectorN", BigTraceData.sectorN);
 				bUpdateROIs  = true;
 			}
@@ -581,16 +581,16 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 				bUpdateROIs  = true;
 			}
 			
-			if(BigTraceData.wireCountourStep!= Integer.parseInt(nfWireContourStep.getText()))
+			if(BigTraceData.wireCountourStep != Integer.parseInt(nfWireContourStep.getText()))
 			{
-				BigTraceData.wireCountourStep= Integer.parseInt(nfWireContourStep.getText());
+				BigTraceData.wireCountourStep = Integer.parseInt(nfWireContourStep.getText());
 				Prefs.set("BigTrace.wireCountourStep", BigTraceData.wireCountourStep);
 				bUpdateROIs  = true;
 			}
 			
-			if(BigTraceData.crossSectionGridStep!= Integer.parseInt(nfCrossSectionGridStep.getText()))
+			if(BigTraceData.crossSectionGridStep != Integer.parseInt(nfCrossSectionGridStep.getText()))
 			{
-				BigTraceData.crossSectionGridStep= Integer.parseInt(nfCrossSectionGridStep.getText());
+				BigTraceData.crossSectionGridStep = Integer.parseInt(nfCrossSectionGridStep.getText());
 				Prefs.set("BigTrace.crossSectionGridStep", BigTraceData.crossSectionGridStep);
 				bUpdateROIs  = true;
 			}
@@ -617,7 +617,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 			{
 				BigTraceData.nSmoothWindow = Integer.parseInt(nfSmoothWindow.getText());
 				Prefs.set("BigTrace.nSmoothWindow", BigTraceData.nSmoothWindow);
-				BigTraceData.shapeInterpolation= shapeInterpolationList.getSelectedIndex();
+				BigTraceData.shapeInterpolation = shapeInterpolationList.getSelectedIndex();
 				Prefs.set("BigTrace.ShapeInterpolation",BigTraceData.shapeInterpolation);
 				bUpdateROIs  = true;				
 			}
@@ -701,12 +701,15 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 	{
 		String filename;
 		
-		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs","", "*.csv");
+		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs",bt.btData.lastDir, "*.csv");
 		
         String path = openDial.getDirectory();
         if (path==null)
         	return;
-
+        
+        bt.btData.lastDir = path;
+        Prefs.set( "BigTrace.lastDir", bt.btData.lastDir );
+        
         filename = path+openDial.getFileName();
      
         String [] sRoiLoadOptions = new String [] {"Clean load ROIs and groups","Append ROIs as undefined group"};	
@@ -717,7 +720,9 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
         
         if(input == null)
         	 return;
+        
         int nLoadMode;
+        
         if(input.equals("Clean load ROIs and groups"))
         {
         	nLoadMode = 0;
@@ -734,7 +739,6 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 	/** Import ROIs dialog **/
 	public void diagImportROIs()
 	{
-	
 	      
         String [] sRoiImportOptions = new String [] {"Points from TrackMate XML (Export)","Points from CSV (coming soon)"};
 		
@@ -763,13 +767,14 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 	public void diagImportTrackMate()
 	{
 		String filename;
-		OpenDialog openDial = new OpenDialog("Import TrackMate XML","", "*.xml");
+		OpenDialog openDial = new OpenDialog("Import TrackMate XML",bt.btData.lastDir, "*.xml");
 		
         String path = openDial.getDirectory();
         if (path==null)
         	return;
-        
-        filename = path+openDial.getFileName();
+        bt.btData.lastDir = path;
+        Prefs.set( "BigTrace.lastDir", bt.btData.lastDir );
+        filename = path + openDial.getFileName();
         
         String [] sTMColorOptions = new String [] {"Random color per track","Current active group color"};
 		
@@ -785,6 +790,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
         if(inputColor.isEmpty())
         	return;
         int nImportColor;
+        
         if(inputColor.equals("Random color per track"))
         {
         	nImportColor = 0;
@@ -793,11 +799,12 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
         {
         	nImportColor = 1;
         }
-        Prefs.set("BigTrace.ImportTMColorMode", nImportColor);
-		
+        
+        Prefs.set("BigTrace.ImportTMColorMode", nImportColor);		
 
        	bt.roiManager.rois = new ArrayList< >();
         bt.roiManager.listModel.clear();
+        
         ROIsImportTrackMateBG importTask = new ROIsImportTrackMateBG();
         importTask.nImportColor = nImportColor;
         importTask.sFilename = filename;

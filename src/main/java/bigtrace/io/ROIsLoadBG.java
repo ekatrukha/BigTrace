@@ -70,18 +70,14 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
     	double [] globCalNew  = new double [3];
         globCalNew[0]= Double.NaN;
         globCalNew[1]= Double.NaN;
-        globCalNew[2]= Double.NaN;
-        
-        
+        globCalNew[2]= Double.NaN;                
        
         Roi3DGroupManager<T> roiGM;
 	
         bt.bInputLock = true;
         bt.setLockMode(true);
 		try ( BufferedReader br = new BufferedReader(new FileReader(sFilename));) 
-		{
-			       
-
+		{			       
 	        String line = "";
 	        //read Groups first
 	        if(nLoadMode == 0)

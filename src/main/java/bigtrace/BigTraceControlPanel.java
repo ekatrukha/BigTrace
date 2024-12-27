@@ -13,6 +13,8 @@ import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -49,6 +51,7 @@ import bigtrace.tracks.TrackingPanel;
 import bigtrace.volume.ExtractClip;
 import bvvpg.vistools.BvvStackSource;
 import ij.Prefs;
+import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 
 import net.imglib2.FinalInterval;
@@ -90,6 +93,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	JButton butSaveView;
 	JButton butLoadView;
 	JButton butSettings;
+
 	
 	public ColorUserSettings selectColors = new ColorUserSettings();
 
@@ -165,21 +169,21 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		
 
 	    GridBagConstraints cv = new GridBagConstraints();
-	    cv.gridx=0;
-	    cv.gridy=0;	    
-	    cv.weightx=0.5;
-	    cv.weighty=1.0;
+	    cv.gridx = 0;
+	    cv.gridy = 0;	    
+	    cv.weightx = 0.5;
+	    cv.weighty = 1.0;
 	    cv.anchor = GridBagConstraints.NORTHWEST;
 	    cv.gridwidth = GridBagConstraints.REMAINDER;
 	    cv.fill = GridBagConstraints.HORIZONTAL;
 	    cv.fill = GridBagConstraints.BOTH;
 
 	    this.add(tabPane,cv);
-	    cv.gridx=0;
-	    cv.gridy=1;	    
+	    cv.gridx = 0;
+	    cv.gridy = 1;	    
 	    cv.gridwidth = GridBagConstraints.RELATIVE;
 	    cv.gridheight = GridBagConstraints.RELATIVE;
-	    cv.weighty=0.01;
+	    cv.weighty = 0.01;
 	    cv.anchor = GridBagConstraints.SOUTHEAST;
 	    cv.fill = GridBagConstraints.HORIZONTAL;
 
@@ -256,11 +260,9 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			}
 		});
 		
-		clipPanel.butExtractClipped.addActionListener(this);
-		
+		clipPanel.butExtractClipped.addActionListener(this);		
 		
 		GridBagConstraints c = new GridBagConstraints();
-
 		
 		//VIEW PANEL
 		JPanel panView = new JPanel(new GridBagLayout()); 
@@ -283,8 +285,8 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    	        }
 			}
 	    	});
-	    c.gridx=0;
-	    c.gridy=0;
+	    c.gridx = 0;
+	    c.gridy = 0;
 		panView.add(butOrigin,c);
 		
 		//BOX AROUND VOLUME
@@ -338,7 +340,6 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    c.gridx++;
 		panView.add(butSettings,c);
 		
-
 	    
 		//Render method panel
 	    JPanel panRender=new JPanel(new GridBagLayout()); 
@@ -361,10 +362,10 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    	panVoxel.setBorder(new PanelTitle(" Voxel size "));
 	    }
 		
-	    c.gridx=0;
-	    c.gridy=0;
-	    c.weightx=1.0;
-	    c.fill=GridBagConstraints.HORIZONTAL;
+	    c.gridx = 0;
+	    c.gridy = 0;
+	    c.weightx = 1.0;
+	    c.fill = GridBagConstraints.HORIZONTAL;
 	    panVoxel.add(voxelSizePanel,c);
 		
 		
@@ -372,22 +373,20 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		JPanel panClip=new JPanel(new GridBagLayout()); 
 		panClip.setBorder(new PanelTitle(" Clipping "));
 
-	    c.gridx=0;
-	    c.gridy=0;
-	    c.weightx=1.0;
-	    c.fill=GridBagConstraints.HORIZONTAL;
+	    c.gridx = 0;
+	    c.gridy = 0;
+	    c.weightx = 1.0;
+	    c.fill = GridBagConstraints.HORIZONTAL;
 	    panClip.add(clipPanel,c);
 	    
 	    
-
-
 	    //add panels to Navigation
-	    c.insets=new Insets(4,4,2,2);
+	    c.insets = new Insets(4,4,2,2);
 	    //View
-	    c.gridx=0;
-	    c.gridy=0;
-	    c.weightx=1.0;
-	    c.gridwidth=1;
+	    c.gridx = 0;
+	    c.gridy = 0;
+	    c.weightx = 1.0;
+	    c.gridwidth = 1;
 	    c.anchor = GridBagConstraints.WEST;
 	    panNavigation.add(panView,c);
 	    
@@ -430,6 +429,22 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
         ViewsIO.saveView( bt, filename );
 	}
 	
+	public void dialLoadView()
+	{
+		String filename;
+		
+
+		OpenDialog openDial = new OpenDialog("Load BigTrace ROIs",bt.btData.lastDir, "*.csv");
+		
+        String path = openDial.getDirectory();
+        if (path == null)
+        	return;
+        bt.btData.lastDir = path;
+        Prefs.set( "BigTrace.lastDir", bt.btData.lastDir );
+        filename = path + openDial.getFileName();
+        ViewsIO.loadView( bt, filename );
+	}
+	
 	
 	public void dialSettings()
 	{
@@ -439,6 +454,9 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	
 		pViewSettings.setLayout(new GridBagLayout());
 		
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		DecimalFormat df3 = new DecimalFormat ("#.#####", symbols);
 		
 		JButton butCanvasBGColor = new JButton( new ColorIcon( bt.btData.canvasBGColor ) );	
 		butCanvasBGColor.addActionListener( e -> {
@@ -470,17 +488,17 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		nfZoomBoxSize.setMaximumSize(nfZoomBoxSize.getPreferredSize());
 
 		NumberField nfZoomBoxScreenFraction = new NumberField(4);
-		nfZoomBoxScreenFraction.setText(Double.toString(bt.btData.dZoomBoxScreenFraction));
+		nfZoomBoxScreenFraction.setText(df3.format(bt.btData.dZoomBoxScreenFraction));
 		nfZoomBoxScreenFraction.setMaximumSize(nfZoomBoxScreenFraction.getPreferredSize());
 		
 		NumberField nfCamera = new NumberField(4);
-		nfCamera.setText(Double.toString(bt.btData.dCam));
+		nfCamera.setText(df3.format( bt.btData.dCam));
 		
 		NumberField nfClipNear = new NumberField(4);
-		nfClipNear.setText(Double.toString(bt.btData.dClipNear));
+		nfClipNear.setText(df3.format(bt.btData.dClipNear));
 		
 		NumberField nfClipFar = new NumberField(4);
-		nfClipFar.setText(Double.toString(bt.btData.dClipFar));
+		nfClipFar.setText(df3.format(bt.btData.dClipFar));
 	
 		cd.gridx=0;
 		cd.gridy=0;	
@@ -567,12 +585,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			tempC = selectColors.getColor(0);
 			if(tempC != null)
 			{
-				bt.btData.canvasBGColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
-				selectColors.setColor(null, 0);
-				Prefs.set("BigTrace.canvasBGColor", tempC.getRGB());
-				final Color frame = BigTraceData.getInvertedColor(tempC);
-				bt.volumeBox.setLineColor( frame );
-				bt.clipBox.setLineColor( frame.darker() );
+				setCanvasBGColor(tempC);
 			}
 			
 			bt.btData.nHalfClickSizeWindow = (int)(0.5*Integer.parseInt(nfClickArea.getText()));
@@ -591,20 +604,34 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			bt.btData.dZoomBoxScreenFraction = Double.parseDouble(nfZoomBoxScreenFraction.getText());
 			Prefs.set("BigTrace.dZoomBoxScreenFraction", bt.btData.dZoomBoxScreenFraction);
 			
-			bt.btData.dCam = Math.abs(Double.parseDouble(nfCamera.getText()));
-			bt.btData.dClipNear = Math.abs(Double.parseDouble(nfClipNear.getText()));
-			bt.btData.dClipFar = Math.abs(Double.parseDouble(nfClipFar.getText()));
-			if(bt.btData.dCam<=bt.btData.dClipNear)
-				bt.btData.dCam = bt.btData.dClipNear+1;
-			
-			Prefs.set("BigTrace.dCam", bt.btData.dCam);
-			Prefs.set("BigTrace.dClipNear", bt.btData.dClipNear);
-			Prefs.set("BigTrace.dClipFar", bt.btData.dClipFar);
-
-			bt.viewer.setCamParams(bt.btData.dCam, bt.btData.dClipNear, bt.btData.dClipFar);
+			setCameraParameters(nfCamera.getText(), nfClipNear.getText(), nfClipFar.getText());
 
 			bt.repaintBVV();
 		}
+	}
+	
+	public void setCameraParameters(String sCam, String sNear, String sFar)
+	{
+		bt.btData.dCam = Math.abs(Double.parseDouble(sCam));
+		bt.btData.dClipNear = Math.abs(Double.parseDouble(sNear));
+		bt.btData.dClipFar = Math.abs(Double.parseDouble(sFar));
+		if(bt.btData.dCam <= bt.btData.dClipNear)
+			bt.btData.dCam = bt.btData.dClipNear+1;
+		
+		Prefs.set("BigTrace.dCam", bt.btData.dCam);
+		Prefs.set("BigTrace.dClipNear", bt.btData.dClipNear);
+		Prefs.set("BigTrace.dClipFar", bt.btData.dClipFar);
+		bt.viewer.setCamParams(bt.btData.dCam, bt.btData.dClipNear, bt.btData.dClipFar);
+	}
+	
+	public void setCanvasBGColor(final Color bgColor)
+	{
+		bt.btData.canvasBGColor = new Color(bgColor.getRed(),bgColor.getGreen(),bgColor.getBlue(),bgColor.getAlpha());
+		selectColors.setColor(null, 0);
+		Prefs.set("BigTrace.canvasBGColor", bgColor.getRGB());
+		final Color frame = BigTraceData.getInvertedColor(bgColor);
+		bt.volumeBox.setLineColor( frame );
+		bt.clipBox.setLineColor( frame.darker() );
 	}
 	
 	public void extractClippedView()
@@ -896,7 +923,12 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		{
 			dialSaveView();
 		}
-
+		
+		//LOAD VIEW
+		if(e.getSource() ==  butLoadView)
+		{
+			dialLoadView();
+		}
 		//SETTINGS
 		if(e.getSource() == butSettings)
 		{
