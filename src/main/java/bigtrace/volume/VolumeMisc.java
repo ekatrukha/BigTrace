@@ -55,37 +55,37 @@ public class VolumeMisc {
 		int i, j;
 		float temp;
 		long [][] bigBox = new long[2][];
-		bigBox[0]=viewclick.minAsLongArray();
-		bigBox[1]=viewclick.maxAsLongArray();
+		bigBox[0] = viewclick.minAsLongArray();
+		bigBox[1] = viewclick.maxAsLongArray();
 		
 		for (i=0;i<ndim;i++)
 		{
-			newMinMaxF[0][i]=Float.MAX_VALUE;
-			newMinMaxF[1][i]=(-1)*Float.MAX_VALUE;
+			newMinMaxF[0][i] = Float.MAX_VALUE;
+			newMinMaxF[1][i] = (-1)*Float.MAX_VALUE;
 		}
 		for (i=0;i<pointArray.size();i++)
 		{
-			
 			for (j=0;j<ndim;j++)
 			{
-				temp=pointArray.get(i).getFloatPosition(j);
-				if(temp>newMinMaxF[1][j])
-					newMinMaxF[1][j]=temp;
-				if(temp<newMinMaxF[0][j])
-					newMinMaxF[0][j]=temp;
+				temp = pointArray.get(i).getFloatPosition(j);
+				if(temp > newMinMaxF[1][j])
+					newMinMaxF[1][j] = temp;
+				if(temp < newMinMaxF[0][j])
+					newMinMaxF[0][j] = temp;
 				
 			}			
 		}
 		for (j=0;j<ndim;j++)
 		{
-				newMinMax[0][j]=Math.max(bigBox[0][j],Math.round(newMinMaxF[0][j]));
-				newMinMax[1][j]=Math.min(bigBox[1][j],Math.round(newMinMaxF[1][j]));
-				if(newMinMax[1][j]<=newMinMax[0][j])
+				newMinMax[0][j] = Math.max(bigBox[0][j],Math.round(newMinMaxF[0][j]));
+				newMinMax[1][j] = Math.min(bigBox[1][j],Math.round(newMinMaxF[1][j]));
+				if(newMinMax[1][j] <= newMinMax[0][j])
 					return false;
 		}
 		return true;
 
 	}
+	
 	/**
 	 * Compute the location of the maximal intensity for any IterableInterval,
 	 * like an {@link Img}, contained inside Cuboid3D
@@ -138,6 +138,7 @@ public class VolumeMisc {
 		
 		return bFound;
 	}
+	
 	/** maximum intensity finding function, but without cuboid **/
 	public static < T extends Comparable< T > & Type< T > > void findMaxLocation(
 			final IterableInterval< T > input,  final RealPoint maxLocation )
@@ -189,11 +190,11 @@ public class VolumeMisc {
 			inC.fwd();
 			ouC.fwd();
 			currVal=inC.get().get();
-			if(currVal>20)
+			if(currVal > 20)
 			{
 				inRA.setPosition(inC.positionAsLongArray());
 				neibC = inRA.get().cursor();
-				isMax= true;
+				isMax = true;
 				while(neibC.hasNext())
 				{
 					neibC.fwd();
@@ -224,7 +225,6 @@ public class VolumeMisc {
 	
 	public static IntervalView<UnsignedByteType> convertFloatToUnsignedByte(RandomAccessibleInterval<FloatType> input, boolean inverse)
 	{
-
 		
 		float minVal = Float.MAX_VALUE;
 		float maxVal = -Float.MAX_VALUE;
@@ -247,9 +247,7 @@ public class VolumeMisc {
 		{
 			cvU = new RealUnsignedByteConverter<>(minVal, maxVal);
 		}
-		
-		
-		
+				
 		RandomAccessibleInterval<UnsignedByteType> inputScaled = Converters.convert(input, cvU, new UnsignedByteType());
 		
 		/*
@@ -298,7 +296,7 @@ public class VolumeMisc {
 	{
 		Shape voxShape = new RectangleShape( 1, true);
 		
-		ArrayList<long []> finList= new ArrayList<> (); 
+		ArrayList<long []> finList = new ArrayList<> (); 
 		final RandomAccessible< Neighborhood< T > > inputNeighborhoods = voxShape.neighborhoodsRandomAccessible(Views.extendZero(input) );		
 		final RandomAccess< Neighborhood< T > > inRA = inputNeighborhoods.randomAccess();
 		
@@ -312,7 +310,7 @@ public class VolumeMisc {
 		while ( inC.hasNext() )
 		{
 			inC.fwd();
-			currVal=inC.get().getRealDouble();
+			currVal = inC.get().getRealDouble();
 			if(currVal>maxVal)
 			{
 				inRA.setPosition(inC.positionAsLongArray());
@@ -321,7 +319,7 @@ public class VolumeMisc {
 				while(neibC.hasNext())
 				{
 					neibC.fwd();
-					if(neibC.get().getRealDouble()>currVal)
+					if(neibC.get().getRealDouble() > currVal)
 					{
 						isMax = false;
 						break;
@@ -354,27 +352,27 @@ public class VolumeMisc {
 		
 		long minDist = Long.MAX_VALUE;
 		long currDist,dL;
-		int indB=0;
-		int indE=0;
+		int indB = 0;
+		int indE = 0;
 		long [] pB, pE;
 		int i,j,k;
 		for (i=0;i<begCorners.size();i++)
 		{
-			pB=begCorners.get(i);
+			pB = begCorners.get(i);
 			for (j=0;j<endCorners.size();j++)
 			{
-				pE=endCorners.get(j);
-				currDist=0;
+				pE = endCorners.get(j);
+				currDist = 0;
 				for(k=0;k<pB.length;k++)
 				{
-					dL=pE[k]-pB[k];
-					currDist+=dL*dL;
+					dL = pE[k]-pB[k];
+					currDist += dL*dL;
 				}
-				if(currDist<minDist)
+				if(currDist < minDist)
 				{
-					minDist=currDist;
-					indB=i;
-					indE=j;
+					minDist = currDist;
+					indB = i;
+					indE = j;
 				}
 			}
 		}
@@ -382,6 +380,7 @@ public class VolumeMisc {
 		pair.add(endCorners.get(indE));
 		return pair;
 	}
+	
 	/** function calculates overlap between newMinMax bounding box
 	 * and provided AbstractInterval and returns it in the newMinMax.
 	 * Not sure if it handles zero overlap well, need to check. **/
@@ -389,24 +388,24 @@ public class VolumeMisc {
 	public static boolean checkBoxInside(final AbstractInterval viewclick, final long [][] newMinMax)
 	{ 
 		long [][] bigBox = new long[2][];
-		bigBox[0]=viewclick.minAsLongArray();
-		bigBox[1]=viewclick.maxAsLongArray();
+		bigBox[0] = viewclick.minAsLongArray();
+		bigBox[1] = viewclick.maxAsLongArray();
 		for (int j=0;j<3;j++)
 		{
-				newMinMax[0][j]=Math.max(bigBox[0][j],newMinMax[0][j]);
-				newMinMax[1][j]=Math.min(bigBox[1][j],newMinMax[1][j]);
-				if(newMinMax[1][j]<newMinMax[0][j])
+				newMinMax[0][j] = Math.max(bigBox[0][j],newMinMax[0][j]);
+				newMinMax[1][j] = Math.min(bigBox[1][j],newMinMax[1][j]);
+				if(newMinMax[1][j] < newMinMax[0][j])
 					return false;
 		}
 		return true;
 	}
+	
 	public static ArrayList<RealPoint> BresenhamWrap(final RealPoint RP1, final RealPoint RP2)
 	{
-		ArrayList<RealPoint> linepx= new ArrayList<>();
+		ArrayList<RealPoint> linepx = new ArrayList<>();
 		ArrayList<long []> br_line;
-		long[] lp1, lp2;
-		Point P1, P2;
-		RealPoint lineRP;
+		final long[] lp1, lp2;
+		
 		int nDim = RP1.numDimensions();
 		int i;
 		
@@ -418,21 +417,19 @@ public class VolumeMisc {
 			lp2[i] = Math.round(RP2.getFloatPosition(i));
 		}
 			
-		P1= new Point(lp1);
-		P2= new Point(lp2);
+		final Point P1 = new Point(lp1);
+		final Point P2 = new Point(lp2);
 
 		br_line = BresenhamLine.generateCoords(P1, P2);
 		for(i=0;i<br_line.size();i++)
 		{
-			lineRP = new RealPoint(nDim);
+			RealPoint lineRP = new RealPoint(nDim);
 			lineRP.setPosition(br_line.get(i));
 			linepx.add(lineRP);
 		}
 
 		return linepx;
 	}
-	
-
 	
 	public static FinalInterval RealIntervaltoInterval (RealInterval R_Int)	
 	{
@@ -442,14 +439,14 @@ public class VolumeMisc {
 		long [] maxL = new long [d];
 		double [] minR = new double [d];
 		double [] maxR = new double [d];
-		R_Int.realMax(maxR);
-		R_Int.realMin(minR);
+		R_Int.realMax( maxR );
+		R_Int.realMin( minR );
 		for (i=0;i<d;i++)
 		{
-			minL[i]=(int)Math.round(minR[i]);
-			maxL[i]=(int)Math.round(maxR[i]);			
+			minL[i]=(int)Math.round( minR[i] );
+			maxL[i]=(int)Math.round( maxR[i] );			
 		}
-		return new FinalInterval(minL, maxL);
+		return new FinalInterval( minL, maxL );
 	}
 	
 	/** assume the input image format is in XYZTC **/
@@ -458,7 +455,7 @@ public class VolumeMisc {
 		ImagePlus outIP;// = ImageJFunctions.wrap(img,sTitle);
 		
 		//just a 3D volume
-		if(img.numDimensions()==3)
+		if(img.numDimensions() == 3)
 		{
 			outIP = ImageJFunctions.wrap(img,sTitle);
 			outIP.setDimensions(1, (int)img.dimension(2), 1);		
@@ -495,8 +492,43 @@ public class VolumeMisc {
 		return outIP;
 		//outIP.show();
 	}
+	
 	public static double clamp(double value, double min, double max) {
 	    return Math.max(min, Math.min(max, value));
+	}
+	
+	/** gets a box around "target" with half size of range in all axes.
+	crops the box so it is inside viewclick interval **/
+	public static FinalInterval getTraceBoxCentered(final AbstractInterval viewclick, final long range, final RealPoint target)
+	{
+		long[][] rangeM = new long[2][3];
+		int i;
+		float [] pos = new float[3];
+		target.localize(pos);
+		for(i=0;i<3;i++)
+		{
+			rangeM[0][i] = (long)(pos[i])-range ;
+			rangeM[1][i] = (long)(pos[i])+range;								
+		}
+		VolumeMisc.checkBoxInside(viewclick, rangeM);
+		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
+		return finInt;							
+	}
+
+	//gets a box around "target" with half size of range
+	public static FinalInterval getZoomBoxCentered(final long range, final RealPoint target)
+	{
+		long[][] rangeM = new long[2][3];
+		int i;
+		float [] pos = new float[3];
+		target.localize(pos);
+		for(i=0;i<3;i++)
+		{
+			rangeM[0][i] = (long)(pos[i])-range ;
+			rangeM[1][i] = (long)(pos[i])+range;								
+		}
+		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
+		return finInt;							
 	}
 	
 }

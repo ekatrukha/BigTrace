@@ -281,7 +281,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 			
 				});
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pOneCLick.add(new JLabel("Minimum intensity: "),cd);
 		cd.gridx++;
@@ -388,37 +388,37 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		
 		
 		
-		cd.gridx=0;
-		cd.gridy=0;
+		cd.gridx = 0;
+		cd.gridy = 0;
 		GBCHelper.alighLoose(cd);
 		pROIrender.add(new JLabel("Selected ROI point color: "),cd);
 		cd.gridx++;
 		pROIrender.add(butPointActiveColor,cd);
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pROIrender.add(new JLabel("Selected ROI line color: "),cd);
 		cd.gridx++;
 		pROIrender.add(butLineActiveColor,cd);
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pROIrender.add(new JLabel("Clip volume on ROI double-click: "),cd);
 		cd.gridx++;
 		pROIrender.add(cbRoiDoubleClickClip,cd);
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pROIrender.add(new JLabel("Expand clipping by (voxels): "),cd);
 		cd.gridx++;
 		pROIrender.add(nfRoiDoubleClickExpand,cd);
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pROIrender.add(new JLabel("ROI Shape interpolation: "),cd);
 		cd.gridx++;
 		pROIrender.add(shapeInterpolationList,cd);	
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pROIrender.add(new JLabel("Trace smoothing window (points): "),cd);
 		cd.gridx++;
@@ -427,21 +427,21 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 
 		if(BigTraceData.nNumTimepoints > 1)
 		{
-			cd.gridx=0;
+			cd.gridx = 0;
 			cd.gridy++;
-			cd.gridwidth=2;
+			cd.gridwidth = 2;
 			cd.anchor = GridBagConstraints.CENTER;
 			pROIrender.add(new JLabel("<html>----  <B>Time</B>  ----</html>"),cd);
 			cd.gridwidth=1;
 			cd.anchor = GridBagConstraints.WEST;
 			
 			
-			cd.gridx=0;
+			cd.gridx = 0;
 			cd.gridy++;
 			pROIrender.add(new JLabel("Show ROIs over time: "),cd);
 			cd.gridx++;
 			pROIrender.add(sTimeRenderROIsList,cd);
-			cd.gridx=0;
+			cd.gridx = 0;
 			cd.gridy++;
 			pROIrender.add(new JLabel("Time fade range (frames): "),cd);
 			cd.gridx++;
@@ -473,54 +473,54 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		NumberField nfSilhouetteDecay = new NumberField(4);
 		nfSilhouetteDecay.setText(df.format(BigTraceData.silhouetteDecay));
 		
-		cd.gridx=0;
-		cd.gridy=0;
+		cd.gridx = 0;
+		cd.gridy = 0;
 		pROIsurface.add(new JLabel("# edges at curve cross-section:"),cd);
 		cd.gridx++;
 		pROIsurface.add(nfSectorNLines,cd);
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
-		cd.gridwidth=2;
+		cd.gridwidth = 2;
 		cd.anchor = GridBagConstraints.CENTER;
 		pROIsurface.add(new JLabel("<html>----  <B>Wire</B> mode  ----</html>"),cd);
-		cd.gridwidth=1;
+		cd.gridwidth = 1;
 		cd.anchor = GridBagConstraints.WEST;
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pROIsurface.add(new JLabel("Use anti-aliased lines :"),cd);
 		cd.gridx++;
 		pROIsurface.add(cbWireAA,cd);
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pROIsurface.add(new JLabel("Distance between curve contours (px):"),cd);
 		cd.gridx++;
 		pROIsurface.add(nfWireContourStep,cd);
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pROIsurface.add(new JLabel("Plane/cross-section ROI grid step (px): "),cd);
 		cd.gridx++;
 		pROIsurface.add(nfCrossSectionGridStep,cd);
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
-		cd.gridwidth=2;
+		cd.gridwidth = 2;
 		cd.anchor = GridBagConstraints.CENTER;
 		pROIsurface.add(new JLabel("<html>----  <B>Silhouette</B> surface ----</html>"),cd);
 		cd.gridwidth=1;
 		cd.anchor = GridBagConstraints.WEST;
 	
 		
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pROIsurface.add(new JLabel("Silhouette render:"),cd);
 		cd.gridx++;
 		pROIsurface.add(sSilhouetteRenderList,cd);	
 		
-		cd.gridx=0;		
+		cd.gridx = 0;		
 		cd.gridy++;
 		pROIsurface.add(new JLabel("Silhouette decay: "),cd);
 		cd.gridx++;
@@ -684,16 +684,15 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
         if (path == null)
         	return;
         filename = path + sd.getFileName();
+        
         bt.setLockMode(true);
         bt.bInputLock = true;
         
-        //this.setLockMode(true);
         ROIsSaveBG<T> saveTask = new ROIsSaveBG<>();
         saveTask.sFilename = filename;
         saveTask.bt = this.bt;
         saveTask.addPropertyChangeListener(bt.btPanel);
         saveTask.execute();
-        //this.setLockMode(false);
 	}
 	
 	
@@ -731,6 +730,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
         Prefs.set("BigTrace.LoadRoisMode", nLoadMode);
         bt.roiManager.loadROIs(filename, nLoadMode);        
 	}
+    
 	/** Import ROIs dialog **/
 	public void diagImportROIs()
 	{

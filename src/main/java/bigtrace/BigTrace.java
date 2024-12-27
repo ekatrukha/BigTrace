@@ -1,8 +1,8 @@
 package bigtrace;
 
 import java.awt.Color;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -29,7 +29,6 @@ import ij.macro.MacroExtension;
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
-import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
@@ -43,18 +42,14 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
-import bdv.tools.InitializeViewerState;
 import bdv.tools.transformation.TransformedSource;
-import bdv.util.Bounds;
-import bdv.viewer.Source;
+
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.TimePointListener;
-import bdv.viewer.ViewerState;
 
 import bvvpg.vistools.BvvFunctions;
 import bvvpg.vistools.BvvHandleFrame;
@@ -83,7 +78,7 @@ import bigtrace.scene.VisPolyLineAA;
 import bigtrace.volume.VolumeMisc;
 
 
-public class BigTrace < T extends RealType< T > & NativeType< T > > implements PlugIn, MacroExtension, WindowListener, TimePointListener
+public class BigTrace < T extends RealType< T > & NativeType< T > > implements PlugIn, MacroExtension, TimePointListener
 {
 	/** main instance of BVV **/
 	public  BvvStackSource< ? > bvv_main = null;
@@ -319,12 +314,10 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		btPanel = new BigTraceControlPanel<>(this, btData,roiManager);
 		btPanel.finFrame = new JFrame("BigTrace");
 		btPanel.finFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
 		
 		bvvFrame = ((BvvHandleFrame)bvv_main.getBvvHandle()).getBigVolumeViewer().getViewerFrame();
 		
 		bvvFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
 
 		btPanel.finFrame.add(btPanel);
 		
@@ -334,16 +327,29 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	    java.awt.Point bvv_p = bvvFrame.getLocationOnScreen();
 	    java.awt.Dimension bvv_d = bvvFrame.getSize();
 	
-	    btPanel.finFrame.setLocation(bvv_p.x+bvv_d.width, bvv_p.y);
-	    btPanel.finFrame.addWindowListener(this);
-	    bvvFrame.addWindowListener(this);
-
-
+	    btPanel.finFrame.setLocation(bvv_p.x + bvv_d.width, bvv_p.y);
+	   
+	    final WindowAdapter closeWA = new WindowAdapter()
+		{
+			@Override
+			public void windowClosing( WindowEvent ev )
+			{
+				closeWindows();
+			}
+		};
+		
+	    btPanel.finFrame.addWindowListener( closeWA );
+	    bvvFrame.addWindowListener(	closeWA);
 		bInputLock = false;
 	}
+		
+	public void closeWindows()
+	{
+		viewer.stop();
+		bvvFrame.dispose();		
+		btPanel.finFrame.dispose();
+	}
 	
-	
-
 	public void focusOnInterval(Interval interval_in)
 	{
 		if(!bInputLock && !bTraceMode)
@@ -364,9 +370,9 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		
 		traceIV = getTraceInterval(btData.bTraceOnlyClipped);
 		
-		if(trace.numVertices()==1)
+		if(trace.numVertices() == 1)
 		{
-			rangeTraceBox = getTraceBoxCentered(traceIV,btData.lTraceBoxSize, trace.vertices.get(0));
+			rangeTraceBox = VolumeMisc.getTraceBoxCentered(traceIV,btData.lTraceBoxSize, trace.vertices.get(0));
 		}
 		else
 		{
@@ -455,7 +461,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		 	 //keep it on
 		 	 roiManager.butShowAll.setEnabled(true);
 	}
-	/** calculate optimal path **/
+	
+	/** turn on Trace Box mode **/
 	public void getSemiAutoTrace(RealPoint target)
 	{
 		
@@ -480,39 +487,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		}
 	}
 
-	/** gets a box around "target" with half size of range in all axes.
-		crops the box so it is inside viewclick interval **/
-	public FinalInterval getTraceBoxCentered(final AbstractInterval viewclick, final long range, final RealPoint target)
-	{
-		long[][] rangeM = new long[2][3];
-		int i;
-		float [] pos = new float[3];
-		target.localize(pos);
-		for(i=0;i<3;i++)
-		{
-			rangeM[0][i]=(long)(pos[i])-range ;
-			rangeM[1][i]=(long)(pos[i])+range;								
-		}
-		VolumeMisc.checkBoxInside(viewclick, rangeM);
-		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
-		return finInt;							
-	}
-	
-	//gets a box around "target" with half size of range
-	public FinalInterval getZoomBoxCentered(final long range, final RealPoint target)
-	{
-		long[][] rangeM = new long[2][3];
-		int i;
-		float [] pos = new float[3];
-		target.localize(pos);
-		for(i=0;i<3;i++)
-		{
-			rangeM[0][i]=(long)(pos[i])-range ;
-			rangeM[1][i]=(long)(pos[i])+range;								
-		}
-		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
-		return finInt;							
-	}
 	
 	//gets a box around "target" with half size of range
 	public FinalInterval getTraceBoxNext(final IntervalView< ? > viewclick, final long range, final float fFollowDegree, LineTrace3D trace)
@@ -894,7 +868,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		}
 		transformTranslation.identity();
 		transformTranslation.translate(shiftTR);
-
 
 		// Remove voxel scale for all sources.
 		// We needed it, because later voxel size transform is applied to the general ViewerPanel.
@@ -1402,109 +1375,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		//System.out.println("al2:"+Integer.toString(foundMaxPosition.getIntPosition(0))+" "+Integer.toString(foundMaxPosition.getIntPosition(1))+" "+Integer.toString(foundMaxPosition.getIntPosition(2)));
 		
 		return true;	
-	}
-	/** find click location in 3D when using maximum intensity render **/
-	@Deprecated
-	public <X extends RealType< X >>boolean findPointLocationMaxIntensityOLD(final IntervalView< X > viewclick, java.awt.Point point_mouse, final RealPoint target)
-	{
-		int i,j;
-		//check if mouse position it is inside bvv window
-		//java.awt.Rectangle windowBVVbounds = btpanel.bvv_frame.getContentPane().getBounds();		
-		//System.out.println( "click x = [" + point_mouse.x + "], y = [" + point_mouse.y + "]" );
-			
-		final int nHalfWindowSize = btData.nHalfClickSizeWindow;
-		//get perspective matrix:
-		AffineTransform3D transform = new AffineTransform3D();
-		viewer.state().getViewerTransform(transform);
-		int sW = viewer.getWidth();
-		int sH = viewer.getHeight();
-		Matrix4f matPerspWorld = new Matrix4f();
-		MatrixMath.screenPerspective( btData.dCam, btData.dClipNear, btData.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
-		
-		
-		ArrayList<RealPoint> clickFrustum = new ArrayList<> ();
-		Vector3f temp = new Vector3f(); 
-		
-		//float [] zVals = new float []{0.0f,1.0f,1.0f,0.0f,0.0f,1.0f,1.0f,0.0f};
-		for (i = -nHalfWindowSize;i<3*nHalfWindowSize;i+=2*nHalfWindowSize)
-			for (j = -nHalfWindowSize;j<3*nHalfWindowSize;j+=2*nHalfWindowSize)
-				for (int z =0 ; z<2; z++)
-				{
-					//take coordinates in original data volume space
-					matPerspWorld.unproject((float)point_mouse.x+i,sH-(float)point_mouse.y+j,z, //z=1 ->far from camera z=0 -> close to camera
-							new int[] { 0, 0, sW, sH },temp);
-					//persp.unproject((float)point_mouse.x+i,sH-(float)point_mouse.y+j,zVals[nCount+1], //z=1 ->far from camera z=0 -> close to camera
-					//new int[] { 0, 0, sW, sH },temp);
-
-					clickFrustum.add(new RealPoint(temp.x,temp.y,temp.z));
-					
-				}
-		//build lines (rays)
-		ArrayList<Line3D> frustumLines = new ArrayList<>();
-		for(i =0;i<clickFrustum.size();i+=2)
-		{
-			frustumLines.add(new Line3D(clickFrustum.get(i),clickFrustum.get(i+1)));
-		}
-		
-		/*
-		// original lines (rays)
-		for(i =0;i<clickFrustum.size();i+=2)
-		{
-			traces.addNewLine();
-			traces.addPointToActive(clickFrustum.get(i));
-			traces.addPointToActive(clickFrustum.get(i+1));
-		}
-		*/
-		
-		//current dataset
-		Cuboid3D dataCube = new Cuboid3D(viewclick); 
-		dataCube.iniFaces();
-		ArrayList<RealPoint> intersectionPoints = Intersections3D.cuboidLinesIntersect(dataCube, frustumLines);
-		// Lines(rays) truncated to the volume.
-		// For now, all of them must contained inside datacube.
-		
-		if(intersectionPoints.size()==8)
-		{
-			btPanel.progressBar.setString("click point found");
-	/*
-			for(i =0;i<intersectionPoints.size();i++)
-			{
-				Point3D point = new Point3D(roiManager.groups.get(0));
-				point.setVertex(intersectionPoints.get(i));
-				point.setGroupInd(0);
-				roiManager.addRoi(point);
-			}
-			*/
-		}		
-		else
-		{
-			btPanel.progressBar.setString("cannot find clicked point");
-			//System.out.println( "#intersection points " + intersectionPoints.size());
-			return false;
-		}
-		long [][] nClickMinMax = new long[2][3];
-		
-		if(VolumeMisc.newBoundBox(viewclick, intersectionPoints, nClickMinMax))
-		{
-
-			IntervalView< X > intRay = Views.interval(viewclick, Intervals.createMinMax(nClickMinMax[0][0],nClickMinMax[0][1],nClickMinMax[0][2],
-																								   nClickMinMax[1][0],nClickMinMax[1][1],nClickMinMax[1][2]));
-			Cuboid3D clickVolume = new Cuboid3D(clickFrustum);
-			clickVolume.iniFaces();
-			RealPoint target_found = new RealPoint( 3 );
-			
-			if(VolumeMisc.findMaxLocationCuboid(intRay,target_found,clickVolume))
-			{
-				btPanel.progressBar.setString("click point found");
-				target.setPosition(target_found);
-				return true;
-			}
-			btPanel.progressBar.setString("cannot find clicked point");
-			return false;					
-		}
-		return false;	
-	}
-	
+	}	
 	
 	@Override
 	public void timePointChanged(int timePointIndex) 
@@ -1557,73 +1428,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		}
 		btPanel.clipPanel.setBoundingBox( scene.getClipBox());
 	} 
- 
-
-	@Override
-	public void windowActivated(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-		//System.out.println("yay1");
-	}
-
-	@Override
-	public void windowClosed(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-		//System.out.println("yay");
-	}
-
-	@Override
-	public void windowClosing(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-		closeWindows();
-	}
-
-	@Override
-	public void windowDeactivated(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-		//System.out.println("yay3");
-	}
-
-	@Override
-	public void windowDeiconified(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-		//System.out.println("yay4");
-	}
-
-	@Override
-	public void windowIconified(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-		//System.out.println("yay5");
-	}
-
-	@Override
-	public void windowOpened(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-		//System.out.println("yay6");
-	}
-
-	
-	public void closeWindows()
-	{
-		viewer.stop();
-		bvvFrame.dispose();		
-		btPanel.finFrame.dispose();
-	}
-	
-	public static double [] initBrightnessBVV( final double cumulativeMinCutoff, final double cumulativeMaxCutoff, final ViewerState state )
-	{
-		final SourceAndConverter< ? > current = state.getCurrentSource();
-		if ( current == null )
-			return null;
-		final Source< ? > source = current.getSpimSource();
-		final int timepoint = state.getCurrentTimepoint();
-		final Bounds bounds = InitializeViewerState.estimateSourceRange( source, timepoint, cumulativeMinCutoff, cumulativeMaxCutoff );
-		double [] out = new double [2];
-		out[0]=bounds.getMinBound();
-		out[1]=bounds.getMaxBound();
-		return out;
-
-	}
-
+ 		
 	
 	@Override
 	public ExtensionDescriptor[] getExtensionFunctions() {

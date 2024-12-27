@@ -443,7 +443,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		JButton butCanvasBGColor = new JButton( new ColorIcon( bt.btData.canvasBGColor ) );	
 		butCanvasBGColor.addActionListener( e -> {
 			Color newColor = JColorChooser.showDialog(bt.btPanel.finFrame, "Choose background color", bt.btData.canvasBGColor );
-			if (newColor!=null)
+			if (newColor != null)
 			{
 				selectColors.setColor(newColor, 0);
 
@@ -565,7 +565,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			Color tempC;
 			
 			tempC = selectColors.getColor(0);
-			if(tempC!=null)
+			if(tempC != null)
 			{
 				bt.btData.canvasBGColor = new Color(tempC.getRed(),tempC.getGreen(),tempC.getBlue(),tempC.getAlpha());
 				selectColors.setColor(null, 0);

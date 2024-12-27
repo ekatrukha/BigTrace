@@ -112,10 +112,10 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	public double dCam = Prefs.get("BigTrace.dCam",2000.0);
 	
 	/** near clip plane position for BVV **/
-	double dClipNear = Prefs.get("BigTrace.dClipNear",1000.0);
+	public double dClipNear = Prefs.get("BigTrace.dClipNear",1000.0);
 	
 	/** far clip plane position for BVV  **/
-	double dClipFar = Prefs.get("BigTrace.dClipFar",1000.0);
+	public double dClipFar = Prefs.get("BigTrace.dClipFar",1000.0);
 	
 	public static RenderSettings renderParams = new RenderSettings();	
 	

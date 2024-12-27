@@ -1,5 +1,6 @@
 package bigtrace.animation;
 
+import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -100,6 +101,37 @@ public class Scene
 			exc.printStackTrace();
 		}
 		
+	}
+	
+	public void load(final BufferedReader br) throws IOException
+	{
+		String[] line_array;
+		String line;
+		//time frame
+		line = br.readLine();
+		line_array = line.split(",");
+		this.setTimeFrame(  Integer.parseInt( line_array[1] ) );
+		//ViewTransform
+		line = br.readLine();
+		line_array = line.split(",");
+		final double [] transform = new double [12];
+		for(int m=0;m<12;m++)
+		{
+			transform[m] = Double.parseDouble( line_array[m+1] );
+		}
+		this.setViewerTransform( transform );
+		long[][] clipBoxIO = new long [2][3];
+		//ClipBox min/max
+		for (int ind =0; ind<2; ind++)
+		{
+			line = br.readLine();
+			line_array = line.split(",");
+			for (int m = 0; m<3; m++)
+			{
+				clipBoxIO[ind][m] = Long.parseLong( line_array[m+1] );
+			}
+		}
+		this.setClipBox( clipBoxIO );
 	}
 }
 	
