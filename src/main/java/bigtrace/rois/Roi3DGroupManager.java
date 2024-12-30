@@ -248,7 +248,7 @@ public class Roi3DGroupManager < T extends RealType< T > & NativeType< T > > imp
 			{
 				for (int i=0;i<nTotRois;i++)
 				{
-					int nIndex = Math.round( i*(nMapSize-1)/(nTotRois-1) );
+					int nIndex = ( int ) Math.round( (i+0.5)*(nMapSize-1)/(nTotRois) );
 					Color newColor = new Color(icm.getRed( nIndex ),icm.getGreen( nIndex ),icm.getBlue( nIndex ),255);
 					groupROI.get( i ).setLineColor( newColor );
 				}

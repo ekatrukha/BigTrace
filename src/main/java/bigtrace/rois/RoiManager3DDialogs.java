@@ -676,7 +676,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		String [] sRoiSaveOptions = new String [] {"Save ROIs BigTrace format","Export interpolated traces CSV", "Export neurite SWC"};	
 
 		String output = (String) JOptionPane.showInputDialog(bt.roiManager, "Save/export ROIs",
-				"Load mode:", JOptionPane.QUESTION_MESSAGE, null,
+				"Save mode:", JOptionPane.QUESTION_MESSAGE, null,
 				sRoiSaveOptions, // Array of choices
 				sRoiSaveOptions[(int)Prefs.get("BigTrace.SaveRoisMode", 0)]);
 		if(output == null)
