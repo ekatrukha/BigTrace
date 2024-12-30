@@ -23,6 +23,8 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
+import bigtrace.io.ROIsExportCSV;
+import bigtrace.io.ROIsExportSWC;
 import bigtrace.io.ROIsImportTrackMateBG;
 import bigtrace.io.ROIsSaveBG;
 import ij.Prefs;
@@ -676,23 +678,85 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 	/** Save ROIS dialog and saving **/
 	public void diagSaveROIs()
 	{
-		String filename;
 		
-		filename = bt.btData.sFileNameFullImg + "_btrois";
-		SaveDialog sd = new SaveDialog("Save ROIs ", filename, ".csv");
-        String path = sd.getDirectory();
-        if (path == null)
-        	return;
-        filename = path + sd.getFileName();
+		String [] sRoiSaveOptions = new String [] {"Save ROIs BigTrace format","Export interpolated traces CSV", "Export neurite SWC"};	
+
+		String output = (String) JOptionPane.showInputDialog(bt.roiManager, "Save/export ROIs",
+				"Load mode:", JOptionPane.QUESTION_MESSAGE, null,
+				sRoiSaveOptions, // Array of choices
+				sRoiSaveOptions[(int)Prefs.get("BigTrace.SaveRoisMode", 0)]);
+		if(output == null)
+			return;
+
+		int nSaveMode = 0;
+
+		for (int i=0;i<3; i++)
+		{
+			if(output.equals( sRoiSaveOptions[i] ))
+			{
+				nSaveMode = i;
+			}
+		}
+        Prefs.set("BigTrace.SaveRoisMode", nSaveMode);
+
         
-        bt.setLockMode(true);
-        bt.bInputLock = true;
-        
-        ROIsSaveBG<T> saveTask = new ROIsSaveBG<>();
-        saveTask.sFilename = filename;
-        saveTask.bt = this.bt;
-        saveTask.addPropertyChangeListener(bt.btPanel);
-        saveTask.execute();
+		String filename;
+		SaveDialog sd;
+		String path;
+		switch (nSaveMode)
+		{
+		case 0: 
+			filename = bt.btData.sFileNameFullImg + "_btrois";
+			sd = new SaveDialog("Save ROIs ", filename, ".csv");
+			path = sd.getDirectory();
+			if (path == null)
+				return;
+			filename = path + sd.getFileName();
+
+			bt.setLockMode(true);
+			bt.bInputLock = true;
+
+			ROIsSaveBG<T> saveTask = new ROIsSaveBG<>();
+			saveTask.sFilename = filename;
+			saveTask.bt = this.bt;
+			saveTask.addPropertyChangeListener(bt.btPanel);
+			saveTask.execute();
+			break;
+		case 1: 
+			filename = bt.btData.sFileNameFullImg + "_traces";
+			sd = new SaveDialog("Export ROIs ", filename, ".csv");
+			path = sd.getDirectory();
+			if (path == null)
+				return;
+			filename = path + sd.getFileName();
+
+			bt.setLockMode(true);
+			bt.bInputLock = true;
+
+			ROIsExportCSV<T> exportTask = new ROIsExportCSV<>();
+			exportTask.sFilename = filename;
+			exportTask.bt = this.bt;
+			exportTask.addPropertyChangeListener(bt.btPanel);
+			exportTask.execute();
+			break;
+		case 2: 
+			filename = bt.btData.sFileNameFullImg + "_traces";
+			sd = new SaveDialog("Export ROIs to SWC ", filename, ".swc");
+			path = sd.getDirectory();
+			if (path == null)
+				return;
+			filename = path + sd.getFileName();
+
+			bt.setLockMode(true);
+			bt.bInputLock = true;
+
+			ROIsExportSWC<T> exportSWCTask = new ROIsExportSWC<>();
+			exportSWCTask.sFilename = filename;
+			exportSWCTask.bt = this.bt;
+			exportSWCTask.addPropertyChangeListener(bt.btPanel);
+			exportSWCTask.execute();
+			break;
+		}
 	}
 	
 	
@@ -721,13 +785,9 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
         if(input == null)
         	 return;
         
-        int nLoadMode;
+        int nLoadMode = 0;
         
-        if(input.equals("Clean load ROIs and groups"))
-        {
-        	nLoadMode = 0;
-        }
-        else
+        if(input.equals(sRoiLoadOptions[1]))
         {
         	nLoadMode = 1;
         }

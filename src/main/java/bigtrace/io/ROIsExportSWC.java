@@ -5,20 +5,23 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
 
 import javax.swing.SwingWorker;
+
+import net.imglib2.RealPoint;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
-import bigtrace.rois.Roi3DGroupManager;
+import bigtrace.rois.AbstractCurve3D;
+
 import ij.IJ;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
 
-public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
+public class ROIsExportSWC< T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
-
 	private String progressState;
 	public BigTrace<T> bt;
 	public String sFilename;
@@ -41,45 +44,59 @@ public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends Sw
 		bt.bInputLock = true;
     	bt.setLockMode(true);
     	
-    	//get the group manager to save groups
-    	Roi3DGroupManager<T> roiGM = new Roi3DGroupManager<>(bt.roiManager);
-    	
         try {
 			final File file = new File(sFilename);
 			
 			try (FileWriter writer = new FileWriter(file))
 			{
-				setProgressState("saving Groups...");
-				roiGM.saveGroups(writer);
-				setProgressState("saving ROIs...");
 				DecimalFormatSymbols symbols = new DecimalFormatSymbols();
 				symbols.setDecimalSeparator('.');
 				DecimalFormat df3 = new DecimalFormat ("#.#####", symbols);
-				
-				writer.write("BigTrace_ROIs,version," + BigTraceData.sVersion + "\n");
-				writer.write("ImageUnits,"+bt.btData.sVoxelUnit+"\n");
-				writer.write("ImageVoxelWidth," + df3.format(BigTraceData.globCal[0]) + "\n");
-				writer.write("ImageVoxelHeight," + df3.format(BigTraceData.globCal[1]) + "\n");
-				writer.write("ImageVoxelDepth," + df3.format(BigTraceData.globCal[2]) + "\n");
-				writer.write("TimeUnits," + bt.btData.sTimeUnit + "\n");
-				writer.write("FrameInterval," + df3.format(bt.btData.dFrameInterval) + "\n");
 				nRoiN = bt.roiManager.rois.size();
-				writer.write("ROIsNumber," + Integer.toString(nRoiN)+"\n");
-				for(nRoi=0;nRoi<nRoiN;nRoi++)
+				long nPointCount = 1;
+				//int nCurrActivePoint;
+				String sRadius;
+				writer.write("#raw "+ bt.btData.sFileNameFullImg+"\n");
+				writer.write("#original_source BigTrace_ver_" +BigTraceData.sVersion+"\n");
+				for(nRoi=0; nRoi<nRoiN; nRoi++)
 				{
+					
 					  //Sleep for up to one second.
 					try {
 						Thread.sleep(1);
 					} catch (InterruptedException ignore) {}
 					setProgress(nRoi*100/nRoiN);
-					writer.write("BT_Roi,"+Integer.toString(nRoi+1)+"\n");
-					bt.roiManager.rois.get(nRoi).saveRoi(writer);
+					if(bt.roiManager.rois.get( nRoi ) instanceof AbstractCurve3D)
+					{						
+						AbstractCurve3D currRoi = ((AbstractCurve3D)bt.roiManager.rois.get( nRoi ));
+						sRadius = df3.format( currRoi.getLineThickness()*0.5*BigTraceData.dMinVoxelSize);
+						ArrayList< RealPoint > points = currRoi.getJointSegmentResampled();
+						for(int nP=0; nP<points.size(); nP++)
+						{
+							writer.write( Long.toString( nPointCount ) +" 0 " );
+							for (int d=0;d<3;d++)
+							{
+								writer.write( df3.format(points.get( nP ).getDoublePosition( d ) ) +" " );								
+							}
+							writer.write( sRadius + " ");
+							if(nP == 0)
+							{
+								writer.write( "-1 \n");
+								
+							}
+							else
+							{
+								writer.write( Long.toString( nPointCount-1 ) + " \n");
+							}							
+							nPointCount++;
+						}
+					}
+
 				}
-				writer.write("End of BigTrace ROIs\n");
 				writer.close();
 			}
 			setProgress(100);
-			setProgressState("saving ROIs done.");
+			setProgressState("exporting curve ROIs done.");
 		} catch (IOException e) {	
 			IJ.log(e.getMessage());
 			//e.printStackTrace();
@@ -96,6 +113,8 @@ public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends Sw
     	bt.bInputLock = false;
     	bt.setLockMode(false);
 		setProgress(100);
-		setProgressState("saving ROIs done.");
+		setProgressState("export traces to SWC done.");
     }
+
+
 }
