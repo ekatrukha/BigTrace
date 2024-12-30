@@ -70,7 +70,19 @@ public class ViewsIO
 				writer.write("wireAntiAliasing,"+Integer.toString( BigTraceData.wireAntiAliasing ? 1 : 0)+"\n");
 				writer.write("timeRender,"+Integer.toString( BigTraceData.timeRender )+"\n");
 				writer.write("timeFade,"+Integer.toString( BigTraceData.timeFade )+"\n");
-
+				//tracing parameters
+				writer.write("nTraceBoxSize,"+Integer.toString( bt.btData.nTraceBoxSize )+"\n");
+				writer.write("fTraceBoxScreenFraction,"+df3.format(bt.btData.fTraceBoxScreenFraction)+"\n");
+				writer.write("fTraceBoxAdvanceFraction,"+df3.format(bt.btData.fTraceBoxAdvanceFraction)+"\n");
+				writer.write("nVertexPlacementPointN,"+Integer.toString( bt.btData.nVertexPlacementPointN )+"\n");
+				writer.write("dDirectionalityOneClick,"+df3.format(bt.btData.dDirectionalityOneClick)+"\n");
+				writer.write("bOCIntensityStop,"+Integer.toString(bt.btData.bOCIntensityStop ? 1 : 0)+"\n");
+				writer.write("dOCIntensityThreshold,"+df3.format(bt.btData.dOCIntensityThreshold)+"\n");
+				for (int d=0;d<3;d++)
+				{
+					writer.write("Trace sigma,"+Integer.toString( d )+ ","+ df3.format(bt.btData.sigmaTrace[d])+"\n");					
+				}
+				
 				writer.write("Scene, current\n");
 				bt.getCurrentScene().save( writer );
 				int nSourcesN = bt.bvv_sources.size();
@@ -145,6 +157,8 @@ public class ViewsIO
         bt.bInputLock = true;
         bt.setLockMode(true);
         int nSourcesN = bt.bvv_sources.size();
+        
+        String [] sigmaTraceName = new String [] {"sigmaTraceX", "sigmaTraceY", "sigmaTraceZ"};
 		try ( BufferedReader br = new BufferedReader(new FileReader(sFilename));) 
 		{			       
 			String line = "";
@@ -265,6 +279,40 @@ public class ViewsIO
 					BigTraceData.timeFade = Integer.parseInt( line_array[1] );
 					Prefs.set("BigTrace.timeFade", BigTraceData.timeFade);
 					break;
+				case "nTraceBoxSize":
+					bt.btData.nTraceBoxSize = Integer.parseInt( line_array[1] );
+					Prefs.set("BigTrace.nTraceBoxSize", bt.btData.nTraceBoxSize);
+					break;	
+				case "fTraceBoxScreenFraction":
+					bt.btData.fTraceBoxScreenFraction = Float.parseFloat( line_array[1] );
+					Prefs.set("BigTrace.fTraceBoxScreenFraction", bt.btData.fTraceBoxScreenFraction);
+					break;	
+				case "fTraceBoxAdvanceFraction":
+					bt.btData.fTraceBoxAdvanceFraction = Float.parseFloat( line_array[1] );
+					Prefs.set("BigTrace.fTraceBoxAdvanceFraction", bt.btData.fTraceBoxAdvanceFraction);
+					break;						
+				case "nVertexPlacementPointN":
+					bt.btData.nVertexPlacementPointN = Integer.parseInt( line_array[1] );
+					Prefs.set("BigTrace.nVertexPlacementPointN", bt.btData.nVertexPlacementPointN);
+					break;	
+				case "dDirectionalityOneClick":
+					bt.btData.dDirectionalityOneClick = Double.parseDouble( line_array[1] );
+					Prefs.set("BigTrace.dDirectionalityOneClick", bt.btData.dDirectionalityOneClick);
+					break;					
+				case "bOCIntensityStop":
+					bt.btData.bOCIntensityStop = line_array[1].equals( "1" )? true : false;
+					Prefs.set("BigTrace.bOCIntensityStop", bt.btData.bOCIntensityStop);
+					break;
+				case "dOCIntensityThreshold":
+					bt.btData.dOCIntensityThreshold = Double.parseDouble( line_array[1] );
+					Prefs.set("BigTrace.dOCIntensityThreshold", bt.btData.dOCIntensityThreshold);
+					break;	
+				case "Trace sigma":
+					int dA = Integer.parseInt( line_array[1]);
+					bt.btData.sigmaTrace[dA] = Double.parseDouble( line_array[2] ) ;
+					Prefs.set("BigTrace."+sigmaTraceName[dA], bt.btData.sigmaTrace[dA]);
+					break;	
+					
 				case "Scene":
 					 final Scene scLoad = new Scene();
 					 scLoad.load( br );

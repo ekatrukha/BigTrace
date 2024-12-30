@@ -386,17 +386,17 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		
 		if(trace.numVertices() == 1)
 		{
-			rangeTraceBox = VolumeMisc.getTraceBoxCentered(traceIV,btData.lTraceBoxSize, trace.vertices.get(0));
+			rangeTraceBox = VolumeMisc.getTraceBoxCentered(traceIV,btData.nTraceBoxSize, trace.vertices.get(0));
 		}
 		else
 		{
-			rangeTraceBox = getTraceBoxNext(traceIV,btData.lTraceBoxSize, btData.fTraceBoxAdvanceFraction, trace);
+			rangeTraceBox = getTraceBoxNext(traceIV,btData.nTraceBoxSize, btData.fTraceBoxAdvanceFraction, trace);
 		}
 		
 		IntervalView<?> traceInterval = Views.interval(traceIV, rangeTraceBox);
 		
 		//getCenteredView(traceInterval);
-		viewer.setTransformAnimator(getCenteredViewAnim(traceInterval,btData.dTraceBoxScreenFraction));
+		viewer.setTransformAnimator(getCenteredViewAnim(traceInterval,btData.fTraceBoxScreenFraction));
 		//long start1, end1;
 		
 

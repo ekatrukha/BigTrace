@@ -104,8 +104,8 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		NumberField nfTraceBoxScreenFraction = new NumberField(4);
 		NumberField nfTBAdvance = new NumberField(4);
 		
-		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btData.lTraceBoxSize)));
-		nfTraceBoxScreenFraction.setText(df.format(bt.btData.dTraceBoxScreenFraction));
+		nfTraceBoxSize.setText(Integer.toString((int)(2.0*bt.btData.nTraceBoxSize)));
+		nfTraceBoxScreenFraction.setText(df.format(bt.btData.fTraceBoxScreenFraction));
 		nfGammaTrace.setText(df.format(bt.btData.gammaTrace));
 		nfTBAdvance.setText(df.format(bt.btData.fTraceBoxAdvanceFraction));
 			
@@ -145,12 +145,9 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 
 		if (reply == JOptionPane.OK_OPTION) 
 		{
-				
-			bt.btData.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", bt.btData.lTraceBoxSize);
-			
-			bt.btData.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", bt.btData.lTraceBoxSize);
+							
+			bt.btData.nTraceBoxSize = (int)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
+			Prefs.set("BigTrace.lTraceBoxSize", bt.btData.nTraceBoxSize);
 		
 			//TRACING OPTIONS
 			
@@ -166,11 +163,8 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 			bt.btData.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
 			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btData.bTraceOnlyClipped);			
 			
-			bt.btData.lTraceBoxSize=(long)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
-			Prefs.set("BigTrace.lTraceBoxSize", bt.btData.lTraceBoxSize);
-			
-			bt.btData.dTraceBoxScreenFraction = Double.parseDouble(nfTraceBoxScreenFraction.getText());
-			Prefs.set("BigTrace.dTraceBoxScreenFraction", bt.btData.dTraceBoxScreenFraction);
+			bt.btData.fTraceBoxScreenFraction = Float.parseFloat(nfTraceBoxScreenFraction.getText());
+			Prefs.set("BigTrace.dTraceBoxScreenFraction", bt.btData.fTraceBoxScreenFraction);
 			
 			bt.btData.fTraceBoxAdvanceFraction = Float.parseFloat(nfTBAdvance.getText());
 			Prefs.set("BigTrace.fTraceBoxAdvanceFraction", bt.btData.fTraceBoxAdvanceFraction);

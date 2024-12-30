@@ -397,7 +397,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 			{
 				if(bt.findPointLocationFromClick(bt.btData.trace_weights,target))
 				{
-					FinalInterval zoomInterval = VolumeMisc.getZoomBoxCentered((long)(bt.btData.lTraceBoxSize*0.5), target);
+					FinalInterval zoomInterval = VolumeMisc.getZoomBoxCentered((long)(bt.btData.nTraceBoxSize*0.5), target);
 			
 					bt.viewer.setTransformAnimator(bt.getCenteredViewAnim(zoomInterval,bt.btData.dZoomBoxScreenFraction));
 				}

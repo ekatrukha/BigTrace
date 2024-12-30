@@ -235,10 +235,10 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	public int nTraceBoxView = 1;
 	
 	/** half size of tracing box (for now in all dimensions) **/
-	public long lTraceBoxSize;
+	public int nTraceBoxSize;
 	
 	/** fraction of screen occupied by trace box **/
-	public double dTraceBoxScreenFraction;	
+	public float fTraceBoxScreenFraction;	
 	
 	/** After advancing tracebox, this parameter defines 
 	 * how much tracebox is going to follow the last direction of trace (with respect to the last added point):
@@ -303,9 +303,9 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 		sigmaTrace[2] = Prefs.get("BigTrace.sigmaTraceZ", 3.0);
 		bTraceOnlyClipped = Prefs.get("BigTrace.bTraceOnlyClipped", false);
 		
-		lTraceBoxSize =(long) Prefs.get("BigTrace.lTraceBoxSize", 50);				
+		nTraceBoxSize = (int) Prefs.get("BigTrace.nTraceBoxSize", 50);				
 		fTraceBoxAdvanceFraction = (float) Prefs.get("BigTrace.fTraceBoxAdvanceFraction", 0.9);
-		dTraceBoxScreenFraction = Prefs.get("BigTrace.dTraceBoxScreenFraction", 0.5);
+		fTraceBoxScreenFraction = (float)Prefs.get("BigTrace.fTraceBoxScreenFraction", 0.5);
 		gammaTrace =  Prefs.get("BigTrace.gammaTrace", 0.0);
 		
 		//one-click

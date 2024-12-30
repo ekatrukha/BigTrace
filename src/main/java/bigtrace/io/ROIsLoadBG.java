@@ -20,6 +20,7 @@ import bigtrace.rois.PolyLine3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.Roi3DGroup;
 import bigtrace.rois.Roi3DGroupManager;
+import ij.Prefs;
 
 import net.imglib2.RealPoint;
 import net.imglib2.type.NativeType;
@@ -161,7 +162,28 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 					  break;
 				  case "FrameInterval":
 					  bt.btData.dFrameInterval = Double.parseDouble(line_array[1]);
-					  break;					  
+					  break;	
+				  case "Intensity Interpolation":
+					  BigTraceData.intensityInterpolation =  Integer.parseInt( line_array[1] );
+					  Prefs.set("BigTrace.IntInterpolation",BigTraceData.intensityInterpolation);
+					  bt.btData.setInterpolationFactory();
+					  break;
+				  case "ROI Shape Interpolation":
+					  BigTraceData.shapeInterpolation =  Integer.parseInt( line_array[1] );
+					  Prefs.set("BigTrace.ShapeInterpolation",BigTraceData.shapeInterpolation);
+					  break;
+				  case "Rotation min frame type":
+					  BigTraceData.rotationMinFrame = Integer.parseInt( line_array[1] );
+					  Prefs.set("BigTrace.RotationMinFrame",BigTraceData.rotationMinFrame);
+					  break;
+				  case "Smooth window":
+					  BigTraceData.nSmoothWindow = Integer.parseInt( line_array[1] );
+					  Prefs.set("BigTrace.nSmoothWindow", BigTraceData.nSmoothWindow);
+					  break;
+				  case "Sector number":
+					  BigTraceData.sectorN = Integer.parseInt( line_array[1] );
+					  Prefs.set("BigTrace.nSectorN", BigTraceData.sectorN);
+					  break;	  
 				  case "BT_Roi":
 					  //Sleep for up to one second.
 					  try {

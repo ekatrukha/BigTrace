@@ -63,6 +63,11 @@ public class ROIsSaveBG < T extends RealType< T > & NativeType< T > > extends Sw
 				writer.write("ImageVoxelDepth," + df3.format(BigTraceData.globCal[2]) + "\n");
 				writer.write("TimeUnits," + bt.btData.sTimeUnit + "\n");
 				writer.write("FrameInterval," + df3.format(bt.btData.dFrameInterval) + "\n");
+				writer.write("Intensity Interpolation,"+Integer.toString( BigTraceData.intensityInterpolation )+"\n");
+				writer.write("ROI Shape Interpolation,"+Integer.toString( BigTraceData.shapeInterpolation )+"\n");
+				writer.write("Rotation min frame type,"+Integer.toString( BigTraceData.rotationMinFrame )+"\n");
+				writer.write("Smooth window,"+Integer.toString( BigTraceData.nSmoothWindow )+"\n");
+
 				nRoiN = bt.roiManager.rois.size();
 				writer.write("ROIsNumber," + Integer.toString(nRoiN)+"\n");
 				for(nRoi=0;nRoi<nRoiN;nRoi++)

@@ -58,6 +58,21 @@ public class ROIsExportSWC< T extends RealType< T > & NativeType< T > > extends 
 				String sRadius;
 				writer.write("#raw "+ bt.btData.sFileNameFullImg+"\n");
 				writer.write("#original_source BigTrace_ver_" +BigTraceData.sVersion+"\n");
+				writer.write( "#roi_shape_interpolation " );
+				switch (BigTraceData.shapeInterpolation)
+				{
+				case BigTraceData.SHAPE_Voxel:
+					writer.write("voxel\n");
+					break;
+				case BigTraceData.SHAPE_Smooth:
+					writer.write("smooth\n");
+					break;
+				case BigTraceData.SHAPE_Spline:
+					writer.write("spline\n");
+					break;
+				}
+				writer.write( "#smooth_window "+Integer.toString( BigTraceData.nSmoothWindow )+"\n" );
+
 				for(nRoi=0; nRoi<nRoiN; nRoi++)
 				{
 					
@@ -96,7 +111,7 @@ public class ROIsExportSWC< T extends RealType< T > & NativeType< T > > extends 
 				writer.close();
 			}
 			setProgress(100);
-			setProgressState("exporting curve ROIs done.");
+			setProgressState("SWC export curve ROIs done.");
 		} catch (IOException e) {	
 			IJ.log(e.getMessage());
 			//e.printStackTrace();
@@ -113,7 +128,7 @@ public class ROIsExportSWC< T extends RealType< T > & NativeType< T > > extends 
     	bt.bInputLock = false;
     	bt.setLockMode(false);
 		setProgress(100);
-		setProgressState("export traces to SWC done.");
+		setProgressState("SWC export curve ROI done.");
     }
 
 
