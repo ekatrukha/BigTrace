@@ -15,6 +15,7 @@ import net.imglib2.type.numeric.RealType;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
+import bigtrace.BigTraceData;
 import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.Roi3D;
 
@@ -51,7 +52,7 @@ public class ROIsExportCSV < T extends RealType< T > & NativeType< T > > extends
 			{
 				//column titles
 				
-				writer.write("ROI_Number,X_coord,Y_coord,Z_coord,ROI_Name,ROI_Type,ROI_Group,ROI_TimePoint\n");
+				writer.write("ROI_Number,X_coord,Y_coord,Z_coord,Radius,ROI_Name,ROI_Type,ROI_Group,ROI_TimePoint\n");
 				DecimalFormatSymbols symbols = new DecimalFormatSymbols();
 				symbols.setDecimalSeparator('.');
 				DecimalFormat df3 = new DecimalFormat ("#.#####", symbols);
@@ -60,6 +61,7 @@ public class ROIsExportCSV < T extends RealType< T > & NativeType< T > > extends
 				String sRoiGroup;
 				String sRoiType;
 				String sRoiTP;
+				String sRadius;
 				int nRoiCurrN = 0;
 				//writer.write("ROIsNumber," + Integer.toString(nRoiN)+"\n");
 				for(nRoi=0; nRoi<nRoiN; nRoi++)
@@ -77,6 +79,7 @@ public class ROIsExportCSV < T extends RealType< T > & NativeType< T > > extends
 						sRoiName = currRoi.getName();
 						sRoiType = Roi3D.intTypeToString( currRoi.getType());
 						sRoiGroup = bt.roiManager.groups.get(currRoi.getGroupInd()).getName();
+						sRadius = df3.format( currRoi.getLineThickness()*0.5*BigTraceData.dMinVoxelSize);
 						ArrayList< RealPoint > points = currRoi.getJointSegmentResampled();
 						for(int nP=0; nP<points.size(); nP++)
 						{
@@ -85,7 +88,7 @@ public class ROIsExportCSV < T extends RealType< T > & NativeType< T > > extends
 							{
 								writer.write( df3.format(points.get( nP ).getDoublePosition( d ) ) +"," );								
 							}
-							writer.write( sRoiName + "," + sRoiType + "," + sRoiGroup + "," + sRoiTP + "\n");
+							writer.write( sRadius +"," + sRoiName + "," + sRoiType + "," + sRoiGroup + "," + sRoiTP + "\n");
 						}
 					}
 
