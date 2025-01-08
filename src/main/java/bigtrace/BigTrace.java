@@ -14,6 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
+import org.janelia.saalfeldlab.control.mcu.XTouchMiniMCUControlPanel;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -74,6 +75,7 @@ import bigtrace.io.ViewsIO;
 import bigtrace.math.OneClickTrace;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
+import bigtrace.mcu.MCUBVVControls;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.RoiManager3D;
@@ -343,6 +345,13 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		
 	    btPanel.finFrame.addWindowListener( closeWA );
 	    bvvFrame.addWindowListener(	closeWA );
+	    //add midi panel controls
+		try {
+			final XTouchMiniMCUControlPanel controlPanel = XTouchMiniMCUControlPanel.build();
+			new MCUBVVControls(
+					bvv_main.getBvvHandle().getViewerPanel(),
+					controlPanel);
+		} catch (final Exception e) {}	    
 		bInputLock = false;
 		
 		//check if there is a saved view
