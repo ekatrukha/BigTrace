@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>38.0.1</version>
+		<version>40.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -87,7 +87,7 @@
 		<dependency>
 		  <groupId>nl.uu.science.cellbiology</groupId>
 		  <artifactId>bvv-playground</artifactId>
-		  <version>0.3.3</version>
+		  <version>0.3.4-SNAPSHOT</version>
 		</dependency>
 		
 		<!-- BIOFORMATS -->
