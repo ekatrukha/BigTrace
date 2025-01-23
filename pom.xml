@@ -87,7 +87,7 @@
 		<dependency>
 		  <groupId>nl.uu.science.cellbiology</groupId>
 		  <artifactId>bvv-playground</artifactId>
-		  <version>0.3.4-SNAPSHOT</version>
+		  <version>0.3.4</version>
 		</dependency>
 		
 		<!-- BIOFORMATS -->
