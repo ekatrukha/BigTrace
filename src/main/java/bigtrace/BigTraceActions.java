@@ -12,14 +12,19 @@ import net.imglib2.RealPoint;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
+
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
+import org.scijava.ui.behaviour.util.Behaviours;
 
 import bigtrace.geometry.Line3D;
+import bigtrace.gui.Rotate3DViewerStyle;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.volume.VolumeMisc;
+import bvvpg.vistools.BvvHandle;
+
 
 public class BigTraceActions < T extends RealType< T > & NativeType< T > > 
 {
@@ -28,12 +33,14 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 	final Actions actions;
 	
 	public BigTraceActions(final BigTrace<T> bt_)
-	{
-		
+	{		
 		bt = bt_;
 		actions = new Actions( new InputTriggerConfig() );
 		installActions();
+		installBehaviors();
 	}
+	
+	
 	public void installActions()
 	{
 		//final Actions actions = new Actions( new InputTriggerConfig() );
@@ -84,6 +91,24 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 
 
 	}
+	
+	/** install smoother rotation **/
+	void installBehaviors()
+	{
+		final BvvHandle handle = bt.bvv_main.getBvvHandle();
+		//change drag rotation for navigation "3D Viewer" style
+		final Rotate3DViewerStyle dragRotate = new Rotate3DViewerStyle( 0.75, handle);
+		final Rotate3DViewerStyle dragRotateFast = new Rotate3DViewerStyle( 2.0, handle);
+		final Rotate3DViewerStyle dragRotateSlow = new Rotate3DViewerStyle( 0.1, handle);
+		
+		final Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
+		behaviours.behaviour( dragRotate, "drag rotate", "button1" );
+		behaviours.behaviour( dragRotateFast, "drag rotate fast", "shift button1" );
+		behaviours.behaviour( dragRotateSlow, "drag rotate slow", "ctrl button1" );
+		behaviours.install( handle.getTriggerbindings(), "BigTrace Behaviours" );
+	}
+	
+	
 	/** find a brightest pixel in the direction of a click
 	 *  and add a new 3D point to active ROI OR
 	 *  start a new ROI (if none selected)
