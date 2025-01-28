@@ -78,10 +78,10 @@ public class SplitVolumePlane < T extends RealType< T > & NativeType< T > > exte
 		//(for now)
 		//make two copies
 	
-		Img<T> out1 =  Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(all_RAI);
+		Img<T> out1 =  Util.getSuitableImgFactory(all_RAI, all_RAI.getType()).create(all_RAI);
 		LoopBuilder.setImages(out1,all_RAI).forEachPixel(Type::set);
 		
-		Img<T> out2 =  Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(all_RAI);
+		Img<T> out2 =  Util.getSuitableImgFactory(all_RAI, all_RAI.getType()).create(all_RAI);
 		LoopBuilder.setImages(out2, all_RAI).forEachPixel(Type::set);
 		
 		final long [] nTotPixArr = all_RAI.dimensionsAsLongArray();

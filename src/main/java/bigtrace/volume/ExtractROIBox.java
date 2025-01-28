@@ -219,7 +219,7 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 		
 		IntervalView<T> bboxMeasure = Views.interval(Views.extendZero(all_RAI),finBoxInt);
 		
-		Img<T> out1 =  Util.getSuitableImgFactory(bboxMeasure, Util.getTypeFromInterval(bboxMeasure)).create(bboxMeasure);
+		Img<T> out1 =  Util.getSuitableImgFactory(bboxMeasure, bboxMeasure.getType()).create(bboxMeasure);
 		
 		IntervalView< T > trans = Views.translate( out1, bboxMeasure.minAsLongArray() );
 

@@ -210,7 +210,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		nChannelN = dimS[4];
 
 		//this is where we store straightened volume
-		Img<T> out1 = Util.getSuitableImgFactory(all_RAI, Util.getTypeFromInterval(all_RAI)).create(new FinalInterval(dimS));
+		Img<T> out1 = Util.getSuitableImgFactory(all_RAI, all_RAI.getType()).create(new FinalInterval(dimS));
 		
 		
 		//get a frame around line

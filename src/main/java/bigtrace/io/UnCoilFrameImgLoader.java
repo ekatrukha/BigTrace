@@ -10,7 +10,6 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 
 import bigtrace.BigTrace;
@@ -44,11 +43,11 @@ public class UnCoilFrameImgLoader < T extends RealType< T > & NativeType< T > > 
 			{
 				final RandomAccessibleInterval< ? > raiXYZ
 				= Views.zeroMin(unCoil.generateSingleVolumeSetup( timepointId, setupId ));
-				if ( Util.getTypeFromInterval( raiXYZ ) instanceof UnsignedShortType )
+				if ( raiXYZ.getType() instanceof UnsignedShortType )
 				{
 					return (RandomAccessibleInterval <UnsignedShortType >) raiXYZ;
 				}
-				else if ( Util.getTypeFromInterval( raiXYZ ) instanceof UnsignedByteType )
+				else if ( raiXYZ.getType() instanceof UnsignedByteType )
 				{
 					return Converters.convert(
 							raiXYZ,

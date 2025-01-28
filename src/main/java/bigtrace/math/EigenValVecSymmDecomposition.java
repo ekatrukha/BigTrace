@@ -87,9 +87,9 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
    }
    public void computeVWRAI( final RandomAccessibleInterval< T > RAIin, final RandomAccessibleInterval< T > eVector, final RandomAccessibleInterval< T > eWeight)
    {
-	   final Cursor< RealComposite< T > > m = Views.iterable( Views.collapseReal( RAIin ) ).cursor();
-	   final Cursor< RealComposite< T > > eV = Views.iterable( Views.collapseReal( eVector ) ).cursor();
-	   final Cursor<  T > eW = Views.iterable(  eWeight  ).cursor();
+	   final Cursor< RealComposite< T > > m =  Views.collapseReal( RAIin ).cursor();
+	   final Cursor< RealComposite< T > > eV =  Views.collapseReal( eVector ).cursor();
+	   final Cursor<  T > eW =   eWeight.cursor();
 
 	   while ( m.hasNext() )
 	   {
@@ -179,10 +179,10 @@ public void computeVWRAI( final RandomAccessibleInterval< T > tensor,
    
    public void computeVWCRAI( final RandomAccessibleInterval< T > RAIin, final RandomAccessibleInterval< T > eVector, final RandomAccessibleInterval< T > eWeight,final RandomAccessibleInterval< T > eCorners)
    {
-	   final Cursor< RealComposite< T > > m = Views.iterable( Views.collapseReal( RAIin ) ).cursor();
-	   final Cursor< RealComposite< T > > eV = Views.iterable( Views.collapseReal( eVector ) ).cursor();
-	   final Cursor<  T > eW = Views.iterable(  eWeight  ).cursor();
-	   final Cursor<  T > eC = Views.iterable(  eCorners  ).cursor();
+	   final Cursor< RealComposite< T > > m = Views.collapseReal( RAIin ).cursor();
+	   final Cursor< RealComposite< T > > eV = Views.collapseReal( eVector ).cursor();
+	   final Cursor<  T > eW = eWeight.cursor();
+	   final Cursor<  T > eC =   eCorners.cursor();
 
 	   while ( m.hasNext() )
 	   {

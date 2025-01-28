@@ -505,7 +505,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 	
 		RandomAccessibleInterval<T> all_RAI =  bt.btData.getAllDataRAI();
 		
-		Img<T> outImg = Util.getSuitableImgFactory(roiIntervBox, Util.getTypeFromInterval(all_RAI) ).create(roiIntervBox);
+		Img<T> outImg = Util.getSuitableImgFactory(roiIntervBox, all_RAI.getType() ).create(roiIntervBox);
 	
 		IntervalView<T> outInterval = Views.translate( outImg, roiIntervBox.minAsLongArray() );
 		
@@ -614,7 +614,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		final ImagePlus imp = IJ.openImage( sTemplateTIF );
 		
 		int nBitD = imp.getBitDepth();
-		T ff = Util.getTypeFromInterval( bt.btData.getAllDataRAI() );
+		T ff =  bt.btData.getAllDataRAI().getType();
 		
 		if(ff instanceof UnsignedByteType)
 		{

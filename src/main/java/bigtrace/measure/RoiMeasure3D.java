@@ -1090,7 +1090,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	
 	public static double getMeanDoubleArray(final double [] values)
 	{
-		final RealSum realSum = new RealSum(values.length);
+		final RealSum realSum = new RealSum();
 		
 		for(int i=0;i<values.length;i++)
 		{
@@ -1102,7 +1102,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	
 	public static double getSDDoubleArray(final double mean, final double [] values)
 	{
-		final RealSum realSum = new RealSum(values.length);
+		final RealSum realSum = new RealSum();
 		for(int i=0;i<values.length;i++)
 		{
 			realSum.add((values[i]-mean)*(values[i]-mean));
@@ -1116,7 +1116,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	
 	public static double getSumDoubleArray(final double [] values)
 	{
-		final RealSum realSum = new RealSum(values.length);
+		final RealSum realSum = new RealSum();
 		
 		for(int i=0;i<values.length;i++)
 		{
