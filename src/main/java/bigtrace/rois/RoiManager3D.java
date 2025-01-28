@@ -144,7 +144,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		groups.add(new Roi3DGroup(sUndefinedGroupName, bt.btData.undefPointSize, new Color(bt.btData.undefPointColor), bt.btData.undefLineThickness, new Color(bt.btData.undefLineColor), bt.btData.undefRenderType) );
 		nActiveGroup = 0;
 
-		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/dot.png");
+		URL icon_path = this.getClass().getResource("/icons/dot.png");
 		ImageIcon tabIcon = new ImageIcon(icon_path);
 		roiPointMode = new JToggleButton(tabIcon);
 		roiPointMode.setToolTipText("Trace single point");
@@ -153,7 +153,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			{roiPointMode.setSelected(true);}
 
 
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/polyline.png");
+		icon_path = this.getClass().getResource("/icons/polyline.png");
 		tabIcon = new ImageIcon(icon_path);
 		roiPolyLineMode = new JToggleButton(tabIcon);
 		roiPolyLineMode.setToolTipText("Trace polyline");
@@ -161,7 +161,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		if(mode == RoiManager3D.ADD_POINT_LINE)
 			{roiPolyLineMode.setSelected(true);}
 
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/semiauto.png");
+		icon_path = this.getClass().getResource("/icons/semiauto.png");
 		tabIcon = new ImageIcon(icon_path);
 		roiPolySemiAMode = new JToggleButton(tabIcon);
 		roiPolySemiAMode.setToolTipText("Semi auto trace");
@@ -181,9 +181,9 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		});
 		
 
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/oneclicktrace.png");
+		icon_path = this.getClass().getResource("/icons/oneclicktrace.png");
 		tabIconOCTrace = new ImageIcon(icon_path);
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/cancel.png");
+		icon_path = this.getClass().getResource("/icons/cancel.png");
 		tabIconCancel = new ImageIcon(icon_path);
 		roiPolyOneClickMode = new JToggleButton(tabIconOCTrace);
 		roiPolyOneClickMode.setToolTipText("One click trace");
@@ -203,7 +203,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			}
 		});
 
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/plane.png");
+		icon_path = this.getClass().getResource("/icons/plane.png");
 		tabIcon = new ImageIcon(icon_path);
 		roiPlaneMode = new JToggleButton(tabIcon);
 		roiPlaneMode.setToolTipText("Cross-section");
@@ -211,13 +211,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		if(mode == RoiManager3D.ADD_POINT_PLANE)
 			{roiPlaneMode.setSelected(true);}
 
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/file_import.png");
+		icon_path = this.getClass().getResource("/icons/file_import.png");
 		tabIcon = new ImageIcon(icon_path);
 		roiImport = new JButton(tabIcon);
 		roiImport.setToolTipText("Import ROIs");
 		roiImport.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
+		icon_path = this.getClass().getResource("/icons/settings.png");
 		tabIcon = new ImageIcon(icon_path);
 		roiSettings = new JButton(tabIcon);
 		roiSettings.setToolTipText("Settings");
@@ -415,7 +415,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		cbActiveGroup.addActionListener(this);
 		butApplyGroup = new JButton("Apply");
 		butApplyGroup.addActionListener(this);
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/group_visibility.png");
+		icon_path = this.getClass().getResource("/icons/group_visibility.png");
 		tabIcon = new ImageIcon(icon_path);
 		butDisplayGroup = new JButton(tabIcon);
 		butDisplayGroup.setToolTipText("Toggle ROI groups visibility");

@@ -38,7 +38,7 @@ public class ClipPanel extends JPanel {
 	 * 
 	 */
 	private static final long serialVersionUID = 1885320351623882576L;
-	private RangeSliderTF [] bbAxes = new RangeSliderTF[3];
+	private RangeSliderPanel [] bbAxes = new RangeSliderPanel[3];
 	private ArrayList<Listener> listeners =	new ArrayList<>();
 	
 	public JButton butExtractClipped;
@@ -50,8 +50,8 @@ public class ClipPanel extends JPanel {
 
 	}
 	
-	private RangeSliderTF addRangeSlider(String label, int[] realMinMax, int[] setMinMax, GridBagConstraints c) {
-		RangeSliderTF slider = new RangeSliderTF(realMinMax, setMinMax);
+	private RangeSliderPanel addRangeSlider(String label, int[] realMinMax, int[] setMinMax, GridBagConstraints c) {
+		RangeSliderPanel slider = new RangeSliderPanel(realMinMax, setMinMax);
 
 		GridBagLayout layout = (GridBagLayout)getLayout();
 
@@ -114,7 +114,7 @@ public class ClipPanel extends JPanel {
 		this.add(butExtractClipped,cd);
 
 
-		RangeSliderTF.Listener bbListener = new RangeSliderTF.Listener() {
+		RangeSliderPanel.Listener bbListener = new RangeSliderPanel.Listener() {
 			@Override
 			public void sliderChanged() {
 				long [][] new_box = new long [2][3];

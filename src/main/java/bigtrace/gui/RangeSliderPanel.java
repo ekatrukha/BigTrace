@@ -14,18 +14,17 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-
-import com.jidesoft.swing.RangeSlider;
-
+import bvvpg.ui.sliders.RangeSliderPG;
 
 
-public class RangeSliderTF extends JPanel implements FocusListener, NumberField.Listener, ChangeListener{
+
+public class RangeSliderPanel extends JPanel implements FocusListener, NumberField.Listener, ChangeListener{
 
 	public static void main(String[] args) {
 		
 		JFrame frame = new JFrame();
-		RangeSliderTF slider = new RangeSliderTF(new int[] {-100, 100}, new int[] {20, 50});
-		frame.getContentPane().add(slider);
+		RangeSliderPanel rsPanel = new RangeSliderPanel(new int[] {-100, 100}, new int[] {20, 50});
+		frame.getContentPane().add(rsPanel);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -41,7 +40,7 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 		public void sliderChanged();
 	}
 	
-	private RangeSlider slider;
+	private RangeSliderPG slider;
 	private NumberField minTF = new NumberField(4);
 	private NumberField maxTF = new NumberField(4);
 
@@ -52,7 +51,7 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 	
 	private ArrayList<Listener> listeners = new ArrayList<>();
 	
-	public RangeSliderTF(int[] realMinMax, int[] setMinMax) {
+	public RangeSliderPanel(int[] realMinMax, int[] setMinMax) {
 		super();
 
 		minTF.setIntegersOnly(true);
@@ -61,7 +60,7 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 		maxTF.setIntegersOnly(true);
 		maxTF.addListener(this);
 		maxTF.addNumberFieldFocusListener(this);
-		slider = new RangeSlider(realMinMax[0], realMinMax[1], setMinMax[0], setMinMax[1]);
+		slider = new RangeSliderPG(realMinMax[0], realMinMax[1], setMinMax[0], setMinMax[1]);
 		nLowerMax = realMinMax[0];
 		nHigherMin = realMinMax[1];
 		slider.addChangeListener(this);
@@ -107,18 +106,18 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 	}
 
 	public int getMin() {
-		return slider.getLowValue();
+		return slider.getLowerValue();
 	}
 
 	public int getMax() {
-		return slider.getHighValue();
+		return slider.getUpperValue();
 	}
 	
 	public void setMinAndMax(int min, int max) {
-		slider.setLowValue(min);
+		slider.setLowerValue(min);
 		minTF.setText(Integer.toString(min));
 
-		slider.setHighValue(max);
+		slider.setUpperValue(max);
 		maxTF.setText(Integer.toString(max));
 
 		slider.repaint();
@@ -133,16 +132,14 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 	
 	@Override
 	public void valueChanged(double v) {
-	
-			
-			// TODO Auto-generated method stub
+				
 			try {
 				//slider.getMaximum();
 				int nMinV = Math.min(Integer.parseInt(minTF.getText()),slider.getMaximum());
 				int nMaxV = Integer.parseInt(maxTF.getText());
 			
-				slider.setLowValue(nMinV);
-				slider.setHighValue(nMaxV);
+				slider.setLowerValue(nMinV);
+				slider.setUpperValue(nMaxV);
 				slider.repaint();
 				fireSliderChanged();
 				
@@ -155,24 +152,24 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 
 	@Override
 	public void focusGained(FocusEvent e) {
-		// TODO Auto-generated method stub
 		JTextField tf = (JTextField)e.getSource();
 		tf.selectAll();
 	}
 
 	@Override
 	public void focusLost(FocusEvent arg0) {
-		// TODO Auto-generated method stub
 		valueChanged(0);
 	}
+	
 	private void updateTextfieldsFromSliders() {
-		minTF.setText(Integer.toString(slider.getLowValue()));
-		maxTF.setText(Integer.toString(slider.getHighValue()));
+		minTF.setText(Integer.toString(slider.getLowerValue()));
+		maxTF.setText(Integer.toString(slider.getUpperValue()));
 		fireSliderChanged();
 	}
+	
 	public void set(final int[] realMinMax, final int[] setMinMax) {		
-		slider.setLowValue(realMinMax[0]);
-		slider.setLowValue(realMinMax[1]);
+		slider.setLowerValue(realMinMax[0]);
+		slider.setUpperValue(realMinMax[1]);
 		slider.setMinimum(setMinMax[0]);
 		slider.setMaximum(setMinMax[1]);
 	}
@@ -194,13 +191,13 @@ public class RangeSliderTF extends JPanel implements FocusListener, NumberField.
 
 		if(bConstrained)
 		{
-			if(slider.getLowValue()>nLowerMax)
+			if(slider.getLowerValue()>nLowerMax)
 			{
-				slider.setLowValue( nLowerMax );
+				slider.setLowerValue( nLowerMax );
 			}
-			if(slider.getHighValue()<nHigherMin)
+			if(slider.getUpperValue()<nHigherMin)
 			{
-				slider.setHighValue( nHigherMin );
+				slider.setUpperValue( nHigherMin );
 			}
 		}
 		updateTextfieldsFromSliders();

@@ -36,7 +36,7 @@ import bigtrace.BigTraceData;
 import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelTitle;
-import bigtrace.gui.RangeSliderTF;
+import bigtrace.gui.RangeSliderPanel;
 import bigtrace.measure.MeasureValues;
 import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.Roi3D;
@@ -70,15 +70,15 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		panTrackTools.setBorder(new PanelTitle(" Tracking "));
 		int nButtonSize = 40;
 		
-		URL icon_path = bigtrace.BigTrace.class.getResource("/icons/train.png");
+		URL icon_path = this.getClass().getResource("/icons/train.png");
 		tabIconTrain = new ImageIcon(icon_path);
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/cancel.png");
+		icon_path = this.getClass().getResource("/icons/cancel.png");
 		tabIconCancel = new ImageIcon(icon_path);
 		butTrack = new JButton(tabIconTrain);
 		butTrack.setToolTipText("Track");
 		butTrack.setPreferredSize(new Dimension(nButtonSize , nButtonSize ));
 		
-		icon_path = bigtrace.BigTrace.class.getResource("/icons/settings.png");
+		icon_path = this.getClass().getResource("/icons/settings.png");
 		ImageIcon tabIcon = new ImageIcon(icon_path);
 		butSettings = new JButton(tabIcon);
 		butSettings.setToolTipText("Settings");
@@ -346,7 +346,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		int [] nRange = new int [2];
 		nRange[0] = 0;
 		nRange[1] = BigTraceData.nNumTimepoints-1;
-		RangeSliderTF timeRange = new RangeSliderTF(nRange, nRange);
+		RangeSliderPanel timeRange = new RangeSliderPanel(nRange, nRange);
 		timeRange.makeConstrained( bt.btData.nCurrTimepoint, bt.btData.nCurrTimepoint );
 		
 		
