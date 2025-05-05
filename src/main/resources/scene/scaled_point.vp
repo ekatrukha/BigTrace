@@ -28,6 +28,11 @@ void main()
  	mat4 invPVM = inverse(pvm);
  	shift = invPVM * shift;
  	
+ 	//inverse transform can lead to rounding errors
+ 	//so make sure we return where we were
+	shift.w = 1.0;
+ 	
+ 	
  	//move to space units
  	shift.xyz = voxelScale * shift.xyz;
  	vec3 pos_scale = voxelScale * aPos;
@@ -49,7 +54,7 @@ void main()
  	
  	//calculate final required radius in pixels
  	//(we need to multiply it by w to do a proper projection)
- 	float dRadius = abs(windowSize.x*(shift.x/shift.w-gl_Position.x/gl_Position.w));
+ 	float dRadius = abs(windowSize.x*(shift.x/shift.w - gl_Position.x/gl_Position.w));
  	
  	//final point size,
  	//let's make sure it is not zero

@@ -125,7 +125,8 @@ public class ViewsIO
 					
 					if(converter.clipActive())
 					{
-						AffineTransform3D clipTransform = converter.getClipTransform();
+						AffineTransform3D clipTransform = new AffineTransform3D();
+						converter.getClipTransform(clipTransform);
 						final double [] transform = new double [12];
 						clipTransform.toArray(transform);
 						writer.write("ClipTransform");

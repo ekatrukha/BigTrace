@@ -578,7 +578,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		//center of the screen "volume" 		
 		Vector3f vcenter = new Vector3f();			
 		Matrix4f matPersp = new Matrix4f();
-		MatrixMath.screenPerspective( btData.dCam, btData.dClipNear, btData.dClipFar, sW, sH, 0, matPersp );
+		MatrixMath.screenPerspective( 0, btData.dCam, btData.dClipNear, btData.dClipFar, sW, sH, 0, matPersp );
 		
 		matPersp.unproject(0.5f*sW,0.5f*sH,0.0f, //z=0 does not matter here
 				new int[] { 0, 0, sW, sH },vcenter);
@@ -1096,7 +1096,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		int sW = viewer.getWidth();
 		int sH = viewer.getHeight();
 		Matrix4f matPerspWorld = new Matrix4f();
-		MatrixMath.screenPerspective( btData.dCam, btData.dClipNear, btData.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
+		MatrixMath.screenPerspective(0, btData.dCam, btData.dClipNear, btData.dClipFar, sW, sH, 0, matPerspWorld ).mul( MatrixMath.affine( transform, new Matrix4f() ) );
 		
 
 		Vector3f temp = new Vector3f(); 
