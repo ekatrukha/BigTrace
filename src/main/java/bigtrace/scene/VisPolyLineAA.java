@@ -179,7 +179,7 @@ public class VisPolyLineAA
 			{
 				dLen += Math.pow( vertices[i*3+d]-vertices[(i-1)*3+d], 2 );
 			}
-			nCumLength[i] = ( float ) Math.sqrt(dLen)+nCumLength[i]-1;
+			nCumLength[i] = ( float ) Math.sqrt(dLen)+nCumLength[i-1];
 		}
 		
 		lineLength = nCumLength[nPointsN-1];

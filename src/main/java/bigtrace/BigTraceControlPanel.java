@@ -313,7 +313,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		panView.add(butVBox,c);
 		
 		//SAVE AND LOAD BUTTONS
-		icon_path = this.getClass().getResource("/icons/save.png");
+		icon_path = this.getClass().getResource("/icons/save_view.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    butSaveView = new JButton(tabIcon);
 	    butSaveView.setToolTipText( "Save image view" );

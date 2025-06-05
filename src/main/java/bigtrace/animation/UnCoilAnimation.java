@@ -673,6 +673,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		}
 		return bTemplateFine;
 	}
+	
 	public boolean saveUncompressedTIFF(final IntervalView<T> outInterval, final int nInd)
 	{
 		final Calibration cal = new Calibration();

@@ -43,7 +43,7 @@ public class ROIsLoadBG < T extends RealType< T > & NativeType< T > > extends Sw
 	@Override
 	public void setProgressState(String state_)
 	{
-		progressState=state_;
+		progressState = state_;
 	}
 
 	@Override
