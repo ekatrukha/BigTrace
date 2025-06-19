@@ -653,7 +653,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		nRange[0] = 0;
 		nRange[1] = BigTraceData.nNumTimepoints-1;
 		RangeSliderPanel timeRange = new RangeSliderPanel(nRange, nRange);
-		if(BigTraceData.nNumTimepoints>1)
+		if(BigTraceData.nNumTimepoints > 1)
 		{
 			clipExtractSettings.add(new JLabel("Extract:"),cd);
 			extractClippedTimeList.setSelectedIndex((int)Prefs.get("BigTrace.extractClippedTime", 0));
