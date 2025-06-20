@@ -1155,7 +1155,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		
 		butPointColor.addActionListener( e -> {
 			Color newColor = JColorChooser.showDialog(bt.btPanel.finFrame, "Choose point color", currentROI.getPointColor() );
-			if (newColor!=null)
+			if (newColor != null)
 			{
 				selectColors.setColor(newColor, 0);
 				butPointColor.setIcon(new ColorIcon(newColor));
