@@ -25,6 +25,8 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
+import mpicbg.spim.data.generic.sequence.BasicImgLoader;
+
 /** class that stores settings and main data from BigTrace **/
 public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 
@@ -356,14 +358,15 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	{
 		if(bSpimSource)
 		{
-			RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
+			final BasicImgLoader imgLoader = bt.spimData.getSequenceDescription().getImgLoader();
+			RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) imgLoader.getSetupImgLoader(nChannel).getImage(nTimePoint);
 			if(bt.bApplyLLSTransform)
 			{
 				RealRandomAccessible<T> rra = Views.interpolate(Views.extendZero(full_int), nInterpolatorFactory);
 				RealRandomAccessible<T> rra_tr = RealViews.affine(rra, bt.afDataTransform);
 				return Views.interval(Views.raster(rra_tr), new FinalInterval(nDimIni[0],nDimIni[1]));	
 			}
-			return (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
+			return (RandomAccessibleInterval<T>) imgLoader.getSetupImgLoader(nChannel).getImage(nTimePoint);
 		}
 		return Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,nChannel),3,nTimePoint);
 	}
