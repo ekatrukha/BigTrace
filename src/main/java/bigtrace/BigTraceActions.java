@@ -151,7 +151,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
                     System.out.println("Skipping ROI that is not an AbstractCurve3D: " + roi);
                 }
             }
-            IntervalView< UnsignedByteType > bt.btData.trace_mask = VolumeMisc.convertFloatToUnsignedByte(salWeights, false);
+            bt.btData.trace_mask = VolumeMisc.convertFloatToUnsignedByte(salWeights, false);
             
             BvvStackSource< UnsignedByteType > bvv_trace = null;
             
