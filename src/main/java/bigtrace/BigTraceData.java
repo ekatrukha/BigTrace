@@ -214,7 +214,7 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	
 	/** weights of curve probability (saliency) for the trace box**/
 	public IntervalView< UnsignedByteType > trace_weights = null;
-	
+
 	/** directions of curve at each voxel for the trace box**/
 	public IntervalView< FloatType > trace_vectors = null;
 	
@@ -228,6 +228,10 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	
 	/** whether to limit tracing to clipped area**/
 	public boolean bTraceOnlyClipped = false;
+
+	/** wip collision mask aafke**/
+	public IntervalView< UnsignedByteType > trace_mask = null;
+	
 	
 	///////////////////////////// TRACING SETTINGS SEMI AUTO
 	
