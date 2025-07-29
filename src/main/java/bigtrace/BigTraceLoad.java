@@ -8,8 +8,6 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
-
-
 import ij.CompositeImage;
 import ij.IJ;
 import ij.ImagePlus;
@@ -38,7 +36,6 @@ import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewSetup;
 
-import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
