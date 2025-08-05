@@ -26,6 +26,7 @@ import bvvpg.vistools.BvvStackSource;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RealPoint;
+import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.FloatArray;
@@ -144,14 +145,18 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
                         r.setPosition( (int) point.getDoublePosition(2), 2 );
                         final FloatType t = r.get();
                         t.set( 1.0f );
-                        // bt.btData.globCal
-                        // salWeights[(int) point.getDoublePosition(0)][(int) point.getDoublePosition(1)][(int) point.getDoublePosition(2)] = new FloatType(1.0f);
                     }
                 } else {
                     System.out.println("Skipping ROI that is not an AbstractCurve3D: " + roi);
                 }
             }
-            bt.btData.trace_mask = VolumeMisc.convertFloatToUnsignedByte(salWeights, false);
+            double[] sigma = { 2.0, 2.0, 2.0 }; // x, y, z
+            // Apply Gaussian blur to the weights
+            ArrayImg<FloatType, FloatArray> blurredSW = ArrayImgs.floats(dim[0], dim[1], dim[2]);
+            IntervalView<FloatType> blurredSalWeights = Views.translate(blurredSW, minV);
+            Gauss3.gauss(sigma, Views.extendBorder(salWeights), blurredSalWeights);
+            bt.btData.flTraceMask = blurredSalWeights;
+            bt.btData.trace_mask = VolumeMisc.convertFloatToUnsignedByte(blurredSalWeights, false);
             
             BvvStackSource< UnsignedByteType > bvv_trace = null;
             

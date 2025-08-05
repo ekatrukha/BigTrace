@@ -11,10 +11,10 @@ import javax.swing.SwingWorker;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
-import bigtrace.volume.VolumeMisc;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
+import bigtrace.volume.VolumeMisc;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
@@ -94,6 +94,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	IntervalView<FloatType> salWeights;
 	RandomAccess<FloatType> raV;
 	RandomAccess<FloatType> raW;
+	RandomAccess<FloatType> trM;
 
 	/** whether we are starting a new trace or continue with existing **/
 	public boolean bNewTrace;
@@ -479,6 +480,14 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			if(Intervals.contains(fullInput, new RealPoint(new float []{candPos[0],candPos[1],candPos[2]})))
 			{
 				currSal = raW.setPositionAndGet(candPos).get();
+                System.out.println("pre currSal: "+currSal);
+                // float trVal = trM.setPositionAndGet(candPos).getRealFloat() * 100.0f;
+                
+                if (trM.setPositionAndGet(candPos).getRealFloat() > 0.001f)
+                {
+                    currSal = 0.0f;
+                }
+                System.out.println("post  currSal: "+currSal +" trM: "+trM.get());
 				candDirection = getVectorAtLocation(candPos);
 //				if(bPrint)
 //				{
@@ -615,10 +624,15 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 
 		directionVectors =  Views.translate(dV, minV);
 		salWeights =  Views.translate(sW, minV[0],minV[1],minV[2]);
+        // salWeights.randomAccess().setPosition(minV[0],minV[1],minV[2]) - 
+        // ;
+        
 		//salWeightsUB = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
 		mEV.computeVWRAI(hessian, directionVectors, salWeights, nThreads, es);
 		raV = directionVectors.randomAccess();
 		raW = salWeights.randomAccess();
+        
+        trM = bt.btData.flTraceMask.randomAccess();
 		//calculate inner box
 		
 		

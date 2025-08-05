@@ -232,6 +232,7 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	/** wip collision mask aafke**/
 	public IntervalView< UnsignedByteType > trace_mask = null;
 	
+    public IntervalView< FloatType > flTraceMask = null;
 	
 	///////////////////////////// TRACING SETTINGS SEMI AUTO
 	

@@ -39,6 +39,8 @@ import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
+import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
@@ -47,6 +49,8 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
+
+import net.imglib2.img.display.imagej.ImageJFunctions;
 
 import bdv.tools.transformation.TransformedSource;
 
@@ -76,6 +80,7 @@ import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
+import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineAA;
 import bigtrace.volume.VolumeMisc;
@@ -383,6 +388,65 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		IntervalView<?> traceIV;
 		
 		traceIV = getTraceInterval(btData.bTraceOnlyClipped);
+		
+		if(trace.numVertices() == 1)
+		{
+			rangeTraceBox = VolumeMisc.getTraceBoxCentered(traceIV,btData.nTraceBoxSize, trace.vertices.get(0));
+		}
+		else
+		{
+			rangeTraceBox = getTraceBoxNext(traceIV,btData.nTraceBoxSize, btData.fTraceBoxAdvanceFraction, trace);
+		}
+		
+		IntervalView<?> traceInterval = Views.interval(traceIV, rangeTraceBox);
+		
+		//getCenteredView(traceInterval);
+		viewer.setTransformAnimator(getCenteredViewAnim(traceInterval,btData.fTraceBoxScreenFraction));
+		//long start1, end1;
+		
+
+		//start1 = System.currentTimeMillis();
+		//calcWeightVectrosCorners(traceInterval, sigmaGlob);
+		//end1 = System.currentTimeMillis();
+		bInputLock = true;
+		TraceBoxMath calcTask = new TraceBoxMath();
+		if(bRefine)
+		{
+			calcTask.refinePosition = trace.vertices.get(0);
+		}
+		calcTask.input = traceInterval;
+		calcTask.bt = this;
+		calcTask.addPropertyChangeListener(btPanel);
+		calcTask.execute();
+		//System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
+
+		//showTraceBox(btdata.trace_weights);
+		btData.nPointsInTraceBox = 1;
+	}
+	
+	/** calculates trace box around last vertice of provided trace.
+	 * if bRefine is true, it will refine the position of the dot
+	 * and add it to the ROI manager **/
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void calcShowTraceMask(final ArrayList<Roi3D> rois, final boolean bRefine)
+	{
+		FinalInterval rangeTraceMask;
+		
+
+
+
+        final Img< UnsignedByteType > img = new ArrayImgFactory< UnsignedByteType >()
+            .create( new long[] { 400, 320 }, new UnsignedByteType() );
+        ImageJFunctions.show( img );
+
+
+        Views.interval(getDataSourceFull(btData.nChannel,btData.nTimePoint),btData.nDimCurr[0], btData.nDimCurr[1]); 
+
+		IntervalView<?> traceIV;
+		
+		traceIV = getTraceInterval(btData.bTraceOnlyClipped);
+        
+        LineTrace3D trace = rois.get(0);
 		
 		if(trace.numVertices() == 1)
 		{
@@ -1497,7 +1561,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	@SuppressWarnings("rawtypes")
 	public static void main(String... args) throws Exception
 	{
-		
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
