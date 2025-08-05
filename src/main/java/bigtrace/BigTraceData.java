@@ -228,10 +228,8 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	
 	/** whether to limit tracing to clipped area**/
 	public boolean bTraceOnlyClipped = false;
-
-	/** wip collision mask aafke**/
-	public IntervalView< UnsignedByteType > trace_mask = null;
 	
+    // collision mask
     public IntervalView< FloatType > flTraceMask = null;
 	
 	///////////////////////////// TRACING SETTINGS SEMI AUTO

@@ -77,6 +77,7 @@ import bigtrace.gui.GuiMisc;
 import bigtrace.io.ViewsIO;
 import bigtrace.math.OneClickTrace;
 import bigtrace.math.TraceBoxMath;
+import bigtrace.math.TraceMaskMath;
 import bigtrace.math.TracingBGVect;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
@@ -151,6 +152,9 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	/** BigTrace macro interface**/
 	public BigTraceMacro<T> btMacro;
 	
+    /** Collision mask worker */
+    public TraceMaskMath traceMaskMath = null;
+
 	/** One click tracing worker**/
 	OneClickTrace<T> oneClickTrace = null;
 	
@@ -193,6 +197,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		
 		btData = new BigTraceData<>(this);
 		btLoad = new BigTraceLoad<>(this);
+        traceMaskMath = new TraceMaskMath(this);
 		
 		
 		if(arg.equals(""))
@@ -388,65 +393,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		IntervalView<?> traceIV;
 		
 		traceIV = getTraceInterval(btData.bTraceOnlyClipped);
-		
-		if(trace.numVertices() == 1)
-		{
-			rangeTraceBox = VolumeMisc.getTraceBoxCentered(traceIV,btData.nTraceBoxSize, trace.vertices.get(0));
-		}
-		else
-		{
-			rangeTraceBox = getTraceBoxNext(traceIV,btData.nTraceBoxSize, btData.fTraceBoxAdvanceFraction, trace);
-		}
-		
-		IntervalView<?> traceInterval = Views.interval(traceIV, rangeTraceBox);
-		
-		//getCenteredView(traceInterval);
-		viewer.setTransformAnimator(getCenteredViewAnim(traceInterval,btData.fTraceBoxScreenFraction));
-		//long start1, end1;
-		
-
-		//start1 = System.currentTimeMillis();
-		//calcWeightVectrosCorners(traceInterval, sigmaGlob);
-		//end1 = System.currentTimeMillis();
-		bInputLock = true;
-		TraceBoxMath calcTask = new TraceBoxMath();
-		if(bRefine)
-		{
-			calcTask.refinePosition = trace.vertices.get(0);
-		}
-		calcTask.input = traceInterval;
-		calcTask.bt = this;
-		calcTask.addPropertyChangeListener(btPanel);
-		calcTask.execute();
-		//System.out.println("+corners: elapsed Time in milli seconds: "+ (end1-start1));		
-
-		//showTraceBox(btdata.trace_weights);
-		btData.nPointsInTraceBox = 1;
-	}
-	
-	/** calculates trace box around last vertice of provided trace.
-	 * if bRefine is true, it will refine the position of the dot
-	 * and add it to the ROI manager **/
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void calcShowTraceMask(final ArrayList<Roi3D> rois, final boolean bRefine)
-	{
-		FinalInterval rangeTraceMask;
-		
-
-
-
-        final Img< UnsignedByteType > img = new ArrayImgFactory< UnsignedByteType >()
-            .create( new long[] { 400, 320 }, new UnsignedByteType() );
-        ImageJFunctions.show( img );
-
-
-        Views.interval(getDataSourceFull(btData.nChannel,btData.nTimePoint),btData.nDimCurr[0], btData.nDimCurr[1]); 
-
-		IntervalView<?> traceIV;
-		
-		traceIV = getTraceInterval(btData.bTraceOnlyClipped);
-        
-        LineTrace3D trace = rois.get(0);
 		
 		if(trace.numVertices() == 1)
 		{
