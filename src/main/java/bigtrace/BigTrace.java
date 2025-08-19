@@ -428,7 +428,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		//showTraceBox(btdata.trace_weights);
 		btData.nPointsInTraceBox = 1;
 	}
-	
+
 	/** calculates trace box around last vertice of provided trace.
 	 * if bRefine is true, it will refine the position of the dot
 	 * and add it to the ROI manager **/
@@ -1416,6 +1416,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			{
 				btData.bDeselectROITime = true;
 			}
+            btData.trace_weights = null;
 			//if(btpanel!=null)
 			btPanel.updateViewDataSources();
 		}	
