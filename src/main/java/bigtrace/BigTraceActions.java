@@ -13,6 +13,7 @@ import org.scijava.ui.behaviour.util.Behaviours;
 
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.Rotate3DViewerStyle;
+import bigtrace.math.TraceBoxMath;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
@@ -21,10 +22,13 @@ import bvvpg.vistools.Bvv;
 import bvvpg.vistools.BvvFunctions;
 import bvvpg.vistools.BvvHandle;
 import net.imglib2.FinalInterval;
+import net.imglib2.RandomAccess;
 import net.imglib2.RealPoint;
+import net.imglib2.iterator.IntervalIterator;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
 
 
@@ -59,7 +63,8 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		actions.runnableAction(() -> actionResetClip(),				"reset clipping", "X" );
 		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "O" );
 		actions.runnableAction(() -> actionSelectRoi(),	            "select ROI", "E" );
-		actions.runnableAction(() -> actionDrawTraceMask(),	        "drawTraceMask", "M" );
+		actions.runnableAction(() -> actionDrawTraceMask(),	        "drawTraceMask", "J" );
+		actions.runnableAction(() -> actionTraceNextInBox(),	    "traceNextInBox", "K" );
 				
 		
 		
@@ -144,7 +149,74 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
             }
         }
     }
+   
 
+    public void actionTraceNextInBox()
+    {
+        Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+        IntervalView<T> traceIV = bt.getTraceInterval(false);
+        System.out.println("in action trace next ");
+
+        if (!bt.bInputLock && !(c instanceof JTextField) && traceIV != null) {
+            System.out.println("in action trace next 2");
+            
+            int maxVal = 0;
+            RealPoint maxPos = new RealPoint(traceIV.numDimensions());
+            bt.setTraceBoxMode(true);
+            bt.traceMaskMath.generateTraceMask();
+            if (bt.btData.trace_weights == null){
+                System.out.println("No trace weights available, generating trace weights");
+                bt.bInputLock = true;
+                TraceBoxMath calcTask = new TraceBoxMath() {
+                    @Override
+                    public void done() {
+                        // This runs on the EDT after background computation is finished
+                        bt.bInputLock = false;
+                        actionTraceNextInBox(); // recall the method, now trace_weights should be ready
+                    }
+                };
+                calcTask.input = traceIV;
+                calcTask.bt = bt;
+                calcTask.addPropertyChangeListener(bt.btPanel);
+                calcTask.execute();
+                return;
+            }
+            // IntervalIterator iter = new IntervalIterator(traceIV);
+            RandomAccess<UnsignedByteType> trW = bt.btData.trace_weights.randomAccess();
+            IntervalIterator iter = new IntervalIterator(bt.btData.trace_weights);
+            RandomAccess<FloatType> trM = bt.btData.flTraceMask.randomAccess();
+            while (iter.hasNext()){
+
+                iter.fwd();
+                trW.setPosition(iter);
+                trM.setPosition(iter);
+                if (trM.get().get() < .001f && trW.get().get() > maxVal){
+                    maxVal = trW.get().get();
+                    iter.localize(maxPos);
+                    System.out.println(
+                        "maxVal: " + maxVal + " with " + trM.get().get() +" at " +
+                        maxPos.getDoublePosition(0) + " " +
+                        maxPos.getDoublePosition(1) + " " +
+                        maxPos.getDoublePosition(2)
+                    );
+                }
+            }
+            System.out.println(
+                maxVal + " at " +
+                maxPos.getDoublePosition(0) + " " +
+                maxPos.getDoublePosition(1) + " " +
+                maxPos.getDoublePosition(2) + " " 
+                // trM.setPosition(maxPos).get().get()
+            );
+            if (maxVal <= 1) {
+                System.out.println("No more points in trace box");
+                bt.viewer.showMessage("No more points in trace box");
+                return;
+            }
+            bt.setLockMode(true);
+			bt.runOneClickTrace(maxPos, true);
+        }
+    }
 	
 	/** find a brightest pixel in the direction of a click
 	 *  and add a new 3D point to active ROI OR
