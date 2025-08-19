@@ -153,10 +153,10 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		}
 		//init math
 		getMathForCurrentPoint(startPoint);
-		if(bNewTrace)
-		{
-			startPoint = refinePointUsingSaliency(startPoint);
-		}
+		// if(bNewTrace)
+		// {
+		// 	startPoint = refinePointUsingSaliency(startPoint);
+		// }
 		
 		double [] startDirectionVector = getVectorAtLocation(startPoint);
 		lastDirectionVector = new double [3];

@@ -51,11 +51,17 @@ public class TraceMaskMath < T extends RealType< T > & NativeType< T > >
                         final FloatType t = r.get();
                         t.set( 1.0f );
                     }
+                    final RandomAccess< FloatType > r = salWeights.randomAccess();
+                    r.setPosition( (int) curve.vertices.get(0).getDoublePosition(0), 0 );
+                    r.setPosition( (int) curve.vertices.get(0).getDoublePosition(1), 1 );
+                    r.setPosition( (int) curve.vertices.get(0).getDoublePosition(2), 2 );
+                    final FloatType t = r.get();
+                    t.set( 2.0f );
                 }
             } 
         }
         double[] sigma = { 2.0, 2.0, 2.0 }; // x, y, z
-        // Apply Gaussian blur to the weights
+        // Apply Gaussian blur to the weights - needs to be linked to globCal?
         ArrayImg<FloatType, FloatArray> blurredSW = ArrayImgs.floats(dim[0], dim[1], dim[2]);
         IntervalView<FloatType> blurredSalWeights = Views.translate(blurredSW, minV);
         Gauss3.gauss(sigma, Views.extendBorder(salWeights), blurredSalWeights);
