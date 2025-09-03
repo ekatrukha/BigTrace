@@ -180,10 +180,10 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 				bStartLocationOccupied = false;
 				if(traceMask.isOccupied( startRefinedPoint ))
 				{
-					traceMask.markInterval(  getLocalSearchArea(startPoint));
+					traceMask.markInterval(  getLocalSearchArea(startPoint, 3.0f));
 					bStartLocationOccupied = true;
 					return;
-				}				
+				}	
 			}
 		}
 		
@@ -356,12 +356,13 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 
 			nextPoint = getNextPoint(points.get(points.size()-1));
 			
-			if(nextPoint!=null)
+			if(nextPoint != null)
 			{
 				if(checkIntersection(nextPoint))
 				{
 					nextPoint = null;
-					System.out.println("one-click tracing stopped, self intersection found.");
+					if(!bUseMask)
+						System.out.println("one-click tracing stopped, self intersection found.");
 				}
 //				double [] nextPointD = nextPoint.positifillArrayOfTracedPointsonAsDoubleArray();
 //				double [] prevPointD = points.get(points.size()-1).positionAsDoubleArray();
@@ -698,7 +699,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	RealPoint refinePointUsingSaliency(final RealPoint target_in)
 	{
 		//get an box around the target
-		final FinalInterval searchArea  = Intervals.intersect( fullInput, getLocalSearchArea(target_in) );		
+		final FinalInterval searchArea  = Intervals.intersect( fullInput, getLocalSearchArea(target_in, 2.0f) );		
 		RealPoint out = new RealPoint(3);
 		//VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(salWeights), maxSearchArea),out);
 		VolumeMisc.findMaxLocation(Views.interval(salWeights, searchArea),out);
@@ -706,14 +707,14 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 	}
 	
-	FinalInterval getLocalSearchArea(final RealPoint target_in)
+	/** gets an interval around target_in with +-fSDN*sigma of tracing **/
+	FinalInterval getLocalSearchArea(final RealPoint target_in, final float fSDN)
 	{
 		final long[][] rangeMax = new long[2][3];
-		float dSDN = 2.0f;
 		for(int d=0;d<3;d++)
 		{
-			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d)-dSDN*bt.btData.sigmaTrace[d]);
-			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+dSDN*bt.btData.sigmaTrace[d]);
+			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d)-fSDN*bt.btData.sigmaTrace[d]);
+			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+fSDN*bt.btData.sigmaTrace[d]);
 		}
 		return new FinalInterval(rangeMax[0],rangeMax[1]);
 	}

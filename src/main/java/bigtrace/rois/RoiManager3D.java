@@ -548,12 +548,12 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 return groups.get(nInd).getName();
 	 }
 	 
-	 /** returns ROI name with a short 3 letters group prefix  in squared brackets**/
-	 public String getGroupPrefixRoiName(final Roi3D nRoi)
+	 /** returns ROI name with a short 3 letters group prefix in squared brackets**/
+	 public String getGroupPrefixRoiNameBase(final Roi3D nRoi)
 	 {
 		 String nFullName;
 		 final int nInd = nRoi.getGroupInd(); 
-		 if(nInd == 0 || (nInd> groups.size()-1))
+		 if(nInd == 0 || (nInd > groups.size()-1))
 		 {
 			 nFullName = nRoi.getName();
 		 }
@@ -567,17 +567,17 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 }
 	 
 	 /** returns ROI name with a TXXX time point + short 3 letters group prefix in squared brackets**/
-	 public String getTimeGroupPrefixRoiName(final Roi3D roi)
+	 public String getGroupPrefixRoiName(final Roi3D roi)
 	 {
 		 final String sTimeFormat = Integer.toString(String.valueOf(BigTraceData.nNumTimepoints).length());
 
 		 if(BigTraceData.nNumTimepoints>1)
 		 {
-			 return "T"+String.format("%0"+sTimeFormat+"d", roi.getTimePoint())+"_"+bt.roiManager.getGroupPrefixRoiName(roi);
+			 return "T"+String.format("%0"+sTimeFormat+"d", roi.getTimePoint())+"_"+bt.roiManager.getGroupPrefixRoiNameBase(roi);
 		 }
 		 
 		 //single time point, skip time
-		 return bt.roiManager.getGroupPrefixRoiName(roi);
+		 return bt.roiManager.getGroupPrefixRoiNameBase(roi);
 	 }
 
 	 public Roi3D getActiveRoi()

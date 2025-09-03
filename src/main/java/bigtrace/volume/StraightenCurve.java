@@ -102,7 +102,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		String sRoiName;
 		if(nTotROIs == 1)
 		{
-			sRoiName = bt.roiManager.getTimeGroupPrefixRoiName(curveROIArr.get(0));
+			sRoiName = bt.roiManager.getGroupPrefixRoiName(curveROIArr.get(0));
 			IntervalView<T> extractedRAI = extractCurveRAI(curveROIArr.get(0),  full_RAI, true);
 			if(extractedRAI == null)
 			{
@@ -118,7 +118,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 			
 			for(int nRoi=0; nRoi<nTotROIs; nRoi++)
 			{
-				sRoiName = bt.roiManager.getTimeGroupPrefixRoiName(curveROIArr.get(nRoi));
+				sRoiName = bt.roiManager.getGroupPrefixRoiName(curveROIArr.get(nRoi));
 				try {
 					  Thread.sleep(1);
 				  } catch (InterruptedException ignore) {}

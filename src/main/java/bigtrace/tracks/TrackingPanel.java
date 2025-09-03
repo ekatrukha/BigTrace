@@ -319,12 +319,11 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		IJ.log( "Aligned "+Integer.toString( groupROIs.size() )+ " ROIs in the " +bt.roiManager.groups.get( indGroup ).getName()+" group.");
 		
 	}
+	
 	/** tracking of LineTrace over time**/
 	void simpleTracking()
 	{
 		JPanel dialogTrackSettings = new JPanel();
-		
-		NumberField nfBoxExpand = new NumberField(4);
 		
 		dialogTrackSettings.setLayout(new GridBagLayout());
 		
@@ -332,8 +331,10 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 
 		GBCHelper.alighLeft(cd);
 		
-		cd.gridx=0;
-		cd.gridy=0;	
+		NumberField nfBoxExpand = new NumberField(4);
+		
+		cd.gridx = 0;
+		cd.gridy = 0;	
 		String[] sTrackDirection = { "all timepoints", "forward in time", "backward in time", "range below" };
 		JComboBox<String> trackDirectionList = new JComboBox<>(sTrackDirection);
 		dialogTrackSettings.add(new JLabel("Tracking:"),cd);
@@ -350,23 +351,23 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		timeRange.makeConstrained( bt.btData.nCurrTimepoint, bt.btData.nCurrTimepoint );
 		
 		
-		cd.gridx=0;
-		cd.gridwidth=2;
+		cd.gridx = 0;
+		cd.gridwidth = 2;
 		dialogTrackSettings.add(timeRange,cd);
-		cd.gridwidth=1;
+		cd.gridwidth = 1;
 		cd.gridy++;
 		
 		String[] sTrackNextFrame = { "ROI bounding box", "ROI's shape"};
 		JComboBox<String> trackNextFrame = new JComboBox<>(sTrackNextFrame);
 		
-		cd.gridx=0;	
+		cd.gridx = 0;	
 		dialogTrackSettings.add(new JLabel("Search next curve inside:"),cd);
 		trackNextFrame.setSelectedIndex((int)Prefs.get("BigTrace.trackNextFrame", 0));
 		cd.gridx++;
 		dialogTrackSettings.add(trackNextFrame,cd);
 		cd.gridy++;
 		
-		cd.gridx=0;	
+		cd.gridx = 0;	
 		dialogTrackSettings.add(new JLabel("Expand ROI box search by (px):"),cd);
 		cd.gridx++;
 		nfBoxExpand.setIntegersOnly( true );

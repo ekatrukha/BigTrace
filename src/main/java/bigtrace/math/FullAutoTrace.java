@@ -22,7 +22,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 	
 	public int nLastTP;
 	
-	//RandomAccessibleInterval<T> full_RAI;
+	public double dMinStartTraceInt = 128.;
 	
 	final OneClickTrace<T> oneClickTrace = new OneClickTrace<>();
 	final RoiTraceMask<T> mask;
@@ -55,58 +55,58 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 		//int nTotTP = nLastTP - nFirstTP;
 		//int nTPCount = 0;
 		
-		IntervalView<T> traceIV =  bt.getTraceInterval(bt.btData.bTraceOnlyClipped);	
-		mask.initTraceMask( traceIV );
 		
 		oneClickTrace.bNewTrace = true;
 		oneClickTrace.bUnlockInTheEnd = false;
 		oneClickTrace.bUpdateProgressBar = false;
 		oneClickTrace.bt = this.bt;	
 		oneClickTrace.bInsertROI = false;
-		//calcTask.nInsertROIInd = bt.roiManager.activeRoi.get();
 		oneClickTrace.bUseMask = true;
-		oneClickTrace.traceMask = mask;
-		oneClickTrace.fullInput = traceIV;
+		
 		oneClickTrace.bInit = false;
 		oneClickTrace.init();
-		boolean bKeepTracing = true;
-		int nCount = 0;
-		while(bKeepTracing)
+			
+		for(int nTP = nFirstTP; nTP <= nLastTP; nTP++)
 		{
+			bt.viewer.setTimepoint(nTP);
+			IntervalView<T> traceIV =  bt.getTraceInterval(bt.btData.bTraceOnlyClipped);	
+			mask.initTraceMask( traceIV );
+			oneClickTrace.traceMask = mask;
+			oneClickTrace.fullInput = traceIV;
 			
-			if(isCancelled())
+			boolean bKeepTracing = true;
+			//int nCount = 0;
+			while(bKeepTracing)
 			{
-				bt.visBox = null;
-				return null;				
-			}
-			
-			ValuePair<Double, RealPoint> newMax = mask.findMaskedMax();
-			//System.out.println(newMax.getA());
-			
-			if(newMax.getA()>110)
-			{
-				oneClickTrace.startPoint = newMax.getB();
-				mask.markLocation( oneClickTrace.startPoint );
-				setProgressState(Double.toString( newMax.getA() ));
-				oneClickTrace.runTracing();
-				if(oneClickTrace.bStartLocationOccupied)
+				if(isCancelled())
 				{
-					nCount++;
-					//bKeepTracing = false;
+					bt.visBox = null;
+					return null;				
+				}
+
+				ValuePair<Double, RealPoint> newMax = mask.findMaskedMax();
+				//System.out.println(newMax.getA());
+
+				if(newMax.getA()>dMinStartTraceInt)
+				{
+					oneClickTrace.startPoint = newMax.getB();
+					mask.markLocation( oneClickTrace.startPoint );
+					setProgressState(Double.toString( newMax.getA() ));
+					oneClickTrace.runTracing();
+					if(!oneClickTrace.bStartLocationOccupied)
+					{
+						mask.markROI( bt.roiManager.getActiveRoi() );
+					}
 				}
 				else
 				{
-					mask.markROI( bt.roiManager.getActiveRoi() );
+					bKeepTracing = false;
 				}
-			}
-			else
-			{
-				bKeepTracing = false;
 			}
 		}
 		oneClickTrace.releaseMultiThread();
 		System.out.println("done");
-		System.out.println(nCount);
+		//System.out.println(nCount);
 		return null;
 	}
 	   /*

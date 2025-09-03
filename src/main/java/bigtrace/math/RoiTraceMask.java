@@ -7,10 +7,10 @@ import net.imglib2.Interval;
 import net.imglib2.RealPoint;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.basictypeaccess.array.ByteArray;
+import net.imglib2.img.basictypeaccess.array.BooleanArray;
 import net.imglib2.type.NativeType;
+import net.imglib2.type.logic.NativeBoolType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.IntervalView;
@@ -24,8 +24,8 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
     final BigTrace<T> bt;
     IntervalView< T > traceInterval;
     boolean bMaskInit = false;
-    //for now unsignedbyte
-    IntervalView< UnsignedByteType > traceMask;
+
+    IntervalView< NativeBoolType > traceMask;
     
     public RoiTraceMask(final BigTrace<T> bt_)
 	{
@@ -38,7 +38,7 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
     	traceInterval = traceInterval_;
     	final long[] dim = Intervals.dimensionsAsLongArray(traceInterval);
     	//make a mask
-    	ArrayImg<UnsignedByteType, ByteArray> maskArr = ArrayImgs.unsignedBytes(dim);
+    	ArrayImg< NativeBoolType, BooleanArray > maskArr = ArrayImgs.booleans( dim );//.unsignedBytes(dim);
     	traceMask = Views.translate(maskArr, traceInterval.minAsLongArray());
     	
     	bMaskInit = true;
@@ -68,11 +68,7 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
      		{
      			posLong[d] = Math.round( point.getFloatPosition( d ));
      		}
-     		if(traceMask.getAt( posLong ).get() == 0)
-     		{
-     			return false;
-     		}
-     		return true;
+     		return traceMask.getAt( posLong ).get();
     	}
 		System.err.println("auto-trace mask was not initialized!");
 		return false;
@@ -82,11 +78,7 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
      * or if it is initialized**/
     public boolean isOccupied(final long[] posLong)
     {
- 		if(traceMask.getAt( posLong ).get() == 0)
- 		{
- 			return false;
- 		}
- 		return true;
+ 		return traceMask.getAt( posLong ).get();
     }
     
     public void markLocation(final RealPoint point)
@@ -101,7 +93,7 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
      		{
      			posLong[d] = Math.round( point.getFloatPosition( d ));
      		}
-     		traceMask.getAt( posLong ).set( 255 );
+     		traceMask.getAt( posLong ).set( true );
      		
      		return;
      	
@@ -115,10 +107,10 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
      	//see if the point inside the interval
      	if(bMaskInit)
     	{
-     		Cursor< UnsignedByteType > markInt = Views.interval( traceMask, Intervals.intersect( inputInt, traceMask ) ).cursor();
+     		Cursor< NativeBoolType > markInt = Views.interval( traceMask, Intervals.intersect( inputInt, traceMask ) ).cursor();
      		while(markInt.hasNext())
      		{
-     			markInt.next().set( 255 );
+     			markInt.next().set( true );
      		}
      		return;
     	}
@@ -132,7 +124,7 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
     {
     	if(bMaskInit)
     	{
-    		final Cursor< UnsignedByteType > cursorRoi = roi.getSingle3DVolumeCursor( traceMask );
+    		final Cursor< NativeBoolType > cursorRoi = roi.getSingle3DVolumeCursor( traceMask );
     		
     		if(cursorRoi != null)
     		{
@@ -143,7 +135,7 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
     				
     				if(Intervals.contains( traceMask, cursorRoi ))
     				{
-    					cursorRoi.get().set( 255 );
+    					cursorRoi.get().set( true );
     				}
     			}
     		}
@@ -156,38 +148,38 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
     
     public ValuePair<Double, RealPoint> findMaskedMax()
     {
-    	final RealPoint maxLocation = new RealPoint(3);
+    	final double [] maxLocation = new double[3];
     	double maxVal = (-1)*Double.MAX_VALUE;
+    	//double [] cursorLoc = new double[3];
+    	//double [] maskLoc = new double[3];
     	if(bMaskInit)
     	{
     		// create a cursor for the image (the order does not matter)
     		final Cursor< T > cursor = traceInterval.localizingCursor();
-    		final Cursor< UnsignedByteType > cursorMask = traceMask.localizingCursor();
+    		final Cursor< NativeBoolType > cursorMask = traceMask.localizingCursor();
 
-    		//double curVal;
-    		cursor.reset();
-    		cursorMask.reset();
     		T currVal;
     		while(cursor.hasNext())
     		{
-    			currVal = cursor.next();
-    			if(cursorMask.next().get()==0)
-    			{
-    				
-    				if(currVal.getRealDouble()>maxVal)
+    			cursor.fwd();    			
+    			if(!cursorMask.next().get())
+    			{ 
+    				currVal = cursor.get();
+    				if(currVal.getRealDouble() > maxVal)
     				{
     					maxVal = currVal.getRealDouble();
-    					maxLocation.setPosition( cursor );
+    					cursor.localize( maxLocation );
+    					//maxLocation.setPosition( cursor );
     				}
     			}
     			
     		}
-  
+ 
     	}
     	else
     	{
     		System.err.println("auto-trace mask was not initialized!");
     	}
-    	return new ValuePair< >(maxVal, maxLocation);
+    	return new ValuePair< >(maxVal, new RealPoint(maxLocation));
     }
 }

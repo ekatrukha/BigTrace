@@ -120,9 +120,9 @@ public class SplineCurve3D {
 			return Double.NaN;
 		}
 		//arclength integration verification
-		//double len1= verifyIntegration();
+		//double len1 = verifyIntegration();
 		//double len2 = arclength[arclength.length-1];
-		//double diff =Math.abs(len1-len2);
+		//double diff = Math.abs(len1-len2);
 		return arclength[arclength.length-1];
 		
 	}
@@ -135,31 +135,21 @@ public class SplineCurve3D {
 
 		final double approxL = xnodes[xnodes.length-1];
 
-		//for the polyline (sparse nodes) integration is not precise,
-		//so let's resample it		
-//		final int nNewPoints = (int) Math.floor(approxL/BigTraceData.dMinVoxelSize);
-//		double [] xLSample = new double[nNewPoints+1];
-//		final double dStep = approxL/nNewPoints;
-//		int i;
-//		for(i = 0; i<= nNewPoints; i++)
-//		{
-//			xLSample[i]=i*dStep;
-//		}
 		final int nNewPoints = (int) Math.floor(approxL/BigTraceData.dMinVoxelSize);
-		double [] xLSample = new double[nNewPoints+2];
-		//final double dStep = approxL/nNewPoints;
-		int i;
-		for(i = 1; i< nNewPoints+1; i++)
+		final double [] xLSample = new double[nNewPoints+2];
+		
+		for(int i = 1; i< nNewPoints; i++)
 		{
-			xLSample[i]=i*BigTraceData.dMinVoxelSize;
+			xLSample[i] = i*BigTraceData.dMinVoxelSize;
 		}
 		xLSample[nNewPoints+1] = approxL;
-		
+
+		xLSample[nNewPoints] = 0.5*(approxL+xLSample[nNewPoints-1]);
+
 		arclength = getTabulatedArcLength(xLSample);
 		
 		//reparametrize arclenth to initial arbitrary (polyline length) parametrization
 		arcToNodes = new CubicSpline(arclength, xLSample, 2);
-		
 	
 	}
 	
@@ -196,7 +186,7 @@ public class SplineCurve3D {
 		//Gaussian 2nd order
 		/**/
 		final double evalGauss = 1.0/Math.sqrt(3.0);
-		out[0]=0.0;
+		out[0] = 0.0;
 		//integrate spline length
 		for (int i=1;i<nNodesN; i++)
 		{
@@ -241,8 +231,8 @@ public class SplineCurve3D {
 		double v;
 		for (int d=0;d<3; d++)
 		{
-			v= interpXYZ[d].evalSlope(x);
-			out+=v*v;
+			v = interpXYZ[d].evalSlope(x);
+			out += v*v;
 		}
 		out = Math.sqrt(out);
 		return out;
