@@ -83,7 +83,17 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	ExecutorService es = null;// = Executors.newFixedThreadPool( nThreads );
 	int nThreads;
 	
-	//boolean bPrint = false;
+	/** if running in auto-trace**/
+	public boolean bUseMask = false;
+
+	/** "trace mask" containing areas marked by existing ROIs **/
+	public RoiTraceMask<T> traceMask = null;
+	
+	/** whether to initialize internally **/
+	public boolean bInit = true;
+	
+	/** if the optimized location is already occupied in the tracemask **/
+	boolean bStartLocationOccupied = false;
 	
 	/** eigenvectors container **/
 	ArrayImg<FloatType, FloatArray> dV;
@@ -98,7 +108,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	/** whether we are starting a new trace or continue with existing **/
 	public boolean bNewTrace;
 	
-	
+	/** if true, inserts ROI to the list with nInsertROIInd  index,
+	 * otherwise just adds ROI to the end **/
 	public boolean bInsertROI = false;
 	
 	public int nInsertROIInd = 0;
@@ -138,7 +149,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		{
 			setProgress(0);
 		}
-		init();
+		
+		if(bInit)
+		{
+			init();
+		}
 		
 		//long start1, end1;
 		
@@ -154,7 +169,22 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		getMathForCurrentPoint(startPoint);
 		if(bNewTrace)
 		{
-			startPoint = refinePointUsingSaliency(startPoint);
+			final RealPoint startRefinedPoint = refinePointUsingSaliency(startPoint);
+			if(!bUseMask)
+			{
+				startPoint = startRefinedPoint;
+			}
+			//masked tracing
+			else
+			{
+				bStartLocationOccupied = false;
+				if(traceMask.isOccupied( startRefinedPoint ))
+				{
+					traceMask.markInterval(  getLocalSearchArea(startPoint));
+					bStartLocationOccupied = true;
+					return;
+				}				
+			}
 		}
 		
 		double [] startDirectionVector = getVectorAtLocation(startPoint);
@@ -228,6 +258,13 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		}
 		//trace in the other direction
 		nTotPoints = traceOneDirection(false, nTotPoints);
+		//could not find anything
+		if(nTotPoints==0 && bNewTrace)
+		{
+			bt.roiManager.deleteActiveROI();
+			if(bUseMask)
+				bStartLocationOccupied = true;
+		}
 		if(nTotPoints<0)
 		{
 			setProgressState("Tracing interrupted by user.");
@@ -443,18 +480,24 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//find a pixel in the neighborhood 
 		//according to direction vector
 		int [] currNeighbor = new int[3];
-		String currNeighborHash="";
+		
+		String currNeighborHash = "";
+		
 		for (d=0;d<3;d++)
 		{
-			currNeighbor[d]=(int)Math.round(lastDirectionVector[d]);
-			currNeighborHash=currNeighborHash+Integer.toString(currNeighbor[d]);
+			currNeighbor[d] = (int)Math.round(lastDirectionVector[d]);
+			currNeighborHash = currNeighborHash+Integer.toString(currNeighbor[d]);
 		}
+		
 		//get all relevant neighbors
 		float maxSal = (-1)*Float.MAX_VALUE;
+		
 		float currSal = (-1)*Float.MAX_VALUE;
+		
 		//double [] candVector;
 		ArrayList<int[]> scannedPos;
-		if(nNeighborsMethods==0)
+		
+		if(nNeighborsMethods == 0)
 		{
 			scannedPos = neighborsMap.get(currNeighborHash);
 		}
@@ -465,16 +508,18 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		int [] candidateNeighbor; 
 
 		long[] candPos = new long[3];
+		
 		float[] finPos = new float[3];
 		
-		for(int nScan=0;nScan<scannedPos.size();nScan++)
+		for(int nScan = 0; nScan < scannedPos.size(); nScan++)
 		{
 			candidateNeighbor = scannedPos.get(nScan);
 			
-			for(d=0;d<3;d++)
+			for(d = 0; d < 3; d++)
 			{
-				candPos[d]=Math.round(currpoint.getFloatPosition(d))+candidateNeighbor[d];
+				candPos[d] = Math.round(currpoint.getFloatPosition(d))+candidateNeighbor[d];
 			}
+			
 		
 			if(Intervals.contains(fullInput, new RealPoint(new float []{candPos[0],candPos[1],candPos[2]})))
 			{
@@ -493,25 +538,33 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 //				LinAlgHelpers.normalize(dirX);
 //				currSal *= LinAlgHelpers.dot(dirX, lastDirectionVector);
 				
-				if(currSal>0)
+				if(currSal > 0)
 				{
 					//double valS = Math.abs(LinAlgHelpers.dot(candDirection, lastDirectionVector));
 					//if(Math.abs(LinAlgHelpers.dot(candDirection, hystVector))<dAngleThreshold)
 					if(Math.abs(LinAlgHelpers.dot(candDirection, lastDirectionVector))<dAngleThreshold)
 					{
-						currSal=0.0f;
+						currSal = 0.0f;
 					}
+					
 					if(bt.btData.bOCIntensityStop)
 					{
 						if(fullInput.randomAccess().setPositionAndGet( candPos ).getRealDouble()<bt.btData.dOCIntensityThreshold)
 						{
-							currSal=0.0f;
+							currSal = 0.0f;
 						}
 					}
-					if(currSal>maxSal)
+					if(bUseMask)
 					{
-						maxSal=currSal;
-						for(i=0;i<3;i++)
+						if(traceMask.isOccupied( candPos ))
+						{
+							currSal = 0.0f;
+						}
+					}
+					if(currSal > maxSal)
+					{
+						maxSal = currSal;
+						for(i = 0; i < 3; i++)
 						{
 							finPos[i] = candPos[i];
 						}
@@ -636,30 +689,33 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			rangeM[1][d]=(long)(target.getDoublePosition(d))+range[d];								
 		}
 		VolumeMisc.checkBoxInside(fullInterval, rangeM);
-		FinalInterval finInt = new FinalInterval(rangeM[0],rangeM[1]);
-		return finInt;							
+		
+		return new FinalInterval(rangeM[0],rangeM[1]);							
 	}
 	
 	/** returns local maximum of saliency (using trace_weights) 
 	 * around target_in point. The search box is equal to SD of tracing x2 **/
-	RealPoint refinePointUsingSaliency(RealPoint target_in)
+	RealPoint refinePointUsingSaliency(final RealPoint target_in)
 	{
-		long[][] rangeMax = new long[2][3];
+		//get an box around the target
+		final FinalInterval searchArea  = Intervals.intersect( fullInput, getLocalSearchArea(target_in) );		
+		RealPoint out = new RealPoint(3);
+		//VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(salWeights), maxSearchArea),out);
+		VolumeMisc.findMaxLocation(Views.interval(salWeights, searchArea),out);
+		return out;
+		
+	}
+	
+	FinalInterval getLocalSearchArea(final RealPoint target_in)
+	{
+		final long[][] rangeMax = new long[2][3];
 		float dSDN = 2.0f;
 		for(int d=0;d<3;d++)
 		{
 			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d)-dSDN*bt.btData.sigmaTrace[d]);
 			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+dSDN*bt.btData.sigmaTrace[d]);
 		}
-		//get an box around the target
-		FinalInterval searchArea = new FinalInterval(rangeMax[0],rangeMax[1]);
-		
-		RealPoint out = new RealPoint(3);
-		searchArea  = Intervals.intersect( fullInput, searchArea );
-		//VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(salWeights), maxSearchArea),out);
-		VolumeMisc.findMaxLocation(Views.interval(salWeights, searchArea),out);
-		return out;
-		
+		return new FinalInterval(rangeMax[0],rangeMax[1]);
 	}
 	public double[] getVectorAtLocation(long[] point)
 	{

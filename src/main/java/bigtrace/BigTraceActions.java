@@ -19,6 +19,8 @@ import org.scijava.ui.behaviour.util.Behaviours;
 
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.Rotate3DViewerStyle;
+import bigtrace.math.RoiTraceMask;
+import bigtrace.math.FullAutoTrace;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
@@ -57,6 +59,8 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		actions.runnableAction(() -> actionResetClip(),				"reset clipping", "X" );
 		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "O" );
 		actions.runnableAction(() -> actionSelectRoi(),	            "select ROI", "E" );
+		
+		actions.runnableAction(() -> actionTestMask(),	            "test Mask", "L" );
 				
 		
 		
@@ -387,6 +391,20 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 				}
 
 			}
+		}
+	}
+	
+	/** test for auto-trace **/
+	public void actionTestMask()
+	{
+		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		//solution for now, to not interfere with typing
+		if(!bt.bInputLock && !(c instanceof JTextField))
+		{
+			FullAutoTrace<T> fullAutoTrace = new FullAutoTrace<>(bt);
+			fullAutoTrace.addPropertyChangeListener( bt.btPanel );
+			fullAutoTrace.execute();
+			
 		}
 	}
 	

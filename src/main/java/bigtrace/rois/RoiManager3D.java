@@ -471,7 +471,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 activeRoi.set(rois.size()-1);
 	 }
 
-	 /** adds provided ROI to the end of the list **/
+	 /** inserts ROI to the ROI list with the provided index **/
 	 public synchronized void insertRoi(final Roi3D newRoi, final int nInsertN)
 	 {		
 		 if(nInsertN < 0 || nInsertN > (rois.size()-1))
