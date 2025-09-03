@@ -29,17 +29,27 @@ public class PanelFullAutoTrace
 
 		GBCHelper.alighLeft(gbc);
 		
-		NumberField nfMaxIntFullTraceStart = new NumberField(4);		
+		NumberField nfMaxIntFullTraceStart = new NumberField(5);
+		NumberField nfAutoMinCurvePoints = new NumberField(5);
 		
-		nfMaxIntFullTraceStart.setText( Integer.toString((int)Prefs.get("BigTrace.dMinStartTraceInt",128.0)) );
+		nfMaxIntFullTraceStart.setIntegersOnly( true );
+		nfMaxIntFullTraceStart.setText( Integer.toString((int)Prefs.get("BigTrace.dAutoMinStartTraceInt",128.0)) );
+		nfAutoMinCurvePoints.setIntegersOnly( true );
+		nfAutoMinCurvePoints.setText( Integer.toString((int)Prefs.get("BigTrace.nAutoMinPointsCurve",3)) );
 	
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		dialogFullAutoSettings.add(new JLabel("Min intensity trace start:"),gbc);
 		gbc.gridx++;
-		nfMaxIntFullTraceStart.setIntegersOnly( true );
-		nfMaxIntFullTraceStart.setText(Integer.toString((int)(Prefs.get("BigTrace.nTrackExpandBox", 0))));
+		
 		dialogFullAutoSettings.add(nfMaxIntFullTraceStart,gbc);
+		
+		gbc.gridx = 0;
+		gbc.gridy ++;
+		dialogFullAutoSettings.add(new JLabel("Min # points in curve:"),gbc);
+		gbc.gridx++;
+		dialogFullAutoSettings.add(nfAutoMinCurvePoints,gbc);
+		
 		
 		RangeSliderPanel timeRange = null;
 		if(BigTraceData.nNumTimepoints>1)
@@ -69,8 +79,13 @@ public class PanelFullAutoTrace
 				fullAutoTrace.nFirstTP = timeRange.getMin();
 				fullAutoTrace.nLastTP = timeRange.getMax();
 			}
-			fullAutoTrace.dMinStartTraceInt = Integer.parseInt(nfMaxIntFullTraceStart.getText());
-			Prefs.set("BigTrace.dMinStartTraceInt",fullAutoTrace.dMinStartTraceInt );
+			fullAutoTrace.dAutoMinStartTraceInt = Integer.parseInt(nfMaxIntFullTraceStart.getText());
+			Prefs.set("BigTrace.dAutoMinStartTraceInt",fullAutoTrace.dAutoMinStartTraceInt );
+
+			fullAutoTrace.nAutoMinPointsCurve = Integer.parseInt(nfAutoMinCurvePoints.getText());
+			Prefs.set("BigTrace.nAutoMinPointsCurve",fullAutoTrace.nAutoMinPointsCurve );
+
+			
 			fullAutoTrace.addPropertyChangeListener( bt.btPanel );
 			fullAutoTrace.execute();
 		}

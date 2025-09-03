@@ -11,6 +11,7 @@ import net.imglib2.view.IntervalView;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
+import bigtrace.rois.LineTrace3D;
 
 public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
@@ -22,7 +23,9 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 	
 	public int nLastTP;
 	
-	public double dMinStartTraceInt = 128.;
+	public double dAutoMinStartTraceInt = 128.;
+	
+	public int nAutoMinPointsCurve = 0;
 	
 	final OneClickTrace<T> oneClickTrace = new OneClickTrace<>();
 	final RoiTraceMask<T> mask;
@@ -87,7 +90,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 				ValuePair<Double, RealPoint> newMax = mask.findMaskedMax();
 				//System.out.println(newMax.getA());
 
-				if(newMax.getA()>dMinStartTraceInt)
+				if(newMax.getA()>dAutoMinStartTraceInt)
 				{
 					oneClickTrace.startPoint = newMax.getB();
 					mask.markLocation( oneClickTrace.startPoint );
@@ -96,6 +99,14 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 					if(!oneClickTrace.bStartLocationOccupied)
 					{
 						mask.markROI( bt.roiManager.getActiveRoi() );
+					}
+					if(bt.roiManager.getActiveRoi() instanceof LineTrace3D)
+					{
+						final LineTrace3D newtrace = (LineTrace3D)bt.roiManager.getActiveRoi();
+						if(newtrace.getNumberOfPointsInJointSegment()<nAutoMinPointsCurve)
+						{
+							bt.roiManager.deleteActiveROI();
+						}
 					}
 				}
 				else
