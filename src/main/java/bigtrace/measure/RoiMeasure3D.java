@@ -1048,7 +1048,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		}
 		if (li_profile!=null && bMakePlot)
 		{
-			plotProfile = new Plot("Profile ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btData.sVoxelUnit+")","Intensity");
+			plotProfile = new Plot("Profile ROI "+bt.roiManager.getFullDisplayedRoiName(roi),"Distance along line ("+bt.btData.sVoxelUnit+")","Intensity");
 			plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
 			plotProfile.show();
 		}
@@ -1081,7 +1081,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		if (li_profile!=null && bMakePlot)
 		{
 
-			plotProfile = new Plot("Alignment angles ROI "+bt.roiManager.getGroupPrefixRoiName(roi),"Distance along line ("+bt.btData.sVoxelUnit+")",sUnit);
+			plotProfile = new Plot("Alignment angles ROI "+bt.roiManager.getFullDisplayedRoiName(roi),"Distance along line ("+bt.btData.sVoxelUnit+")",sUnit);
 			plotProfile.addPoints(li_profile[0],li_profile[1], Plot.LINE);
 			plotProfile.show();
 		}

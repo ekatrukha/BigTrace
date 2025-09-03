@@ -104,7 +104,7 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 
 		for(int nRoi=0; nRoi<nTotROIs; nRoi++)
 		{
-			sRoiName = bt.roiManager.getGroupPrefixRoiName(listROIs.get(nRoi));
+			sRoiName = bt.roiManager.getFullDisplayedRoiName(listROIs.get(nRoi));
 			try {
 				Thread.sleep(1);
 			} catch (InterruptedException ignore) {}

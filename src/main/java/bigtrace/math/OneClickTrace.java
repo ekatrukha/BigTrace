@@ -36,11 +36,14 @@ import net.imglib2.view.Views;
 public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
 	public BigTrace<T> bt;
+	
 	/** full dataset to trace **/
 	public IntervalView<T> fullInput; 
+	
 	/** if a tracing leaving this box,
 	 * new full box is recalculated at the current location **/
 	public FinalInterval innerTraceBox; 
+	
 	public RealPoint startPoint;
 	
 	public boolean bUpdateProgressBar = true;
@@ -48,12 +51,15 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	public boolean bUnlockInTheEnd = true;
 	
 	public RealPoint currentVector;
+	
 	public long [] boxFullHalfRange;
+	
 	public long [] boxInnerHalfRange;
 
 	/** dimensions of the box where saliency + vectors 
 	 * will be calculated in rangeFullBoxDim * sigma of the axis **/
 	final double rangeFullBoxDim = 3.0;
+	
 	/** dimensions of the box where tracing will happen
 	 	(in sigmas) before new box needs to be calculated**/
 	final double rangeInnerBoxDim = 1.0;
@@ -95,6 +101,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	/** if the optimized location is already occupied in the tracemask **/
 	boolean bStartLocationOccupied = false;
 	
+	float fEstimatedThickness = 5.0f;
+	
 	/** eigenvectors container **/
 	ArrayImg<FloatType, FloatArray> dV;
 	/** weights (saliency) container **/
@@ -120,6 +128,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	ArrayImg<FloatType, FloatArray> hessFloat;
 	
 	private String progressState;
+	
 	private LineTrace3D existingTracing;
 	
 	@Override
@@ -251,8 +260,10 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			{
 				lastDirectionVector[d]=(-1)*startDirectionVector[d];
 			}
+			
 			//reverse ROI
 			bt.roiManager.getActiveRoi().reversePoints();
+			
 			//init math at new point
 			getMathForCurrentPoint(startPoint);
 		}
@@ -301,6 +312,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		{
 			LineTrace3D newTracing;
 			newTracing = (LineTrace3D) bt.roiManager.makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
+			newTracing.setLineThickness( fEstimatedThickness );
 			newTracing.addFirstPoint(points.get(0));
 			if(!bInsertROI)
 			{
@@ -447,6 +459,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 				convObjects[count].setExecutor(es);
 				count++;
 			}
+		}
+		
+		if(bt.btData.bEstimateROIThicknessFromParams)
+		{
+			fEstimatedThickness = bt.btData.estimateROIThicknessFromTracing();
 		}
 	}
 

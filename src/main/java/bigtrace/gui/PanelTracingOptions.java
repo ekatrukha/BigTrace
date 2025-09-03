@@ -24,6 +24,8 @@ public class PanelTracingOptions extends JPanel
 	
 	final JCheckBox cbTraceOnlyClipped = new JCheckBox();
 	
+	final JCheckBox cbEstimateThickness = new JCheckBox();
+	
 	public PanelTracingOptions(final BigTrace<?> bt_)
 	{
 		super();
@@ -39,31 +41,35 @@ public class PanelTracingOptions extends JPanel
 		nfSigmaY.setText(df.format(bt.btData.sigmaTrace[1]));
 		nfSigmaZ.setText(df.format(bt.btData.sigmaTrace[2]));
 
+		cbEstimateThickness.setSelected(bt.btData.bEstimateROIThicknessFromParams);		
 		cbTraceOnlyClipped.setSelected(bt.btData.bTraceOnlyClipped);
 		
-		gbc.gridx=0;
-		gbc.gridy=0;
-
+		gbc.gridx = 0;
+		gbc.gridy = 0;
 		this.add(new JLabel("Curve thickness X axis (SD, px): "),gbc);
 		gbc.gridx++;
 		this.add(nfSigmaX,gbc);
 		
-		gbc.gridx=0;
+		gbc.gridx = 0;
 		gbc.gridy++;
 		this.add(new JLabel("Curve thickness Y axis (SD, px): "),gbc);
 		gbc.gridx++;
 		this.add(nfSigmaY,gbc);
 		
-		gbc.gridx=0;
+		gbc.gridx = 0;
 		gbc.gridy++;
 		this.add(new JLabel("Curve thickness Z axis (SD, px): "),gbc);
 		gbc.gridx++;
 		this.add(nfSigmaZ,gbc);
-
 		
-		gbc.gridx=0;
+		gbc.gridx = 0;
 		gbc.gridy++;
-		//cd.anchor=GridBagConstraints.WEST;
+		this.add(new JLabel("Estimate ROI thickness from params: "),gbc);
+		gbc.gridx++;
+		this.add(cbEstimateThickness,gbc);
+		
+		gbc.gridx = 0;
+		gbc.gridy++;
 		this.add(new JLabel("Trace only clipped volume: "),gbc);
 		gbc.gridx++;
 		this.add(cbTraceOnlyClipped,gbc);
@@ -79,6 +85,9 @@ public class PanelTracingOptions extends JPanel
 		
 		bt.btData.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
 		Prefs.set("BigTrace.sigmaTraceZ", bt.btData.sigmaTrace[2]);
+
+		bt.btData.bEstimateROIThicknessFromParams = cbEstimateThickness.isSelected();
+		Prefs.set("BigTrace.bEstimateROIThicknessFromParams", bt.btData.bEstimateROIThicknessFromParams);
 		
 		bt.btData.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
 		Prefs.set("BigTrace.bTraceOnlyClipped", bt.btData.bTraceOnlyClipped);	

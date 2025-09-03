@@ -466,7 +466,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 {		
 		 rois.add(newRoi);		 
 		 //listModel.addElement(newRoi.getName());
-		 listModel.addElement(getGroupPrefixRoiName(newRoi));
+		 listModel.addElement(getFullDisplayedRoiName(newRoi));
 		 jlist.setSelectedIndex(rois.size()-1);
 		 activeRoi.set(rois.size()-1);
 	 }
@@ -567,7 +567,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 }
 	 
 	 /** returns ROI name with a TXXX time point + short 3 letters group prefix in squared brackets**/
-	 public String getGroupPrefixRoiName(final Roi3D roi)
+	 public String getFullDisplayedRoiName(final Roi3D roi)
 	 {
 		 final String sTimeFormat = Integer.toString(String.valueOf(BigTraceData.nNumTimepoints).length());
 
@@ -914,7 +914,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			{
 				final Roi3D currROI = getActiveRoi();
 				currROI.setName(s);
-				listModel.set(activeRoi.intValue(),getGroupPrefixRoiName(currROI));
+				listModel.set(activeRoi.intValue(),getFullDisplayedRoiName(currROI));
 				return;
 			}
 	 }
@@ -1401,7 +1401,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			if(rois.get(i).getGroupInd() == nGroupFrom)
 			{
 				rois.get(i).setGroupInd(nGroupTo);
-				listModel.setElementAt(getGroupPrefixRoiName(rois.get(i)), i);
+				listModel.setElementAt(getFullDisplayedRoiName(rois.get(i)), i);
 			}
 		}
 	}
@@ -1443,7 +1443,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		final Roi3D currROI = rois.get( nRoiIndex );
 		currROI.setGroup(groups.get(nGroupIndex));
 		currROI.setGroupInd(nGroupIndex);
-		listModel.setElementAt(getGroupPrefixRoiName(currROI), nRoiIndex);
+		listModel.setElementAt(getFullDisplayedRoiName(currROI), nRoiIndex);
 	}
 	
 	public void dialShowGroups()

@@ -3,8 +3,7 @@ package bigtrace.rois;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -23,6 +22,7 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
+import bigtrace.gui.PanelOneClickTraceOptions;
 import bigtrace.gui.PanelTracingOptions;
 import bigtrace.io.ROIsExportCSV;
 import bigtrace.io.ROIsExportSWC;
@@ -107,8 +107,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 													JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
 		if (reply == JOptionPane.OK_OPTION) 
-		{
-							
+		{							
 			bt.btData.nTraceBoxSize = (int)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
 			Prefs.set("BigTrace.lTraceBoxSize", bt.btData.nTraceBoxSize);
 		
@@ -123,105 +122,30 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 			
 			bt.btData.gammaTrace = Double.parseDouble(nfGammaTrace.getText());
 			Prefs.set("BigTrace.gammaTrace", bt.btData.gammaTrace);
-			
-			
+	
 		}
 	}	
 	
 	public void dialOneClickProperties()
 	{
-		JTabbedPane tabPane = new JTabbedPane();
-		GridBagConstraints cd = new GridBagConstraints();
-
-		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
-		decimalFormatSymbols.setDecimalSeparator('.');
-		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
+		final JTabbedPane tabPane = new JTabbedPane();
 		
-		////////////TRACING OPTIONS
-		
-		PanelTracingOptions panelGeneralTrace = new PanelTracingOptions(bt);
-
-		NumberField nfIntensityThreshold = new NumberField(5);
-	
-		JCheckBox cbIntensityStop = new JCheckBox();
-
-				
-		////////////ONE-CLICK TRACING OPTIONS
-		JPanel pOneCLick = new JPanel(new GridBagLayout());
-		
-		NumberField nfPlaceVertex = new NumberField(4);
-		NumberField nfDirectionalityOneClick = new NumberField(4);
-		
-		nfPlaceVertex.setIntegersOnly(true);
-		nfPlaceVertex.setText(Integer.toString(bt.btData.nVertexPlacementPointN));
-		nfDirectionalityOneClick.setText(df.format(bt.btData.dDirectionalityOneClick));
-		cbIntensityStop.setSelected(bt.btData.bOCIntensityStop);
-		nfIntensityThreshold.setText(df.format(bt.btData.dOCIntensityThreshold));
-		nfIntensityThreshold.setTFEnabled( bt.btData.bOCIntensityStop);
-		
-		cd.gridx=0;
-		cd.gridy=0;		
-		pOneCLick.add(new JLabel("Intermediate vertex placement (px, >=3): "),cd);
-		cd.gridx++;
-		pOneCLick.add(nfPlaceVertex,cd);
-		
-		cd.gridx=0;		
-		cd.gridy++;
-		pOneCLick.add(new JLabel("Constrain directionality (0-1): "),cd);
-		cd.gridx++;
-		pOneCLick.add(nfDirectionalityOneClick,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		//cd.anchor=GridBagConstraints.WEST;
-		pOneCLick.add(new JLabel("Use intensity threshold: "),cd);
-		cd.gridx++;
-		pOneCLick.add(cbIntensityStop,cd);
-		cbIntensityStop.addActionListener( new ActionListener()
-				{
-
-					@Override
-					public void actionPerformed( ActionEvent arg0 )
-					{
-						
-						nfIntensityThreshold.setTFEnabled( cbIntensityStop.isSelected() );
-					}
+		////////////TRACING OPTIONS		
+		final PanelTracingOptions panelGeneralTrace = new PanelTracingOptions(bt);
 			
-				});
-		
-		cd.gridx = 0;
-		cd.gridy++;
-		pOneCLick.add(new JLabel("Minimum intensity: "),cd);
-		cd.gridx++;
-		pOneCLick.add(nfIntensityThreshold,cd);
+		////////////ONE-CLICK TRACING OPTIONS		
+		final PanelOneClickTraceOptions panelOneClickOptions = new PanelOneClickTraceOptions(bt);
 		
 		//assemble pane
-		tabPane.addTab("Tracing",panelGeneralTrace);
-		tabPane.addTab("One click trace",pOneCLick);
+		tabPane.addTab("Tracing", panelGeneralTrace);
+		tabPane.addTab("One click trace", panelOneClickOptions);
 		int reply = JOptionPane.showConfirmDialog(null, tabPane, "One click tracing settings", 
         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-
 		if (reply == JOptionPane.OK_OPTION) 
-		{
-	
-			//TRACING OPTIONS
-			
+		{	
 			panelGeneralTrace.getSetOptions();		
-			
-			bt.btData.nVertexPlacementPointN = Math.max(3, Integer.parseInt(nfPlaceVertex.getText()));
-			Prefs.set("BigTrace.nVertexPlacementPointN", (double)(bt.btData.nVertexPlacementPointN));
-			
-			bt.btData.dDirectionalityOneClick = Math.min(1.0, (Math.max(0, Double.parseDouble(nfDirectionalityOneClick.getText()))));
-			Prefs.set("BigTrace.dDirectionalityOneClick",bt.btData.dDirectionalityOneClick);
-			
-			bt.btData.bOCIntensityStop = cbIntensityStop.isSelected();
-			Prefs.set("BigTrace.bOCIntensityStop", bt.btData.bOCIntensityStop);	
-			if(bt.btData.bOCIntensityStop)
-			{
-				bt.btData.dOCIntensityThreshold = Math.max(0, Double.parseDouble(nfIntensityThreshold.getText()));
-				Prefs.set("BigTrace.dOCIntensityThreshold",bt.btData.dOCIntensityThreshold);		
-			}
+			panelOneClickOptions.getSetOptions();	
 		}
 	}
 	

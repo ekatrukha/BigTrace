@@ -6,6 +6,7 @@ import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -20,8 +21,9 @@ public class PanelFullAutoTrace
 	
 	static public <T extends RealType< T > & NativeType< T >> void launchFullAutoTrace(final BigTrace< T > bt)
 	{
-		
-		JPanel dialogFullAutoSettings = new JPanel();
+		final JTabbedPane tabPane = new JTabbedPane();
+
+		final JPanel dialogFullAutoSettings = new JPanel();
 		
 		dialogFullAutoSettings.setLayout(new GridBagLayout());
 		
@@ -69,10 +71,24 @@ public class PanelFullAutoTrace
 			gbc.gridy++;
 		}
 		
-		int reply = JOptionPane.showConfirmDialog(null, dialogFullAutoSettings, "Full auto tracing", 
+		////////////TRACING OPTIONS		
+		final PanelTracingOptions panelGeneralTrace = new PanelTracingOptions(bt);
+			
+		////////////ONE-CLICK TRACING OPTIONS		
+		final PanelOneClickTraceOptions panelOneClickOptions = new PanelOneClickTraceOptions(bt);
+
+		//assemble pane
+		tabPane.addTab("AutoTrace", dialogFullAutoSettings);
+		tabPane.addTab("Tracing", panelGeneralTrace);
+		tabPane.addTab("One click trace", panelOneClickOptions);
+		
+		int reply = JOptionPane.showConfirmDialog(null, tabPane, "Full auto tracing", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (reply == JOptionPane.OK_OPTION) 
 		{
+			panelGeneralTrace.getSetOptions();		
+			panelOneClickOptions.getSetOptions();
+			
 			FullAutoTrace<T> fullAutoTrace = new FullAutoTrace<>(bt);
 			if(timeRange != null)
 			{
@@ -84,7 +100,6 @@ public class PanelFullAutoTrace
 
 			fullAutoTrace.nAutoMinPointsCurve = Integer.parseInt(nfAutoMinCurvePoints.getText());
 			Prefs.set("BigTrace.nAutoMinPointsCurve",fullAutoTrace.nAutoMinPointsCurve );
-
 			
 			fullAutoTrace.addPropertyChangeListener( bt.btPanel );
 			fullAutoTrace.execute();
