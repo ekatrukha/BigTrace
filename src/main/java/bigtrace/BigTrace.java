@@ -923,12 +923,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 				}
 
 			}
-			
-			for(int i=0;i<bvv_sources.size();i++)
-			{
-				bvv_sources.get(i).setClipTransform(afDataTransform);
-
-			}
 			//check the alignment
 			//BvvFunctions.show(btdata.getDataSourceFull(0, 0),"test",Bvv.options().addTo(bvv_main));
 			//ImageJFunctions.show(btdata.getDataSourceFull(0, 0));
