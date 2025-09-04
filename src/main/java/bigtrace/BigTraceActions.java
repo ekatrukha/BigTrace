@@ -18,7 +18,6 @@ import org.scijava.ui.behaviour.util.Actions;
 import org.scijava.ui.behaviour.util.Behaviours;
 
 import bigtrace.geometry.Line3D;
-import bigtrace.gui.PanelFullAutoTrace;
 import bigtrace.gui.Rotate3DViewerStyle;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;

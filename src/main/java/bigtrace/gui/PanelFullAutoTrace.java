@@ -19,7 +19,6 @@ import net.imglib2.type.numeric.RealType;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.math.FullAutoTrace;
-import bigtrace.rois.Roi3D;
 import ij.Prefs;
 
 public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > implements ActionListener
