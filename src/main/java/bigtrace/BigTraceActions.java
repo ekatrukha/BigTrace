@@ -59,10 +59,6 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "O" );
 		actions.runnableAction(() -> actionSelectRoi(),	            "select ROI", "E" );
 		
-		actions.runnableAction(() -> actionFullAutoTrace(),	            "auto trace", "L" );
-				
-		
-		
 		actions.runnableAction(
 				() -> {
 					Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
@@ -390,18 +386,6 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 				}
 
 			}
-		}
-	}
-	
-	/** test for auto-trace **/
-	public void actionFullAutoTrace()
-	{
-		Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
-		//solution for now, to not interfere with typing
-		if(!bt.bInputLock && !(c instanceof JTextField))
-		{
-			final PanelFullAutoTrace<T> panelAuto = new PanelFullAutoTrace<>( bt );
-			panelAuto.launchFullAutoTrace();	
 		}
 	}
 	
