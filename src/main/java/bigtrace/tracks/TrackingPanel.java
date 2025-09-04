@@ -195,9 +195,9 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		//put all panels together
 		cr = new GridBagConstraints();
 		setLayout(new GridBagLayout());
-		cr.insets=new Insets(4,4,2,2);
-		cr.gridx=0;
-		cr.gridy=0;
+		cr.insets = new Insets(4,4,2,2);
+		cr.gridx = 0;
+		cr.gridy = 0;
 		cr.fill = GridBagConstraints.HORIZONTAL;
 
 		//Line Tools
@@ -238,6 +238,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 			alignROIsInGroup(cbGroup.getSelectedIndex());
 		}
 	}
+	
 	void alignROIsInGroup(final int indGroup)
 	{
 		class ROIsT

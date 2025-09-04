@@ -59,7 +59,7 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "O" );
 		actions.runnableAction(() -> actionSelectRoi(),	            "select ROI", "E" );
 		
-		actions.runnableAction(() -> actionFullAutoTrace(),	            "test Mask", "L" );
+		actions.runnableAction(() -> actionFullAutoTrace(),	            "auto trace", "L" );
 				
 		
 		
@@ -400,7 +400,8 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		//solution for now, to not interfere with typing
 		if(!bt.bInputLock && !(c instanceof JTextField))
 		{
-			PanelFullAutoTrace.launchFullAutoTrace( bt );	
+			final PanelFullAutoTrace<T> panelAuto = new PanelFullAutoTrace<>( bt );
+			panelAuto.launchFullAutoTrace();	
 		}
 	}
 	

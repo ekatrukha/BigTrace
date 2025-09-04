@@ -1,6 +1,8 @@
 package bigtrace.math;
 import java.util.concurrent.ExecutionException;
 
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.SwingWorker;
 
 import net.imglib2.RealPoint;
@@ -28,7 +30,12 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 	public int nAutoMinPointsCurve = 0;
 	
 	final OneClickTrace<T> oneClickTrace = new OneClickTrace<>();
+	
 	final RoiTraceMask<T> mask;
+	
+	public JButton butAuto = null;
+	
+	public ImageIcon tabIconRestore = null;
 	
 	public FullAutoTrace(BigTrace<T> bt)
 	{
@@ -88,6 +95,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 				}
 
 				ValuePair<Double, RealPoint> newMax = mask.findMaskedMax();
+				//final ValuePair<Double, RealPoint> newMax = mask.findMaskedMaxAboveThreshold(dAutoMinStartTraceInt);
 				//System.out.println(newMax.getA());
 
 				if(newMax.getA()>dAutoMinStartTraceInt)
@@ -148,6 +156,19 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
         	setProgressState("Auto-tracing interrupted by user.");
         	setProgress(100);	
     	}
+    	
+    	if(butAuto != null && tabIconRestore != null)
+    	{
+    		butAuto.setIcon( tabIconRestore );
+    		butAuto.setToolTipText( "Full auto tracing" );
+    		butAuto.addActionListener( bt.roiManager );
+    	}
+    	bt.visBox = null;
+    	oneClickTrace.releaseMultiThread();
+    	
+    	//unlock user interaction
+    	bt.bInputLock = false;
+    	bt.setLockMode(false);
     }
     
 }

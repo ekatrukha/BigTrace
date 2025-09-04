@@ -49,6 +49,7 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.NumberField;
+import bigtrace.gui.PanelFullAutoTrace;
 import bigtrace.gui.PanelTitle;
 import bigtrace.io.ROIsLoadBG;
 import bigtrace.measure.RoiMeasure3D;
@@ -113,13 +114,14 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	public JComboBox<String> cbActiveChannel;
 	JComboBox<String> cbActiveGroup;
 
-	JToggleButton roiPointMode;
-	JToggleButton roiPolyLineMode;
-	JToggleButton roiPolySemiAMode;
-	JToggleButton roiPolyOneClickMode;
-	JToggleButton roiPlaneMode;
-	JButton roiImport;
-	JButton roiSettings;
+	final JToggleButton roiPointMode;
+	final JToggleButton roiPolyLineMode;
+	final JToggleButton roiPolySemiAMode;
+	final JToggleButton roiPolyOneClickMode;
+	final JToggleButton roiPlaneMode;
+	final public JButton butAutoTrace;
+	final JButton roiImport;
+	final JButton roiSettings;
 
 	ImageIcon tabIconOCTrace;
 	ImageIcon tabIconCancel;
@@ -217,6 +219,12 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		roiImport.setToolTipText("Import ROIs");
 		roiImport.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 
+		icon_path = this.getClass().getResource("/icons/autotrace.png");
+		tabIcon = new ImageIcon(icon_path);
+		butAutoTrace = new JButton(tabIcon);
+		butAutoTrace.setToolTipText("Full auto tracing");
+		butAutoTrace.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		
 		icon_path = this.getClass().getResource("/icons/settings.png");
 		tabIcon = new ImageIcon(icon_path);
 		roiSettings = new JButton(tabIcon);
@@ -237,6 +245,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		roiPlaneMode.addActionListener(this);
 
 		roiImport.addActionListener(this);
+		butAutoTrace.addActionListener( this );
 		roiSettings.addActionListener(this);
 		//add to the panel
 		GridBagConstraints ct = new GridBagConstraints();
@@ -263,11 +272,11 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		panTracing.add(new JLabel(), ct);
 		ct.weightx = 0.0;
 		ct.gridx++;
+		panTracing.add(butAutoTrace,ct);
+		ct.gridx++;
 		panTracing.add(roiImport,ct);
 		ct.gridx++;
 		panTracing.add(roiSettings,ct);
-
-
 
 		///RoiLIST and buttons
 		listModel = new  DefaultListModel<>();
@@ -1068,6 +1077,16 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		if(e.getSource() == butLoadROIs)
 		{
 			rmDiag.diagLoadROIs();
+		}
+		
+		//FULL AUTO TRACE
+		if(e.getSource() == butAutoTrace)
+		{
+			if(!bt.bInputLock)
+			{
+				final PanelFullAutoTrace<T> panelAuto = new PanelFullAutoTrace<>( bt );
+				panelAuto.launchFullAutoTrace();
+			}
 		}
 		//IMPORT ROIS
 		if(e.getSource() == roiImport)

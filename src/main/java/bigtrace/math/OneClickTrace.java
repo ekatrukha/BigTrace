@@ -179,12 +179,9 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		if(bNewTrace)
 		{
 			final RealPoint startRefinedPoint = refinePointUsingSaliency(startPoint);
-			if(!bUseMask)
-			{
-				startPoint = startRefinedPoint;
-			}
 			//masked tracing
-			else
+			//check if already traced
+			if(bUseMask)
 			{
 				bStartLocationOccupied = false;
 				if(traceMask.isOccupied( startRefinedPoint ))
@@ -194,6 +191,10 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 					return;
 				}	
 			}
+			//System.out.println("ini"+startPoint.toString() +" refined"+startRefinedPoint.toString());
+			startPoint = startRefinedPoint;
+			
+			getMathForCurrentPoint(startPoint);
 		}
 		
 		double [] startDirectionVector = getVectorAtLocation(startPoint);
@@ -305,7 +306,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 		RealPoint nextPoint;
 		
-		int nCountPoints=0;
+		int nCountPoints = 0;
 		points.add(startPoint);
 		allPointsIntersection.add(startPoint.positionAsDoubleArray());
 		if(bFirstTrace)
@@ -962,7 +963,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
     	{
     		bt.roiManager.unselect();
     	}
-    	bt.bInputLock = false;
+    	
     	if(bUnlockInTheEnd)
     	{
     		//unlock user interaction  	

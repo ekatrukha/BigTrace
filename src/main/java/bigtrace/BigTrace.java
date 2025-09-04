@@ -325,7 +325,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		btPanel.finFrame.add(btPanel);
 		
         //Display the window.
-		btPanel.finFrame.setSize(400,600);
+		btPanel.finFrame.setSize(430,600);
 		btPanel.finFrame.setVisible(true);
 	    java.awt.Point bvv_p = bvvFrame.getLocationOnScreen();
 	    java.awt.Dimension bvv_d = bvvFrame.getSize();
@@ -1496,9 +1496,11 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		BigTrace testI = new BigTrace(); 
 		
 		//testI.run("");
-		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
+		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP.tif");
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP-3d.tif");
 
+		
 		///testI.run("/home/eugene/Desktop/projects/BigTrace/BT_tracks/Snejana_small_example.tif");
 
 		///macros test

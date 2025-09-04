@@ -127,8 +127,8 @@ public class SplineCurve3D {
 		
 	}
 	
-	/** function calculates arclength and reparametrizes 
-	 * interpolation to this value
+	/** function calculates arclength of the fitted spline 
+	 * and reparametrizes interpolation to this value
 	 ***/
 	public void initArcLength()
 	{		

@@ -2,11 +2,18 @@ package bigtrace.gui;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
 
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.event.AncestorListener;
+import javax.swing.event.ListSelectionListener;
 
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -14,12 +21,28 @@ import net.imglib2.type.numeric.RealType;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.math.FullAutoTrace;
+import bigtrace.rois.Roi3D;
 import ij.Prefs;
 
-public class PanelFullAutoTrace
+public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > implements ActionListener
 {
+	final BigTrace<T> bt;
 	
-	static public <T extends RealType< T > & NativeType< T >> void launchFullAutoTrace(final BigTrace< T > bt)
+	ImageIcon tabIconAuto;
+	ImageIcon tabIconCancel;
+	final FullAutoTrace<T> fullAutoTrace;
+	final JButton butAuto;
+
+	
+	public PanelFullAutoTrace (final BigTrace<T> bt_)
+	{
+		bt = bt_;
+		fullAutoTrace = new FullAutoTrace<>(bt);
+		butAuto = bt.roiManager.butAutoTrace;
+		butAuto.addActionListener( this );
+	}
+	
+	public  void launchFullAutoTrace()
 	{
 		final JTabbedPane tabPane = new JTabbedPane();
 
@@ -61,7 +84,7 @@ public class PanelFullAutoTrace
 			nRange[0] = 0;
 			nRange[1] = BigTraceData.nNumTimepoints-1;
 			timeRange = new RangeSliderPanel(nRange, nRange);
-			timeRange.makeConstrained( bt.btData.nCurrTimepoint, bt.btData.nCurrTimepoint );
+			//timeRange.makeConstrained( bt.btData.nCurrTimepoint, bt.btData.nCurrTimepoint );
 			
 			gbc.gridy++;
 			gbc.gridx = 0;
@@ -89,7 +112,12 @@ public class PanelFullAutoTrace
 			panelGeneralTrace.getSetOptions();		
 			panelOneClickOptions.getSetOptions();
 			
-			FullAutoTrace<T> fullAutoTrace = new FullAutoTrace<>(bt);
+			URL icon_path = this.getClass().getResource("/icons/autotrace.png");
+			tabIconAuto = new ImageIcon(icon_path);
+			icon_path = this.getClass().getResource("/icons/cancel.png");
+			tabIconCancel = new ImageIcon(icon_path);
+
+			
 			if(timeRange != null)
 			{
 				fullAutoTrace.nFirstTP = timeRange.getMin();
@@ -101,9 +129,33 @@ public class PanelFullAutoTrace
 			fullAutoTrace.nAutoMinPointsCurve = Integer.parseInt(nfAutoMinCurvePoints.getText());
 			Prefs.set("BigTrace.nAutoMinPointsCurve",fullAutoTrace.nAutoMinPointsCurve );
 			
+			bt.bInputLock = true;
+			bt.setLockMode(true);
 			fullAutoTrace.addPropertyChangeListener( bt.btPanel );
+			butAuto.setEnabled( true );
+			butAuto.setIcon( tabIconCancel );
+			butAuto.setToolTipText( "Stop auto trace" );
+			butAuto.removeActionListener( bt.roiManager );
+			fullAutoTrace.butAuto = butAuto;
+			fullAutoTrace.tabIconRestore = tabIconAuto;
 			fullAutoTrace.execute();
 		}
 
+	}
+
+	@Override
+	public void actionPerformed( ActionEvent e )
+	{
+		// RUN TRACKING
+		if(e.getSource() == butAuto)
+		{
+			
+				if(bt.bInputLock && butAuto.isEnabled() && fullAutoTrace!=null && !fullAutoTrace.isCancelled() && !fullAutoTrace.isDone())
+				{
+					fullAutoTrace.cancel( false );
+				}
+			
+		}
+		
 	}
 }

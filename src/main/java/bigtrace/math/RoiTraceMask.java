@@ -182,4 +182,43 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
     	}
     	return new ValuePair< >(maxVal, new RealPoint(maxLocation));
     }
+    
+    public ValuePair<Double, RealPoint> findMaskedMaxAboveThreshold(final double dThreshold)
+    {
+    	final double [] maxLocation = new double[3];
+    	double maxVal = (-1)*Double.MAX_VALUE;
+    	//double [] cursorLoc = new double[3];
+    	//double [] maskLoc = new double[3];
+    	if(bMaskInit)
+    	{
+    		// create a cursor for the image (the order does not matter)
+    		final Cursor< T > cursor = traceInterval.localizingCursor();
+    		final Cursor< NativeBoolType > cursorMask = traceMask.localizingCursor();
+
+    		T currVal;
+    		boolean bKeepSearch = true;
+    		while(bKeepSearch && cursor.hasNext())
+    		{
+    			cursor.fwd();    			
+    			if(!cursorMask.next().get())
+    			{ 
+    				currVal = cursor.get();
+    				if(currVal.getRealDouble() > dThreshold)
+    				{
+    					maxVal = currVal.getRealDouble();
+    					cursor.localize( maxLocation );
+    					bKeepSearch = false;
+    					//maxLocation.setPosition( cursor );
+    				}
+    			}
+    			
+    		}
+ 
+    	}
+    	else
+    	{
+    		System.err.println("auto-trace mask was not initialized!");
+    	}
+    	return new ValuePair< >(maxVal, new RealPoint(maxLocation));
+    }
 }
