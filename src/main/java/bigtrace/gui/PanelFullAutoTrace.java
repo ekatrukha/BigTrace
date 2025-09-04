@@ -12,8 +12,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.event.AncestorListener;
-import javax.swing.event.ListSelectionListener;
 
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -21,7 +19,6 @@ import net.imglib2.type.numeric.RealType;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.math.FullAutoTrace;
-import bigtrace.rois.Roi3D;
 import ij.Prefs;
 
 public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > implements ActionListener

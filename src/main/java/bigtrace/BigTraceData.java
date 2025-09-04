@@ -433,6 +433,6 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 		{
 			out = ( float ) Math.max(this.sigmaTrace[0]*globCal[0]/BigTraceData.dMinVoxelSize, out);
 		}		
-		return out*9.0f;
+		return out*6.0f;
 	}
 }
