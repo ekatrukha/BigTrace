@@ -19,6 +19,7 @@ import net.imglib2.type.numeric.RealType;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.math.FullAutoTrace;
+import bigtrace.rois.Roi3D;
 import ij.Prefs;
 
 public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > implements ActionListener
@@ -27,16 +28,19 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 	
 	ImageIcon tabIconAuto;
 	ImageIcon tabIconCancel;
-	final FullAutoTrace<T> fullAutoTrace;
-	final JButton butAuto;
+	FullAutoTrace<T> fullAutoTrace;
+	JButton butAuto;
 
 	
 	public PanelFullAutoTrace (final BigTrace<T> bt_)
 	{
 		bt = bt_;
-		fullAutoTrace = new FullAutoTrace<>(bt);
-		butAuto = bt.roiManager.butAutoTrace;
-		butAuto.addActionListener( this );
+	}
+	
+	public void initButton(final JButton butAutoTrace)
+	{
+		butAuto = butAutoTrace;
+		butAuto.addActionListener( this );		
 	}
 	
 	public  void launchFullAutoTrace()
@@ -114,6 +118,7 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 			icon_path = this.getClass().getResource("/icons/cancel.png");
 			tabIconCancel = new ImageIcon(icon_path);
 
+			fullAutoTrace = new FullAutoTrace<>(bt);
 			
 			if(timeRange != null)
 			{
@@ -132,7 +137,6 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 			butAuto.setEnabled( true );
 			butAuto.setIcon( tabIconCancel );
 			butAuto.setToolTipText( "Stop auto trace" );
-			butAuto.removeActionListener( bt.roiManager );
 			fullAutoTrace.butAuto = butAuto;
 			fullAutoTrace.tabIconRestore = tabIconAuto;
 			fullAutoTrace.execute();
@@ -146,12 +150,17 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 		// RUN TRACKING
 		if(e.getSource() == butAuto)
 		{
-			
+			if(!bt.bInputLock)
+			{
+				launchFullAutoTrace();
+			}
+			else
+			{
 				if(bt.bInputLock && butAuto.isEnabled() && fullAutoTrace!=null && !fullAutoTrace.isCancelled() && !fullAutoTrace.isDone())
 				{
 					fullAutoTrace.cancel( false );
 				}
-			
+			}
 		}
 		
 	}

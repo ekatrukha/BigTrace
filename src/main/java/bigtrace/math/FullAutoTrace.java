@@ -161,7 +161,6 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
     	{
     		butAuto.setIcon( tabIconRestore );
     		butAuto.setToolTipText( "Full auto tracing" );
-    		butAuto.addActionListener( bt.roiManager );
     	}
     	bt.visBox = null;
     	oneClickTrace.releaseMultiThread();

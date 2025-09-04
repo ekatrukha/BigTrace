@@ -122,6 +122,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	final public JButton butAutoTrace;
 	final JButton roiImport;
 	final JButton roiSettings;
+	
+	final PanelFullAutoTrace< T > panelFullAutoTrace;
 
 	ImageIcon tabIconOCTrace;
 	ImageIcon tabIconCancel;
@@ -135,6 +137,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 		this.bt = bt;
 		rmDiag = new RoiManager3DDialogs(bt);
+		panelFullAutoTrace = new PanelFullAutoTrace<>(bt);
 		int nButtonSize = 40;
 
 		JPanel panTracing = new JPanel(new GridBagLayout());  
@@ -224,6 +227,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		butAutoTrace = new JButton(tabIcon);
 		butAutoTrace.setToolTipText("Full auto tracing");
 		butAutoTrace.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		panelFullAutoTrace.initButton(butAutoTrace);
 		
 		icon_path = this.getClass().getResource("/icons/settings.png");
 		tabIcon = new ImageIcon(icon_path);
@@ -245,8 +249,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		roiPlaneMode.addActionListener(this);
 
 		roiImport.addActionListener(this);
-		butAutoTrace.addActionListener( this );
 		roiSettings.addActionListener(this);
+		
 		//add to the panel
 		GridBagConstraints ct = new GridBagConstraints();
 		ct.gridx=0;
@@ -1079,15 +1083,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			rmDiag.diagLoadROIs();
 		}
 		
-		//FULL AUTO TRACE
-		if(e.getSource() == butAutoTrace)
-		{
-			if(!bt.bInputLock)
-			{
-				final PanelFullAutoTrace<T> panelAuto = new PanelFullAutoTrace<>( bt );
-				panelAuto.launchFullAutoTrace();
-			}
-		}
 		//IMPORT ROIS
 		if(e.getSource() == roiImport)
 		{
