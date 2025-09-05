@@ -100,10 +100,10 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 
 				if(newMax.getA()>dAutoMinStartTraceInt)
 				{
-					oneClickTrace.startPoint = newMax.getB();
-					mask.markLocation( oneClickTrace.startPoint );
+					oneClickTrace.startPoint = newMax.getB();					
 					setProgressState(Double.toString( newMax.getA() ));
 					oneClickTrace.runTracing();
+					mask.markLocation(newMax.getB() );
 					if(!oneClickTrace.bStartLocationOccupied)
 					{
 						mask.markROI( bt.roiManager.getActiveRoi() );

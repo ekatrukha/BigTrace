@@ -64,7 +64,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	 	(in sigmas) before new box needs to be calculated**/
 	final double rangeInnerBoxDim = 1.0;
 	
-	long [] minV;
+	final long [] minV = new long [4];
 	
 	public double dAngleThreshold;// = 0.8;
 	
@@ -73,14 +73,14 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	/** after this amount of points new segment will be added to LineTrace ROI **/
 	int nPointPerSegment;
 	
-	int [][] nNeighborsIndexes = new int[26][3];
+	final int [][] nNeighborsIndexes = new int[26][3];
 	
-	double [][] nNeighborsVectors = new double[26][3];
+	final double [][] nNeighborsVectors = new double[26][3];
 	
 	private HashMap<String, ArrayList<int[]>> neighborsMap = new HashMap<>();
 	
 	/** vector of curve direction for the last point **/
-	double [] lastDirectionVector;
+	final double [] lastDirectionVector = new double[3];
 	
 	ArrayList<double[]> allPointsIntersection;
 	
@@ -198,13 +198,14 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		}
 		
 		double [] startDirectionVector = getVectorAtLocation(startPoint);
-		lastDirectionVector = new double [3];
+		
 		for (int d=0; d<3; d++)
 		{
 			lastDirectionVector[d] = startDirectionVector[d];
 		}
 		
 		allPointsIntersection = new ArrayList<>();
+		
 		int nTotPoints = 0;
 		//we continue tracing, let's setup environment for that
 		if(!bNewTrace)
@@ -271,7 +272,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//trace in the other direction
 		nTotPoints = traceOneDirection(false, nTotPoints);
 		//could not find anything
-		if(nTotPoints==0 && bNewTrace)
+		if(nTotPoints == 0 && bNewTrace)
 		{
 			bt.roiManager.deleteActiveROI();
 			if(bUseMask)
@@ -409,7 +410,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//nCountReset = Math.max(Math.max(bt.btdata.sigmaTrace[0], bt.btdata.sigmaTrace[1]),bt.btdata.sigmaTrace[2]);
 		boxFullHalfRange = new long[3];
 		boxInnerHalfRange = new long[3];
-		long [] boxFullRange = new long[3];
+		final long [] boxFullRange = new long[3];
 
 		
 		for (int d=0;d<3;d++)
@@ -428,7 +429,6 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//hessFloat = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 6 );
 		//dV = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ], 3 );
 		//sW = ArrayImgs.floats( dim[ 0 ], dim[ 1 ], dim[ 2 ]);
-		minV = new long [4];
 
 		hessFloat = ArrayImgs.floats( boxFullRange[ 0 ], boxFullRange[ 1 ], boxFullRange[ 2 ], 6 );
 		dV = ArrayImgs.floats( boxFullRange[ 0 ], boxFullRange[ 1 ], boxFullRange[ 2 ], 3 );
@@ -492,20 +492,19 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	{
 		RealPoint out = null;
 
-		int i,d;
-		double [] newDirection = null;
+		final double [] newDirection = new double[3];
 		double [] candDirection;
 	
 		//find a pixel in the neighborhood 
 		//according to direction vector
-		int [] currNeighbor = new int[3];
+		final int [] currNeighbor = new int[3];
 		
 		String currNeighborHash = "";
 		
-		for (d=0;d<3;d++)
+		for (int d = 0; d < 3; d++)
 		{
 			currNeighbor[d] = (int)Math.round(lastDirectionVector[d]);
-			currNeighborHash = currNeighborHash+Integer.toString(currNeighbor[d]);
+			currNeighborHash = currNeighborHash + Integer.toString(currNeighbor[d]);
 		}
 		
 		//get all relevant neighbors
@@ -513,7 +512,6 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 		float currSal = (-1)*Float.MAX_VALUE;
 		
-		//double [] candVector;
 		ArrayList<int[]> scannedPos;
 		
 		if(nNeighborsMethods == 0)
@@ -526,15 +524,15 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		}
 		int [] candidateNeighbor; 
 
-		long[] candPos = new long[3];
+		final long[] candPos = new long[3];
 		
-		float[] finPos = new float[3];
+		final float[] finPos = new float[3];
 		
 		for(int nScan = 0; nScan < scannedPos.size(); nScan++)
 		{
 			candidateNeighbor = scannedPos.get(nScan);
 			
-			for(d = 0; d < 3; d++)
+			for (int d = 0; d < 3; d++)
 			{
 				candPos[d] = Math.round(currpoint.getFloatPosition(d))+candidateNeighbor[d];
 			}
@@ -543,29 +541,19 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			if(Intervals.contains(fullInput, new RealPoint(new float []{candPos[0],candPos[1],candPos[2]})))
 			{
 				currSal = raW.setPositionAndGet(candPos).get();
-				candDirection = getVectorAtLocation(candPos);
-//				if(bPrint)
-//				{
-//					//System.out.println(candidateNeighbor[0]+"\t"+candidateNeighbor[1]+"\t"+candidateNeighbor[2]+"\t"+currSal);
-//					System.out.println(currSal);
-//				}
-//				double [] dirX = new double [3];
-//				for (int zz=0;zz<2;zz++)
-//				{
-//					dirX[zz] = (double)candidateNeighbor[zz];
-//				}
-//				LinAlgHelpers.normalize(dirX);
-//				currSal *= LinAlgHelpers.dot(dirX, lastDirectionVector);
+				
 				
 				if(currSal > 0)
 				{
-					//double valS = Math.abs(LinAlgHelpers.dot(candDirection, lastDirectionVector));
-					//if(Math.abs(LinAlgHelpers.dot(candDirection, hystVector))<dAngleThreshold)
+					candDirection = getVectorAtLocation(candPos);
+					
+					//check directionality
 					if(Math.abs(LinAlgHelpers.dot(candDirection, lastDirectionVector))<dAngleThreshold)
 					{
 						currSal = 0.0f;
 					}
 					
+					// intensity stop rule
 					if(bt.btData.bOCIntensityStop)
 					{
 						if(fullInput.randomAccess().setPositionAndGet( candPos ).getRealDouble()<bt.btData.dOCIntensityThreshold)
@@ -573,6 +561,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 							currSal = 0.0f;
 						}
 					}
+					
+					//check if we hit the mask
 					if(bUseMask)
 					{
 						if(traceMask.isOccupied( candPos ))
@@ -580,49 +570,38 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 							currSal = 0.0f;
 						}
 					}
+					//currSal *= Math.abs(LinAlgHelpers.dot(candDirection, lastDirectionVector));
+					//see if we pass
 					if(currSal > maxSal)
 					{
 						maxSal = currSal;
-						for(i = 0; i < 3; i++)
+						for (int d = 0; d < 3; d++)
 						{
-							finPos[i] = candPos[i];
+							finPos[d] = candPos[d];
+							newDirection[d] = candDirection[d];
 						}
-						newDirection = candDirection;
 					}
 				}
 			}
 		}
 		//System.out.println(maxSal);
 		if(maxSal>0.000001)
-		{
-			// newDirection = getVectorAtLocation(new RealPoint(finPos));
-			double dCos = LinAlgHelpers.dot(newDirection, lastDirectionVector);
-			//System.out.println(dCos);
+		{			
+			final double dCos = LinAlgHelpers.dot(newDirection, lastDirectionVector);			
 			if(dCos>0)
-			//if(LinAlgHelpers.dot(newDirection, lastDirectionVector)>0)
 			{
-				lastDirectionVector = newDirection;
+				for (int d = 0; d < 3; d++)
+				{
+					lastDirectionVector[d] = newDirection[d];
+				}
 			}
 			else
 			{
 				LinAlgHelpers.scale(newDirection,-1.0,lastDirectionVector);
 			}
 			out = new RealPoint(finPos);
-//			if(Math.abs(out.getDoublePosition(0)-49)+Math.abs(out.getDoublePosition(1)-48)<0.001)
-//			{
-//				System.out.println("Found deviation point");
-//				bPrint = true;
-//				
-//			}
 		}
 		
-		//else //it is already null
-		//{
-		
-			//out = null;
-		//}
-
-
 		return out;
 		
 	}
@@ -634,8 +613,6 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//let's figure out the volume around the point
 		IntervalView<T> currentBox = Views.interval(fullInput, getLocalTraceBox(fullInput,boxFullHalfRange,currPoint));
 		innerTraceBox = getLocalTraceBox(fullInput,boxInnerHalfRange,currPoint);
-		//long[] minV = new long [currentBox.numDimensions()+1];
-		//minV = new long [currentBox.numDimensions()+1];
 		currentBox.min(minV);
 		
 		//IntervalView<FloatType> gradient = Views.translate(gradFloat, nShift);
@@ -700,7 +677,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	crops the box so it is inside viewclick interval **/
 	public FinalInterval getLocalTraceBox(final AbstractInterval fullInterval, final long [] range, final RealPoint target)
 	{
-		long[][] rangeM = new long[2][3];
+		final long[][] rangeM = new long[2][3];
 
 		for(int d=0;d<3;d++)
 		{
@@ -720,7 +697,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		final FinalInterval searchArea  = Intervals.intersect( fullInput, getLocalSearchArea(target_in, 2.0f) );		
 		RealPoint out = new RealPoint(3);
 		//VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(salWeights), maxSearchArea),out);
-		VolumeMisc.findMaxLocation(Views.interval(salWeights, searchArea),out);
+		VolumeMisc.findMaxLocation(Views.interval(salWeights, searchArea), out);
 		return out;
 		
 	}
@@ -746,29 +723,29 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	
 	}
 	/** returns orientation vector at the provided location **/
-	public double[] getVectorAtLocation(RealPoint point)
+	public double[] getVectorAtLocation(final RealPoint point)
 	{
 		int d;
-		double [] currDirVector = new double[3];
-		long [] currpos = new long [4];
+		final double [] currDirVector = new double[3];
+		final long [] currpos = new long [4];
 
 		for (d=0;d<3;d++)
 		{
-			currpos[d]=Math.round(point.getFloatPosition(d));
+			currpos[d] = Math.round(point.getFloatPosition(d));
 		}
 		
 		for(d=0;d<3;d++)
 		{
-			currpos[3]=d;
+			currpos[3] = d;
 			raV.setPosition(currpos);
 			currDirVector[d] = raV.get().getRealDouble();
 		}
 		return currDirVector;
 	}
 	
-	ArrayList<int[]> getNeighborPixels(double [] directionVector)
+	ArrayList<int[]> getNeighborPixels(final double [] directionVector)
 	{
-		ArrayList<int[]> out = new ArrayList<>();
+		final ArrayList<int[]> out = new ArrayList<>();
 		for(int i=0;i<26;i++)
 		{
 			if(LinAlgHelpers.dot(directionVector, nNeighborsVectors[i])>0.5)
@@ -777,13 +754,12 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			}
 		}
 		return out;
-
 	}
 	
 	void initNeighbors()
 	{
 		int nCount = 0;
-		int [] dx = new int[3];
+		final int [] dx = new int[3];
 		for (dx[0]=-1; dx[0]<2; dx[0]++)
 		{
 			for (dx[1]=-1; dx[1]<2; dx[1]++)
