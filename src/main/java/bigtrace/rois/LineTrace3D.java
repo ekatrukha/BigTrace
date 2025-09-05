@@ -80,12 +80,13 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 		double [] dist = new double [3];
 		LinAlgHelpers.subtract(vertices.get(vertices.size()-1).positionAsDoubleArray(), in_.positionAsDoubleArray(), dist);
 		if(LinAlgHelpers.length(dist)>0.000001)
-		{
+		{		
 			vertices.add(new RealPoint(in_));
 			//verticesVis.setVertices(vertices);
 			segments.add(segments_);
 			//segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
 			updateRenderVertices();
+
 		}
 	}
 	public void addPointAndSegmentNoUpdate(final RealPoint in_, final ArrayList<RealPoint> segments_)

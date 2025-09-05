@@ -279,9 +279,9 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		{
 			//why is this shift?! I don't know,
 			// but looks better like this
-			nDimBox[0][i]=btData.nDimIni[0][i]+0.5f;
-			nDimBox[1][i]=(btData.nDimIni[1][i]-1.0f);
-		}
+			nDimBox[0][i] = btData.nDimIni[0][i]-0.5f;
+			nDimBox[1][i] = btData.nDimIni[1][i]+0.5f;
+		} 
 		final Color frame = BigTraceData.getInvertedColor(btData.canvasBGColor);
 		volumeBox = new Box3D(nDimBox,1.0f,0.0f,frame,frame, 0);
 		
@@ -1499,13 +1499,13 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		testI.run("");
+		//testI.run("");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP-3d.tif");
 
 		
-		///testI.run("/home/eugene/Desktop/projects/BigTrace/BT_tracks/Snejana_small_example.tif");
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/FR21_SC_nuc10-1.tif");
 
 		///macros test
 //		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT_8bit.tif");

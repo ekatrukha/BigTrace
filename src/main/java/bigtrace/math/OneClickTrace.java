@@ -340,8 +340,11 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		{
 			if(points.size() == nPointPerSegment)
 			{
+				RealPoint lastSegmentPoint = points.get(points.size()-1).positionAsRealPoint();
 				bt.roiManager.addSegment(points.get(points.size()-1), points);
+				
 				points = new ArrayList<>();
+				points.add( lastSegmentPoint );
 				if(bUpdateProgressBar)
 				{
 					setProgressState(Integer.toString(nCountPoints)+"points found.");
@@ -393,7 +396,6 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			}
 		}
 		//adding last part of the trace
-
 		bt.roiManager.addSegment(points.get(points.size()-1), points);
 		
 		return nCountPoints;
@@ -540,8 +542,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 			if(Intervals.contains(fullInput, new RealPoint(new float []{candPos[0],candPos[1],candPos[2]})))
 			{
-				currSal = raW.setPositionAndGet(candPos).get();
-				
+				currSal = raW.setPositionAndGet(candPos).get();			
 				
 				if(currSal > 0)
 				{
