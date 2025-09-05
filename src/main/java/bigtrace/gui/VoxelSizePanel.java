@@ -63,27 +63,27 @@ public class VoxelSizePanel extends JPanel implements NumberField.Listener, Focu
 		setLayout(gridbag);
 
 		
-		c.fill=GridBagConstraints.HORIZONTAL;
-		//c.weightx = 0.5;
-		c.gridx=0;
-		c.gridy=0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+
+		c.gridx = 0;
+		c.gridy = 0;
 		this.add(new JLabel("X"),c);
 		c.gridx++;
 		this.add(nfAllSize[0],c);
-		//c.gridx=0;		
+		
 		c.gridx++;
 		this.add(new JLabel("Y"),c);
 		c.gridx++;
 		this.add(nfAllSize[1],c);
-		//c.gridx=0;
+
 		c.gridx++;
 		this.add(new JLabel("Z"),c);
 		c.gridx++;
 		this.add(nfAllSize[2],c);
-		c.gridwidth=3;
-		c.gridx=0;
+		c.gridwidth = 3;
+		c.gridx = 0;
 		c.gridy++;
-		//c.weightx = 0.0;
+
 		JLabel jlUnits =new JLabel("Units");
 		jlUnits.setHorizontalAlignment(SwingConstants.RIGHT);
 		this.add(jlUnits,c);
