@@ -355,6 +355,10 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 				ViewsIO.loadView( this, btData.sFileNameFullImg+"_btview.csv" );
 			} 
 		}
+		if(btData.bStartFullScreen)
+		{	
+			btPanel.makeFullScreen();
+		}
 	}
 		
 	public void closeWindows()

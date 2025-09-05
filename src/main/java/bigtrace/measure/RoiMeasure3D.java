@@ -178,8 +178,8 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 
 		//add to the panel
 		GridBagConstraints cr = new GridBagConstraints();
-		cr.gridx=0;
-		cr.gridy=0;
+		cr.gridx = 0;
+		cr.gridy = 0;
 		panLineTools.add(butLineProfile,cr);
 		cr.gridx++;
 		panLineTools.add(butLineAlignment,cr);

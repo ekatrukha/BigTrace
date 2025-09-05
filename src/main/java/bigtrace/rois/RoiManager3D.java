@@ -253,8 +253,8 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		
 		//add to the panel
 		GridBagConstraints ct = new GridBagConstraints();
-		ct.gridx=0;
-		ct.gridy=0;
+		ct.gridx = 0;
+		ct.gridy = 0;
 		panTracing.add(roiPointMode,ct);
 		ct.gridx++;
 		panTracing.add(roiPolyLineMode,ct);
@@ -269,15 +269,16 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
 		panTracing.add(sp,ct);
 		ct.gridx++;
-
+		
+		panTracing.add(butAutoTrace,ct);
+		ct.gridx++;
+		
 		//filler
-		//ct.gridx++;
 		ct.weightx = 0.01;
 		panTracing.add(new JLabel(), ct);
 		ct.weightx = 0.0;
 		ct.gridx++;
-		panTracing.add(butAutoTrace,ct);
-		ct.gridx++;
+
 		panTracing.add(roiImport,ct);
 		ct.gridx++;
 		panTracing.add(roiSettings,ct);

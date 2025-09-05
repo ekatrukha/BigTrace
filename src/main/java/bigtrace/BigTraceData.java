@@ -31,7 +31,7 @@ import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 
 	/** current plugin version **/
-	public static String sVersion = "0.6.1";
+	public static String sVersion = "0.7.0";
 	
 	/** plugin instance **/
 	BigTrace<T> bt;
@@ -189,6 +189,8 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	public static int timeFade = (int) Prefs.get("BigTrace.timeFade",0);
 		
 	/////////////////////////////////USER INTERFACE "CLICKING"
+	
+	public boolean bStartFullScreen = Prefs.get("BigTrace.bStartFullScreen", true);
 	
 	/** half size of rectangle around click point (in screen pixels)
 	 * used to find maximum intensity voxel **/
