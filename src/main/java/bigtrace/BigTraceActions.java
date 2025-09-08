@@ -7,23 +7,29 @@ import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JTextField;
 
-import net.imglib2.FinalInterval;
-import net.imglib2.RealPoint;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
-
-
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Actions;
 import org.scijava.ui.behaviour.util.Behaviours;
 
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.Rotate3DViewerStyle;
+import bigtrace.math.TraceBoxMath;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.volume.VolumeMisc;
+import bvvpg.vistools.Bvv;
+import bvvpg.vistools.BvvFunctions;
 import bvvpg.vistools.BvvHandle;
+import net.imglib2.FinalInterval;
+import net.imglib2.RandomAccess;
+import net.imglib2.RealPoint;
+import net.imglib2.iterator.IntervalIterator;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.view.IntervalView;
 
 
 public class BigTraceActions < T extends RealType< T > & NativeType< T > > 
@@ -105,7 +111,108 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		behaviours.behaviour( dragRotateSlow, "drag rotate slow", "ctrl button1" );
 		behaviours.install( handle.getTriggerbindings(), "BigTrace Behaviours" );
 	}
-	
+
+    public void actionDrawTraceMask() {
+        Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+        // Ensure no interference with typing
+        IntervalView<T> traceIV = bt.getTraceInterval(false);
+        if (!bt.bInputLock && !(c instanceof JTextField) && traceIV != null) {
+            if(bt.bvv_trace!=null)
+            {
+                bt.btData.bcTraceBox.storeBC(bt.bvv_trace);
+                bt.bvv_trace.removeFromBdv();
+                System.gc();
+            }
+            bt.traceMaskMath.generateTraceMask();
+            IntervalView< UnsignedByteType > trace_mask = VolumeMisc.convertFloatToUnsignedByte(bt.btData.flTraceMask, false);
+            
+            bt.bvv_trace = BvvFunctions.show(trace_mask, "trace_mask", Bvv.options().addTo(bt.bvv_main));
+            bt.bvv_trace.setCurrent();
+            bt.bvv_trace.setRenderType(bt.btData.nRenderMethod);
+            bt.bvv_trace.setDisplayRangeBounds(0, 255);
+            bt.bvv_trace.setAlphaRangeBounds(0, 255);
+            if(bt.btData.bcTraceBox.bInit)
+            {
+                bt.btData.bcTraceBox.setBC(bt.bvv_trace);
+            }
+            else	
+            {
+                bt.bvv_trace.setDisplayRangeBounds(0, 255);
+                bt.bvv_trace.setAlphaRangeBounds(0, 255);
+                bt.bvv_trace.setDisplayRange(0., 150.0);
+                bt.bvv_trace.setAlphaRange(0., 150.0);
+
+            }
+        }
+    }
+   
+
+    public void actionTraceNextInBox()
+    {
+        Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+        IntervalView<T> traceIV = bt.getTraceInterval(false);
+        System.out.println("in action trace next ");
+
+        if (!bt.bInputLock && !(c instanceof JTextField) && traceIV != null) {
+            System.out.println("in action trace next 2");
+            
+            int maxVal = 0;
+            RealPoint maxPos = new RealPoint(traceIV.numDimensions());
+            bt.setTraceBoxMode(true);
+            bt.traceMaskMath.generateTraceMask();
+            if (bt.btData.trace_weights == null){
+                System.out.println("No trace weights available, generating trace weights");
+                bt.bInputLock = true;
+                TraceBoxMath calcTask = new TraceBoxMath() {
+                    @Override
+                    public void done() {
+                        // This runs on the EDT after background computation is finished
+                        bt.bInputLock = false;
+                        actionTraceNextInBox(); // recall the method, now trace_weights should be ready
+                    }
+                };
+                calcTask.input = traceIV;
+                calcTask.bt = bt;
+                calcTask.addPropertyChangeListener(bt.btPanel);
+                calcTask.execute();
+                return;
+            }
+            // IntervalIterator iter = new IntervalIterator(traceIV);
+            RandomAccess<UnsignedByteType> trW = bt.btData.trace_weights.randomAccess();
+            IntervalIterator iter = new IntervalIterator(bt.btData.trace_weights);
+            RandomAccess<FloatType> trM = bt.btData.flTraceMask.randomAccess();
+            while (iter.hasNext()){
+
+                iter.fwd();
+                trW.setPosition(iter);
+                trM.setPosition(iter);
+                if (trM.get().get() < .001f && trW.get().get() > maxVal){
+                    maxVal = trW.get().get();
+                    iter.localize(maxPos);
+                    System.out.println(
+                        "maxVal: " + maxVal + " with " + trM.get().get() +" at " +
+                        maxPos.getDoublePosition(0) + " " +
+                        maxPos.getDoublePosition(1) + " " +
+                        maxPos.getDoublePosition(2)
+                    );
+                }
+            }
+            System.out.println(
+                maxVal + " at " +
+                maxPos.getDoublePosition(0) + " " +
+                maxPos.getDoublePosition(1) + " " +
+                maxPos.getDoublePosition(2) + " " 
+                // trM.setPosition(maxPos).get().get()
+            );
+            if (maxVal <= 1) {
+                System.out.println("No more points in trace box");
+                bt.viewer.showMessage("No more points in trace box");
+                return;
+            }
+            bt.setLockMode(true);
+			bt.runOneClickTrace(maxPos, true);
+        }
+    }
 	
 	/** find a brightest pixel in the direction of a click
 	 *  and add a new 3D point to active ROI OR
@@ -131,12 +238,13 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 					switch (RoiManager3D.mode)
 					{
 						case RoiManager3D.ADD_POINT_SEMIAUTOLINE:
-							
+
 							bt.setTraceBoxMode(true);
 							
 							//nothing selected, make a new tracing
 							if(bt.roiManager.activeRoi.intValue()==-1)
 							{
+                                bt.traceMaskMath.generateTraceMask();
 								//make a temporary ROI to calculate TraceBox
 								LineTrace3D tracing_for_box = (LineTrace3D) bt.roiManager.makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
 								tracing_for_box.addFirstPoint(target);
@@ -166,7 +274,8 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 							
 							if(bt.roiManager.activeRoi.intValue()==-1)
 							{
-								bMakeNewTrace = true;
+								bt.traceMaskMath.generateTraceMask();
+                                bMakeNewTrace = true;
 							}
 							else
 							{

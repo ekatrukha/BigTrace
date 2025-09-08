@@ -11,10 +11,10 @@ import javax.swing.SwingWorker;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
-import bigtrace.volume.VolumeMisc;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
+import bigtrace.volume.VolumeMisc;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
