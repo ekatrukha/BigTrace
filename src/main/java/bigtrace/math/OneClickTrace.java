@@ -444,15 +444,14 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		es = Executors.newFixedThreadPool( nThreads );
 
 		int count = 0;
-		int d1,d2;
+		
 		double [][] kernels;
 		Kernel1D[] derivKernel;
 		int [] nDerivOrder;
-		for (d1=0;d1<3;d1++)
+		for (int d1 = 0; d1 < 3; d1++)
 		{
-			for (d2 = d1; d2 < 3; d2++ )
+			for (int d2 = d1; d2 < 3; d2++ )
 			{
-
 				nDerivOrder = new int [3];
 				nDerivOrder[d1]++;
 				nDerivOrder[d2]++;
@@ -648,10 +647,9 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 		//second derivatives
 		int count = 0;
-		int d1,d2;
-		for (d1=0;d1<3;d1++)
+		for (int d1 = 0; d1 < 3; d1++)
 		{
-			for (d2 = d1; d2 < 3; d2++ )
+			for (int d2 = d1; d2 < 3; d2++ )
 			{
 				IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
 				//FinalInterval test = (FinalInterval) convObjects[count].requiredSourceInterval(hs2);
@@ -664,7 +662,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		EigenValVecSymmDecomposition<FloatType> mEV = new EigenValVecSymmDecomposition<>(3);
 
 		directionVectors =  Views.translate(dV, minV);
-		salWeights =  Views.translate(sW, minV[0],minV[1],minV[2]);
+		salWeights =  Views.translate(sW, minV[0], minV[1], minV[2]);
 		//salWeightsUB = VolumeMisc.convertFloatToUnsignedByte(salWeights,false);
 		mEV.computeVWRAI(hessian, directionVectors, salWeights, nThreads, es);
 		raV = directionVectors.randomAccess();
@@ -680,10 +678,10 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	{
 		final long[][] rangeM = new long[2][3];
 
-		for(int d=0;d<3;d++)
+		for(int d=0; d < 3; d++)
 		{
-			rangeM[0][d]=(long)(target.getDoublePosition(d))-range[d] ;
-			rangeM[1][d]=(long)(target.getDoublePosition(d))+range[d];								
+			rangeM[0][d] = (long)(target.getDoublePosition(d)) - range[d];
+			rangeM[1][d] = (long)(target.getDoublePosition(d)) + range[d];								
 		}
 		VolumeMisc.checkBoxInside(fullInterval, rangeM);
 		
