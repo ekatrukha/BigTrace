@@ -580,6 +580,8 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 				point_contours.set(i, Roi3D.scaleGlobInv(point_contours.get(i), BigTraceData.globCal));
 			}
 			BufferMesh meshx = VisWireMesh.initClosedVolumeMesh(point_contours, Roi3D.scaleGlobInv(points, BigTraceData.globCal) );
+			if(meshx == null)
+				return null;
 			volumeMesh = Meshes.removeDuplicateVertices( meshx, 2 );
 			bMeshInit = true;
 		}

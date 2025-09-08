@@ -25,11 +25,13 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
+import mpicbg.spim.data.generic.sequence.BasicImgLoader;
+
 /** class that stores settings and main data from BigTrace **/
 public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 
 	/** current plugin version **/
-	public static String sVersion = "0.6.0";
+	public static String sVersion = "0.7.0";
 	
 	/** plugin instance **/
 	BigTrace<T> bt;
@@ -188,6 +190,8 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 		
 	/////////////////////////////////USER INTERFACE "CLICKING"
 	
+	public boolean bStartFullScreen = Prefs.get("BigTrace.bStartFullScreen", true);
+	
 	/** half size of rectangle around click point (in screen pixels)
 	 * used to find maximum intensity voxel **/
 	public int nHalfClickSizeWindow = (int)Prefs.get("BigTrace.nHalfClickSizeWindow",5.0);
@@ -209,17 +213,7 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	
 	/** whether to clip volume when double clicking on ROI **/
 	public static int nROIDoubleClickClipExpand = (int)Prefs.get("BigTrace.nROIDoubleClickClipExpand", 0.0);
-		
-	///////////////////////////// SEMI-AUTO TRACING DATA
-	
-	/** weights of curve probability (saliency) for the trace box**/
-	public IntervalView< UnsignedByteType > trace_weights = null;
 
-	/** directions of curve at each voxel for the trace box**/
-	public IntervalView< FloatType > trace_vectors = null;
-	
-	/**special points Dijkstra search for the trace box**/
-	public ArrayList<long []> jump_points = null;
 	
 ///////////////////////////// TRACING SETTINGS GENERAL
 	
@@ -229,8 +223,8 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	/** whether to limit tracing to clipped area**/
 	public boolean bTraceOnlyClipped = false;
 	
-    // collision mask
-    public IntervalView< FloatType > flTraceMask = null;
+	/** whether to automatically pick traced ROI thicknes **/	
+	public boolean bEstimateROIThicknessFromParams = Prefs.get("BigTrace.bEstimateROIThicknessFromParams", true);
 	
 	///////////////////////////// TRACING SETTINGS SEMI AUTO
 	
@@ -256,6 +250,16 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	
 	/** storage of the dataset orientation before entering TraceBox mode **/
 	public AffineTransform3D transformBeforeTracing = new AffineTransform3D(); 
+
+	/** weights of curve probability (saliency) for the trace box**/
+	public IntervalView< UnsignedByteType > trace_weights = null;
+	
+	/** directions of curve at each voxel for the trace box**/
+	public IntervalView< FloatType > trace_vectors = null;
+	
+	/**special points Dijkstra search for the trace box**/
+	public ArrayList<long []> jump_points = null;
+	
 	
 	///////////////////////////// TRACING SETTINGS ONE CLICK
 	
@@ -359,14 +363,15 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	{
 		if(bSpimSource)
 		{
-			RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
+			final BasicImgLoader imgLoader = bt.spimData.getSequenceDescription().getImgLoader();
+			RandomAccessibleInterval<T> full_int = (RandomAccessibleInterval<T>) imgLoader.getSetupImgLoader(nChannel).getImage(nTimePoint);
 			if(bt.bApplyLLSTransform)
 			{
 				RealRandomAccessible<T> rra = Views.interpolate(Views.extendZero(full_int), nInterpolatorFactory);
 				RealRandomAccessible<T> rra_tr = RealViews.affine(rra, bt.afDataTransform);
 				return Views.interval(Views.raster(rra_tr), new FinalInterval(nDimIni[0],nDimIni[1]));	
 			}
-			return (RandomAccessibleInterval<T>) bt.spimData.getSequenceDescription().getImgLoader().getSetupImgLoader(nChannel).getImage(nTimePoint);
+			return (RandomAccessibleInterval<T>) imgLoader.getSetupImgLoader(nChannel).getImage(nTimePoint);
 		}
 		return Views.hyperSlice(Views.hyperSlice(bt.all_ch_RAI,4,nChannel),3,nTimePoint);
 	}
@@ -421,5 +426,15 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	{
 		
 		return  new Color(255-color_in.getRed(),255-color_in.getGreen(),255-color_in.getBlue(),color_in.getAlpha());
+	}
+	
+	public float estimateROIThicknessFromTracing()
+	{
+		float out = (-1)*Float.MAX_VALUE;
+		for(int d = 0; d < 3; d++)
+		{
+			out = ( float ) Math.max(this.sigmaTrace[0]*globCal[0]/BigTraceData.dMinVoxelSize, out);
+		}		
+		return out*6.0f;
 	}
 }

@@ -30,6 +30,7 @@ public class UnCoilFrameImgLoader < T extends RealType< T > & NativeType< T > > 
 		bt = bt_;
 		unCoil = unCoil_;		
 	}
+	
 	@Override
 	public BasicSetupImgLoader< UnsignedShortType> getSetupImgLoader( int setupId )
 	{

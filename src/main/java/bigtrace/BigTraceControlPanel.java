@@ -2,6 +2,9 @@ package bigtrace;
 
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -313,7 +316,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		panView.add(butVBox,c);
 		
 		//SAVE AND LOAD BUTTONS
-		icon_path = this.getClass().getResource("/icons/save.png");
+		icon_path = this.getClass().getResource("/icons/save_view.png");
 	    tabIcon = new ImageIcon(icon_path);
 	    butSaveView = new JButton(tabIcon);
 	    butSaveView.setToolTipText( "Save image view" );
@@ -326,9 +329,18 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    butLoadView = new JButton(tabIcon);
 	    butLoadView.setToolTipText( "Load image view" );
 		butLoadView.addActionListener(this);
-
 	    c.gridx++;
 		panView.add(butLoadView,c);	
+
+		//FULLSCREEN BUTTON
+		icon_path = this.getClass().getResource("/icons/fullscreen.png");
+	    tabIcon = new ImageIcon(icon_path);
+	    JButton butFullScreen = new JButton(tabIcon);
+	    butFullScreen.setToolTipText( "Fullscreen" );
+	    butFullScreen.addActionListener((e)->makeFullScreen());						
+		c.gridx++;
+		panView.add(butFullScreen,c);	
+
 		
 		//SETTINGS
 		icon_path = this.getClass().getResource("/icons/settings.png");
@@ -470,6 +482,9 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			
 		});
 		
+		JCheckBox cbStartFullScreen = new JCheckBox();
+		cbStartFullScreen.setSelected(bt.btData.bStartFullScreen);
+		
 		NumberField nfClickArea = new NumberField(4);
 		nfClickArea.setIntegersOnly(true);
 		nfClickArea.setText(Integer.toString(bt.btData.nHalfClickSizeWindow*2));
@@ -508,17 +523,24 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		cd.gridx++;
 		pViewSettings.add(butCanvasBGColor,cd);
 		
-		cd.gridx=0;
+		cd.gridx = 0;
+		cd.gridy++;
+		pViewSettings.add(new JLabel("Start in full screen mode: "),cd);
+		cd.gridx++;
+		pViewSettings.add(cbStartFullScreen,cd);
+		
+		cd.gridx = 0;
 		cd.gridy++;
 		pViewSettings.add(new JLabel("Snap area size on click (screen px): "),cd);
 		cd.gridx++;
 		pViewSettings.add(nfClickArea,cd);
 	
-		cd.gridx=0;
+		cd.gridx = 0;
 		cd.gridy++;
 		pViewSettings.add(new JLabel("Transform animation duration (ms): "),cd);
 		cd.gridx++;
 		pViewSettings.add(nfAnimationDuration,cd);
+		
 
 		cd.gridx=0;
 		cd.gridy++;
@@ -588,6 +610,8 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 				setCanvasBGColor(tempC);
 			}
 			
+			bt.btData.bStartFullScreen = cbStartFullScreen.isSelected();
+			Prefs.set("BigTrace.bStartFullScreen", bt.btData.bStartFullScreen );
 			bt.btData.nHalfClickSizeWindow = (int)(0.5*Integer.parseInt(nfClickArea.getText()));
 			Prefs.set("BigTrace.nHalfClickSizeWindow",bt.btData.nHalfClickSizeWindow);
 
@@ -653,7 +677,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		nRange[0] = 0;
 		nRange[1] = BigTraceData.nNumTimepoints-1;
 		RangeSliderPanel timeRange = new RangeSliderPanel(nRange, nRange);
-		if(BigTraceData.nNumTimepoints>1)
+		if(BigTraceData.nNumTimepoints > 1)
 		{
 			clipExtractSettings.add(new JLabel("Extract:"),cd);
 			extractClippedTimeList.setSelectedIndex((int)Prefs.get("BigTrace.extractClippedTime", 0));
@@ -941,5 +965,21 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		}
 	}
 
+	void makeFullScreen()
+	{
+
+		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+		int width = gd.getDisplayMode().getWidth();
+		int height = gd.getDisplayMode().getHeight();
+		int nCPWidth = this.finFrame.getWidth();
+		Dimension nBVVWindowDim = new Dimension( width - nCPWidth, height );
+		
+		bt.bvvFrame.getContentPane().setPreferredSize(  nBVVWindowDim ) ;	
+		bt.bvvFrame.setSize(width - nCPWidth, height  );
+		this.finFrame.setSize( nCPWidth, height );
+		bt.bvvFrame.setLocation( 0, 0 );
+
+		this.finFrame.setLocation(width - nCPWidth, 0);
+	}
 
 }

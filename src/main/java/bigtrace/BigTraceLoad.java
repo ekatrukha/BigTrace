@@ -8,8 +8,6 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
-
-
 import ij.CompositeImage;
 import ij.IJ;
 import ij.ImagePlus;
@@ -31,13 +29,13 @@ import loci.plugins.util.LociPrefs;
 import ch.epfl.biop.bdv.img.OpenersToSpimData;
 import ch.epfl.biop.bdv.img.opener.OpenerSettings;
 
+import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewSetup;
 
-import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
@@ -91,12 +89,26 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		
-		FinalInterval rai_int = new FinalInterval(seq.getImgLoader().getSetupImgLoader(0).getImage(0));
+
+		FinalInterval rai_int = new FinalInterval(((BasicImgLoader)seq.getImgLoader()).getSetupImgLoader(0).getImage(0));			
+		
 		List< ViewSetup > allViewSetups = seq.getViewSetupsOrdered();
-		for (int nV = 0; nV<allViewSetups.size();nV++)
+		for (int nV = 0; nV < allViewSetups.size();nV++)
 		{
-			Dimensions nDim = allViewSetups.get( nV ).getSize();
-			rai_int = Intervals.union( rai_int, new FinalInterval(new long[3],nDim.dimensionsAsLongArray()) );
+			//Dimensions nDim = allViewSetups.get( nV ).getSize();
+			final long [] nDim = allViewSetups.get( nV ).getSize().dimensionsAsLongArray();
+			for (int d=0;d<3;d++)
+			{
+				nDim[d]--;
+			}
+			if(rai_int == null)
+			{
+				rai_int = new FinalInterval(new long[3],nDim);
+			}
+			else
+			{
+				rai_int = Intervals.union( rai_int, new FinalInterval(new long[3],nDim) );
+			}
 		}
 		rai_int.min( btdata.nDimIni[0] );
 		rai_int.max( btdata.nDimIni[1] );
@@ -265,7 +277,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		String sTestLLS = seq.getViewDescription(0, 0).getViewSetup().getName();
 		if(sTestLLS.length()>3)
 		{
-			if(sTestLLS.contains("LLS") && btdata.sFileNameFullImg.endsWith(".czi"))
+			if((sTestLLS.contains("LLS")||sTestLLS.contains("LatticeLightsheet")) && btdata.sFileNameFullImg.endsWith(".czi"))
 			{
 				if (JOptionPane.showConfirmDialog(null, "Looks like the input comes from Zeiss LLS7.\nDo you want to deskew it?\n"
 						+ "(if it is already deskewed, click No)", "Loading option",

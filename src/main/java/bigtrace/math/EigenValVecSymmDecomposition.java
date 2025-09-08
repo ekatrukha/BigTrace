@@ -52,13 +52,13 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
    /** Arrays for internal storage of eigenvalues.
    @serial internal storage of eigenvalues.
    */
-   private double[] dEV, eEV;
+   private final double[] dEV, eEV;
 
    /** Array for internal storage of eigenvectors.
    @serial internal storage of eigenvectors.
    */
    //RealCompositeSymmetricMatrix< T > Vm;
-   private double[][] V;
+   private final double[][] V;
 
 
 /* ------------------------
@@ -120,7 +120,7 @@ public void computeVWRAI( final RandomAccessibleInterval< T > tensor,
 			{
 				dimensionMax = size;
 				dimensionArgMax = d;
-				dimensionMin= tensor.min(d);
+				dimensionMin = tensor.min(d);
 			}
 		}
 
@@ -224,7 +224,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 			{
 				dimensionMax = size;
 				dimensionArgMax = d;
-				dimensionMin= tensor.min(d);
+				dimensionMin = tensor.min(d);
 			}
 		}
 
@@ -289,18 +289,18 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
    
    public void computeVectorWeight( RealComposite< T > tensor, RealComposite< T > vector,  T weight)
    {
-	   int nCount=0;
+	   int nCount = 0;
 	  // RealCompositeSymmetricMatrix< T > m = new RealCompositeSymmetricMatrix<T>( null, n);
 	   //m.setData(tensor);
 	   int i;
-	   for(i =0;i<n; i++)
-		   for(int j =i;j<n; j++)
-	   {
-		   V[i][j] = tensor.get(nCount).getRealFloat();
-		   //V[i][j] = m.get(i, j);
-		   V[j][i]=V[i][j];
-		   nCount++;
-	   }
+	   for(i = 0; i < n; i++)
+		   for(int j = i; j < n; j++)
+		   {
+			   V[i][j] = tensor.get(nCount).getRealDouble();
+			   //V[i][j] = m.get(i, j);
+			   V[j][i] = V[i][j];
+			   nCount++;
+		   }
 	   // Do the math
        // Tridiagonalize.
        tred2();
@@ -314,23 +314,23 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        // and store corresponding vector
        int index = 0;
        double dMin = Math.abs(dEV[index]);
-       for (i =1;i<n; i++)
+       for (i = 1; i < n; i++)
        {
-    	   if(Math.abs(dEV[i])<dMin)
+    	   if(Math.abs(dEV[i]) < dMin)
     	   {
-    		   index=i;
-    		   dMin=Math.abs(dEV[index]);
+    		   index = i;
+    		   dMin = Math.abs(dEV[index]);
     	   }
        }
-       for (i =0;i<n; i++)
+       for (i = 0; i < n; i++)
        {
     	   vector.get(i).setReal(V[i][index]);
        } 	   
        boolean bBothNegative = true;
        double dWeight = 0.0;
-       for (i =0;i<n; i++)
+       for (i = 0; i < n; i++)
        {
-    	   if(i!=index)
+    	   if(i != index)
     	   {
     		   if(dEV[i]>0)
     		   {
@@ -338,7 +338,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
     		   }
     		   else
     		   {
-    			   dWeight-=dEV[i];
+    			   dWeight -= dEV[i];
     		   }
     	   }
        }       
@@ -353,20 +353,21 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        
        ////////////////////////////////////////
    }
+   
    public void computeCorners( RealComposite< T > tensor,  T corner)
    {
-	   int nCount=0;
+	   int nCount = 0;
 	  // RealCompositeSymmetricMatrix< T > m = new RealCompositeSymmetricMatrix<T>( null, n);
 	   //m.setData(tensor);
 	   int i;
-	   for(i =0;i<n; i++)
-		   for(int j =i;j<n; j++)
-	   {
-		   V[i][j] = tensor.get(nCount).getRealFloat();
-		   //V[i][j] = m.get(i, j);
-		   V[j][i]=V[i][j];
-		   nCount++;
-	   }
+	   for(i = 0; i < n; i++)
+		   for(int j = i; j < n; j++)
+		   {
+			   V[i][j] = tensor.get(nCount).getRealDouble();
+			   //V[i][j] = m.get(i, j);
+			   V[j][i]=V[i][j];
+			   nCount++;
+		   }
 	   // Do the math
        // Tridiagonalize.
        tred2();
@@ -382,14 +383,14 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        double dMin = Math.abs(dEV[index]);
        for (i =1;i<n; i++)
        {
-    	   if(Math.abs(dEV[i])<dMin)
+    	   if(Math.abs(dEV[i]) < dMin)
     	   {
     		   index=i;
     		   dMin=Math.abs(dEV[index]);
     	   }
-    	   if(dEV[i]>dMax)
+    	   if(dEV[i] > dMax)
     	   {
-    		   dMax=dEV[i];
+    		   dMax = dEV[i];
     	   }
        }
    
@@ -403,20 +404,21 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
     	   corner.setZero();
        }
    }
+   
    public void computeVectorWeightCorners( RealComposite< T > tensor, RealComposite< T > vector,  T weight, T corner)
    {
 	   int nCount=0;
 	  // RealCompositeSymmetricMatrix< T > m = new RealCompositeSymmetricMatrix<T>( null, n);
 	   //m.setData(tensor);
 	   int i;
-	   for(i =0;i<n; i++)
-		   for(int j =i;j<n; j++)
-	   {
-		   V[i][j] = tensor.get(nCount).getRealFloat();
-		   //V[i][j] = m.get(i, j);
-		   V[j][i]=V[i][j];
-		   nCount++;
-	   }
+	   for(i = 0; i < n; i++)
+		   for(int j = i; j < n; j++)
+		   {
+			   V[i][j] = tensor.get(nCount).getRealDouble();
+			   //V[i][j] = m.get(i, j);
+			   V[j][i] = V[i][j];
+			   nCount++;
+		   }
 	   // Do the math
        // Tridiagonalize.
        tred2();
@@ -432,7 +434,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        double dMin = Math.abs(dEV[index]);
        for (i=1; i<n; i++)
        {
-    	   if(Math.abs(dEV[i])<dMin)
+    	   if(Math.abs(dEV[i]) < dMin)
     	   {
     		   index = i;
     		   dMin = Math.abs(dEV[index]);
@@ -442,15 +444,15 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
     		   dMax = dEV[i];
     	   }
        }
-       for (i =0;i<n; i++)
+       for (i = 0; i < n; i++)
        {
     	   vector.get(i).setReal(V[i][index]);
-       } 	   
+       } 	    
        boolean bBothNegative = true;
        double dWeight = 0.0;
-       for (i =0;i<n; i++)
+       for (i = 0; i < n; i++)
        {
-    	   if(i!=index)
+    	   if(i != index)
     	   {
     		   if(dEV[i]>0)
     		   {
@@ -458,7 +460,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
     		   }
     		   else
     		   {
-    			   dWeight-=dEV[i];
+    			   dWeight -= dEV[i];
     		   }
     		   
     	   }
@@ -471,7 +473,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        {
     	   weight.setZero();
        }
-       if(dMax<0)
+       if(dMax < 0)
        {
     	   corner.setReal(dMin);
        }
@@ -488,12 +490,12 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 	   //m.setData(tensor);
 	   for(int i =0;i<n; i++)
 		   for(int j =i;j<n; j++)
-	   {
-		   V[i][j] = tensor.get(nCount).getRealFloat();
-		   //V[i][j] = m.get(i, j);
-		   V[j][i]=V[i][j];
-		   nCount++;
-	   }
+		   {
+			   V[i][j] = tensor.get(nCount).getRealFloat();
+			   //V[i][j] = m.get(i, j);
+			   V[j][i] = V[i][j];
+			   nCount++;
+		   }
        // Tridiagonalize.
        tred2();
  
@@ -501,12 +503,12 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        tql2();
        
        
-       System.out.println("eig "+Double.toString(dEV[0])+" "+Double.toString(dEV[1])+" "+Double.toString(dEV[2]));
+       System.out.println("eig "+ Double.toString(dEV[0])+" "+Double.toString(dEV[1])+" "+Double.toString(dEV[2]));
 	   for(int i =0;i<n; i++)
 		   for(int j =0;j<n; j++)
 		   {
 			   //tensor.get((long)(nCount))
-			   in_vals[i][j]=(float) V[j][i];
+			   in_vals[i][j] = (float) V[j][i];
 		   }
 
    }
@@ -521,8 +523,8 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
 	   {
 		   if(Math.abs(dEV[i])<dMin)
 		   {
-			   dMin=Math.abs(dEV[i]);
-			   nIndex=i;
+			   dMin = Math.abs(dEV[i]);
+			   nIndex = i;
 		   }
 	   }
 	   System.out.println("index "+Integer.toString(nIndex));
@@ -549,7 +551,8 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
    @return     real(diag(D))
    */
 
-   public double[] getRealEigenvalues () {
+   public double[] getRealEigenvalues () 
+   {
       return dEV;
    }
 
@@ -557,7 +560,8 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
    @return     imag(diag(D))
    */
 
-   public double[] getImagEigenvalues () {
+   public double[] getImagEigenvalues () 
+   {
       return eEV;
    }
 

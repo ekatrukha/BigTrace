@@ -67,9 +67,9 @@ public class ExtractClip < T extends RealType< T > & NativeType< T > > extends S
 		//output calibration
 		cal.setUnit(bt.btData.sVoxelUnit);
 		cal.setTimeUnit(bt.btData.sTimeUnit);
-		cal.pixelWidth = BigTraceData.dMinVoxelSize;
-		cal.pixelHeight = BigTraceData.dMinVoxelSize;
-		cal.pixelDepth = BigTraceData.dMinVoxelSize;
+		cal.pixelWidth = BigTraceData.globCal[0];
+		cal.pixelHeight = BigTraceData.globCal[1];
+		cal.pixelDepth = BigTraceData.globCal[2];
 		
 		Path p = Paths.get(bt.btData.sFileNameFullImg);
 		String filename = p.getFileName().toString();
