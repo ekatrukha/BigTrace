@@ -39,8 +39,6 @@ import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
-import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
@@ -49,8 +47,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-
-import net.imglib2.img.display.imagej.ImageJFunctions;
 
 import bdv.tools.transformation.TransformedSource;
 
@@ -77,11 +73,9 @@ import bigtrace.gui.GuiMisc;
 import bigtrace.io.ViewsIO;
 import bigtrace.math.OneClickTrace;
 import bigtrace.math.TraceBoxMath;
-import bigtrace.math.TraceMaskMath;
 import bigtrace.math.TracingBGVect;
 import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
-import bigtrace.rois.Roi3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineAA;
 import bigtrace.volume.VolumeMisc;
@@ -152,9 +146,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	/** BigTrace macro interface**/
 	public BigTraceMacro<T> btMacro;
 	
-    /** Collision mask worker */
-    public TraceMaskMath traceMaskMath = null;
-
 	/** One click tracing worker**/
 	OneClickTrace<T> oneClickTrace = null;
 	
@@ -197,7 +188,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		
 		btData = new BigTraceData<>(this);
 		btLoad = new BigTraceLoad<>(this);
-        traceMaskMath = new TraceMaskMath(this);
 		
 		
 		if(arg.equals(""))
@@ -432,7 +422,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		//showTraceBox(btdata.trace_weights);
 		btData.nPointsInTraceBox = 1;
 	}
-
+	
 	/** calculates trace box around last vertice of provided trace.
 	 * if bRefine is true, it will refine the position of the dot
 	 * and add it to the ROI manager **/
@@ -1414,7 +1404,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			{
 				btData.bDeselectROITime = true;
 			}
-            btData.trace_weights = null;
 			//if(btpanel!=null)
 			btPanel.updateViewDataSources();
 		}	
@@ -1506,6 +1495,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	@SuppressWarnings("rawtypes")
 	public static void main(String... args) throws Exception
 	{
+		
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
