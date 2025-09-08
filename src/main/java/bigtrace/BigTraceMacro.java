@@ -186,9 +186,4 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		IJ.log("test ok right away");
 
 	}
-	
-	void waitUntilUnlock()
-	{
-		
-	}
 }
