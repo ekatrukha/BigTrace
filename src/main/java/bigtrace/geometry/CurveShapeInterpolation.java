@@ -29,12 +29,14 @@ public class CurveShapeInterpolation {
 	
 	/** reference curve points in SPACE coordinates **/
 	ArrayList<RealPoint> points_curve = null;
+	
+	boolean bInit = false;
 		
 	
 	public CurveShapeInterpolation (final int nRoiType_)
 	{
 		nRoiType = nRoiType_;
-
+		bInit = false;
 	}
 	
 	public CurveShapeInterpolation (final ArrayList<RealPoint> points, final int nShapeInterpolation,final int nRoiType_)
@@ -45,7 +47,8 @@ public class CurveShapeInterpolation {
 	
 	/** depending on the Roi3D type and interpolation type, 
 	 * builds different "reference" curves.
-	 * Provided points in array are assumed to be in VOXEL coordinates **/
+	 * Provided points in array are assumed to be in VOXEL coordinates.
+	 * It inits either linInter or splineInter, only one of them could be not null **/
 	public boolean init(final ArrayList<RealPoint> points, final int nShapeInterpolation)
 	{
 		
@@ -68,10 +71,11 @@ public class CurveShapeInterpolation {
 						}
 						//init linear interpolator
 						linInter = new LerpCurve3D(points_curve);
+						splineInter = null;
 						break;
 					case BigTraceData.SHAPE_Smooth:
 						if(nRoiType == Roi3D.POLYLINE)
-						{
+						{							
 							//sample segments between points with pixel step of 1
 							points_curve = Roi3D.scaleGlob(getJointSegmentSmoothPolyLine(points),BigTraceData.globCal);
 						}
@@ -82,25 +86,56 @@ public class CurveShapeInterpolation {
 						}
 						//init linear interpolator
 						linInter = new LerpCurve3D(points_curve);
+						splineInter = null;
 						break;
 					case BigTraceData.SHAPE_Spline:
 						if(nRoiType == Roi3D.POLYLINE)
 						{
-							//perform spline interpolation
-							//estimating end derivatives
-							splineInter = new SplineCurve3D( Roi3D.scaleGlob(points,BigTraceData.globCal),2);
+							if(points.size()==2)
+							{
+								points_curve = Roi3D.scaleGlob(points,BigTraceData.globCal);
+								linInter = new LerpCurve3D(points_curve);
+								splineInter = null;
+							}
+							else
+							{
+								//perform spline interpolation
+								//estimating end derivatives
+								splineInter = new SplineCurve3D( Roi3D.scaleGlob(points,BigTraceData.globCal),2);
+								linInter = null;
+							}
 						}
 						else
 						{
-							//smooth positions of points
-							points_curve = Roi3D.scaleGlob(getSmoothVals(points),BigTraceData.globCal);		
-							//take some points along the curve as spline nodes
-							splineInter = new SplineCurve3D(getSplineSparsePoints(points_curve),2);
+							if(points.size()==2)
+							{
+								points_curve = Roi3D.scaleGlob(points,BigTraceData.globCal);
+								linInter = new LerpCurve3D(points_curve);
+								splineInter = null;
+							}
+							else
+							{
+								//smooth positions of points
+								points_curve = Roi3D.scaleGlob(getSmoothVals(points),BigTraceData.globCal);		
+								//take some points along the curve as spline nodes
+								final ArrayList< RealPoint > sparse_points = getSplineSparsePoints(points_curve);
+								if(sparse_points.size()==2)
+								{
+									points_curve = sparse_points;
+									linInter = new LerpCurve3D(points_curve);
+									splineInter = null;
+								}
+								else
+								{
+									splineInter = new SplineCurve3D(sparse_points,2);
+									linInter = null;
+								}
+							}
 						}
 						
 						break;
 				}
-				
+				bInit = true;
 				return true;
 		}
 		return false;
@@ -132,7 +167,7 @@ public class CurveShapeInterpolation {
 	}
 	/** samples segments between points with a step of approx 1 voxel,
 	 * making curve pass through points**/
-	public static ArrayList<RealPoint> getJointSegmentSmoothPolyLine(final ArrayList<RealPoint> points)
+	private static ArrayList<RealPoint> getJointSegmentSmoothPolyLine(final ArrayList<RealPoint> points)
 	{
 		final ArrayList<RealPoint> out = new ArrayList<>();
 
@@ -184,7 +219,7 @@ public class CurveShapeInterpolation {
 	 *  is less than half of average window, it becomes new half average window.
 	 *  It works similar to Matlab's "smooth()" function;
 	 * **/
-	public static ArrayList< RealPoint > getSmoothVals (final ArrayList< RealPoint > points)
+	private static ArrayList< RealPoint > getSmoothVals (final ArrayList< RealPoint > points)
 	{
 		ArrayList< RealPoint > out = new ArrayList< >();
 		double [][] coords= new double[points.size()][3];
@@ -295,7 +330,7 @@ public class CurveShapeInterpolation {
 	
 	/** returns approximately every BigTraceData.nSmoothWindow's point from array
 	 * (and in addition, mandatory boundary (end) points **/
-	public static ArrayList<RealPoint> getSplineSparsePoints(final ArrayList< RealPoint > points)
+	private static ArrayList<RealPoint> getSplineSparsePoints(final ArrayList< RealPoint > points)
 	{
 		ArrayList< RealPoint > out = new ArrayList< >();
 		int nPointsN = points.size();
@@ -326,7 +361,7 @@ public class CurveShapeInterpolation {
 	/** returns points array, passing through reference curve points in SPACE coordinates**/
 	public ArrayList<RealPoint> getVerticesVisual()
 	{
-		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
+		if(linInter != null)
 		{
 			return points_curve;
 		}
@@ -337,7 +372,7 @@ public class CurveShapeInterpolation {
 	/** returns points array, passing through reference curve points in SPACE coordinates **/
 	public ArrayList<double []> getTangentsVisual()
 	{
-		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
+		if(linInter != null)
 		{
 			return getTangentsAverage(points_curve);
 		}
@@ -362,6 +397,7 @@ public class CurveShapeInterpolation {
 		}
 		return splineInter.interpolate(xLSample);
 	}
+	
 	private ArrayList<double []> getTangentsSplineVisual()
 	{
 	
@@ -369,6 +405,7 @@ public class CurveShapeInterpolation {
 		int nNewPoints;
 		double [] xLSample;
 		int i;
+		waitForInit();
 		dLength = splineInter.getMaxArcLength();
 		nNewPoints =(int) Math.floor(dLength/BigTraceData.dMinVoxelSize);
 		xLSample = new double[nNewPoints+1];
@@ -387,10 +424,9 @@ public class CurveShapeInterpolation {
 		int nNewPoints;
 		double [] xLSample;
 		int i;
-		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
+		waitForInit();
+		if(linInter != null)
 		{
-			if(linInter == null)
-				return null;
 			dLength = linInter.getMaxLength();
 		}
 		else
@@ -405,12 +441,33 @@ public class CurveShapeInterpolation {
 		{
 			xLSample[i]=i*BigTraceData.dMinVoxelSize;
 		}
-		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
+		if(linInter != null)
 		{
 			return linInter.interpolate(xLSample);
 		}
 		return splineInter.interpolate(xLSample);
 	}
+	
+	void waitForInit()
+	{
+		//in case it was not initialized yet
+		if(!bInit)
+		{
+			while(!bInit)
+			{
+				try
+				{
+					Thread.sleep( 1 );
+				}
+				catch ( InterruptedException exc )
+				{
+					// TODO Auto-generated catch block
+					exc.printStackTrace();
+				}
+			}
+		}
+	}
+	
 	public ArrayList<double[]> getTangentsResample()
 	{
 		
@@ -418,7 +475,9 @@ public class CurveShapeInterpolation {
 		int nNewPoints;
 		double [] xLSample;
 		int i;
-		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
+		
+		waitForInit();
+		if(linInter != null)
 		{
 			dLength = linInter.getMaxLength();
 		}
@@ -432,16 +491,18 @@ public class CurveShapeInterpolation {
 		{
 			xLSample[i]=i*BigTraceData.dMinVoxelSize;
 		}
-		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
+		if(linInter != null)
 		{
 			return linInter.interpolateSlopes(xLSample);
 		}
 		return splineInter.interpolateSlopes(xLSample);
 	}
+	
 	/** returns the length of the reference "generating" curve **/
 	public double getLength()
 	{
-		if(currInterpolation == BigTraceData.SHAPE_Smooth || currInterpolation == BigTraceData.SHAPE_Voxel)
+		waitForInit();
+		if(linInter != null)
 		{
 			return linInter.getMaxLength();
 		}

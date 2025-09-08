@@ -49,6 +49,7 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.NumberField;
+import bigtrace.gui.PanelFullAutoTrace;
 import bigtrace.gui.PanelTitle;
 import bigtrace.io.ROIsLoadBG;
 import bigtrace.measure.RoiMeasure3D;
@@ -113,13 +114,16 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	public JComboBox<String> cbActiveChannel;
 	JComboBox<String> cbActiveGroup;
 
-	JToggleButton roiPointMode;
-	JToggleButton roiPolyLineMode;
-	JToggleButton roiPolySemiAMode;
-	JToggleButton roiPolyOneClickMode;
-	JToggleButton roiPlaneMode;
-	JButton roiImport;
-	JButton roiSettings;
+	final JToggleButton roiPointMode;
+	final JToggleButton roiPolyLineMode;
+	final JToggleButton roiPolySemiAMode;
+	final JToggleButton roiPolyOneClickMode;
+	final JToggleButton roiPlaneMode;
+	final public JButton butAutoTrace;
+	final JButton roiImport;
+	final JButton roiSettings;
+	
+	final PanelFullAutoTrace< T > panelFullAutoTrace;
 
 	ImageIcon tabIconOCTrace;
 	ImageIcon tabIconCancel;
@@ -133,6 +137,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 		this.bt = bt;
 		rmDiag = new RoiManager3DDialogs(bt);
+		panelFullAutoTrace = new PanelFullAutoTrace<>(bt);
 		int nButtonSize = 40;
 
 		JPanel panTracing = new JPanel(new GridBagLayout());  
@@ -217,6 +222,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		roiImport.setToolTipText("Import ROIs");
 		roiImport.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
 
+		icon_path = this.getClass().getResource("/icons/autotrace.png");
+		tabIcon = new ImageIcon(icon_path);
+		butAutoTrace = new JButton(tabIcon);
+		butAutoTrace.setToolTipText("Full auto tracing");
+		butAutoTrace.setPreferredSize(new Dimension(nButtonSize, nButtonSize));
+		panelFullAutoTrace.initButton(butAutoTrace);
+		
 		icon_path = this.getClass().getResource("/icons/settings.png");
 		tabIcon = new ImageIcon(icon_path);
 		roiSettings = new JButton(tabIcon);
@@ -238,10 +250,11 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 
 		roiImport.addActionListener(this);
 		roiSettings.addActionListener(this);
+		
 		//add to the panel
 		GridBagConstraints ct = new GridBagConstraints();
-		ct.gridx=0;
-		ct.gridy=0;
+		ct.gridx = 0;
+		ct.gridy = 0;
 		panTracing.add(roiPointMode,ct);
 		ct.gridx++;
 		panTracing.add(roiPolyLineMode,ct);
@@ -256,18 +269,19 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
 		panTracing.add(sp,ct);
 		ct.gridx++;
-
+		
+		panTracing.add(butAutoTrace,ct);
+		ct.gridx++;
+		
 		//filler
-		//ct.gridx++;
 		ct.weightx = 0.01;
 		panTracing.add(new JLabel(), ct);
 		ct.weightx = 0.0;
 		ct.gridx++;
+
 		panTracing.add(roiImport,ct);
 		ct.gridx++;
 		panTracing.add(roiSettings,ct);
-
-
 
 		///RoiLIST and buttons
 		listModel = new  DefaultListModel<>();
@@ -466,12 +480,12 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 {		
 		 rois.add(newRoi);		 
 		 //listModel.addElement(newRoi.getName());
-		 listModel.addElement(getGroupPrefixRoiName(newRoi));
+		 listModel.addElement(getFullDisplayedRoiName(newRoi));
 		 jlist.setSelectedIndex(rois.size()-1);
 		 activeRoi.set(rois.size()-1);
 	 }
 
-	 /** adds provided ROI to the end of the list **/
+	 /** inserts ROI to the ROI list with the provided index **/
 	 public synchronized void insertRoi(final Roi3D newRoi, final int nInsertN)
 	 {		
 		 if(nInsertN < 0 || nInsertN > (rois.size()-1))
@@ -548,12 +562,12 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		 return groups.get(nInd).getName();
 	 }
 	 
-	 /** returns ROI name with a short 3 letters group prefix  in squared brackets**/
-	 public String getGroupPrefixRoiName(final Roi3D nRoi)
+	 /** returns ROI name with a short 3 letters group prefix in squared brackets**/
+	 public String getGroupPrefixRoiNameBase(final Roi3D nRoi)
 	 {
 		 String nFullName;
 		 final int nInd = nRoi.getGroupInd(); 
-		 if(nInd == 0 || (nInd> groups.size()-1))
+		 if(nInd == 0 || (nInd > groups.size()-1))
 		 {
 			 nFullName = nRoi.getName();
 		 }
@@ -567,17 +581,17 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 }
 	 
 	 /** returns ROI name with a TXXX time point + short 3 letters group prefix in squared brackets**/
-	 public String getTimeGroupPrefixRoiName(final Roi3D roi)
+	 public String getFullDisplayedRoiName(final Roi3D roi)
 	 {
 		 final String sTimeFormat = Integer.toString(String.valueOf(BigTraceData.nNumTimepoints).length());
 
 		 if(BigTraceData.nNumTimepoints>1)
 		 {
-			 return "T"+String.format("%0"+sTimeFormat+"d", roi.getTimePoint())+"_"+bt.roiManager.getGroupPrefixRoiName(roi);
+			 return "T"+String.format("%0"+sTimeFormat+"d", roi.getTimePoint())+"_"+bt.roiManager.getGroupPrefixRoiNameBase(roi);
 		 }
 		 
 		 //single time point, skip time
-		 return bt.roiManager.getGroupPrefixRoiName(roi);
+		 return bt.roiManager.getGroupPrefixRoiNameBase(roi);
 	 }
 
 	 public Roi3D getActiveRoi()
@@ -914,7 +928,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			{
 				final Roi3D currROI = getActiveRoi();
 				currROI.setName(s);
-				listModel.set(activeRoi.intValue(),getGroupPrefixRoiName(currROI));
+				listModel.set(activeRoi.intValue(),getFullDisplayedRoiName(currROI));
 				return;
 			}
 	 }
@@ -1069,6 +1083,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 			rmDiag.diagLoadROIs();
 		}
+		
 		//IMPORT ROIS
 		if(e.getSource() == roiImport)
 		{
@@ -1401,7 +1416,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			if(rois.get(i).getGroupInd() == nGroupFrom)
 			{
 				rois.get(i).setGroupInd(nGroupTo);
-				listModel.setElementAt(getGroupPrefixRoiName(rois.get(i)), i);
+				listModel.setElementAt(getFullDisplayedRoiName(rois.get(i)), i);
 			}
 		}
 	}
@@ -1443,7 +1458,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		final Roi3D currROI = rois.get( nRoiIndex );
 		currROI.setGroup(groups.get(nGroupIndex));
 		currROI.setGroupInd(nGroupIndex);
-		listModel.setElementAt(getGroupPrefixRoiName(currROI), nRoiIndex);
+		listModel.setElementAt(getFullDisplayedRoiName(currROI), nRoiIndex);
 	}
 	
 	public void dialShowGroups()

@@ -62,7 +62,7 @@ public class CubicSpline {
 		double aj,bj,dj,cj;
 		double inv_denom;
 		int n = x.length;
-		if (n<2)
+		if (n<3)
 		{
 			System.err.println("more than two points required for spline interpolation");
 			return null;

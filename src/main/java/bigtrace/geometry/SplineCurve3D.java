@@ -7,16 +7,15 @@ import bigtrace.rois.Roi3D;
 import net.imglib2.RealPoint;
 /** cubic spline interpolation wrapper for each 3D coordinates of points set **/
 public class SplineCurve3D {
-	
-	
+		
 	/** interpolation components for each coordinate **/
 	CubicSpline [] interpXYZ = new CubicSpline[3];
 	
 	/** nodes (arbitrary parametrization, usually as a length of the input polyline)**/
-	double [] xnodes=null;
+	double [] xnodes = null;
 	
 	/** arclength of spline through the nodes **/
-	double [] arclength=null;
+	double [] arclength = null;
 	
 	/** reparametrization of arclength spline**/
 	CubicSpline arcToNodes = null;
@@ -50,7 +49,7 @@ public class SplineCurve3D {
 		}
 		for (d=0;d<3;d++)
 		{
-			if(nDeriveEst==0)
+			if(nDeriveEst == 0)
 			{
 				interpXYZ[d] = new CubicSpline(xnodes, coords[d]);
 			}
@@ -83,8 +82,8 @@ public class SplineCurve3D {
 		{
 			for (int d=0;d<3;d++)
 			{
-				currNodePos=arcToNodes.evalSpline(xp[i]);
-				curr_point[d]=interpXYZ[d].evalSpline(currNodePos);				
+				currNodePos = arcToNodes.evalSpline(xp[i]);
+				curr_point[d] = interpXYZ[d].evalSpline(currNodePos);				
 			}
 			out.add(new RealPoint(curr_point));
 			
@@ -104,8 +103,8 @@ public class SplineCurve3D {
 		{
 			for (int d=0;d<3;d++)
 			{
-				currNodePos=arcToNodes.evalSpline(xp[i]);
-				curr_point[d]=interpXYZ[d].evalSlope(currNodePos);				
+				currNodePos = arcToNodes.evalSpline(xp[i]);
+				curr_point[d] = interpXYZ[d].evalSlope(currNodePos);				
 			}
 			out.add(curr_point.clone());
 			
@@ -121,34 +120,36 @@ public class SplineCurve3D {
 			return Double.NaN;
 		}
 		//arclength integration verification
-		//double len1= verifyIntegration();
+		//double len1 = verifyIntegration();
 		//double len2 = arclength[arclength.length-1];
-		//double diff =Math.abs(len1-len2);
+		//double diff = Math.abs(len1-len2);
 		return arclength[arclength.length-1];
 		
 	}
 	
-	/** function calculates arclength and reparametrizes 
-	 * interpolation to this value
+	/** function calculates arclength of the fitted spline 
+	 * and reparametrizes interpolation to this value
 	 ***/
 	public void initArcLength()
 	{		
 
 		final double approxL = xnodes[xnodes.length-1];
 
-		//for the polyline (sparse nodes) integration is not precise,
-		//so let's resample it		
-		final int nNewPoints =(int) Math.floor(approxL/BigTraceData.dMinVoxelSize);
-		double [] xLSample = new double[nNewPoints+1];
-		final double dStep = approxL/nNewPoints;
-		int i;
-		for(i = 0;i<=nNewPoints;i++)
+		final int nNewPoints = (int) Math.floor(approxL/BigTraceData.dMinVoxelSize);
+		final double [] xLSample = new double[nNewPoints+2];
+		
+		for(int i = 1; i< nNewPoints; i++)
 		{
-			xLSample[i]=i*dStep;
+			xLSample[i] = i*BigTraceData.dMinVoxelSize;
 		}
-		arclength=getTabulatedArcLength(xLSample);
+		xLSample[nNewPoints+1] = approxL;
+
+		xLSample[nNewPoints] = 0.5*(approxL+xLSample[nNewPoints-1]);
+
+		arclength = getTabulatedArcLength(xLSample);
+		
 		//reparametrize arclenth to initial arbitrary (polyline length) parametrization
-		arcToNodes = new CubicSpline(arclength, xLSample,2);
+		arcToNodes = new CubicSpline(arclength, xLSample, 2);
 	
 	}
 	
@@ -185,18 +186,18 @@ public class SplineCurve3D {
 		//Gaussian 2nd order
 		/**/
 		final double evalGauss = 1.0/Math.sqrt(3.0);
-		out[0]=0.0;
+		out[0] = 0.0;
 		//integrate spline length
 		for (int i=1;i<nNodesN; i++)
 		{
-			curr=0.0;
+			curr = 0.0;
 			diff= 0.5*(nodes[i]-nodes[i-1]);
 			aver = 0.5*(nodes[i]+nodes[i-1]);
 
-			curr+=getIntegrFunction(diff*evalGauss+aver);
-			curr+=getIntegrFunction(aver-diff*evalGauss);
-			curr*=diff;
-			out[i]=out[i-1]+curr;
+			curr += getIntegrFunction(diff*evalGauss+aver);
+			curr += getIntegrFunction(aver-diff*evalGauss);
+			curr *= diff;
+			out[i] = out[i-1]+curr;
 		}
 		
 		
@@ -230,8 +231,8 @@ public class SplineCurve3D {
 		double v;
 		for (int d=0;d<3; d++)
 		{
-			v= interpXYZ[d].evalSlope(x);
-			out+=v*v;
+			v = interpXYZ[d].evalSlope(x);
+			out += v*v;
 		}
 		out = Math.sqrt(out);
 		return out;

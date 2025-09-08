@@ -48,7 +48,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 	MeasureValues oldVect;
 	MeasureValues newVect;
 	
-	final OneClickTrace<T> calcTask = new OneClickTrace<>();
+	final OneClickTrace<T> oneClickTask = new OneClickTrace<>();
 	
 	Roi3DGroup newGroupTrack;
 	
@@ -108,16 +108,18 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		
 		//int nTP = nInitialTimePoint+1; 
 		
-		calcTask.bNewTrace = true;
-		calcTask.bUnlockInTheEnd = false;
-		calcTask.bUpdateProgressBar = false;
-		calcTask.bt = this.bt;
+		oneClickTask.bNewTrace = true;
+		oneClickTask.bUnlockInTheEnd = false;
+		oneClickTask.bUpdateProgressBar = false;
+		oneClickTask.bt = this.bt;
+		oneClickTask.bInit = false;
 		
 		boolean bTracing = true;
 	
 		//tracing back in time
-		calcTask.bInsertROI = true;
-		calcTask.nInsertROIInd = bt.roiManager.activeRoi.get();
+		oneClickTask.bInsertROI = true;
+		oneClickTask.nInsertROIInd = bt.roiManager.activeRoi.get();
+		oneClickTask.init();
 		for(int nTP = nInitialTimePoint-1; nTP>=nFirstTP && bTracing; nTP--)
 		{
 
@@ -126,6 +128,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 			if(isCancelled())
 			{
 				bt.visBox = null;
+				oneClickTask.releaseMultiThread();
 				return null;				
 			}
 			setProgressState("tracking curve over time...("+Integer.toString( nTPCount )+"/"+Integer.toString( nTotTP )+")");
@@ -136,7 +139,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		currentRoi = initialRoi;
 		((AbstractCurve3D)currentRoi).getEndsDirection(oldVect, BigTraceData.globCal);
 		bTracing = true;
-		calcTask.bInsertROI = false;
+		oneClickTask.bInsertROI = false;
 		for(int nTP = nInitialTimePoint+1; nTP<=nLastTP && bTracing; nTP++)
 		{
 
@@ -145,6 +148,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 			if(isCancelled())
 			{
 				bt.visBox = null;
+				oneClickTask.releaseMultiThread();
 				return null;		
 			}
 			setProgressState("tracking curve over time...("+Integer.toString( nTPCount )+"/"+Integer.toString( nTotTP )+")");
@@ -189,10 +193,10 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		//ImageJFunctions.show( searchBox,"Test");
 		
 		final IntervalView<T> traceIV =  bt.getTraceInterval(bt.btData.bTraceOnlyClipped);			
-		calcTask.fullInput = traceIV;
-		calcTask.startPoint = rpMax;
-		calcTask.runTracing();
-		calcTask.releaseMultiThread();
+		oneClickTask.fullInput = traceIV;
+		oneClickTask.startPoint = rpMax;
+		oneClickTask.runTracing();
+		//oneClickTask.releaseMultiThread();
 
 		//get the new box
 		//currentRoi = bt.roiManager.rois.get(bt.roiManager.rois.size()-1);
@@ -254,6 +258,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 
     		//System.out.println("Tracking interrupted by user.");
     		bt.visBox = null;
+    		oneClickTask.releaseMultiThread();
         	setProgressState("Tracking interrupted by user.");
         	setProgress(100);	
     	}
@@ -265,7 +270,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
     		butTrack.setToolTipText( "Track" );
     	}
     	bt.visBox = null;
-
+    	oneClickTask.releaseMultiThread();
     	//unlock user interaction
     	bt.bInputLock = false;
     	bt.setLockMode(false);

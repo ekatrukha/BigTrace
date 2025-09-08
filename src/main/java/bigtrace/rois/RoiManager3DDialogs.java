@@ -3,8 +3,7 @@ package bigtrace.rois;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -23,6 +22,8 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceData;
 import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
+import bigtrace.gui.PanelOneClickTraceOptions;
+import bigtrace.gui.PanelTracingOptions;
 import bigtrace.io.ROIsExportCSV;
 import bigtrace.io.ROIsExportSWC;
 import bigtrace.io.ROIsImportTrackMateBG;
@@ -47,57 +48,19 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 	public void dialSemiAutoProperties()
 	{
 		
-		JTabbedPane tabPane = new JTabbedPane();
-		GridBagConstraints cd = new GridBagConstraints();
+		final JTabbedPane tabPane = new JTabbedPane();
+		GridBagConstraints gbc = new GridBagConstraints();
 
 		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
 		decimalFormatSymbols.setDecimalSeparator('.');
 		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
 		
 		////////////TRACING OPTIONS
-		JPanel pTrace = new JPanel(new GridBagLayout());
+		final PanelTracingOptions panelGeneralTrace = new PanelTracingOptions(bt);
 
-		NumberField nfSigmaX = new NumberField(4);
-		NumberField nfSigmaY = new NumberField(4);
-		NumberField nfSigmaZ = new NumberField(4);
-		JCheckBox cbTraceOnlyClipped = new JCheckBox();
-
-		
-		nfSigmaX.setText(df.format(bt.btData.sigmaTrace[0]));
-		nfSigmaY.setText(df.format(bt.btData.sigmaTrace[1]));
-		nfSigmaZ.setText(df.format(bt.btData.sigmaTrace[2]));
-
-		cbTraceOnlyClipped.setSelected(bt.btData.bTraceOnlyClipped);
-		
-		cd.gridx=0;
-		cd.gridy=0;
-
-		pTrace.add(new JLabel("Curve thickness X axis (SD, px): "),cd);
-		cd.gridx++;
-		pTrace.add(nfSigmaX,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pTrace.add(new JLabel("Curve thickness Y axis (SD, px): "),cd);
-		cd.gridx++;
-		pTrace.add(nfSigmaY,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pTrace.add(new JLabel("Curve thickness Z axis (SD, px): "),cd);
-		cd.gridx++;
-		pTrace.add(nfSigmaZ,cd);
-
-		
-		cd.gridx=0;
-		cd.gridy++;
-		//cd.anchor=GridBagConstraints.WEST;
-		pTrace.add(new JLabel("Trace only clipped volume: "),cd);
-		cd.gridx++;
-		pTrace.add(cbTraceOnlyClipped,cd);
 		
 		////////////SEMI-AUTO TRACING OPTIONS
-		JPanel pSemiAuto = new JPanel(new GridBagLayout());
+		final JPanel pSemiAuto = new JPanel(new GridBagLayout());
 		
 		NumberField nfGammaTrace = new NumberField(4);
 		NumberField nfTraceBoxSize = new NumberField(4);
@@ -109,59 +72,47 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		nfGammaTrace.setText(df.format(bt.btData.gammaTrace));
 		nfTBAdvance.setText(df.format(bt.btData.fTraceBoxAdvanceFraction));
 			
-		cd.gridx=0;
-		cd.gridy=0;
+		gbc.gridx=0;
+		gbc.gridy=0;
 		//cd.anchor=GridBagConstraints.WEST;
-		pSemiAuto.add(new JLabel("Trace box size (px): "),cd);
-		cd.gridx++;
-		pSemiAuto.add(nfTraceBoxSize,cd);
+		pSemiAuto.add(new JLabel("Trace box size (px): "),gbc);
+		gbc.gridx++;
+		pSemiAuto.add(nfTraceBoxSize,gbc);
 		
-		cd.gridx=0;
-		cd.gridy++;
+		gbc.gridx=0;
+		gbc.gridy++;
 		//cd.anchor=GridBagConstraints.WEST;
-		pSemiAuto.add(new JLabel("Trace box screen fraction (0-1): "),cd);
-		cd.gridx++;
-		pSemiAuto.add(nfTraceBoxScreenFraction,cd);
+		pSemiAuto.add(new JLabel("Trace box screen fraction (0-1): "),gbc);
+		gbc.gridx++;
+		pSemiAuto.add(nfTraceBoxScreenFraction,gbc);
 		
-		cd.gridx=0;
-		cd.gridy++;
+		gbc.gridx=0;
+		gbc.gridy++;
 		//cd.anchor=GridBagConstraints.WEST;
-		pSemiAuto.add(new JLabel("Trace box advance [0-center..1-edge]: "),cd);
-		cd.gridx++;
-		pSemiAuto.add(nfTBAdvance,cd);	
+		pSemiAuto.add(new JLabel("Trace box advance [0-center..1-edge]: "),gbc);
+		gbc.gridx++;
+		pSemiAuto.add(nfTBAdvance,gbc);	
 
-		cd.gridx=0;		
-		cd.gridy++;
-		pSemiAuto.add(new JLabel("Orientation weight(0-1): "),cd);
-		cd.gridx++;
-		pSemiAuto.add(nfGammaTrace,cd);
+		gbc.gridx=0;		
+		gbc.gridy++;
+		pSemiAuto.add(new JLabel("Orientation weight(0-1): "),gbc);
+		gbc.gridx++;
+		pSemiAuto.add(nfGammaTrace,gbc);
 	
 		//assemble pane
-		tabPane.addTab("Tracing",pTrace);
-		tabPane.addTab("Semi auto",pSemiAuto);
+		tabPane.addTab("Tracing", panelGeneralTrace);
+		tabPane.addTab("Semi auto", pSemiAuto);
 
 		int reply = JOptionPane.showConfirmDialog(null, tabPane, "Semi-auto tracing settings", 
 													JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
 		if (reply == JOptionPane.OK_OPTION) 
-		{
-							
+		{							
 			bt.btData.nTraceBoxSize = (int)(Integer.parseInt(nfTraceBoxSize.getText())*0.5);
 			Prefs.set("BigTrace.lTraceBoxSize", bt.btData.nTraceBoxSize);
 		
 			//TRACING OPTIONS
-			
-			bt.btData.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
-			Prefs.set("BigTrace.sigmaTraceX", bt.btData.sigmaTrace[0]);
-			
-			bt.btData.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
-			Prefs.set("BigTrace.sigmaTraceY", bt.btData.sigmaTrace[1]);
-			
-			bt.btData.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
-			Prefs.set("BigTrace.sigmaTraceZ", bt.btData.sigmaTrace[2]);
-			
-			bt.btData.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
-			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btData.bTraceOnlyClipped);			
+			panelGeneralTrace.getSetOptions();			
 			
 			bt.btData.fTraceBoxScreenFraction = Float.parseFloat(nfTraceBoxScreenFraction.getText());
 			Prefs.set("BigTrace.dTraceBoxScreenFraction", bt.btData.fTraceBoxScreenFraction);
@@ -171,157 +122,33 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 			
 			bt.btData.gammaTrace = Double.parseDouble(nfGammaTrace.getText());
 			Prefs.set("BigTrace.gammaTrace", bt.btData.gammaTrace);
-			
-			
-		}
-	}
 	
+		}
+	}	
 	
 	public void dialOneClickProperties()
 	{
-		JTabbedPane tabPane = new JTabbedPane();
-		GridBagConstraints cd = new GridBagConstraints();
-
-		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
-		decimalFormatSymbols.setDecimalSeparator('.');
-		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
+		final JTabbedPane tabPane = new JTabbedPane();
 		
-		////////////TRACING OPTIONS
-		JPanel pTrace = new JPanel(new GridBagLayout());
-
-		NumberField nfSigmaX = new NumberField(4);
-		NumberField nfSigmaY = new NumberField(4);
-		NumberField nfSigmaZ = new NumberField(4);
-		
-
-		NumberField nfIntensityThreshold = new NumberField(5);
-		JCheckBox cbTraceOnlyClipped = new JCheckBox();
-		JCheckBox cbIntensityStop = new JCheckBox();
-
-		
-		nfSigmaX.setText(df.format(bt.btData.sigmaTrace[0]));
-		nfSigmaY.setText(df.format(bt.btData.sigmaTrace[1]));
-		nfSigmaZ.setText(df.format(bt.btData.sigmaTrace[2]));
-
-		cbTraceOnlyClipped.setSelected(bt.btData.bTraceOnlyClipped);
-		
-
-		cd.gridx=0;
-		cd.gridy=0;
-
-		pTrace.add(new JLabel("Curve thickness X axis (SD, px): "),cd);
-		cd.gridx++;
-		pTrace.add(nfSigmaX,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pTrace.add(new JLabel("Curve thickness Y axis (SD, px): "),cd);
-		cd.gridx++;
-		pTrace.add(nfSigmaY,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		pTrace.add(new JLabel("Curve thickness Z axis (SD, px): "),cd);
-		cd.gridx++;
-		pTrace.add(nfSigmaZ,cd);
-
-		
-		cd.gridx=0;
-		cd.gridy++;
-		//cd.anchor=GridBagConstraints.WEST;
-		pTrace.add(new JLabel("Trace only clipped volume: "),cd);
-		cd.gridx++;
-		pTrace.add(cbTraceOnlyClipped,cd);
-		
-		
-		////////////ONE-CLICK TRACING OPTIONS
-		JPanel pOneCLick = new JPanel(new GridBagLayout());
-		
-		NumberField nfPlaceVertex = new NumberField(4);
-		NumberField nfDirectionalityOneClick = new NumberField(4);
-		
-		nfPlaceVertex.setIntegersOnly(true);
-		nfPlaceVertex.setText(Integer.toString(bt.btData.nVertexPlacementPointN));
-		nfDirectionalityOneClick.setText(df.format(bt.btData.dDirectionalityOneClick));
-		cbIntensityStop.setSelected(bt.btData.bOCIntensityStop);
-		nfIntensityThreshold.setText(df.format(bt.btData.dOCIntensityThreshold));
-		nfIntensityThreshold.setTFEnabled( bt.btData.bOCIntensityStop);
-		
-		cd.gridx=0;
-		cd.gridy=0;		
-		pOneCLick.add(new JLabel("Intermediate vertex placement (px, >=3): "),cd);
-		cd.gridx++;
-		pOneCLick.add(nfPlaceVertex,cd);
-		
-		cd.gridx=0;		
-		cd.gridy++;
-		pOneCLick.add(new JLabel("Constrain directionality (0-1): "),cd);
-		cd.gridx++;
-		pOneCLick.add(nfDirectionalityOneClick,cd);
-		
-		cd.gridx=0;
-		cd.gridy++;
-		//cd.anchor=GridBagConstraints.WEST;
-		pOneCLick.add(new JLabel("Use intensity threshold: "),cd);
-		cd.gridx++;
-		pOneCLick.add(cbIntensityStop,cd);
-		cbIntensityStop.addActionListener( new ActionListener()
-				{
-
-					@Override
-					public void actionPerformed( ActionEvent arg0 )
-					{
-						
-						nfIntensityThreshold.setTFEnabled( cbIntensityStop.isSelected() );
-					}
+		////////////TRACING OPTIONS		
+		final PanelTracingOptions panelGeneralTrace = new PanelTracingOptions(bt);
 			
-				});
-		
-		cd.gridx = 0;
-		cd.gridy++;
-		pOneCLick.add(new JLabel("Minimum intensity: "),cd);
-		cd.gridx++;
-		pOneCLick.add(nfIntensityThreshold,cd);
+		////////////ONE-CLICK TRACING OPTIONS		
+		final PanelOneClickTraceOptions panelOneClickOptions = new PanelOneClickTraceOptions(bt);
 		
 		//assemble pane
-		tabPane.addTab("Tracing",pTrace);
-		tabPane.addTab("One click trace",pOneCLick);
+		tabPane.addTab("Tracing", panelGeneralTrace);
+		tabPane.addTab("One click trace", panelOneClickOptions);
 		int reply = JOptionPane.showConfirmDialog(null, tabPane, "One click tracing settings", 
         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-
 		if (reply == JOptionPane.OK_OPTION) 
-		{
-	
-			//TRACING OPTIONS
-			
-			bt.btData.sigmaTrace[0] = Double.parseDouble(nfSigmaX.getText());
-			Prefs.set("BigTrace.sigmaTraceX", bt.btData.sigmaTrace[0]);
-			
-			bt.btData.sigmaTrace[1] = Double.parseDouble(nfSigmaY.getText());
-			Prefs.set("BigTrace.sigmaTraceY", bt.btData.sigmaTrace[1]);
-			
-			bt.btData.sigmaTrace[2] = Double.parseDouble(nfSigmaZ.getText());
-			Prefs.set("BigTrace.sigmaTraceZ", bt.btData.sigmaTrace[2]);
-			
-			bt.btData.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
-			Prefs.set("BigTrace.bTraceOnlyClipped", bt.btData.bTraceOnlyClipped);			
-			
-			bt.btData.nVertexPlacementPointN = Math.max(3, Integer.parseInt(nfPlaceVertex.getText()));
-			Prefs.set("BigTrace.nVertexPlacementPointN", (double)(bt.btData.nVertexPlacementPointN));
-			
-			bt.btData.dDirectionalityOneClick = Math.min(1.0, (Math.max(0, Double.parseDouble(nfDirectionalityOneClick.getText()))));
-			Prefs.set("BigTrace.dDirectionalityOneClick",bt.btData.dDirectionalityOneClick);
-			
-			bt.btData.bOCIntensityStop = cbIntensityStop.isSelected();
-			Prefs.set("BigTrace.bOCIntensityStop", bt.btData.bOCIntensityStop);	
-			if(bt.btData.bOCIntensityStop)
-			{
-				bt.btData.dOCIntensityThreshold = Math.max(0, Double.parseDouble(nfIntensityThreshold.getText()));
-				Prefs.set("BigTrace.dOCIntensityThreshold",bt.btData.dOCIntensityThreshold);		
-			}
+		{	
+			panelGeneralTrace.getSetOptions();		
+			panelOneClickOptions.getSetOptions();	
 		}
 	}
+	
 	/** show ROI Appearance dialog**/
 	public void dialRenderSettings()
 	{

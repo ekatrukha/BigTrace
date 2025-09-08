@@ -57,8 +57,6 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 		actions.runnableAction(() -> actionResetClip(),				"reset clipping", "X" );
 		actions.runnableAction(() -> actionToggleRender(),			"toggle render mode", "O" );
 		actions.runnableAction(() -> actionSelectRoi(),	            "select ROI", "E" );
-				
-		
 		
 		actions.runnableAction(
 				() -> {

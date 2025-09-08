@@ -277,7 +277,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		String sTestLLS = seq.getViewDescription(0, 0).getViewSetup().getName();
 		if(sTestLLS.length()>3)
 		{
-			if(sTestLLS.contains("LLS") && btdata.sFileNameFullImg.endsWith(".czi"))
+			if((sTestLLS.contains("LLS")||sTestLLS.contains("LatticeLightsheet")) && btdata.sFileNameFullImg.endsWith(".czi"))
 			{
 				if (JOptionPane.showConfirmDialog(null, "Looks like the input comes from Zeiss LLS7.\nDo you want to deskew it?\n"
 						+ "(if it is already deskewed, click No)", "Loading option",

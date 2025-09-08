@@ -174,7 +174,7 @@ public class DerivConvolutionKernels {
 	{
 	  int   i, n;
 	  double limit;
-	  double[] h;
+	  final double[] h;
 
 	  limit = MASK_SIZE(MAX_SIZE_MASK_0,sigma); /* Error < 0.001 on each side */
 	  n = (int) limit;
@@ -195,7 +195,7 @@ public class DerivConvolutionKernels {
 	{
 	  int i, n;
 	  double limit;
-	  double []  h;
+	  final double []  h;
 
 	  limit = MASK_SIZE(MAX_SIZE_MASK_1,sigma); /* Error < 0.001 on each side */
 	  n = (int)limit;
@@ -215,7 +215,7 @@ public class DerivConvolutionKernels {
 	{
 	  int i, n;
 	  double limit;
-	  double[] h;
+	  final double[] h;
 
 	  limit = MASK_SIZE(MAX_SIZE_MASK_2,sigma); /* Error < 0.001 on each side */
 	  n = (int)limit;
@@ -233,10 +233,10 @@ public class DerivConvolutionKernels {
 
 
 /** return 3D Gaussian derivative convolution kernels defined in deriv_type */
-public static double [][] convolve_derive_kernel(double [] sigma, int [] deriv_type)
+public static double [][] convolve_derive_kernel(final double [] sigma, final int [] deriv_type)
 {
 	
-  double [][] kernConv = new double[3][];
+  final double [][] kernConv = new double[3][];
   
   
   for (int i=0;i<3;i++)
@@ -244,16 +244,16 @@ public static double [][] convolve_derive_kernel(double [] sigma, int [] deriv_t
 	  switch(deriv_type[i])
 	  {
 	  	case 0:
-	  		kernConv[i]=compute_gauss_mask_0(sigma[i]);
+	  		kernConv[i] = compute_gauss_mask_0(sigma[i]);
 	  		break;
 	  	case 1:
-	  		kernConv[i]=compute_gauss_mask_1(sigma[i]);
+	  		kernConv[i] = compute_gauss_mask_1(sigma[i]);
 	  		break;
 	  	case 2:
-	  		kernConv[i]=compute_gauss_mask_2(sigma[i]);
+	  		kernConv[i] = compute_gauss_mask_2(sigma[i]);
 	  		break;
 	    default: //just a stub
-	    	kernConv[i]=compute_gauss_mask_0(sigma[i]);
+	    	kernConv[i] = compute_gauss_mask_0(sigma[i]);
 	        break;
 	  		
 	  }
@@ -266,11 +266,11 @@ public static double [][] convolve_derive_kernel(double [] sigma, int [] deriv_t
 	
 public static void main(String[] args) {
 	
-	double[] maskx = compute_gauss_mask_1(3.0);
-	double[] masky = compute_gauss_mask_1(3.0);
+	final double[] maskx = compute_gauss_mask_1(3.0);
+	final double[] masky = compute_gauss_mask_1(3.0);
 	
 	int nKernelLength=maskx.length;
-	float [][] kernel = new float[nKernelLength][nKernelLength];
+	final float [][] kernel = new float[nKernelLength][nKernelLength];
 	for(int i=0;i<nKernelLength;i++)
 		for(int j=0;j<nKernelLength;j++)
 		{
