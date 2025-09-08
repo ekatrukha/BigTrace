@@ -124,7 +124,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 			}
 		}
 		oneClickTrace.releaseMultiThread();
-		System.out.println("done");
+		//System.out.println("done");
 		//System.out.println(nCount);
 		return null;
 	}
