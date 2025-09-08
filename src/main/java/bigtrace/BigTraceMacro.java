@@ -9,6 +9,8 @@ import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.volume.StraightenCurve;
 import ij.IJ;
+import ij.macro.ExtensionDescriptor;
+import ij.macro.MacroExtension;
 
 
 public class BigTraceMacro < T extends RealType< T > & NativeType< T > > 
@@ -16,9 +18,68 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 	/** plugin instance **/
 	BigTrace<T> bt;
 	
+	/** macro extensions **/
+	public ExtensionDescriptor[] extensions;
+	
+	/** whether we run in the macro mode **/
+	public boolean bMacroMode = false;
+	
 	public BigTraceMacro(final BigTrace<T> bt_)
 	{
 		bt = bt_;
+		
+		extensions = new ExtensionDescriptor[7];
+		extensions[0] = ExtensionDescriptor.newDescriptor("btLoadROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
+		extensions[1] = ExtensionDescriptor.newDescriptor("btStraighten", bt, MacroExtension.ARG_NUMBER, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
+		extensions[2] = ExtensionDescriptor.newDescriptor("btShapeInterpolation", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_NUMBER);
+		extensions[3] = ExtensionDescriptor.newDescriptor("btIntensityInterpolation", bt, MacroExtension.ARG_STRING);
+		extensions[4] = ExtensionDescriptor.newDescriptor("btTest", bt);
+		extensions[5] = ExtensionDescriptor.newDescriptor("btClose", bt);
+		extensions[6] = ExtensionDescriptor.newDescriptor("btTest", bt);
+	}
+	
+	public String handleExtension(String name, Object[] args) 
+	{
+		try
+		{
+			if (name.equals("btLoadROIs")) 
+			{
+				macroLoadROIs( (String)args[0],(String)args[1]);
+			}
+			if (name.equals("btStraighten")) 
+			{
+				if(args.length == 2)
+				{
+					//backwards compartibility
+					macroStraighten((int)Math.round(((Double)args[0]).doubleValue()), (String)args[1], "Square");					
+				}
+				else
+				{
+					macroStraighten((int)Math.round(((Double)args[0]).doubleValue()), (String)args[1], (String)args[2]);
+				}
+			}
+			if (name.equals("btShapeInterpolation")) 
+			{
+				macroShapeInterpolation( (String)args[0],(int)Math.round(((Double)args[1]).doubleValue()));
+			}
+			if (name.equals("btIntensityInterpolation")) 
+			{
+				macroIntensityInterpolation( (String)args[0]);
+			}
+			if (name.equals("btClose")) 
+			{
+				macroCloseBT();			
+			}
+			if (name.equals("btTest")) 
+			{
+				macroTest();
+			} 
+		}
+		catch ( InterruptedException exc )
+		{
+			exc.printStackTrace();
+		}
+		return null;
 	}
 	
 	public void macroLoadROIs(String sFileName, String input) throws InterruptedException
@@ -35,6 +96,36 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
         	return;
         int nLoadMode = 0;
         switch (input)
+        {
+        	case "Clean":
+            	nLoadMode = 0;
+        		break;
+        	case "Append":
+        		nLoadMode = 1;
+        		break;  
+        	default:
+        		IJ.log( "Error! ROIs loading mode should be either Clean or Append. Loading failed." );
+        		return;
+        }
+        bt.roiManager.loadROIs( sFileName, nLoadMode );
+        IJ.log( "BigTrace ROIs loaded from " + sFileName);
+
+	}
+	
+	public void macroSaveROIs(String sFileName, String output) throws InterruptedException
+	{
+		while(bt.bInputLock)
+		{
+			Thread.sleep(1000);
+		}
+		
+		//it should be later unlocked by  bt.roiManager.saveROIs
+		bt.bInputLock = true;
+		
+        if(output == null)
+        	return;
+        int nLoadMode = 0;
+        switch (output)
         {
         	case "Clean":
             	nLoadMode = 0;
