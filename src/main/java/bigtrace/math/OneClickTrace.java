@@ -17,6 +17,7 @@ import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import net.imglib2.AbstractInterval;
 import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RealPoint;
 import net.imglib2.algorithm.convolution.Convolution;
@@ -25,6 +26,7 @@ import net.imglib2.algorithm.convolution.kernel.SeparableKernelConvolution;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.FloatArray;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -121,6 +123,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	public boolean bInsertROI = false;
 	
 	public int nInsertROIInd = 0;
+	int nOrder = 0;
 	
 	//IntervalView<UnsignedByteType> salWeightsUB;
 	
@@ -420,9 +423,9 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 		for (int d=0;d<3;d++)
 		{
-			boxFullHalfRange[d]=(long) (Math.ceil(rangeFullBoxDim*bt.btData.sigmaTrace[d])); 
-			boxInnerHalfRange[d]=(long) (Math.ceil(rangeInnerBoxDim*bt.btData.sigmaTrace[d])); 
-			boxFullRange[d] = (long) (Math.ceil(rangeFullBoxDim*bt.btData.sigmaTrace[d])*2+1); 		
+			boxFullHalfRange[d] = (long) (Math.ceil(rangeFullBoxDim * bt.btData.sigmaTrace[d])); 
+			boxInnerHalfRange[d] = (long) (Math.ceil(rangeInnerBoxDim * bt.btData.sigmaTrace[d])); 
+			boxFullRange[d] = (long) (Math.ceil(rangeFullBoxDim * bt.btData.sigmaTrace[d]) * 2 + 1); 		
 		}
 		//IntervalView<T> input = Views.interval(fullInput, getLocalTraceBox(fullInput,boxFullHalfRange,startPoint));
 		//dim = Intervals.dimensionsAsLongArray( input );
@@ -532,6 +535,20 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		
 		final float[] finPos = new float[3];
 		
+		if(Math.abs(currpoint.getDoublePosition( 0 )-54.0)<0.01)
+		{
+			int g=0;
+			g++;
+			//if(nOrder==1)
+			{
+			ImageJFunctions.show( salWeights, "TEST53" );
+			}
+			//else
+			{
+			//	nOrder++;
+			}
+		}
+		
 		for(int nScan = 0; nScan < scannedPos.size(); nScan++)
 		{
 			candidateNeighbor = scannedPos.get(nScan);
@@ -541,7 +558,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 				candPos[d] = Math.round(currpoint.getFloatPosition(d))+candidateNeighbor[d];
 			}
 			
-		
+		 
 			if(Intervals.contains(fullInput, new RealPoint(new float []{candPos[0],candPos[1],candPos[2]})))
 			{
 				currSal = raW.setPositionAndGet(candPos).get();			
@@ -615,13 +632,13 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 	{
 		//let's figure out the volume around the point
 		IntervalView<T> currentBox = Views.interval(fullInput, getLocalTraceBox(fullInput,boxFullHalfRange,currPoint));
-		innerTraceBox = getLocalTraceBox(fullInput,boxInnerHalfRange,currPoint);
+		innerTraceBox = getLocalTraceBox(fullInput, boxInnerHalfRange, currPoint);
 		currentBox.min(minV);
 		
 		//IntervalView<FloatType> gradient = Views.translate(gradFloat, nShift);
 		IntervalView<FloatType> hessian = Views.translate(hessFloat, minV);
 		
-		bt.visBox = new Box3D(currentBox,1.0f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		bt.visBox = new Box3D(currentBox, 1.0f, 0.0f, Color.LIGHT_GRAY, Color.LIGHT_GRAY, 0);
 
 	/*
 		double [][] kernels;
@@ -656,7 +673,9 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 			{
 				IntervalView< FloatType > hs2 = Views.hyperSlice( hessian, 3, count );
 				//FinalInterval test = (FinalInterval) convObjects[count].requiredSourceInterval(hs2);
-				convObjects[count].process(Views.extendBorder(currentBox), hs2 );
+				//convObjects[count].process(Views.extendBorder(currentBox), hs2 );
+				convObjects[count].process(Views.extendMirrorSingle( currentBox), hs2 );
+				Interval int2 = convObjects[count].requiredSourceInterval( hs2 );
 				count++;
 			}
 		}
@@ -699,7 +718,9 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		final FinalInterval searchArea  = Intervals.intersect( fullInput, getLocalSearchArea(target_in, 2.0f) );		
 		RealPoint out = new RealPoint(3);
 		//VolumeMisc.findMaxLocation(Views.interval(Views.extendZero(salWeights), maxSearchArea),out);
+		//VolumeMisc.findMaxLocation(salWeights, out);
 		VolumeMisc.findMaxLocation(Views.interval(salWeights, searchArea), out);
+		//ImageJFunctions.show( Views.interval(salWeights, searchArea), "TEST1" );
 		return out;
 		
 	}
@@ -710,8 +731,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		final long[][] rangeMax = new long[2][3];
 		for(int d=0;d<3;d++)
 		{
-			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d)-fSDN*bt.btData.sigmaTrace[d]);
-			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d)+fSDN*bt.btData.sigmaTrace[d]);
+			rangeMax[0][d] = Math.round(target_in.getFloatPosition(d) - fSDN * bt.btData.sigmaTrace[d]);
+			rangeMax[1][d] = Math.round(target_in.getFloatPosition(d) + fSDN * bt.btData.sigmaTrace[d]);
 		}
 		return new FinalInterval(rangeMax[0],rangeMax[1]);
 	}

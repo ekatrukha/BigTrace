@@ -1459,7 +1459,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP-3d.tif");
 
 		
-		testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/FR21_SC_nuc10-1.tif");
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/FR01_SC_nuc10-1.tif");
 
 		///macros test
 //		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT_8bit.tif");
@@ -1478,50 +1478,25 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_tracks/Snejana_small_example.tif");
 		
-		/*
-		testI.roiManager.setLockMode(true);
-		float [] point = new float[3];
-//		point[0]=23;
-//		point[1]=23;
-//		point[2]=10;
+		while(testI.bInputLock)
+		{
+			Thread.sleep(1000);
+		}
 
-		point[0]=37;
-		point[1]=61;
-		point[2]=10;
-
+		double [] point = new double [3];
+		point[0]=42;
+		point[1]=15;
+		point[2]=6;
+		point[0]=56;
+		point[1]=13;
+		point[2]=11;
 		RealPoint target = new RealPoint(point);
-
-		testI.runOneClickTrace(target);
-		*/
-	/*	testI.roiManager.setLockMode(true);
-
-		point[0]=24;
-		point[1]=24;
-		point[2]=10;
-		target = new RealPoint(point);
 		
 
-		testI.runOneClickTrace(target);*/
+		testI.runOneClickTrace(target, true);
 
 		
-		/**/
-		//directionality test
-		//testI.run("");
-		/*
-		//performance test
-		testI.run("/home/eugene/Desktop/ExM_MT_8bit-small_crop.tif"); 
-		
-		
-		testI.roiManager.setLockMode(true);
-		float [] point = new float[3];
-		point[0]=17;
-		point[1]=61;
-		point[2]=110;
-		RealPoint target = new RealPoint(point);
 
-		testI.runOneClickTrace(target);
-		
-		*/
 		
 	}
 

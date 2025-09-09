@@ -90,11 +90,18 @@ public class EigenValVecSymmDecomposition<T extends RealType< T >>{//{ implement
 	   final Cursor< RealComposite< T > > m =  Views.collapseReal( RAIin ).cursor();
 	   final Cursor< RealComposite< T > > eV =  Views.collapseReal( eVector ).cursor();
 	   final Cursor<  T > eW =   eWeight.cursor();
-
+	   double [] pos = new double [3];
 	   while ( m.hasNext() )
 	   {
-
-		   computeVectorWeight(m.next(),eV.next(),eW.next());
+		   m.fwd();
+		   m.localize( pos);
+		   if(Math.abs( pos[0]-54)<0.01 && Math.abs(pos[1]-13)<0.01 && Math.abs(pos[2]-11)<0.01)
+		   {
+			   int ggg= 0;
+			   ggg++;
+			   computeVectorWeight(m.get(),eV.next(),eW.next(), true);
+		   }
+		   computeVectorWeight(m.get(),eV.next(),eW.next(), false);
 	   }
    }
    
@@ -287,7 +294,7 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
    }
    
    
-   public void computeVectorWeight( RealComposite< T > tensor, RealComposite< T > vector,  T weight)
+   public void computeVectorWeight( RealComposite< T > tensor, RealComposite< T > vector,  T weight, boolean bPrint)
    {
 	   int nCount = 0;
 	  // RealCompositeSymmetricMatrix< T > m = new RealCompositeSymmetricMatrix<T>( null, n);
@@ -322,9 +329,18 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
     		   dMin = Math.abs(dEV[index]);
     	   }
        }
+       if(bPrint)
+	   {
+		   System.out.println("vector");
+	   }
        for (i = 0; i < n; i++)
        {
     	   vector.get(i).setReal(V[i][index]);
+    	   if(bPrint)
+    	   {
+    		   //System.out.println("vector");
+    		   System.out.println(vector.get(i));
+    	   }
        } 	   
        boolean bBothNegative = true;
        double dWeight = 0.0;
@@ -350,7 +366,12 @@ public void computeVWCRAI( final RandomAccessibleInterval< T > tensor,
        {
     	   weight.setZero();
        }
-       
+	   if(bPrint)
+	   {
+		   System.out.println("weight");
+		   System.out.println(weight);
+	   }
+
        ////////////////////////////////////////
    }
    

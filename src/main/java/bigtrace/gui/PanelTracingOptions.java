@@ -23,11 +23,12 @@ public class PanelTracingOptions extends JPanel
 	final NumberField nfSigmaY = new NumberField(4);
 	final NumberField nfSigmaZ = new NumberField(4);
 	
-	final JCheckBox cbTraceOnlyClipped = new JCheckBox("Trace only clipped volume");
 	final String [] sEstimateMode = new String [] {"MAX", "AVG", "MIN"};
 	final JComboBox<String> cbEstimateThicknessMode = new JComboBox<>(sEstimateMode);
 	final NumberField cbEstimateThicknessCoeff = new NumberField(2);
 	final JCheckBox cbEstimateThickness = new JCheckBox(" Set ROI diameter ");
+	
+	final JCheckBox cbTraceOnlyClipped = new JCheckBox("Trace only clipped volume");
 	
 	public PanelTracingOptions(final BigTrace<?> bt_)
 	{
@@ -85,11 +86,7 @@ public class PanelTracingOptions extends JPanel
 		gbc.gridx = 0;
 		gbc.gridy++;
 		gbc.gridwidth = 2;
-		//this.add(new JLabel("Estimate ROI thickness from params: "),gbc);
-		//gbc.gridx++;
-		//this.add(cbEstimateThickness,gbc);
 		this.add(panEstimate,gbc);
-		//gbc.gridwidth = 1;
 		
 		gbc.gridx = 0;
 		gbc.gridy++;

@@ -58,12 +58,8 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 	protected Void doInBackground() throws Exception 
 	{
 		
-		//full_RAI = bt.btData.getAllDataRAI();	
-		
-		//int nInitialTimePoint = bt.btData.nCurrTimepoint;	
-		
-		//int nTotTP = nLastTP - nFirstTP;
-		//int nTPCount = 0;
+		int nTracesFound = 0;
+		int nCurrROIN = 0;
 		
 		
 		oneClickTrace.bNewTrace = true;
@@ -85,6 +81,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 			oneClickTrace.fullInput = traceIV;
 			
 			boolean bKeepTracing = true;
+			nCurrROIN = bt.roiManager.rois.size();
 			//int nCount = 0;
 			while(bKeepTracing)
 			{
@@ -122,6 +119,10 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 					bKeepTracing = false;
 				}
 			}
+			nTracesFound += bt.roiManager.rois.size() - nCurrROIN;
+			nCurrROIN = bt.roiManager.rois.size();
+			setProgress((int)Math.round( 100*(nTP - nFirstTP+1.0)/(nLastTP - nFirstTP+1.0)));
+			setProgressState(Integer.toString(nTracesFound)+" traces found.");
 		}
 		oneClickTrace.releaseMultiThread();
 		//System.out.println("done");
@@ -155,6 +156,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
     		bt.visBox = null;
         	setProgressState("Auto-tracing interrupted by user.");
         	setProgress(100);	
+        	oneClickTrace.releaseMultiThread();
     	}
     	
     	if(butAuto != null && tabIconRestore != null)
