@@ -668,7 +668,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	       for (i=0;i<rois.size();i++) 
 	       {
 	    	   roi = rois.get(i);
-	    	   nShift =  roi.getTimePoint() - bt.btData.nCurrTimepoint;
+	    	   nShift = roi.getTimePoint() - bt.btData.nCurrTimepoint;
 	    	   if(nShift >= nMinF && nShift <= nMaxF)
 	    	   {
 
@@ -757,9 +757,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 {
 		 LineTrace3D tracing;
 		 //new Line
-		 if(jlist.getSelectedIndex()<0 || getActiveRoi().getType()!=Roi3D.LINE_TRACE)
+		 if(jlist.getSelectedIndex()<0 || getActiveRoi().getType() != Roi3D.LINE_TRACE)
 		 {
 			 tracing = (LineTrace3D) makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
+			 if(bt.btData.bEstimateROIThicknessFromParams)
+			 {
+				 tracing.setLineThickness( bt.btData.estimateROIThicknessFromTracing() );
+			 }
 			 tracing.addFirstPoint(point_);
 			 addRoi(tracing);
 			 //activeRoi = rois.size()-1; 

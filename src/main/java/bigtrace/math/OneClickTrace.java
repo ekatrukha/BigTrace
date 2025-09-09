@@ -314,7 +314,10 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		{
 			LineTrace3D newTracing;
 			newTracing = (LineTrace3D) bt.roiManager.makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
-			newTracing.setLineThickness( fEstimatedThickness );
+			if(bt.btData.bEstimateROIThicknessFromParams)
+			{
+				newTracing.setLineThickness( fEstimatedThickness );
+			}
 			newTracing.addFirstPoint(points.get(0));
 			if(!bInsertROI)
 			{

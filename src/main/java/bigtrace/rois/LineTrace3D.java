@@ -37,8 +37,6 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 	public VisPointsScaled verticesVis;
 	//public VisPolyLineScaled segmentsVis;
 	public VisWireMesh segmentsVis;
-	
-	
 
 	public LineTrace3D(final Roi3DGroup preset_in, final int nTimePoint_)
 	{
@@ -166,20 +164,18 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 	
 
 	@Override
-	public void setLineThickness(float line_thickness) {
-
-
-		lineThickness=line_thickness;
+	public void setLineThickness(float line_thickness) 
+	{
+		lineThickness = line_thickness;
 		segmentsVis.setThickness(lineThickness);
 		updateRenderVertices();
 	}
 	
 	
 	@Override
-	public void setRenderType(int nRenderType){
-		
-		
-		renderType=nRenderType;
+	public void setRenderType(int nRenderType)
+	{	
+		renderType = nRenderType;
 		verticesVis.setRenderType(renderType);
 		segmentsVis.setRenderType(renderType);
 		updateRenderVertices();

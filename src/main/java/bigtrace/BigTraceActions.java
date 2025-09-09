@@ -139,6 +139,10 @@ public class BigTraceActions < T extends RealType< T > & NativeType< T > >
 							{
 								//make a temporary ROI to calculate TraceBox
 								LineTrace3D tracing_for_box = (LineTrace3D) bt.roiManager.makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
+								if(bt.btData.bEstimateROIThicknessFromParams)
+								{
+									tracing_for_box.setLineThickness( bt.btData.estimateROIThicknessFromTracing() );
+								}
 								tracing_for_box.addFirstPoint(target);
 								//calculate a box around maximum intensity point
 								bt.calcShowTraceBox(tracing_for_box, true);

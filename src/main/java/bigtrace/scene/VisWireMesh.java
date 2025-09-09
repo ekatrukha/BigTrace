@@ -89,7 +89,7 @@ public class VisWireMesh {
 	public void setThickness(float fLineThickness_)
 	{
 		fLineThickness = fLineThickness_;
-		if(centerLine!=null)
+		if(centerLine != null)
 			centerLine.setThickness( fLineThickness );
 	}
 	

@@ -510,18 +510,18 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		trace.vertices.get(trace.vertices.size()-1).localize(pos);		
 		for(i=0;i<3;i++)
 		{
-			rangeM[0][i]=(long)(pos[i])-range ;
-			rangeM[1][i]=(long)(pos[i])+range;								
+			rangeM[0][i] = (long)(pos[i]) - range ;
+			rangeM[1][i] = (long)(pos[i]) + range;								
 		}
 		//now shift it in the last direction of the trace to fFollowDegree
 		ArrayList<RealPoint> lastSegment =trace.getLastSegment();
-		lastSegment.get(lastSegment.size()-2).localize(beforeLast);
+		lastSegment.get(lastSegment.size() - 2).localize(beforeLast);
 		LinAlgHelpers.subtract(pos, beforeLast, pos);
 		LinAlgHelpers.normalize(pos);
 		for(i=0;i<3;i++)
 		{
-			rangeM[0][i]+=(long)(pos[i]*range*fFollowDegree);
-			rangeM[1][i]+=(long)(pos[i]*range*fFollowDegree);								
+			rangeM[0][i] += (long)(pos[i] * range * fFollowDegree);
+			rangeM[1][i] += (long)(pos[i] * range * fFollowDegree);								
 		}		
 		
 		VolumeMisc.checkBoxInside(viewclick, rangeM);
