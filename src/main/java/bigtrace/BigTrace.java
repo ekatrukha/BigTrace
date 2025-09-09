@@ -161,6 +161,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		{
 			btMacro.bMacroMode = true;
 			Functions.registerExtensions(this);
+			IJ.log("Started BigTrace v." + BigTraceData.sVersion + " in macro mode");
+			IJ.log("Opening file " + arg);
 		}
 		
 		
