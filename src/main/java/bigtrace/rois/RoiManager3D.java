@@ -51,7 +51,6 @@ import bigtrace.geometry.Line3D;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelFullAutoTrace;
 import bigtrace.gui.PanelTitle;
-import bigtrace.io.ROIsLoadBG;
 import bigtrace.measure.RoiMeasure3D;
 import bigtrace.tracks.TrackingPanel;
 
@@ -1330,24 +1329,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			roiPolyOneClickMode.setToolTipText("One click trace");
 			
 		}
-	}
-	
-	public void loadROIs(String filename, int nLoadMode)
-	{
-		if(nLoadMode == 0 )
-		{
-        	this.groups = new ArrayList<>();
-        	this.rois = new ArrayList< >();
-        	listModel.clear();
-		}
-		
-        ROIsLoadBG<T> loadTask = new ROIsLoadBG<>();
-        
-        loadTask.sFilename = filename;
-        loadTask.nLoadMode = nLoadMode;
-        loadTask.bt = this.bt;
-        loadTask.addPropertyChangeListener(bt.btPanel);
-        loadTask.execute();	
 	}
 	
 

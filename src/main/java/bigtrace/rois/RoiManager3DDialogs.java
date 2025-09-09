@@ -24,10 +24,8 @@ import bigtrace.gui.GBCHelper;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelOneClickTraceOptions;
 import bigtrace.gui.PanelTracingOptions;
-import bigtrace.io.ROIsExportCSV;
-import bigtrace.io.ROIsExportSWC;
+import bigtrace.io.ROIsIO;
 import bigtrace.io.ROIsImportTrackMateBG;
-import bigtrace.io.ROIsSaveBG;
 import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
@@ -521,28 +519,12 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
         Prefs.set("BigTrace.SaveRoisMode", nSaveMode);
 
         
-		String filename;
+		String filename = "";
 		SaveDialog sd;
-		String path;
+		String path = "";
+
 		switch (nSaveMode)
 		{
-		case 0: 
-			filename = bt.btData.sFileNameFullImg + "_btrois";
-			sd = new SaveDialog("Save ROIs ", filename, ".csv");
-			path = sd.getDirectory();
-			if (path == null)
-				return;
-			filename = path + sd.getFileName();
-
-			bt.setLockMode(true);
-			bt.bInputLock = true;
-
-			ROIsSaveBG<T> saveTask = new ROIsSaveBG<>();
-			saveTask.sFilename = filename;
-			saveTask.bt = this.bt;
-			saveTask.addPropertyChangeListener(bt.btPanel);
-			saveTask.execute();
-			break;
 		case 1: 
 			filename = bt.btData.sFileNameFullImg + "_traces";
 			sd = new SaveDialog("Export ROIs ", filename, ".csv");
@@ -550,15 +532,6 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 			if (path == null)
 				return;
 			filename = path + sd.getFileName();
-
-			bt.setLockMode(true);
-			bt.bInputLock = true;
-
-			ROIsExportCSV<T> exportTask = new ROIsExportCSV<>();
-			exportTask.sFilename = filename;
-			exportTask.bt = this.bt;
-			exportTask.addPropertyChangeListener(bt.btPanel);
-			exportTask.execute();
 			break;
 		case 2: 
 			filename = bt.btData.sFileNameFullImg + "_traces";
@@ -566,18 +539,18 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 			path = sd.getDirectory();
 			if (path == null)
 				return;
+			break;
+		default: 
+			filename = bt.btData.sFileNameFullImg + "_btrois";
+			sd = new SaveDialog("Save ROIs ", filename, ".csv");
+			path = sd.getDirectory();
+			if (path == null)
+				return;
 			filename = path + sd.getFileName();
-
-			bt.setLockMode(true);
-			bt.bInputLock = true;
-
-			ROIsExportSWC<T> exportSWCTask = new ROIsExportSWC<>();
-			exportSWCTask.sFilename = filename;
-			exportSWCTask.bt = this.bt;
-			exportSWCTask.addPropertyChangeListener(bt.btPanel);
-			exportSWCTask.execute();
 			break;
 		}
+		filename = path + sd.getFileName();
+		ROIsIO.saveROIs( filename, nSaveMode, bt );
 	}
 	
 	
@@ -614,7 +587,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
         }
         
         Prefs.set("BigTrace.LoadRoisMode", nLoadMode);
-        bt.roiManager.loadROIs(filename, nLoadMode);        
+        ROIsIO.loadROIs(filename, nLoadMode, bt);        
 	}
     
 	/** Import ROIs dialog **/

@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
+import bigtrace.io.ROIsIO;
 import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.Roi3D;
 import bigtrace.volume.StraightenCurve;
 import ij.IJ;
+import ij.ImageJ;
 import ij.macro.ExtensionDescriptor;
 import ij.macro.MacroExtension;
 
@@ -30,12 +32,13 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		
 		extensions = new ExtensionDescriptor[7];
 		extensions[0] = ExtensionDescriptor.newDescriptor("btLoadROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
-		extensions[1] = ExtensionDescriptor.newDescriptor("btStraighten", bt, MacroExtension.ARG_NUMBER, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
-		extensions[2] = ExtensionDescriptor.newDescriptor("btShapeInterpolation", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_NUMBER);
-		extensions[3] = ExtensionDescriptor.newDescriptor("btIntensityInterpolation", bt, MacroExtension.ARG_STRING);
-		extensions[4] = ExtensionDescriptor.newDescriptor("btTest", bt);
-		extensions[5] = ExtensionDescriptor.newDescriptor("btClose", bt);
-		extensions[6] = ExtensionDescriptor.newDescriptor("btTest", bt);
+		extensions[1] = ExtensionDescriptor.newDescriptor("btSaveROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
+		extensions[2] = ExtensionDescriptor.newDescriptor("btStraighten", bt, MacroExtension.ARG_NUMBER, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
+		extensions[3] = ExtensionDescriptor.newDescriptor("btShapeInterpolation", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_NUMBER);
+		extensions[4] = ExtensionDescriptor.newDescriptor("btIntensityInterpolation", bt, MacroExtension.ARG_STRING);
+		extensions[5] = ExtensionDescriptor.newDescriptor("btTest", bt);
+		extensions[6] = ExtensionDescriptor.newDescriptor("btClose", bt);
+		//extensions[7] = ExtensionDescriptor.newDescriptor("btTest", bt);
 	}
 	
 	public String handleExtension(String name, Object[] args) 
@@ -45,6 +48,10 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			if (name.equals("btLoadROIs")) 
 			{
 				macroLoadROIs( (String)args[0],(String)args[1]);
+			}
+			if (name.equals("btSaveROIs")) 
+			{
+				macroSaveROIs( (String)args[0],(String)args[1]);
 			}
 			if (name.equals("btStraighten")) 
 			{
@@ -107,7 +114,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
         		IJ.log( "Error! ROIs loading mode should be either Clean or Append. Loading failed." );
         		return;
         }
-        bt.roiManager.loadROIs( sFileName, nLoadMode );
+        ROIsIO.loadROIs( sFileName, nLoadMode, bt );
         IJ.log( "BigTrace ROIs loaded from " + sFileName);
 
 	}
@@ -124,21 +131,26 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		
         if(output == null)
         	return;
+        String out = output.toLowerCase();
         int nLoadMode = 0;
-        switch (output)
+        switch (out)
         {
-        	case "Clean":
+        	case "bigtrace":
             	nLoadMode = 0;
         		break;
-        	case "Append":
+        	case "csv":
         		nLoadMode = 1;
-        		break;  
+        		break;
+           	case "swc":
+        		nLoadMode = 2;
+        		break;
+        		
         	default:
-        		IJ.log( "Error! ROIs loading mode should be either Clean or Append. Loading failed." );
+        		IJ.log( "Error! ROIs saving mode should be either BigTrace, CSV or SWC. Saving aborted." );
         		return;
         }
-        bt.roiManager.loadROIs( sFileName, nLoadMode );
-        IJ.log( "BigTrace ROIs loaded from " + sFileName);
+        ROIsIO.saveROIs( sFileName, nLoadMode, bt );
+        IJ.log( "BigTrace ROIs saved to " + sFileName);
 
 	}
 	
@@ -276,5 +288,26 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		bt.resetViewXY();
 		IJ.log("test ok right away");
 
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static void main(String... args) throws Exception
+	{
+		
+		new ImageJ();
+		BigTrace testI = new BigTrace(); 
+		
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
+		try
+		{
+			testI.btMacro.bMacroMode = true;
+			testI.btMacro.macroLoadROIs("/home/eugene/Desktop/FR21_SC_nuc10-1.tif_btrois.csv","Clean");
+			testI.btMacro.macroSaveROIs("/home/eugene/Desktop/FR21_SC_nuc10-1.tif_btrois.swc","SWC");
+		}
+		catch ( Exception exc )
+		{
+			// TODO Auto-generated catch block
+			exc.printStackTrace();
+		}
 	}
 }
