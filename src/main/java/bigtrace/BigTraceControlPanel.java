@@ -133,7 +133,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	    tabPane.addTab("",tabIcon ,roiMeasure,"Measure");
 	    
 	    //TRACKS	
-	    if(BigTraceData.nNumTimepoints>1)
+	    if(bt.btData.nNumTimepoints > 1)
 	    {
 		    icon_path = this.getClass().getResource("/icons/tracks.png");
 		    tabIcon = new ImageIcon(icon_path);
@@ -675,9 +675,9 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		JComboBox<String> extractClippedTimeList = new JComboBox<>(sExtractClippedTime);
 		int [] nRange = new int [2];
 		nRange[0] = 0;
-		nRange[1] = BigTraceData.nNumTimepoints-1;
+		nRange[1] = bt.btData.nNumTimepoints-1;
 		RangeSliderPanel timeRange = new RangeSliderPanel(nRange, nRange);
-		if(BigTraceData.nNumTimepoints > 1)
+		if(bt.btData.nNumTimepoints > 1)
 		{
 			clipExtractSettings.add(new JLabel("Extract:"),cd);
 			extractClippedTimeList.setSelectedIndex((int)Prefs.get("BigTrace.extractClippedTime", 0));
@@ -723,7 +723,7 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 			nTimePointMin = bt.btData.nCurrTimepoint;
 			nTimePointMax = bt.btData.nCurrTimepoint;
 			
-			if(BigTraceData.nNumTimepoints>1)
+			if(bt.btData.nNumTimepoints > 1)
 			{
 				nTimeRangeSetting = extractClippedTimeList.getSelectedIndex();
 				Prefs.set("BigTrace.extractClippedTime", nTimeRangeSetting);

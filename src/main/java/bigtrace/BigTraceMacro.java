@@ -31,7 +31,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 	{
 		bt = bt_;
 		
-		extensions = new ExtensionDescriptor[13];
+		extensions = new ExtensionDescriptor[11];
 		extensions[0] = ExtensionDescriptor.newDescriptor("btLoadROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
 		extensions[1] = ExtensionDescriptor.newDescriptor("btSaveROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
 		extensions[2] = ExtensionDescriptor.newDescriptor("btStraighten", bt, MacroExtension.ARG_NUMBER, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
@@ -47,10 +47,12 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 				  																		  MacroExtension.ARG_NUMBER, 
 				  																		  MacroExtension.ARG_STRING, 
 				  																		  MacroExtension.ARG_NUMBER);		
-		extensions[8] = ExtensionDescriptor.newDescriptor("btSetFullAutoTraceParameters", bt, MacroExtension.ARG_STRING);
-		extensions[9] = ExtensionDescriptor.newDescriptor("btRunFullAutoTrace", bt);
-		extensions[10] = ExtensionDescriptor.newDescriptor("btTest", bt);
-		extensions[11] = ExtensionDescriptor.newDescriptor("btClose", bt);
+		extensions[8] = ExtensionDescriptor.newDescriptor("btRunFullAutoTrace", bt, MacroExtension.ARG_NUMBER,
+																					MacroExtension.ARG_NUMBER,
+																					MacroExtension.ARG_NUMBER,
+																					MacroExtension.ARG_NUMBER);
+		extensions[9] = ExtensionDescriptor.newDescriptor("btTest", bt);
+		extensions[10] = ExtensionDescriptor.newDescriptor("btClose", bt);
 		//extensions[7] = ExtensionDescriptor.newDescriptor("btTest", bt);
 	}
 	
@@ -121,13 +123,18 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 				if(args.length==4)
 				{
 					macroSetOneClickParameters((int)Math.round(((Double)args[0]).doubleValue()), Math.round(((Double)args[1]).doubleValue()), (String)args[2], Math.round(((Double)args[3]).doubleValue()) );
-
 				}
 				else
 				{
 					IJ.log( "Error calling btSetOneClickParameters, wrong number of provided parameters" );
 				}
 					
+			}
+			if (name.equals("btRunFullAutoTrace")) 
+			{
+				int nFirstTP;
+				int nLastTP;
+				
 			}
 			if (name.equals("btClose")) 
 			{
@@ -143,6 +150,26 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			exc.printStackTrace();
 		}
 		return null;
+	}
+	
+	public void macroRunFullAutoTrace(final int nIntMin, final int nNumPoints, final int nFirstFrame, final int nLastFrame) throws InterruptedException
+	{
+		while(bt.bInputLock)
+		{
+			Thread.sleep(1000);
+		}
+		int nFirstTP = 0;
+		int nLastTP = 0;
+		
+		if (bt.btData.nNumTimepoints != 1)
+		{
+			nFirstTP = Math.min(nFirstFrame, nLastFrame);
+			nLastTP = Math.max(nFirstFrame, nLastFrame);
+			nFirstTP = Math.max( 0, nFirstTP );
+			nLastTP = Math.min( bt.btData.nNumTimepoints - 1, nLastTP );
+		}
+	
+		bt.roiManager.panelFullAutoTrace.launchFullAutoTrace( nIntMin, nNumPoints, nFirstFrame, nLastFrame );
 	}
 	
 	public void macroSetTracingThickness(final double [] sigmas) throws InterruptedException

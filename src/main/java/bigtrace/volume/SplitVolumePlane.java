@@ -29,8 +29,8 @@ public class SplitVolumePlane < T extends RealType< T > & NativeType< T > > exte
 
 	private String progressState;
 	
-	CrossSection3D crossSection;
-	public BigTrace<T> bt;
+	final CrossSection3D crossSection;
+	final public BigTrace<T> bt;
 	int nSliceType;
 	
 	
@@ -138,8 +138,8 @@ public class SplitVolumePlane < T extends RealType< T > & NativeType< T > > exte
 		if(nSliceType ==0)
 		{
 
-			VolumeMisc.wrapImgImagePlusCal(out1,fileName+"_vol1", cal).show();
-			VolumeMisc.wrapImgImagePlusCal(out2,fileName+"_vol2", cal).show();
+			VolumeMisc.wrapImgImagePlusCal(out1,fileName+"_vol1", cal, bt.btData.nNumTimepoints).show();
+			VolumeMisc.wrapImgImagePlusCal(out2,fileName+"_vol2", cal, bt.btData.nNumTimepoints).show();
 
 		}	
 		//tight crop, let's calculate corresponding intervals
@@ -200,8 +200,8 @@ public class SplitVolumePlane < T extends RealType< T > & NativeType< T > > exte
 			}
 		
 			//apply calibration and show
-			VolumeMisc.wrapImgImagePlusCal(Views.interval(out1, newCrop[0]),fileName+"_vol1", cal).show();
-			VolumeMisc.wrapImgImagePlusCal(Views.interval(out2, newCrop[1]),fileName+"_vol2", cal).show();
+			VolumeMisc.wrapImgImagePlusCal(Views.interval(out1, newCrop[0]),fileName+"_vol1", cal, bt.btData.nNumTimepoints).show();
+			VolumeMisc.wrapImgImagePlusCal(Views.interval(out2, newCrop[1]),fileName+"_vol2", cal, bt.btData.nNumTimepoints).show();
 		}
 
 		setProgressState("volume splitting done.");

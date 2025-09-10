@@ -246,7 +246,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		pROIrender.add(nfSmoothWindow,cd);
 		
 
-		if(BigTraceData.nNumTimepoints > 1)
+		if(bt.btData.nNumTimepoints > 1)
 		{
 			cd.gridx = 0;
 			cd.gridy++;
@@ -444,7 +444,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 			}
 			
 			//TIME RENDER
-			if(BigTraceData.nNumTimepoints>1)
+			if(bt.btData.nNumTimepoints>1)
 			{
 				if(BigTraceData.timeFade != Integer.parseInt(nfTimeFadeROIs.getText())||BigTraceData.timeRender!= sTimeRenderROIsList.getSelectedIndex())
 				{

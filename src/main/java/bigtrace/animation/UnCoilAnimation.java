@@ -684,7 +684,7 @@ public class UnCoilAnimation < T extends RealType< T > & NativeType< T > > exten
 		cal.pixelDepth = BigTraceData.globCal[2];
 		
 		final IntervalView< T > imgOut = Views.zeroMin(  Views.interval( Views.extendZero( outInterval ),unionInterval ));
-		final ImagePlus ip = VolumeMisc.wrapImgImagePlusCal(imgOut, inputROI.getName() + "_vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd),cal);
+		final ImagePlus ip = VolumeMisc.wrapImgImagePlusCal(imgOut, inputROI.getName() + "_vol_T"+ String.format("%0"+String.valueOf(nFrames).length()+"d", nInd),cal, bt.btData.nNumTimepoints);
 		IJ.saveAsTiff(ip, sSaveFolderPath+ip.getTitle());
 
 		return true;

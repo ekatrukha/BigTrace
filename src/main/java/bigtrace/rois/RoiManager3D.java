@@ -122,7 +122,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	final JButton roiImport;
 	final JButton roiSettings;
 	
-	final PanelFullAutoTrace< T > panelFullAutoTrace;
+	final public PanelFullAutoTrace< T > panelFullAutoTrace;
 
 	ImageIcon tabIconOCTrace;
 	ImageIcon tabIconCancel;
@@ -582,9 +582,9 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 /** returns ROI name with a TXXX time point + short 3 letters group prefix in squared brackets**/
 	 public String getFullDisplayedRoiName(final Roi3D roi)
 	 {
-		 final String sTimeFormat = Integer.toString(String.valueOf(BigTraceData.nNumTimepoints).length());
+		 final String sTimeFormat = Integer.toString(String.valueOf(bt.btData.nNumTimepoints).length());
 
-		 if(BigTraceData.nNumTimepoints>1)
+		 if(bt.btData.nNumTimepoints > 1)
 		 {
 			 return "T"+String.format("%0"+sTimeFormat+"d", roi.getTimePoint())+"_"+bt.roiManager.getGroupPrefixRoiNameBase(roi);
 		 }
@@ -1271,7 +1271,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 			
 			//time point
-			currentROI.setTimePoint(Math.min(Math.max(0, Integer.parseInt(nfTimePoint.getText())),BigTraceData.nNumTimepoints-1));
+			currentROI.setTimePoint(Math.min(Math.max(0, Integer.parseInt(nfTimePoint.getText())), bt.btData.nNumTimepoints - 1));
 			//point size 
 			currentROI.setPointSize(Float.parseFloat(nfPointSize.getText()));
 			

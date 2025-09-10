@@ -17,7 +17,6 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
 import bigtrace.BigTrace;
-import bigtrace.BigTraceData;
 import bigtrace.math.FullAutoTrace;
 import ij.Prefs;
 
@@ -42,7 +41,7 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 		butAuto.addActionListener( this );		
 	}
 	
-	public  void launchFullAutoTrace()
+	public void showDialogFullAutoTrace()
 	{
 		final JTabbedPane tabPane = new JTabbedPane();
 
@@ -77,12 +76,12 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 		
 		
 		RangeSliderPanel timeRange = null;
-		if(BigTraceData.nNumTimepoints>1)
+		if(bt.btData.nNumTimepoints > 1)
 		{
 			
 			final int [] nRange = new int [2];
 			nRange[0] = 0;
-			nRange[1] = BigTraceData.nNumTimepoints-1;
+			nRange[1] = bt.btData.nNumTimepoints-1;
 			timeRange = new RangeSliderPanel(nRange, nRange);
 			//timeRange.makeConstrained( bt.btData.nCurrTimepoint, bt.btData.nCurrTimepoint );
 			
@@ -117,30 +116,43 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 			icon_path = this.getClass().getResource("/icons/cancel.png");
 			tabIconCancel = new ImageIcon(icon_path);
 
-			fullAutoTrace = new FullAutoTrace<>(bt);
+			final int dAutoMinStartTraceInt = Integer.parseInt(nfMaxIntFullTraceStart.getText());
+			Prefs.set("BigTrace.dAutoMinStartTraceInt",dAutoMinStartTraceInt );
 			
+			final int nAutoMinPointsCurve = Integer.parseInt(nfAutoMinCurvePoints.getText());
+			Prefs.set("BigTrace.nAutoMinPointsCurve", nAutoMinPointsCurve );
+			int nFirstTP = 0;
+			int nLastTP = 0;
 			if(timeRange != null)
 			{
-				fullAutoTrace.nFirstTP = timeRange.getMin();
-				fullAutoTrace.nLastTP = timeRange.getMax();
+				nFirstTP = timeRange.getMin();
+				nLastTP = timeRange.getMax();
 			}
-			fullAutoTrace.dAutoMinStartTraceInt = Integer.parseInt(nfMaxIntFullTraceStart.getText());
-			Prefs.set("BigTrace.dAutoMinStartTraceInt",fullAutoTrace.dAutoMinStartTraceInt );
-
-			fullAutoTrace.nAutoMinPointsCurve = Integer.parseInt(nfAutoMinCurvePoints.getText());
-			Prefs.set("BigTrace.nAutoMinPointsCurve",fullAutoTrace.nAutoMinPointsCurve );
-			
-			bt.bInputLock = true;
-			bt.setLockMode(true);
-			fullAutoTrace.addPropertyChangeListener( bt.btPanel );
-			butAuto.setEnabled( true );
-			butAuto.setIcon( tabIconCancel );
-			butAuto.setToolTipText( "Stop auto trace" );
-			fullAutoTrace.butAuto = butAuto;
-			fullAutoTrace.tabIconRestore = tabIconAuto;
-			fullAutoTrace.execute();
+			launchFullAutoTrace(dAutoMinStartTraceInt, nAutoMinPointsCurve, nFirstTP, nLastTP);
 		}
 
+	}
+	
+	public void launchFullAutoTrace(final int dAutoMinStartTraceInt, final int nAutoMinPointsCurve, final int nFirstTP, final int nLastTP)
+	{
+		fullAutoTrace = new FullAutoTrace<>(bt);
+		
+		fullAutoTrace.nFirstTP = nFirstTP;
+		fullAutoTrace.nLastTP = nLastTP;
+
+		fullAutoTrace.dAutoMinStartTraceInt = dAutoMinStartTraceInt;
+
+		fullAutoTrace.nAutoMinPointsCurve = nAutoMinPointsCurve;
+		
+		bt.bInputLock = true;
+		bt.setLockMode(true);
+		fullAutoTrace.addPropertyChangeListener( bt.btPanel );
+		butAuto.setEnabled( true );
+		butAuto.setIcon( tabIconCancel );
+		butAuto.setToolTipText( "Stop auto trace" );
+		fullAutoTrace.butAuto = butAuto;
+		fullAutoTrace.tabIconRestore = tabIconAuto;
+		fullAutoTrace.execute();
 	}
 
 	@Override
@@ -151,7 +163,7 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 		{
 			if(!bt.bInputLock)
 			{
-				launchFullAutoTrace();
+				showDialogFullAutoTrace();
 			}
 			else
 			{

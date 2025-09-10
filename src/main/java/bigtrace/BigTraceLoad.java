@@ -86,7 +86,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 			BigTraceData.globCal[d] = seq.getViewDescription(0,0).getViewSetup().getVoxelSize().dimension(d);
 		}
 		//number of timepoints
-		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
+		bt.btData.nNumTimepoints = seq.getTimePoints().size();
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		
 
@@ -271,7 +271,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		BigTraceData.dMinVoxelSize = Math.min(Math.min(BigTraceData.globCal[0], BigTraceData.globCal[1]), BigTraceData.globCal[2]);
 		
 		//number of timepoints
-		BigTraceData.nNumTimepoints = seq.getTimePoints().size();
+		bt.btData.nNumTimepoints = seq.getTimePoints().size();
 		
 		//see if data comes from LLS7
 		String sTestLLS = seq.getViewDescription(0, 0).getViewSetup().getName();
@@ -394,7 +394,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 		btdata.sVoxelUnit = imp.getCalibration().getUnit();
 		btdata.sTimeUnit = imp.getCalibration().getTimeUnit();
 		btdata.dFrameInterval = imp.getCalibration().frameInterval;
-		BigTraceData.nNumTimepoints = imp.getNFrames();
+		bt.btData.nNumTimepoints = imp.getNFrames();
 		
 		Img<T> img_ImageJ;
 
@@ -430,7 +430,7 @@ public class BigTraceLoad < T extends RealType< T > & NativeType< T > >
 
 		getChannelsColors(imp);
 
-		if(BigTraceData.nNumTimepoints==1)
+		if(bt.btData.nNumTimepoints == 1)
 		{
 			bt.all_ch_RAI = Views.addDimension(bt.all_ch_RAI, 0, 0);
 			//test = all_ch_RAI.dimensionsAsLongArray();

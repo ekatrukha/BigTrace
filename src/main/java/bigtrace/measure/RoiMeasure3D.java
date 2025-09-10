@@ -680,47 +680,47 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		rt.setValue("Point_Size", row, val.getPointSize());
 		rt.setValue("Line_Thickness", row, val.getLineThickness());
 
-		if(BigTraceData.nNumTimepoints>1)
+		if(bt.btData.nNumTimepoints > 1)
 		{
 			rt.setValue("ROI_TimePoint", row, val.getTimePoint());
 		}
-		if ((systemMeasurements&VOLUME)!=0)
+		if ((systemMeasurements & VOLUME) != 0)
 		{
 			rt.setValue("Volume", row, val.volume);
 		}
-		if ((systemMeasurements&LENGTH)!=0)
+		if ((systemMeasurements & LENGTH) != 0)
 		{
 			rt.setValue("Length", row, val.length);
 		}
-		if ((systemMeasurements&MEAN)!=0)
+		if ((systemMeasurements & MEAN) != 0)
 		{
 			rt.setValue("Mean_intensity", row, val.mean);
 		}
-		if ((systemMeasurements&STD_DEV)!=0)
+		if ((systemMeasurements & STD_DEV) != 0)
 		{
 			rt.setValue("SD_intensity", row, val.stdDev);
 		}
-		if ((systemMeasurements&INTEGRATED)!=0)
+		if ((systemMeasurements & INTEGRATED) != 0)
 		{
 			rt.setValue("Integrated_intensity", row, val.integrated);
 		}
-		if ((systemMeasurements&MEAN_LINEAR)!=0)
+		if ((systemMeasurements & MEAN_LINEAR) != 0)
 		{
 			rt.setValue("Mean_linear_intensity", row, val.mean_linear);
 		}
-		if ((systemMeasurements&STD_LINEAR)!=0)
+		if ((systemMeasurements & STD_LINEAR) != 0)
 		{
 			rt.setValue("SD_linear_intensity", row, val.std_linear);
 		}
-		if ((systemMeasurements&DIST_ENDS)!=0)
+		if ((systemMeasurements & DIST_ENDS) != 0)
 		{
 			rt.setValue("Distance_between_ends", row, val.endsDistance);
 		}
-		if ((systemMeasurements&STRAIGHTNESS)!=0)
+		if ((systemMeasurements & STRAIGHTNESS) != 0)
 		{
 			rt.setValue("Straightness", row, val.straightness);
 		}
-		if ((systemMeasurements&ENDS_COORDS)!=0)
+		if ((systemMeasurements & ENDS_COORDS) != 0)
 		{
 			for(int nEnd = 0;nEnd<2;nEnd++)
 			{
@@ -1182,7 +1182,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		
 		String[] sExtractBoxTime = { "Single ROI's time point", "All time points" };
 		JComboBox<String> extractBoxTimeList = new JComboBox<>(sExtractBoxTime);
-		if(BigTraceData.nNumTimepoints>1)
+		if(bt.btData.nNumTimepoints > 1 )
 		{
 			cd.gridy++;
 			cd.gridx=0;
@@ -1233,7 +1233,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 				Prefs.set("BigTrace.nExpandROIBox", nExpandROIBox);				
 			}
 			nTimeRange = 0;
-			if(BigTraceData.nNumTimepoints>1)
+			if(bt.btData.nNumTimepoints > 1)
 			{
 				nTimeRange = extractBoxTimeList.getSelectedIndex();
 				Prefs.set("BigTrace.nExtractBoxTime", nTimeRange);
@@ -1362,7 +1362,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		
 		String[] sStraightenTime = { "Single ROI's time point", "All time points" };
 		JComboBox<String> straightenTimeList = new JComboBox<>(sStraightenTime);
-		if(BigTraceData.nNumTimepoints>1)
+		if(bt.btData.nNumTimepoints > 1)
 		{
 			cd.gridy++;
 			cd.gridx=0;
@@ -1420,7 +1420,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			Prefs.set("BigTrace.nStraightenShape", nStraightenShape);
 			
 			nTimeRange = 0;
-			if(BigTraceData.nNumTimepoints>1)
+			if(bt.btData.nNumTimepoints > 1)
 			{
 				nTimeRange = straightenTimeList.getSelectedIndex();
 				Prefs.set("BigTrace.nStraightenTime", nTimeRange);

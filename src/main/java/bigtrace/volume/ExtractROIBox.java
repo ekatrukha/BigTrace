@@ -123,7 +123,7 @@ public class ExtractROIBox < T extends RealType< T > & NativeType< T > > extends
 			setProgressState("extracting ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
 			if(extractedRAI != null)
 			{
-				outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_bbox",cal));
+				outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_bbox",cal, bt.btData.nNumTimepoints));
 			}
 		}
 		

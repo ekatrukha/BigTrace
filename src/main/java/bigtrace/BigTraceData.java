@@ -51,7 +51,7 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	public int nTotalChannels = 0;
 	
 	/** total number of TimePoints**/
-	static public int nNumTimepoints = 0;
+	public int nNumTimepoints = 0;
 	
 	///////////////////////DATASET PROCESSING/MEASURE SETTING
 
@@ -397,7 +397,7 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 			for (int nCh=0; nCh < nTotalChannels; nCh++)
 			{
 				raiXYZT = new ArrayList<> ();
-				for(int nTimePoint = 0;nTimePoint<BigTraceData.nNumTimepoints;nTimePoint++)
+				for(int nTimePoint = 0; nTimePoint < nNumTimepoints; nTimePoint++)
 				{
 					raiXYZT.add(getDataSourceFull(nCh,nTimePoint));
 				}
