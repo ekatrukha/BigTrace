@@ -31,7 +31,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 	{
 		bt = bt_;
 		
-		extensions = new ExtensionDescriptor[11];
+		extensions = new ExtensionDescriptor[13];
 		extensions[0] = ExtensionDescriptor.newDescriptor("btLoadROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
 		extensions[1] = ExtensionDescriptor.newDescriptor("btSaveROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
 		extensions[2] = ExtensionDescriptor.newDescriptor("btStraighten", bt, MacroExtension.ARG_NUMBER, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
@@ -40,14 +40,17 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		extensions[5] = ExtensionDescriptor.newDescriptor("btSetTracingThickness", bt,  MacroExtension.ARG_NUMBER, //sigmax  
 																						MacroExtension.ARG_NUMBER, //sigmay
 																						MacroExtension.ARG_NUMBER); //sigmaz
-		extensions[6] = ExtensionDescriptor.newDescriptor("btSetOneClickParameters", bt,  MacroExtension.ARG_NUMBER,  
+		extensions[6] = ExtensionDescriptor.newDescriptor("btSetTracingROI", bt,  MacroExtension.ARG_STRING, //boolean  
+																					MacroExtension.ARG_NUMBER, //coeff
+																					MacroExtension.ARG_STRING); //method
+		extensions[7] = ExtensionDescriptor.newDescriptor("btSetOneClickParameters", bt,  MacroExtension.ARG_NUMBER,  
 				  																		  MacroExtension.ARG_NUMBER, 
 				  																		  MacroExtension.ARG_STRING, 
 				  																		  MacroExtension.ARG_NUMBER);		
-		extensions[7] = ExtensionDescriptor.newDescriptor("btSetFullAutoTraceParameters", bt, MacroExtension.ARG_STRING);
-		extensions[8] = ExtensionDescriptor.newDescriptor("btRunFullAutoTrace", bt);
-		extensions[9] = ExtensionDescriptor.newDescriptor("btTest", bt);
-		extensions[10] = ExtensionDescriptor.newDescriptor("btClose", bt);
+		extensions[8] = ExtensionDescriptor.newDescriptor("btSetFullAutoTraceParameters", bt, MacroExtension.ARG_STRING);
+		extensions[9] = ExtensionDescriptor.newDescriptor("btRunFullAutoTrace", bt);
+		extensions[10] = ExtensionDescriptor.newDescriptor("btTest", bt);
+		extensions[11] = ExtensionDescriptor.newDescriptor("btClose", bt);
 		//extensions[7] = ExtensionDescriptor.newDescriptor("btTest", bt);
 	}
 	
@@ -93,9 +96,20 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 				final double [] sigmas = new double[3];
 				for(int d=0; d<3; d++)
 				{
-					sigmas[d] = Math.abs(((Double)args[0]).doubleValue());
+					sigmas[d] = Math.abs(((Double)args[d]).doubleValue());
 				}
 				macroSetTracingThickness(sigmas);
+				
+			}
+			if (name.equals("btSetTracingROI")) 
+			{
+				if(args.length != 3)
+				{
+					IJ.log( "Error, btSetTracingROI requires three arguments" );					
+					return null;
+				}
+				
+				macroSetTracingROI((String)args[0],Math.abs(((Double)args[1]).doubleValue()), (String)args[2]);
 				
 			}
 			if (name.equals("btSetOneClickParameters")) 
@@ -149,6 +163,53 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		IJ.log( out );
 
 	}
+	
+	public void macroSetTracingROI(String sEnable, final double coeff, String sMethod) throws InterruptedException
+	{
+		while(bt.bInputLock)
+		{
+			Thread.sleep(1000);
+		}
+		IJ.log( "Setting ROI thickness from tracing parameters: " );
+		bt.btData.bEstimateROIThicknessFromParams  = false;
+		if(sEnable.equals( "true" ))
+		{
+			bt.btData.bEstimateROIThicknessFromParams = true;
+			
+		}
+		else
+		{
+			IJ.log( "Disabled");
+		}
+		Prefs.set("BigTrace.bEstimateROIThicknessFromParams", bt.btData.bEstimateROIThicknessFromParams);	
+		
+		if(bt.btData.bEstimateROIThicknessFromParams)
+		{
+			String out = "Enabled, coefficient ";
+			bt.btData.dTraceROIThicknessCoeff = coeff;
+			Prefs.set("BigTrace.dTraceROIThicknessCoeff",bt.btData.dTraceROIThicknessCoeff);
+			out = out + Double.toString( bt.btData.dTraceROIThicknessCoeff );
+			out = out +" method ";
+			int nMethod = 0;
+			switch (sMethod.toLowerCase())
+			{
+			case "avg":
+				nMethod = 1;
+				out = out +" AVG";
+				break;
+			case "min":
+				nMethod = 2;
+				out = out +" MIN";
+				break;
+			default:
+				out = out +" MAX";
+			}
+			bt.btData.nTraceROIThicknessMode = nMethod;
+			Prefs.set("BigTrace.nTraceROIThicknessMode", (double)bt.btData.nTraceROIThicknessMode);
+			IJ.log( out );
+		}
+	}
+	
 	public void macroSetOneClickParameters(int nVertexPlacementPointN, double dDirectionalityOneClick, String sOCIntensityStop, double dOCIntensityThreshold) throws InterruptedException
 	{
 		while(bt.bInputLock)
@@ -393,7 +454,8 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			//testI.btMacro.macroLoadROIs("/home/eugene/Desktop/FR21_SC_nuc10-1.tif_btrois.csv","Clean");
 			//testI.btMacro.macroSaveROIs("/home/eugene/Desktop/FR21_SC_nuc10-1.tif_btrois.swc","SWC");
 			testI.btMacro.macroSetOneClickParameters( 5, 0.6,"false", 100 );
-			testI.btMacro.macroSetTracingThickness(new double [] { 1.1,2.2,3.3});
+			testI.btMacro.macroSetTracingThickness(new double [] { 1.2,3.2,3.4});
+			testI.btMacro.macroSetTracingROI("true", 3.0, "AVG");
 		}
 		catch ( Exception exc )
 		{

@@ -173,6 +173,8 @@ public class VisWireMesh {
 	/** simple central polyline, not cylindrical **/
 	public void setVerticesCenterLine(final ArrayList< RealPoint > points)
 	{		
+		
+		nPointsN = points.size();
 		if(BigTraceData.wireAntiAliasing)
 		{
 			centerLine = new VisPolyLineAA(points, fLineThickness, l_color);
@@ -180,13 +182,11 @@ public class VisWireMesh {
 		}
 		else
 		{
-			nPointsN=points.size();
-			
 			vertices = new float [nPointsN*3];//assume 3D	
 
-			for (int i=0;i<nPointsN; i++)
+			for (int i=0; i<nPointsN; i++)
 			{
-				for (int d=0;d<3; d++)
+				for (int d=0; d<3; d++)
 				{
 					vertices[i*3+d]=points.get(i).getFloatPosition(d);
 				}			
@@ -197,33 +197,35 @@ public class VisWireMesh {
 	/** generates triangulated surface mesh of a pipe around provided points **/
 	public void setVerticesSurface(final ArrayList<ArrayList< RealPoint >> allContours)
 	{
-		int i,j, iPoint;
 		int vertShift;
+		int i;
 
 		final int nSectorN = BigTraceData.sectorN;
 		nPointsN = allContours.size();
 		if(nPointsN>1)
 		{
 			//all vertices
-			vertices = new float [2*(nSectorN+1)*3*nPointsN];
-			for (iPoint=1;iPoint<nPointsN;iPoint++)
+			vertices = new float [2*(nSectorN + 1)*3*nPointsN];
+			
+			for (int iPoint = 1; iPoint < nPointsN; iPoint++)
 			{
 				//add to drawing vertices triangles
 				vertShift = (iPoint-1)*(nSectorN+1)*2*3;
-				for (i=0;i<nSectorN; i++)
+				for (i = 0; i < nSectorN; i++)
 				{
-					for (j=0;j<3; j++)
+					for (int j = 0; j < 3; j++)
 					{
-						vertices[vertShift+i*6+j]=allContours.get(iPoint-1).get(i).getFloatPosition(j);
-						vertices[vertShift+i*6+3+j]=allContours.get(iPoint).get(i).getFloatPosition(j);
+						vertices[vertShift + i*6 + j]     = allContours.get(iPoint-1).get(i).getFloatPosition(j);
+						vertices[vertShift + i*6 + j + 3] = allContours.get(iPoint).get(i).getFloatPosition(j);
 
 					}				
 				}
+				
 				//last one closing circles
-				for (j=0;j<3; j++)
+				for (int j = 0; j < 3; j++)
 				{
-					vertices[vertShift+i*6+j]=allContours.get(iPoint-1).get(0).getFloatPosition(j);
-					vertices[vertShift+i*6+3+j]=allContours.get(iPoint).get(0).getFloatPosition(j);
+					vertices[vertShift + i*6 + j]     = allContours.get(iPoint-1).get(0).getFloatPosition(j);
+					vertices[vertShift + i*6 + j + 3] = allContours.get(iPoint).get(0).getFloatPosition(j);
 
 				}
 			}
@@ -243,6 +245,7 @@ public class VisWireMesh {
 			setVerticesWireSharp(allContours);
 		}
 	}
+	
 	/** generates a wireframe mesh of a pipe around provided points **/
 	public void setVerticesWireAA( final ArrayList<ArrayList< RealPoint >> allContours)
 	{
@@ -343,7 +346,10 @@ public class VisWireMesh {
 		{
 			initGPUBufferWire( gl );
 		}
-		
+		else
+		{
+			initialized = true;
+		}
 		bLocked  = false;
 		return true;
 	}
@@ -351,7 +357,7 @@ public class VisWireMesh {
 	private void initGPUBufferWire( final GL3 gl )
 	{
 		initialized = true;
-		if(nPointsN>1)
+		if(nPointsN > 1)
 		{
 
 			// ..:: VERTEX BUFFER ::..

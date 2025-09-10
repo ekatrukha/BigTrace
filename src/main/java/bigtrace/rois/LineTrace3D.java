@@ -123,26 +123,21 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 	
 	/** returns the last segment of the tracing.**/
 	public ArrayList<RealPoint> getLastSegment() 
-	{
-		
-		return segments.get(segments.size()-1);
-		
+	{		
+		return segments.get(segments.size()-1);		
 	}
 
 
 	@Override
-	public void draw(final GL3 gl, final Matrix4fc pvm, final Matrix4fc vm, final int[] screen_size) {
-		
-
+	public void draw(final GL3 gl, final Matrix4fc pvm, final Matrix4fc vm, final int[] screen_size) 
+	{
 		verticesVis.draw(gl, pvm, screen_size);
-		segmentsVis.draw(gl, pvm, vm);
-		
-		
+		segmentsVis.draw(gl, pvm, vm);	
 	}
 	
 	@Override
-	public void setPointColor(Color pointColor_) {
-		
+	public void setPointColor(Color pointColor_) 
+	{	
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());	
 		verticesVis.setColor(pointColor);
 	}

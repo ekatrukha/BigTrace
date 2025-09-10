@@ -79,7 +79,7 @@ public class VisPolyLineAA
 	
 	public void setThickness(float fLineThickness_)
 	{
-		fLineThickness= fLineThickness_;
+		fLineThickness = fLineThickness_;
 	}
 	
 	public void setColor(Color color_in)
