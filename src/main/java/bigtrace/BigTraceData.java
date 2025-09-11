@@ -51,7 +51,7 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	public int nTotalChannels = 0;
 	
 	/** total number of TimePoints**/
-	static public int nNumTimepoints = 0;
+	public int nNumTimepoints = 0;
 	
 	///////////////////////DATASET PROCESSING/MEASURE SETTING
 
@@ -223,8 +223,15 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	/** whether to limit tracing to clipped area**/
 	public boolean bTraceOnlyClipped = false;
 	
-	/** whether to automatically pick traced ROI thicknes **/	
+	/** whether to automatically pick traced ROI thickness(diameter) **/	
 	public boolean bEstimateROIThicknessFromParams = Prefs.get("BigTrace.bEstimateROIThicknessFromParams", true);
+
+	/** coefficient value **/	
+	public double dTraceROIThicknessCoeff = Prefs.get("BigTrace.dTraceROIThicknessCoeff", 6.0);
+
+	/** estimation mode value 0 - MAX, 1 - AVG, 2 - MIN **/	
+	public int nTraceROIThicknessMode = (int)Prefs.get("BigTrace.nTraceROIThicknessMode", 0.0);
+
 	
 	///////////////////////////// TRACING SETTINGS SEMI AUTO
 	
@@ -390,7 +397,7 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 			for (int nCh=0; nCh < nTotalChannels; nCh++)
 			{
 				raiXYZT = new ArrayList<> ();
-				for(int nTimePoint = 0;nTimePoint<BigTraceData.nNumTimepoints;nTimePoint++)
+				for(int nTimePoint = 0; nTimePoint < nNumTimepoints; nTimePoint++)
 				{
 					raiXYZT.add(getDataSourceFull(nCh,nTimePoint));
 				}
@@ -430,11 +437,31 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	
 	public float estimateROIThicknessFromTracing()
 	{
-		float out = (-1)*Float.MAX_VALUE;
-		for(int d = 0; d < 3; d++)
+		float out = 0.0f;
+		switch(nTraceROIThicknessMode)
 		{
-			out = ( float ) Math.max(this.sigmaTrace[0]*globCal[0]/BigTraceData.dMinVoxelSize, out);
-		}		
-		return out*6.0f;
+		case 0:
+			out = (-1)*Float.MAX_VALUE;
+			for(int d = 0; d < 3; d++)
+			{
+				out = ( float ) Math.max(this.sigmaTrace[d]*globCal[d]/BigTraceData.dMinVoxelSize, out);
+			}		
+			break;
+		case 1:
+			for(int d = 0; d < 3; d++)
+			{
+				out +=( float ) (this.sigmaTrace[d]*globCal[d]/BigTraceData.dMinVoxelSize);
+			}	
+			out /= 3.0;
+			break;
+		case 2:
+			out = Float.MAX_VALUE;
+			for(int d = 0; d < 3; d++)
+			{
+				out = ( float ) Math.min(this.sigmaTrace[d]*globCal[d]/BigTraceData.dMinVoxelSize, out);
+			}		
+			break;
+		}
+		return ( float ) ( out * dTraceROIThicknessCoeff );
 	}
 }

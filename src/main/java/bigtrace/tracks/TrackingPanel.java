@@ -347,7 +347,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		
 		int [] nRange = new int [2];
 		nRange[0] = 0;
-		nRange[1] = BigTraceData.nNumTimepoints-1;
+		nRange[1] = bt.btData.nNumTimepoints - 1;
 		RangeSliderPanel timeRange = new RangeSliderPanel(nRange, nRange);
 		timeRange.makeConstrained( bt.btData.nCurrTimepoint, bt.btData.nCurrTimepoint );
 		
@@ -391,12 +391,12 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 				//all timepoints
 				case 0:
 					btTracker.nFirstTP = 0;
-					btTracker.nLastTP = BigTraceData.nNumTimepoints-1;
+					btTracker.nLastTP = bt.btData.nNumTimepoints - 1;
 					break;
 				//forward 
 				case 1:
 					btTracker.nFirstTP = bt.btData.nCurrTimepoint;
-					btTracker.nLastTP = BigTraceData.nNumTimepoints-1;
+					btTracker.nLastTP = bt.btData.nNumTimepoints - 1;
 					break;
 				//backwards
 				case 2:
@@ -441,7 +441,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		if(e.getSource() == butTrack && jlist.getSelectedIndex()>-1)
 		{
 			
-			if(!bt.bInputLock && BigTraceData.nNumTimepoints > 1 && bt.roiManager.getActiveRoi().getType()==Roi3D.LINE_TRACE)
+			if(!bt.bInputLock && bt.btData.nNumTimepoints > 1 && bt.roiManager.getActiveRoi().getType()==Roi3D.LINE_TRACE)
 			{
 				simpleTracking();
 			}

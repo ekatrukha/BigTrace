@@ -20,7 +20,7 @@ import net.imglib2.RealPoint;
 
 public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
-
+	
 	private String progressState;
 	public int nImportColor = 0;
 	public BigTrace<?> bt;
@@ -37,7 +37,7 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
 	@Override
 	public void setProgressState(String state_) {
 		
-		progressState=state_;
+		progressState = state_;
 		
 	}
 
@@ -95,7 +95,7 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
 	                    	//IJ.log(streamReader.getAttributeValue(0));
 	                    	nFrameRead = Integer.parseInt(streamReader.getAttributeValue(0));
 	                    	
-	                    	nFrame = Math.min(Math.max(0, nFrameRead),BigTraceData.nNumTimepoints-1);
+	                    	nFrame = Math.min(Math.max(0, nFrameRead), bt.btData.nNumTimepoints - 1);
 	                    	if(nFrame!=nFrameRead)
 	                    	{
 	                    		IJ.log("Warning: time frame is outside dataset range for track "+Integer.toString(nTrack)+" particle "+Integer.toString(nPoint)+".");

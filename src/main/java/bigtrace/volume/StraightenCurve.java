@@ -110,7 +110,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 			}
 			else
 			{
-				outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal));
+				outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal, bt.btData.nNumTimepoints));
 			}
 		}
 		else
@@ -132,7 +132,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 				else
 				{
 					setProgressState("storing ROI ("+Integer.toString(nRoi+1)+"/"+Integer.toString(nTotROIs)+") "+ sRoiName);
-					if(!outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal)))
+					if(!outputImagePlus(VolumeMisc.wrapImgImagePlusCal(extractedRAI, sRoiName + "_straight",cal, bt.btData.nNumTimepoints)))
 					{
 						IJ.log("Error saving straighten ROIs to "+sSaveFolderPath);
 						break;
@@ -204,7 +204,7 @@ public class StraightenCurve < T extends RealType< T > & NativeType< T > > exten
 		else
 		{
 			nMinTimePoint = 0;
-			nMaxTimePoint = BigTraceData.nNumTimepoints-1;
+			nMaxTimePoint = bt.btData.nNumTimepoints - 1;
 		}
 		//channels number
 		nChannelN = dimS[4];

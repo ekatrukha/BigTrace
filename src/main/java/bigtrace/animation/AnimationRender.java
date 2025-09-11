@@ -24,7 +24,6 @@ import bdv.util.Prefs;
 
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
-import bigtrace.BigTraceData;
 import bvvpg.core.render.VolumeRenderer.RepaintType;
 import ij.IJ;
 
@@ -34,16 +33,15 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 	
 	final BigTrace<T> bt;
 	
-	AnimationPanel< T > aPanel;
+	final AnimationPanel< T > aPanel;
 	
 	private String progressState;
 	
 	JButton butRecord = null;
+	
 	Dimension dimsIni;
-
 	
 	ImageIcon tabIconRecord = null;
-	
 
 	@Override
 	public String getProgressState()
@@ -76,6 +74,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		{
 			Prefs.showMultibox(false);
 		}
+		
 		if(aPanel.bRenderScaleBar)
 		{
 			Prefs.showScaleBar(true);
@@ -101,7 +100,7 @@ public class AnimationRender  < T extends RealType< T > & NativeType< T > >  ext
 		
 		int nHeight = aPanel.nRenderHeight;
 		//check if there is time slider => +25 in height
-		if(BigTraceData.nNumTimepoints>1)
+		if(bt.btData.nNumTimepoints > 1)
 		{
 			nHeight += 25;
 		}

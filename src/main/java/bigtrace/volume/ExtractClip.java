@@ -73,7 +73,7 @@ public class ExtractClip < T extends RealType< T > & NativeType< T > > extends S
 		
 		Path p = Paths.get(bt.btData.sFileNameFullImg);
 		String filename = p.getFileName().toString();
-		ImagePlus ip = VolumeMisc.wrapImgImagePlusCal(Views.interval(full_RAI, cropInt), filename + "_crop",cal);
+		ImagePlus ip = VolumeMisc.wrapImgImagePlusCal(Views.interval(full_RAI, cropInt), filename + "_crop",cal, bt.btData.nNumTimepoints);
 		if(nOutput == 0)
 		{
 			ip.show();

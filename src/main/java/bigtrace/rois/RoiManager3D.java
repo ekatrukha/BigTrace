@@ -51,7 +51,6 @@ import bigtrace.geometry.Line3D;
 import bigtrace.gui.NumberField;
 import bigtrace.gui.PanelFullAutoTrace;
 import bigtrace.gui.PanelTitle;
-import bigtrace.io.ROIsLoadBG;
 import bigtrace.measure.RoiMeasure3D;
 import bigtrace.tracks.TrackingPanel;
 
@@ -123,7 +122,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	final JButton roiImport;
 	final JButton roiSettings;
 	
-	final PanelFullAutoTrace< T > panelFullAutoTrace;
+	final public PanelFullAutoTrace< T > panelFullAutoTrace;
 
 	ImageIcon tabIconOCTrace;
 	ImageIcon tabIconCancel;
@@ -583,9 +582,9 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 /** returns ROI name with a TXXX time point + short 3 letters group prefix in squared brackets**/
 	 public String getFullDisplayedRoiName(final Roi3D roi)
 	 {
-		 final String sTimeFormat = Integer.toString(String.valueOf(BigTraceData.nNumTimepoints).length());
+		 final String sTimeFormat = Integer.toString(String.valueOf(bt.btData.nNumTimepoints).length());
 
-		 if(BigTraceData.nNumTimepoints>1)
+		 if(bt.btData.nNumTimepoints > 1)
 		 {
 			 return "T"+String.format("%0"+sTimeFormat+"d", roi.getTimePoint())+"_"+bt.roiManager.getGroupPrefixRoiNameBase(roi);
 		 }
@@ -669,7 +668,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	       for (i=0;i<rois.size();i++) 
 	       {
 	    	   roi = rois.get(i);
-	    	   nShift =  roi.getTimePoint() - bt.btData.nCurrTimepoint;
+	    	   nShift = roi.getTimePoint() - bt.btData.nCurrTimepoint;
 	    	   if(nShift >= nMinF && nShift <= nMaxF)
 	    	   {
 
@@ -758,9 +757,13 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 {
 		 LineTrace3D tracing;
 		 //new Line
-		 if(jlist.getSelectedIndex()<0 || getActiveRoi().getType()!=Roi3D.LINE_TRACE)
+		 if(jlist.getSelectedIndex()<0 || getActiveRoi().getType() != Roi3D.LINE_TRACE)
 		 {
 			 tracing = (LineTrace3D) makeRoi(Roi3D.LINE_TRACE, bt.btData.nCurrTimepoint);
+			 if(bt.btData.bEstimateROIThicknessFromParams)
+			 {
+				 tracing.setLineThickness( bt.btData.estimateROIThicknessFromTracing() );
+			 }
 			 tracing.addFirstPoint(point_);
 			 addRoi(tracing);
 			 //activeRoi = rois.size()-1; 
@@ -1268,7 +1271,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		{
 			
 			//time point
-			currentROI.setTimePoint(Math.min(Math.max(0, Integer.parseInt(nfTimePoint.getText())),BigTraceData.nNumTimepoints-1));
+			currentROI.setTimePoint(Math.min(Math.max(0, Integer.parseInt(nfTimePoint.getText())), bt.btData.nNumTimepoints - 1));
 			//point size 
 			currentROI.setPointSize(Float.parseFloat(nfPointSize.getText()));
 			
@@ -1330,24 +1333,6 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 			roiPolyOneClickMode.setToolTipText("One click trace");
 			
 		}
-	}
-	
-	public void loadROIs(String filename, int nLoadMode)
-	{
-		if(nLoadMode == 0 )
-		{
-        	this.groups = new ArrayList<>();
-        	this.rois = new ArrayList< >();
-        	listModel.clear();
-		}
-		
-        ROIsLoadBG<T> loadTask = new ROIsLoadBG<>();
-        
-        loadTask.sFilename = filename;
-        loadTask.nLoadMode = nLoadMode;
-        loadTask.bt = this.bt;
-        loadTask.addPropertyChangeListener(bt.btPanel);
-        loadTask.execute();	
 	}
 	
 

@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -22,9 +23,11 @@ public class PanelTracingOptions extends JPanel
 	final NumberField nfSigmaY = new NumberField(4);
 	final NumberField nfSigmaZ = new NumberField(4);
 	
-	final JCheckBox cbTraceOnlyClipped = new JCheckBox();
-	
-	final JCheckBox cbEstimateThickness = new JCheckBox();
+	final JCheckBox cbTraceOnlyClipped = new JCheckBox("Trace only clipped volume");
+	final String [] sEstimateMode = new String [] {"MAX", "AVG", "MIN"};
+	final JComboBox<String> cbEstimateThicknessMode = new JComboBox<>(sEstimateMode);
+	final NumberField cbEstimateThicknessCoeff = new NumberField(2);
+	final JCheckBox cbEstimateThickness = new JCheckBox(" Set ROI diameter ");
 	
 	public PanelTracingOptions(final BigTrace<?> bt_)
 	{
@@ -35,12 +38,15 @@ public class PanelTracingOptions extends JPanel
 
 		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
 		decimalFormatSymbols.setDecimalSeparator('.');
-		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
+		DecimalFormat df = new DecimalFormat("0.00", decimalFormatSymbols);
+		DecimalFormat df2 = new DecimalFormat("0.0", decimalFormatSymbols);
 	
 		nfSigmaX.setText(df.format(bt.btData.sigmaTrace[0]));
 		nfSigmaY.setText(df.format(bt.btData.sigmaTrace[1]));
 		nfSigmaZ.setText(df.format(bt.btData.sigmaTrace[2]));
-
+		
+		cbEstimateThicknessCoeff.setText(df2.format( bt.btData.dTraceROIThicknessCoeff));
+		cbEstimateThicknessMode.setSelectedIndex( bt.btData.nTraceROIThicknessMode );
 		cbEstimateThickness.setSelected(bt.btData.bEstimateROIThicknessFromParams);		
 		cbTraceOnlyClipped.setSelected(bt.btData.bTraceOnlyClipped);
 		
@@ -62,16 +68,31 @@ public class PanelTracingOptions extends JPanel
 		gbc.gridx++;
 		this.add(nfSigmaZ,gbc);
 		
-		gbc.gridx = 0;
-		gbc.gridy++;
-		this.add(new JLabel("Estimate ROI thickness from params: "),gbc);
-		gbc.gridx++;
-		this.add(cbEstimateThickness,gbc);
+		JPanel panEstimate = new JPanel(new GridBagLayout());
+		GridBagConstraints gbc2 = new GridBagConstraints();
+		gbc2.gridx = 0;
+		gbc2.gridy = 0;
+		panEstimate.add(cbEstimateThickness, gbc2);
+		gbc2.gridx++;
+		panEstimate.add(cbEstimateThicknessCoeff, gbc2);
+		gbc2.gridx++;
+		panEstimate.add(new JLabel(" times "), gbc2);
+		gbc2.gridx++;
+		panEstimate.add(cbEstimateThicknessMode, gbc2);
+		gbc2.gridx++;
+		panEstimate.add(new JLabel("of all SDs"), gbc2);
 		
 		gbc.gridx = 0;
 		gbc.gridy++;
-		this.add(new JLabel("Trace only clipped volume: "),gbc);
-		gbc.gridx++;
+		gbc.gridwidth = 2;
+		//this.add(new JLabel("Estimate ROI thickness from params: "),gbc);
+		//gbc.gridx++;
+		//this.add(cbEstimateThickness,gbc);
+		this.add(panEstimate,gbc);
+		//gbc.gridwidth = 1;
+		
+		gbc.gridx = 0;
+		gbc.gridy++;
 		this.add(cbTraceOnlyClipped,gbc);
 	}
 	
@@ -88,7 +109,14 @@ public class PanelTracingOptions extends JPanel
 
 		bt.btData.bEstimateROIThicknessFromParams = cbEstimateThickness.isSelected();
 		Prefs.set("BigTrace.bEstimateROIThicknessFromParams", bt.btData.bEstimateROIThicknessFromParams);
-		
+		if(bt.btData.bEstimateROIThicknessFromParams )
+		{
+			bt.btData.dTraceROIThicknessCoeff = Math.abs( Double.parseDouble(cbEstimateThicknessCoeff.getText()));
+			Prefs.set("BigTrace.dTraceROIThicknessCoeff",bt.btData.dTraceROIThicknessCoeff);
+			
+			bt.btData.nTraceROIThicknessMode = cbEstimateThicknessMode.getSelectedIndex();
+			Prefs.set("BigTrace.nTraceROIThicknessMode", (double)bt.btData.nTraceROIThicknessMode);
+		}
 		bt.btData.bTraceOnlyClipped = cbTraceOnlyClipped.isSelected();
 		Prefs.set("BigTrace.bTraceOnlyClipped", bt.btData.bTraceOnlyClipped);	
 	}

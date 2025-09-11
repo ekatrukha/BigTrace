@@ -84,13 +84,13 @@ import bigtrace.volume.VolumeMisc;
 public class BigTrace < T extends RealType< T > & NativeType< T > > implements PlugIn, MacroExtension, TimePointListener
 {
 	/** main instance of BVV **/
-	public  BvvStackSource< ? > bvv_main = null;
+	public BvvStackSource< ? > bvv_main = null;
 	
 	/** BVV sources used for the volume visualization **/
-	public  ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<>();
+	public ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<>();
 	
 	/** saliency view (TraceBox) for semi-auto tracing **/
-	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
+	public BvvStackSource< UnsignedByteType > bvv_trace = null;
 
 	/** whether or not TraceMode is active **/
 	public boolean bTraceMode = false;
@@ -148,19 +148,6 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	
 	/** One click tracing worker**/
 	OneClickTrace<T> oneClickTrace = null;
-	
-	/**macro extensions **/
-	private ExtensionDescriptor[] extensions = {
-			
-			ExtensionDescriptor.newDescriptor("btLoadROIs", this, ARG_STRING, ARG_STRING),	
-			ExtensionDescriptor.newDescriptor("btStraighten", this, ARG_NUMBER, ARG_STRING, ARG_STRING),	
-			ExtensionDescriptor.newDescriptor("btShapeInterpolation", this, ARG_STRING,ARG_NUMBER),
-			ExtensionDescriptor.newDescriptor("btIntensityInterpolation", this, ARG_STRING),
-			ExtensionDescriptor.newDescriptor("btTest", this),
-			ExtensionDescriptor.newDescriptor("btClose", this),
-			ExtensionDescriptor.newDescriptor("btTest", this),
-
-	};
 		
 	@Override
 	public void run(String arg)
@@ -172,10 +159,10 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		//register IJ macro extensions
 		if (IJ.macroRunning())
 		{
+			btMacro.bMacroMode = true;
 			Functions.registerExtensions(this);
-		}
-		
-		
+			IJ.log("Started BigTrace v." + BigTraceData.sVersion + " in macro mode.");			
+		}	
 		
 		//switch to FlatLaf theme		
 		try {
@@ -198,7 +185,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		{
 			btData.sFileNameFullImg = arg;
 		}
-
+		if(btMacro.bMacroMode)
+			IJ.log("Opening file " + btData.sFileNameFullImg + ".");
 		if(btData.sFileNameFullImg == null)
 			return;
 		btData.lastDir = Paths.get(btData.sFileNameFullImg ).getParent().toString();
@@ -347,7 +335,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		
 		//check if there is a saved view
 		File f = new File(btData.sFileNameFullImg+"_btview.csv");
-		if(f.exists() && !f.isDirectory()) 
+		
+		if(f.exists() && !f.isDirectory() && !btMacro.bMacroMode) 
 		{ 
 			if (JOptionPane.showConfirmDialog(null, "There is a saved view state for this file,\ndo you want to load it?", "Load saved view?",
 			        JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) 
@@ -519,18 +508,18 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		trace.vertices.get(trace.vertices.size()-1).localize(pos);		
 		for(i=0;i<3;i++)
 		{
-			rangeM[0][i]=(long)(pos[i])-range ;
-			rangeM[1][i]=(long)(pos[i])+range;								
+			rangeM[0][i] = (long)(pos[i]) - range ;
+			rangeM[1][i] = (long)(pos[i]) + range;								
 		}
 		//now shift it in the last direction of the trace to fFollowDegree
 		ArrayList<RealPoint> lastSegment =trace.getLastSegment();
-		lastSegment.get(lastSegment.size()-2).localize(beforeLast);
+		lastSegment.get(lastSegment.size() - 2).localize(beforeLast);
 		LinAlgHelpers.subtract(pos, beforeLast, pos);
 		LinAlgHelpers.normalize(pos);
 		for(i=0;i<3;i++)
 		{
-			rangeM[0][i]+=(long)(pos[i]*range*fFollowDegree);
-			rangeM[1][i]+=(long)(pos[i]*range*fFollowDegree);								
+			rangeM[0][i] += (long)(pos[i] * range * fFollowDegree);
+			rangeM[1][i] += (long)(pos[i] * range * fFollowDegree);								
 		}		
 		
 		VolumeMisc.checkBoxInside(viewclick, rangeM);
@@ -571,7 +560,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		double dCurrH = boxAfter.realMax(1)-boxAfter.realMin(1);
 		double scaleX = (zoomFraction)*sW/dCurrW;
 		double scaleY = (zoomFraction)*sH/dCurrH;
-		double scalefin=Math.min(scaleX, scaleY);
+		double scalefin = Math.min(scaleX, scaleY);
 		
 		transform.scale(scalefin);
 		
@@ -587,9 +576,9 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		matPersp.unproject(0.5f*sW,0.5f*sH,0.0f, //z=0 does not matter here
 				new int[] { 0, 0, sW, sH },vcenter);
 		float [] centerViewPoint = new float[3];
-		centerViewPoint[0]=vcenter.x;
-		centerViewPoint[1]=vcenter.y;
-		centerViewPoint[2]=0.0f; //center of the "screen" volume		
+		centerViewPoint[0] = vcenter.x;
+		centerViewPoint[1] = vcenter.y;
+		centerViewPoint[2] = 0.0f; //center of the "screen" volume		
 		
 		//position center of the volume in the center of "screen" volume
 		double [] dl = transform.getTranslation();
@@ -864,7 +853,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		{
 			AffineTransform3D transformSource = new AffineTransform3D();
 		
-			for(int nTP=0;nTP<BigTraceData.nNumTimepoints;nTP++)
+			for(int nTP = 0; nTP < btData.nNumTimepoints; nTP++)
 			{
 				if(source.getSpimSource().isPresent( nTP ))
 				{
@@ -1085,6 +1074,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		viewer.setTransformAnimator(anim);
 
 	}
+	
 	/** given mouse click coordinates, returns the line along the view ray **/
 	public Line3D findClickLine(final java.awt.Point point_mouse)
 	{
@@ -1114,6 +1104,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 
 		return clickLine;
 	}
+	
 	public Line3D findClickLine()
 	{
 
@@ -1146,7 +1137,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			//end1 = System.currentTimeMillis();
 			//System.out.println("alg1: "+ (end1-start1));
 			//start1 = System.currentTimeMillis();
-			boolean bRes =findPointLocationMaxIntensity(viewclick, point_mouse, target);
+			boolean bRes = findPointLocationMaxIntensity(viewclick, point_mouse, target);
 			//end1 = System.currentTimeMillis();
 			//System.out.println("alg2: "+ (end1-start1));
 			return bRes;
@@ -1434,7 +1425,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		affine.set( affine.get( 1, 3 ) + height / 2, 1, 3 );
 		viewer.state().setViewerTransform( affine );
 		int nTimePoint = scene.getTimeFrame();
-		if(nTimePoint<BigTraceData.nNumTimepoints)
+		if(nTimePoint < btData.nNumTimepoints)
 		{
 			viewer.state().setCurrentTimepoint(nTimePoint);
 		}
@@ -1444,52 +1435,13 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	
 	@Override
 	public ExtensionDescriptor[] getExtensionFunctions() {
-		return extensions;
+		return btMacro.extensions;
 	}
 	
 	@Override
-	public String handleExtension(String name, Object[] args) {
-	
-		try
-		{
-			if (name.equals("btLoadROIs")) 
-			{
-				btMacro.macroLoadROIs( (String)args[0],(String)args[1]);
-			}
-			if (name.equals("btStraighten")) 
-			{
-				if(args.length==2)
-				{
-					//backwards compartibility
-					btMacro.macroStraighten((int)Math.round(((Double)args[0]).doubleValue()), (String)args[1], "Square");					
-				}
-				else
-				{
-					btMacro.macroStraighten((int)Math.round(((Double)args[0]).doubleValue()), (String)args[1], (String)args[2]);
-				}
-			}
-			if (name.equals("btShapeInterpolation")) 
-			{
-				btMacro.macroShapeInterpolation( (String)args[0],(int)Math.round(((Double)args[1]).doubleValue()));
-			}
-			if (name.equals("btIntensityInterpolation")) 
-			{
-				btMacro.macroIntensityInterpolation( (String)args[0]);
-			}
-			if (name.equals("btClose")) 
-			{
-				btMacro.macroCloseBT();			
-			}
-			if (name.equals("btTest")) 
-			{
-				btMacro.macroTest();
-			} 
-		}
-		catch ( InterruptedException exc )
-		{
-			exc.printStackTrace();
-		}
-		return null;
+	public String handleExtension(String name, Object[] args) 
+	{
+		return btMacro.handleExtension( name, args );
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -1499,14 +1451,16 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		new ImageJ();
 		BigTrace testI = new BigTrace(); 
 		
-		testI.run("");
+		//testI.run("");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP-3d.tif");
 
 		
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/SC_nuc10.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/FR21_SC_nuc10-1.tif");
 
+		
 		///macros test
 //		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT_8bit.tif");
 //		testI.btMacro.macroLoadROIs( "/home/eugene/Desktop/projects/BigTrace/macro/ExM_MT_8bit.tif_btrois.csv","Clean" );
