@@ -34,7 +34,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		extensions = new ExtensionDescriptor[11];
 		extensions[0] = ExtensionDescriptor.newDescriptor("btLoadROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
 		extensions[1] = ExtensionDescriptor.newDescriptor("btSaveROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
-		extensions[2] = ExtensionDescriptor.newDescriptor("btStraighten", bt, MacroExtension.ARG_NUMBER, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
+		extensions[2] = ExtensionDescriptor.newDescriptor("btStraighten", bt, MacroExtension.ARG_NUMBER, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING + MacroExtension.ARG_OPTIONAL);
 		extensions[3] = ExtensionDescriptor.newDescriptor("btShapeInterpolation", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_NUMBER);
 		extensions[4] = ExtensionDescriptor.newDescriptor("btIntensityInterpolation", bt, MacroExtension.ARG_STRING);
 		extensions[5] = ExtensionDescriptor.newDescriptor("btSetTracingThickness", bt,  MacroExtension.ARG_NUMBER, //sigmax  
@@ -45,15 +45,16 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 																					MacroExtension.ARG_STRING); //method
 		extensions[7] = ExtensionDescriptor.newDescriptor("btSetOneClickParameters", bt,  MacroExtension.ARG_NUMBER,  
 				  																		  MacroExtension.ARG_NUMBER, 
-				  																		  MacroExtension.ARG_STRING, 
-				  																		  MacroExtension.ARG_NUMBER);		
+				  																		  MacroExtension.ARG_STRING + MacroExtension.ARG_OPTIONAL, 
+				  																		  MacroExtension.ARG_NUMBER + MacroExtension.ARG_OPTIONAL);		
 		extensions[8] = ExtensionDescriptor.newDescriptor("btRunFullAutoTrace", bt, MacroExtension.ARG_NUMBER,
 																					MacroExtension.ARG_NUMBER,
-																					MacroExtension.ARG_NUMBER,
-																					MacroExtension.ARG_NUMBER);
+																					MacroExtension.ARG_NUMBER + MacroExtension.ARG_OPTIONAL,
+																					MacroExtension.ARG_NUMBER + MacroExtension.ARG_OPTIONAL);
 		extensions[9] = ExtensionDescriptor.newDescriptor("btTest", bt);
 		extensions[10] = ExtensionDescriptor.newDescriptor("btClose", bt);
 		//extensions[7] = ExtensionDescriptor.newDescriptor("btTest", bt);
+		
 	}
 	
 	public String handleExtension(String name, Object[] args) 
@@ -70,7 +71,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			}
 			if (name.equals("btStraighten")) 
 			{
-				if(args.length == 2)
+				if(args[2] == null)
 				{
 					//backwards compartibility
 					macroStraighten((int)Math.round(((Double)args[0]).doubleValue()), (String)args[1], "Square");					
@@ -90,51 +91,40 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			}
 			if (name.equals("btSetTracingThickness")) 
 			{
-				if(args.length != 3)
-				{
-					IJ.log( "Error, btSetTracingThickness requires three arguments" );					
-					return null;
-				}
 				final double [] sigmas = new double[3];
 				for(int d=0; d<3; d++)
 				{
 					sigmas[d] = Math.abs(((Double)args[d]).doubleValue());
 				}
+				
 				macroSetTracingThickness(sigmas);
 				
 			}
 			if (name.equals("btSetTracingROI")) 
 			{
-				if(args.length != 3)
-				{
-					IJ.log( "Error, btSetTracingROI requires three arguments" );					
-					return null;
-				}
-				
-				macroSetTracingROI((String)args[0],Math.abs(((Double)args[1]).doubleValue()), (String)args[2]);
-				
+				macroSetTracingROI((String)args[0],Math.abs(((Double)args[1]).doubleValue()), (String)args[2]);				
 			}
 			if (name.equals("btSetOneClickParameters")) 
 			{
-				if(args.length == 3 || args.length == 2)
+				if(args[2] == null || args[3] == null)
 				{
-					macroSetOneClickParameters((int)Math.round(((Double)args[0]).doubleValue()), Math.round(((Double)args[1]).doubleValue()), "false", 0.0);
+					macroSetOneClickParameters((int)Math.round(((Double)args[0]).doubleValue()), ((Double)args[1]).doubleValue(), "false", 0.0);
+					return null;
 				}
-				if(args.length==4)
-				{
-					macroSetOneClickParameters((int)Math.round(((Double)args[0]).doubleValue()), Math.round(((Double)args[1]).doubleValue()), (String)args[2], Math.round(((Double)args[3]).doubleValue()) );
-				}
-				else
-				{
-					IJ.log( "Error calling btSetOneClickParameters, wrong number of provided parameters" );
-				}
+
+				macroSetOneClickParameters((int)Math.round(((Double)args[0]).doubleValue()), ((Double)args[1]).doubleValue(), (String)args[2],((Double)args[3]).doubleValue() );
 					
 			}
 			if (name.equals("btRunFullAutoTrace")) 
 			{
-				int nFirstTP;
-				int nLastTP;
-				
+				int nFirstTP = 0;
+				int nLastTP = bt.btData.nNumTimepoints-1;
+				if(args[2] != null && args[3] !=null )
+				{
+					nFirstTP = (int)Math.round(((Double)args[2]).doubleValue());
+					nLastTP = (int)Math.round(((Double)args[3]).doubleValue());
+				}
+				macroRunFullAutoTrace((int)Math.round(((Double)args[0]).doubleValue()),(int)Math.round(((Double)args[1]).doubleValue()),nFirstTP,nLastTP);
 			}
 			if (name.equals("btClose")) 
 			{
@@ -168,7 +158,12 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			nFirstTP = Math.max( 0, nFirstTP );
 			nLastTP = Math.min( bt.btData.nNumTimepoints - 1, nLastTP );
 		}
-	
+		IJ.log( "Running full autotrace with parameters:" );
+		IJ.log("Min intensity trace start:" + Integer.toString( nIntMin ));
+		IJ.log("Min # points in curve:" + Integer.toString( nNumPoints ));
+		IJ.log( "First time frame: " + Integer.toString( nFirstFrame ));
+		IJ.log( "Last time frame: " + Integer.toString( nLastFrame ));
+		
 		bt.roiManager.panelFullAutoTrace.launchFullAutoTrace( nIntMin, nNumPoints, nFirstFrame, nLastFrame );
 	}
 	
@@ -483,6 +478,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			testI.btMacro.macroSetOneClickParameters( 5, 0.6,"false", 100 );
 			testI.btMacro.macroSetTracingThickness(new double [] { 1.2,3.2,3.4});
 			testI.btMacro.macroSetTracingROI("true", 3.0, "AVG");
+			testI.btMacro.macroRunFullAutoTrace(150,3,0,0);
 		}
 		catch ( Exception exc )
 		{

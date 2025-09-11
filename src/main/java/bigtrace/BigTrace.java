@@ -84,13 +84,13 @@ import bigtrace.volume.VolumeMisc;
 public class BigTrace < T extends RealType< T > & NativeType< T > > implements PlugIn, MacroExtension, TimePointListener
 {
 	/** main instance of BVV **/
-	public  BvvStackSource< ? > bvv_main = null;
+	public BvvStackSource< ? > bvv_main = null;
 	
 	/** BVV sources used for the volume visualization **/
-	public  ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<>();
+	public ArrayList<BvvStackSource< ? >> bvv_sources = new ArrayList<>();
 	
 	/** saliency view (TraceBox) for semi-auto tracing **/
-	public  BvvStackSource< UnsignedByteType > bvv_trace = null;
+	public BvvStackSource< UnsignedByteType > bvv_trace = null;
 
 	/** whether or not TraceMode is active **/
 	public boolean bTraceMode = false;
@@ -161,11 +161,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		{
 			btMacro.bMacroMode = true;
 			Functions.registerExtensions(this);
-			IJ.log("Started BigTrace v." + BigTraceData.sVersion + " in macro mode");
-			IJ.log("Opening file " + arg);
-		}
-		
-		
+			IJ.log("Started BigTrace v." + BigTraceData.sVersion + " in macro mode.");			
+		}	
 		
 		//switch to FlatLaf theme		
 		try {
@@ -188,7 +185,8 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		{
 			btData.sFileNameFullImg = arg;
 		}
-
+		if(btMacro.bMacroMode)
+			IJ.log("Opening file " + btData.sFileNameFullImg + ".");
 		if(btData.sFileNameFullImg == null)
 			return;
 		btData.lastDir = Paths.get(btData.sFileNameFullImg ).getParent().toString();

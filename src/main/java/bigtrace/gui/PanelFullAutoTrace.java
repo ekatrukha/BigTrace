@@ -24,8 +24,8 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 {
 	final BigTrace<T> bt;
 	
-	ImageIcon tabIconAuto;
-	ImageIcon tabIconCancel;
+	final ImageIcon tabIconAuto;
+	final ImageIcon tabIconCancel;
 	FullAutoTrace<T> fullAutoTrace;
 	JButton butAuto;
 
@@ -33,6 +33,10 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 	public PanelFullAutoTrace (final BigTrace<T> bt_)
 	{
 		bt = bt_;
+		URL icon_path = this.getClass().getResource("/icons/autotrace.png");
+		tabIconAuto = new ImageIcon(icon_path);
+		icon_path = this.getClass().getResource("/icons/cancel.png");
+		tabIconCancel = new ImageIcon(icon_path);
 	}
 	
 	public void initButton(final JButton butAutoTrace)
@@ -110,11 +114,6 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 		{
 			panelGeneralTrace.getSetOptions();		
 			panelOneClickOptions.getSetOptions();
-			
-			URL icon_path = this.getClass().getResource("/icons/autotrace.png");
-			tabIconAuto = new ImageIcon(icon_path);
-			icon_path = this.getClass().getResource("/icons/cancel.png");
-			tabIconCancel = new ImageIcon(icon_path);
 
 			final int dAutoMinStartTraceInt = Integer.parseInt(nfMaxIntFullTraceStart.getText());
 			Prefs.set("BigTrace.dAutoMinStartTraceInt",dAutoMinStartTraceInt );
