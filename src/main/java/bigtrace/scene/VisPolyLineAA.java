@@ -34,6 +34,14 @@ public class VisPolyLineAA
 
 	private int vao;
 	
+	/** VBOs **/
+	private int [] vbos;
+	
+	/** vertex arrays **/
+	private int [] vaos;
+	
+	private boolean bBuffersGenerated = false;
+	
 	private Vector4f l_color;
 
 	public float fLineThickness;
@@ -102,10 +110,10 @@ public class VisPolyLineAA
 	
 	public void setVertices( ArrayList< RealPoint > points)
 	{
-		int i,j;
-		
+		int i,j;		
 		
 		nPointsN = points.size();
+		
 		vertices = new float [nPointsN*3];//assume 3D	
 
 		for (i=0;i<nPointsN; i++)
@@ -116,10 +124,47 @@ public class VisPolyLineAA
 			}
 			
 		}
+		
 		initialized = false;
 	}
+	
+	private void generateBuffers(final GL3 gl )
+	{
+		vbos = new int[ 4 ];
+		vaos = new int[ 4 ];
+		
+		gl.glGenBuffers( 4, vbos, 0 );
+		for(int i=0;i<4;i++)
+			vaos[i] = vbos[i];
+		gl.glGenVertexArrays( 1, vaos, 0 );
+		vao = vaos[ 0 ];
+		
+		//this can be done once
+		
+		gl.glBindVertexArray( vao );
+		
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 0 ] );
+		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+		gl.glEnableVertexAttribArray( 0 );
+		
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 1 ] );
+		gl.glVertexAttribPointer( 1, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+		gl.glEnableVertexAttribArray( 1 );
 
-	private void init( GL3 gl )
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 2 ] );
+		gl.glVertexAttribPointer( 2, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+		gl.glEnableVertexAttribArray( 2 );
+
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 3 ] );
+		gl.glVertexAttribPointer( 3, 2, GL_FLOAT, false, 2 * Float.BYTES, 0 );
+		gl.glEnableVertexAttribArray( 3 );
+		
+		gl.glBindVertexArray( 0 );
+		
+		bBuffersGenerated = true;
+	}
+
+	private void init( final GL3 gl )
 	{
 		initialized = true;
 		
@@ -129,15 +174,15 @@ public class VisPolyLineAA
 		// Python & OpenGL for Scientific Visualization
 		// Copyright (c) 2018 - Nicolas P. Rougier <Nicolas.Rougier@inria.fr>
 		
-		int nTotLength = (nPointsN)*3*2;
+		final int nTotLength = (nPointsN)*3*2;
 		nTotVert = nPointsN*2;
-		float [] nCumLength = new float [nPointsN];
-		float [] UV = new float [nPointsN*2*2];
+		final float [] nCumLength = new float [nPointsN];
+		final float [] UV = new float [nPointsN*2*2];
 		//calculate new arrays
-		float [] vertAll = new float [nTotLength+2*3*2];
-		float [] vertCurr = new float [nTotLength];
-		float [] vertPrev = new float [nTotLength];
-		float [] vertNext = new float [nTotLength];
+		final float [] vertAll = new float [nTotLength + 2*3*2];
+		final float [] vertCurr = new float [nTotLength];
+		final float [] vertPrev = new float [nTotLength];
+		final float [] vertNext = new float [nTotLength];
 		
 	
 		for(int nV = 1; nV<nPointsN+1; nV++)
@@ -166,9 +211,9 @@ public class VisPolyLineAA
 		}
 		for(int i = 0; i<nTotLength; i++)
 		{
-			vertCurr[i] =vertAll[i+6];
-			vertPrev[i] =vertAll[i];
-			vertNext[i] =vertAll[i+12];
+			vertCurr[i] = vertAll[i+6];
+			vertPrev[i] = vertAll[i];
+			vertNext[i] = vertAll[i+12];
 		}
 		
 		//cumulative length
@@ -191,58 +236,32 @@ public class VisPolyLineAA
 				UV[nV*4+3] = -1.0f;
 		}
 
+		// ..:: VERTEX BUFFERS & ARRAY OBJECTS ::..
 
-		// ..:: VERTEX BUFFER ::..
+		if(!bBuffersGenerated)
+		{
+			generateBuffers( gl );
+		}	
 
-		final int[] tmp = new int[ 4 ];
-		gl.glGenBuffers( 4, tmp, 0 );
-		final int currVbo = tmp[ 0 ];
-		final int prevVbo = tmp[ 1 ];
-		final int nextVbo = tmp[ 2 ];
-		final int uvVbo   = tmp[ 3 ];
-
+		//upload data to GPU
 		
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, currVbo );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 0 ] );
 		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertCurr.length * Float.BYTES, FloatBuffer.wrap( vertCurr ), GL.GL_STATIC_DRAW );
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
 
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, prevVbo );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 1 ] );
 		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertPrev.length * Float.BYTES, FloatBuffer.wrap( vertPrev ), GL.GL_STATIC_DRAW );
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
 		
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, nextVbo );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 2 ] );
 		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertNext.length * Float.BYTES, FloatBuffer.wrap( vertNext ), GL.GL_STATIC_DRAW );
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
 		
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, uvVbo );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 3 ] );
 		gl.glBufferData( GL.GL_ARRAY_BUFFER, UV.length * Float.BYTES, FloatBuffer.wrap( UV ), GL.GL_STATIC_DRAW );
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
-		
-		
-		// ..:: VERTEX ARRAY OBJECT ::..
 
 		
-		gl.glGenVertexArrays( 1, tmp, 0 );
-		vao = tmp[ 0 ];
-		gl.glBindVertexArray( vao );
-		
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, currVbo );
-		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 0 );
-		
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, prevVbo );
-		gl.glVertexAttribPointer( 1, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 1 );
-
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, nextVbo );
-		gl.glVertexAttribPointer( 2, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 2 );
-
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, uvVbo );
-		gl.glVertexAttribPointer( 3, 2, GL_FLOAT, false, 2 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 3 );
-		
-		gl.glBindVertexArray( 0 );
 
 		
 	}

@@ -12,8 +12,8 @@ import com.jogamp.opengl.GL3;
 
 import bigtrace.BigTraceData;
 import bigtrace.geometry.Line3D;
-import bigtrace.scene.VisPointsScaled;
 import bigtrace.scene.VisPolyLineAA;
+
 import net.imglib2.AbstractInterval;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
@@ -29,8 +29,7 @@ public class Box3D extends AbstractRoi3D
 
 	public ArrayList<RealPoint> vertices;
 	public ArrayList<ArrayList<RealPoint>> edges;
-	public ArrayList<VisPointsScaled> verticesVis;
-	public ArrayList<VisPolyLineAA> edgesVis;
+	public final ArrayList<VisPolyLineAA> edgesVis;
 
 	
 	public Box3D(final Roi3DGroup preset_in, final int nTimePoint_)
@@ -38,12 +37,24 @@ public class Box3D extends AbstractRoi3D
 		type = Roi3D.BOX;
 
 		pointSize = preset_in.pointSize;
-		lineThickness=preset_in.lineThickness;
+		lineThickness = preset_in.lineThickness;
 		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
 		nTimePoint = nTimePoint_;
+		edgesVis = new ArrayList<>();
 	}
+	
+	public Box3D(final float lineThickness_)
+	{
+		type = Roi3D.BOX;
+
+		lineThickness = lineThickness_;		
+
+		edgesVis = new ArrayList<>();
+
+	}
+	
 	public Box3D(float [][] nDimBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nTimePoint_)
 	{
 		type = Roi3D.BOX;
@@ -54,19 +65,12 @@ public class Box3D extends AbstractRoi3D
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 
 		nTimePoint = nTimePoint_;
-		verticesVis = new ArrayList<>();
 		edgesVis = new ArrayList<>();
-		int i;
 		
-		
-		ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
-		for(i=0;i<edgesPairPoints.size(); i++)
-		{
-			edgesVis.add(new VisPolyLineAA(edgesPairPoints.get(i), lineThickness,lineColor));
-		}
+		setIntervalFloatArray(nDimBox);
 	}
 
-	public Box3D(AbstractInterval nIntervalBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nTimePoint_)
+	public Box3D(final AbstractInterval nIntervalBox, final float lineThickness_, final float pointSize_, final Color lineColor_, final Color pointColor_, final int nTimePoint_)
 	{
 		type = Roi3D.BOX;
 		pointSize = pointSize_;
@@ -76,30 +80,65 @@ public class Box3D extends AbstractRoi3D
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
 
 		nTimePoint = nTimePoint_;
-		verticesVis = new ArrayList<>();
 		edgesVis = new ArrayList<>();
-		int i;
+
+		setInterval(nIntervalBox);
+	}
+	
+	public void setInterval(AbstractInterval nIntervalBox)
+	{
 		float [][] nDimBox = new float [2][3];
 		
 		double [] minI = nIntervalBox.minAsDoubleArray();
 		double [] maxI = nIntervalBox.maxAsDoubleArray();
 
-		for(i=0;i<3;i++)
+		for(int i = 0; i < 3; i++)
 		{
-			nDimBox[0][i]=(float)minI[i];
-			nDimBox[1][i]=(float)maxI[i];
+			nDimBox[0][i] = (float)minI[i];
+			nDimBox[1][i] = (float)maxI[i];
 
 		}
-		ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
-		for(i=0;i<edgesPairPoints.size(); i++)
+		setIntervalFloatArray(nDimBox);
+	}
+	
+	public void setIntervalLongArray(long [][] nDimBoxL)
+	{
+		final float [][] nDimBox = new float[2][3];
+		
+		for(int d = 0; d < 3; d++)
 		{
-			edgesVis.add(new VisPolyLineAA(edgesPairPoints.get(i), lineThickness,lineColor));
+			nDimBox[0][d] = nDimBoxL[0][d];
+			nDimBox[1][d] = nDimBoxL[0][d];
+
+		}
+		
+		setIntervalFloatArray(nDimBox);
+	}
+	
+	public void setIntervalFloatArray(float[][] nDimBox)
+	{
+		final ArrayList<ArrayList< RealPoint >> edgesPairPoints = getEdgesPairPoints(nDimBox);
+		
+		if(edgesVis.size() == 0)
+		{
+			for(int i=0; i<edgesPairPoints.size(); i++)
+			{
+				final VisPolyLineAA pL = new VisPolyLineAA(edgesPairPoints.get(i), lineThickness, lineColor);
+				edgesVis.add(pL);
+			}
+		}
+		else
+		{
+			for(int i=0; i<edgesPairPoints.size(); i++)
+			{
+				edgesVis.get( i ).setVertices( edgesPairPoints.get(i) );
+			}
 		}
 	}
 	@Override
 	public void draw(final GL3 gl, final Matrix4fc pvm, final Matrix4fc vm, final int[] screen_size) {
 	
-		for (int i=0;i<edgesVis.size();i++)
+		for (int i = 0; i < edgesVis.size(); i++)
 		{
 			edgesVis.get(i).draw(gl, pvm);
 		}
@@ -109,12 +148,7 @@ public class Box3D extends AbstractRoi3D
 	@Override
 	public void setPointColor(Color pointColor_) 
 	{
-		
 		pointColor = new Color(pointColor_.getRed(),pointColor_.getGreen(),pointColor_.getBlue(),pointColor_.getAlpha());	
-		for(int i =0; i<verticesVis.size();i++)
-		{
-			verticesVis.get(i).setColor(pointColor);
-		}
 	}
 
 	@Override
@@ -122,7 +156,7 @@ public class Box3D extends AbstractRoi3D
 	{
 		
 		lineColor = new Color(lineColor_.getRed(),lineColor_.getGreen(),lineColor_.getBlue(),lineColor_.getAlpha());
-		for(int i =0; i<edgesVis.size();i++)
+		for(int i = 0; i < edgesVis.size(); i++)
 		{
 			edgesVis.get(i).setColor(lineColor);
 		}
@@ -134,7 +168,7 @@ public class Box3D extends AbstractRoi3D
 	{
 
 		lineThickness = line_thickness;
-		for(int i =0; i<edgesVis.size();i++)
+		for(int i = 0; i < edgesVis.size(); i++)
 		{
 			edgesVis.get(i).setThickness(lineThickness);
 		}
@@ -215,7 +249,8 @@ public class Box3D extends AbstractRoi3D
 	}
 
 	@Override
-	public void updateRenderVertices() {
+	public void updateRenderVertices() 
+	{
 		// TODO Auto-generated method stub
 		
 	}
@@ -228,14 +263,14 @@ public class Box3D extends AbstractRoi3D
 		int i,j,z;
 		ArrayList<ArrayList< RealPoint >> out = new ArrayList<>();
 		int [][] edgesxy = new int [5][2];
-		edgesxy[0]=new int[]{0,0};
-		edgesxy[1]=new int[]{1,0};
-		edgesxy[2]=new int[]{1,1};
-		edgesxy[3]=new int[]{0,1};
-		edgesxy[4]=new int[]{0,0};
+		edgesxy[0] = new int[]{0,0};
+		edgesxy[1] = new int[]{1,0};
+		edgesxy[2] = new int[]{1,1};
+		edgesxy[3] = new int[]{0,1};
+		edgesxy[4] = new int[]{0,0};
 		//draw front and back
-		RealPoint vertex1=new RealPoint(0,0,0);
-		RealPoint vertex2=new RealPoint(0,0,0);
+		RealPoint vertex1 = new RealPoint(0,0,0);
+		RealPoint vertex2 = new RealPoint(0,0,0);
 		for (z=0;z<2;z++)
 		{
 			for (i=0;i<4;i++)
@@ -278,6 +313,7 @@ public class Box3D extends AbstractRoi3D
 		}	
 		return out;
 	}
+	
 	/** returns vertices of box specified by provided interval in no particular order **/
 	public static ArrayList<RealPoint > getBoxVertices(final Interval interval)
 	{
@@ -308,7 +344,8 @@ public class Box3D extends AbstractRoi3D
 	}
 	
 	@Override
-	public Interval getBoundingBox() {
+	public Interval getBoundingBox() 
+	{
 		if(vertices.size()==0)
 			return null;
 	

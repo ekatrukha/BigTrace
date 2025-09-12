@@ -90,7 +90,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 			{
 				if(isCancelled())
 				{
-					bt.visBox = null;
+					bt.visualBoxes.bShowTraceBox = false;
 					return null;				
 				}
 
@@ -152,7 +152,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
     	}
     	catch (Exception e)
     	{
-    		bt.visBox = null;
+    		bt.visualBoxes.bShowTraceBox = false;
         	setProgressState("Auto-tracing interrupted by user.");
         	setProgress(100);	
     	}
@@ -162,7 +162,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
     		butAuto.setIcon( tabIconRestore );
     		butAuto.setToolTipText( "Full auto tracing" );
     	}
-    	bt.visBox = null;
+    	bt.visualBoxes.bShowTraceBox = false;
     	oneClickTrace.releaseMultiThread();
     	
     	//unlock user interaction

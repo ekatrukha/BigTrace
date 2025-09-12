@@ -1,6 +1,5 @@
 package bigtrace.math;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
@@ -12,7 +11,6 @@ import javax.swing.SwingWorker;
 import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.volume.VolumeMisc;
-import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.Roi3D;
 import net.imglib2.AbstractInterval;
@@ -167,6 +165,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//long start1, end1;
 		
 		//start1 = System.currentTimeMillis();
+		
+		bt.visualBoxes.bShowTraceBox = true;
 		
 		//in case we continue tracing
 		if(!bNewTrace)
@@ -621,7 +621,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 		//IntervalView<FloatType> gradient = Views.translate(gradFloat, nShift);
 		IntervalView<FloatType> hessian = Views.translate(hessFloat, minV);
 		
-		bt.visBox = new Box3D(currentBox,1.0f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		bt.visualBoxes.traceBox.setInterval( currentBox );
 
 	/*
 		double [][] kernels;
@@ -933,7 +933,8 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
     	//es.shutdown();
     	releaseMultiThread();
 
-    	bt.visBox = null;
+    	
+    	bt.visualBoxes.bShowTraceBox = false;
     	bt.roiManager.setOneClickTracing( false );
     	
     	//deselect the trace if we just made it

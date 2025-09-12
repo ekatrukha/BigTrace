@@ -127,7 +127,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 			nTPCount++;
 			if(isCancelled())
 			{
-				bt.visBox = null;
+				bt.visualBoxes.bShowTraceBox = false;
 				oneClickTask.releaseMultiThread();
 				return null;				
 			}
@@ -147,7 +147,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 			nTPCount++;
 			if(isCancelled())
 			{
-				bt.visBox = null;
+				bt.visualBoxes.bShowTraceBox = false;
 				oneClickTask.releaseMultiThread();
 				return null;		
 			}
@@ -257,7 +257,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
     	{
 
     		//System.out.println("Tracking interrupted by user.");
-    		bt.visBox = null;
+    		bt.visualBoxes.bShowTraceBox = false;
     		oneClickTask.releaseMultiThread();
         	setProgressState("Tracking interrupted by user.");
         	setProgress(100);	
@@ -269,7 +269,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
     		butTrack.setIcon( tabIconTrain );
     		butTrack.setToolTipText( "Track" );
     	}
-    	bt.visBox = null;
+    	bt.visualBoxes.bShowTraceBox = false;
     	oneClickTask.releaseMultiThread();
     	//unlock user interaction
     	bt.bInputLock = false;
