@@ -103,12 +103,12 @@ public class ClipPanel extends JPanel {
 		showClippedBox = new JCheckBox("Box", false);
 		
 		clipROIBox = new JCheckBox("Clip ROIs", false);
-		cd.gridx=1;
+		cd.gridx = 1;
 		//c.gridy++;
 		this.add(showClippedBox,cd);
-		cd.gridx=2;
+		cd.gridx = 2;
 		this.add(clipROIBox,cd);
-		cd.gridx=3;
+		cd.gridx = 3;
 		cd.anchor = GridBagConstraints.EAST;
 		butExtractClipped = new JButton("Extract");
 		this.add(butExtractClipped,cd);
@@ -132,8 +132,6 @@ public class ClipPanel extends JPanel {
 			bbAxes[d].addSliderChangeListener(bbListener);
 		}
 	}
-
-
 
 	public void setBoundingBox(int bbx0, int bby0, int bbz0, int bbx1, int bby1, int bbz1) 
 	{

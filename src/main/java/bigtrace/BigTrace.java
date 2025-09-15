@@ -70,11 +70,11 @@ import bigtrace.geometry.Intersections3D;
 import bigtrace.geometry.Line3D;
 import bigtrace.gui.AnisotropicTransformAnimator3D;
 import bigtrace.gui.GuiMisc;
+import bigtrace.gui.VisualBoxes;
 import bigtrace.io.ViewsIO;
 import bigtrace.math.OneClickTrace;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
-import bigtrace.rois.Box3D;
 import bigtrace.rois.LineTrace3D;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.scene.VisPolyLineAA;
@@ -119,14 +119,9 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	/** visualization of coordinates origin axes **/
 	ArrayList<VisPolyLineAA> originVis = new ArrayList<>();
 
-	/** box around volume **/
-	Box3D volumeBox;
-	
-	/** helper box to visualize one-click tracing things **/
-	public Box3D visBox = null;
-	
-	/** helper box to visualize one-click tracing things **/
-	public Box3D clipBox = null;
+	/** class showing helper boxes, around volume,
+	 * tracing, clipping**/
+	public VisualBoxes visualBoxes = null;
 
 	/** object storing main data/variables **/
 	public BigTraceData<T> btData;
@@ -270,11 +265,14 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			nDimBox[0][i] = btData.nDimIni[0][i]-0.5f;
 			nDimBox[1][i] = btData.nDimIni[1][i]+0.5f;
 		} 
-		final Color frame = BigTraceData.getInvertedColor(btData.canvasBGColor);
-		volumeBox = new Box3D(nDimBox,1.0f,0.0f,frame,frame, 0);
 		
-//		volumeBox = new Box3D(nDimBox,1.0f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
-		clipBox = new Box3D(nDimBox,1.0f,0.0f,frame.darker(),frame.darker(), 0);
+		visualBoxes = new VisualBoxes(this);
+		
+		final Color frame = BigTraceData.getInvertedColor(btData.canvasBGColor);
+		visualBoxes.setColor( frame );		
+		visualBoxes.volumeBox.setIntervalFloatArray( nDimBox );		
+		visualBoxes.clipBox.setIntervalFloatArray( nDimBox );		
+
 	}
 	
 	public void initSourcesCanvas(double origin_axis_length)
@@ -738,18 +736,18 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 			//render a box around  the volume 
 			if (btData.bVolumeBox)
 			{
-				volumeBox.draw(gl, pvm, camview, screen_size);
+				visualBoxes.volumeBox.draw(gl, pvm, camview, screen_size);
 			}
 			//render a box around  the volume 
 			if (btData.bClipBox)
 			{
-				clipBox.draw(gl, pvm, camview, screen_size);
+				visualBoxes.clipBox.draw(gl, pvm, camview, screen_size);
 			}
 			
 			//one click tracing box
-			if(visBox != null)
+			if(visualBoxes.bShowTraceBox)
 			{
-				visBox.draw(gl, pvm, camview, screen_size);
+				visualBoxes.traceBox.draw(gl, pvm, camview, screen_size);
 				
 			}
 		//panel.requestRepaint(RepaintType.SCENE);

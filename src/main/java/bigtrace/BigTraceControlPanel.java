@@ -47,7 +47,6 @@ import bigtrace.gui.RenderMethodPanel;
 import bigtrace.gui.VoxelSizePanel;
 import bigtrace.io.ViewsIO;
 import bigtrace.measure.RoiMeasure3D;
-import bigtrace.rois.Box3D;
 import bigtrace.rois.ColorUserSettings;
 import bigtrace.rois.RoiManager3D;
 import bigtrace.tracks.TrackingPanel;
@@ -57,7 +56,6 @@ import ij.Prefs;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 
-import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
@@ -653,9 +651,9 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 		bt.btData.canvasBGColor = new Color(bgColor.getRed(),bgColor.getGreen(),bgColor.getBlue(),bgColor.getAlpha());
 		selectColors.setColor(null, 0);
 		Prefs.set("BigTrace.canvasBGColor", bgColor.getRGB());
-		final Color frame = BigTraceData.getInvertedColor(bgColor);
-		bt.volumeBox.setLineColor( frame );
-		bt.clipBox.setLineColor( frame.darker() );
+
+		bt.visualBoxes.setColor( BigTraceData.getInvertedColor(bgColor) );
+
 	}
 	
 	public void extractClippedView()
@@ -857,20 +855,20 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	@SuppressWarnings("rawtypes")
 	public void updateViewDataSources()
 	{
-		int i;
 
 		//update bvv sources clipped view
 		double [][] doubleClip = new double [2][3];
-		for (i=0;i<3;i++)
-			for(int j=0;j<2;j++)
-				doubleClip[j][i] = BigTraceData.nDimCurr[j][i];
+		for (int d = 0; d < 3; d++)
+			for(int j = 0; j < 2; j++)
+				doubleClip[j][d] = BigTraceData.nDimCurr[j][d];
 
 		final FinalRealInterval clipInt = new FinalRealInterval(doubleClip[0],doubleClip[1]);
-		for(i=0;i<bt.bvv_sources.size();i++)
+		
+		for(int i = 0; i < bt.bvv_sources.size(); i++)
 		{
 			((BvvStackSource)bt.bvv_sources.get(i)).setClipInterval(clipInt);
 		}	
-		bt.clipBox = new Box3D(new FinalInterval(BigTraceData.nDimCurr[0],BigTraceData.nDimCurr[1]),0.5f,0.0f,Color.LIGHT_GRAY,Color.LIGHT_GRAY, 0);
+		bt.visualBoxes.clipBox.setIntervalLongArray( BigTraceData.nDimCurr );
 		
 	}
 	

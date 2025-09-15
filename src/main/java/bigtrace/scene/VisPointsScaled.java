@@ -31,9 +31,16 @@ public class VisPointsScaled
 {
 
 	private final Shader progRound;
+	
 	private final Shader progSquare;
-
-	private int vao;
+	
+	/** VBOs **/
+	private int [] vbos;
+	
+	/** vertex arrays **/
+	private int [] vaos;
+	
+	private boolean bBuffersGenerated = false;
 	
 	private Vector4f l_color;
 	
@@ -81,8 +88,6 @@ public class VisPointsScaled
 	{
 		this();
 		
-		int i,j;
-		
 		fPointSize= fPointSize_;
 		
 		l_color = new Vector4f(color_in.getComponents(null));
@@ -93,11 +98,11 @@ public class VisPointsScaled
 		
 		vertices = new float [nPointsN*3];//assume 3D
 
-		for (i=0;i<nPointsN; i++)
+		for (int i = 0; i < nPointsN; i++)
 		{
-			for (j=0;j<3; j++)
+			for (int j = 0; j < 3; j++)
 			{				
-				vertices[i*3+j]=points.get(i).getFloatPosition(j);
+				vertices[i*3 + j]=points.get(i).getFloatPosition(j);
 			}			
 		}
 
@@ -132,44 +137,59 @@ public class VisPointsScaled
 		
 		initialized = false;
 	}
-	public void setColor(Color pointColor) {
-		
-		l_color = new Vector4f(pointColor.getComponents(null));
-		
+	
+	public void setColor(Color pointColor) 
+	{		
+		l_color = new Vector4f(pointColor.getComponents(null));		
 	}
+	
 	public void setSize(float fPointSize_)
 	{
 		fPointSize= fPointSize_;
 	}
+	
 	public void setRenderType(int nRenderType_)
 	{
-		renderType = nRenderType_;
-		
+		renderType = nRenderType_;		
 	}
-
-	private void init( GL3 gl )
+	
+	private void generateBuffers(final GL3 gl )
 	{
-		initialized = true;
-
-		// ..:: VERTEX BUFFER ::..
-
-		final int[] tmp = new int[ 2 ];
-		gl.glGenBuffers( 1, tmp, 0 );
-		final int vbo = tmp[ 0 ];
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
-
-
-		// ..:: VERTEX ARRAY OBJECT ::..
-
-		gl.glGenVertexArrays( 1, tmp, 0 );
-		vao = tmp[ 0 ];
-		gl.glBindVertexArray( vao );
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+		vbos = new int[ 1 ];
+		vaos = new int[ 1 ];
+		
+		gl.glGenBuffers( 1, vbos, 0 );
+		vaos[0] = vbos[0];
+		gl.glGenVertexArrays( 1, vaos, 0 );
+		
+		//this can be done once
+		
+		gl.glBindVertexArray( vaos[ 0 ] );
+	
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[0] );
 		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
 		gl.glEnableVertexAttribArray( 0 );
 		gl.glBindVertexArray( 0 );
+		
+		bBuffersGenerated = true;
+	}
+
+	private void init( GL3 gl )
+	{		
+		// ..:: VERTEX BUFFERS & ARRAY OBJECTS ::..
+
+		if(!bBuffersGenerated)
+		{
+			generateBuffers( gl );
+		}	
+
+		//upload data to GPU
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[0] );
+		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+
+		initialized = true;
+
 	}
 
 	public void draw(final GL3 gl, final Matrix4fc pvm, final int [] screen_size )
@@ -225,7 +245,6 @@ public class VisPointsScaled
 		progRound.getUniform1i("clipactive").set(BigTraceData.nClipROI);
 		progRound.getUniform3f("clipmin").set(new Vector3f(BigTraceData.nDimCurr[0][0],BigTraceData.nDimCurr[0][1],BigTraceData.nDimCurr[0][2]));
 		progRound.getUniform3f("clipmax").set(new Vector3f(BigTraceData.nDimCurr[1][0],BigTraceData.nDimCurr[1][1],BigTraceData.nDimCurr[1][2]));
-
 		progRound.setUniforms( context );
 		
 		progSquare.getUniform1f( "pointSizeReal" ).set( (float) (1.25*fPointSize*BigTraceData.dMinVoxelSize) );
@@ -239,14 +258,13 @@ public class VisPointsScaled
 		progSquare.getUniform1i("clipactive").set(BigTraceData.nClipROI);
 		progSquare.getUniform3f("clipmin").set(new Vector3f(BigTraceData.nDimCurr[0][0],BigTraceData.nDimCurr[0][1],BigTraceData.nDimCurr[0][2]));
 		progSquare.getUniform3f("clipmax").set(new Vector3f(BigTraceData.nDimCurr[1][0],BigTraceData.nDimCurr[1][1],BigTraceData.nDimCurr[1][2]));
-
 		progSquare.setUniforms( context );
-		
-		
 
 		progRound.use( context );
-		gl.glBindVertexArray( vao );
-		if(nPointsN==1)
+
+		gl.glBindVertexArray( vaos[ 0 ] );
+		
+		if(nPointsN == 1)
 		{
 			gl.glDrawArrays( GL.GL_POINTS, 0, nPointsN);
 		}
