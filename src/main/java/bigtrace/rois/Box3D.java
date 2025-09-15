@@ -108,7 +108,7 @@ public class Box3D extends AbstractRoi3D
 		for(int d = 0; d < 3; d++)
 		{
 			nDimBox[0][d] = nDimBoxL[0][d];
-			nDimBox[1][d] = nDimBoxL[0][d];
+			nDimBox[1][d] = nDimBoxL[1][d];
 
 		}
 		
