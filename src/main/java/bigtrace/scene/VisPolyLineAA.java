@@ -134,7 +134,7 @@ public class VisPolyLineAA
 		vaos = new int[ 4 ];
 		
 		gl.glGenBuffers( 4, vbos, 0 );
-		for(int i=0;i<4;i++)
+		for(int i = 0; i < 4; i++)
 			vaos[i] = vbos[i];
 		gl.glGenVertexArrays( 1, vaos, 0 );
 		vao = vaos[ 0 ];
@@ -143,18 +143,13 @@ public class VisPolyLineAA
 		
 		gl.glBindVertexArray( vao );
 		
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 0 ] );
-		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 0 );
+		for(int i = 0; i < 3; i++)
+		{
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ i ] );
+			gl.glVertexAttribPointer( i, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+			gl.glEnableVertexAttribArray( i );
+		}
 		
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 1 ] );
-		gl.glVertexAttribPointer( 1, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 1 );
-
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 2 ] );
-		gl.glVertexAttribPointer( 2, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 2 );
-
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbos[ 3 ] );
 		gl.glVertexAttribPointer( 3, 2, GL_FLOAT, false, 2 * Float.BYTES, 0 );
 		gl.glEnableVertexAttribArray( 3 );

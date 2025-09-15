@@ -1450,12 +1450,12 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		BigTrace testI = new BigTrace(); 
 		
 		//testI.run("");
-		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
+		//testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP-3d.tif");
 
 		
-		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/SC_nuc10.tif");
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/SC_nuc10.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/FR21_SC_nuc10-1.tif");
 
 		

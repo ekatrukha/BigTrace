@@ -37,7 +37,21 @@ public class VisWireMesh {
 	
 	private final Shader progMesh;
 
-	private int vao;
+	/** VBOs for mesh surface render **/
+	private int [] vbosWire;
+	
+	/** vertex arrays for mesh surface**/
+	private int [] vaosWire;
+	
+	private boolean bBuffersWireGenerated = false;
+	
+	/** VBOs for mesh surface render **/
+	private int [] vbosMesh;
+	
+	/** vertex arrays for mesh surface**/
+	private int [] vaosMesh;
+	
+	private boolean bBuffersMeshGenerated = false;
 		
 	private float vertices[]; 
 	
@@ -59,9 +73,11 @@ public class VisWireMesh {
 	
 	volatile boolean bLocked = false;
 	
-	VisPolyLineAA centerLine = null;
+	/** anti-aliased centerline **/
+	final VisPolyLineAA centerLine = new VisPolyLineAA ();
 	
-	ArrayList<VisPolyLineAA> wireLine = null;
+	/** anti-aliased wire mesh **/
+	final ArrayList<VisPolyLineAA> wireLine = new ArrayList<>();
 	
 
 	public VisWireMesh()
@@ -89,21 +105,15 @@ public class VisWireMesh {
 	public void setThickness(float fLineThickness_)
 	{
 		fLineThickness = fLineThickness_;
-		if(centerLine != null)
-			centerLine.setThickness( fLineThickness );
+		centerLine.setThickness( fLineThickness );
 	}
 	
 	public void setColor(Color color_in)
 	{
 		l_color = new Vector4f(color_in.getComponents(null));
-		if(centerLine != null)
-			centerLine.setColor( l_color );
-		if(wireLine!=null)
-		{
-			 for (VisPolyLineAA segment : wireLine)
-				 segment.setColor( l_color ); 
-			
-		}
+		centerLine.setColor( l_color );
+		for (VisPolyLineAA segment : wireLine)
+			segment.setColor( l_color ); 
 	}
 	
 	public void setRenderType(int nRenderType_)
@@ -134,11 +144,10 @@ public class VisWireMesh {
 		if(renderType == Roi3D.OUTLINE)
 		{
 			setVerticesCenterLine(Roi3D.scaleGlobInv(points_, BigTraceData.globCal));
-			wireLine = null;
+			//wireLine.clear();
 		}
 		else
 		{
-			centerLine = null;
 			
 			//build a pipe in scaled space
 			ArrayList<ArrayList< RealPoint >> point_contours = Pipe3D.getCountours(points_, tangents_, BigTraceData.sectorN, 0.5*fLineThickness*BigTraceData.dMinVoxelSize);
@@ -155,7 +164,7 @@ public class VisWireMesh {
 			else
 			//(renderType == Roi3D.SURFACE)
 			{
-					wireLine = null;
+					//wireLine.clear();
 					//initMesh(point_contours);
 					nMeshTrianglesSize = 0;
 					mesh = initMeshOpenEnds(point_contours);
@@ -177,7 +186,9 @@ public class VisWireMesh {
 		nPointsN = points.size();
 		if(BigTraceData.wireAntiAliasing)
 		{
-			centerLine = new VisPolyLineAA(points, fLineThickness, l_color);
+			centerLine.setThickness( fLineThickness );
+			centerLine.setColor( l_color );
+			centerLine.setVertices( points );
 			centerLine.bIncludeClip = true;
 		}
 		else
@@ -250,12 +261,12 @@ public class VisWireMesh {
 	public void setVerticesWireAA( final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 		int i,j, iPoint;
-		wireLine = new ArrayList<>();
+		wireLine.clear();
 		final int nSectorN = BigTraceData.sectorN;
 		nPointsN = allContours.size();
-		if(nPointsN>1)
+		if(nPointsN > 1)
 		{
-			for (iPoint=0;iPoint<nPointsN;iPoint+=BigTraceData.wireCountourStep)
+			for (iPoint=0; iPoint<nPointsN; iPoint+=BigTraceData.wireCountourStep)
 			{
 				
 				ArrayList<RealPoint> contour_arr = new  ArrayList<>();
@@ -302,6 +313,11 @@ public class VisWireMesh {
 			
 		}
 	}
+	
+//	void addLineWireLine(final ArrayList<RealPoint> line_arr, final float fWireLineThickness, final Color l_color)
+//	{
+//		
+//	}
 	public void setVerticesWireSharp( final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 		int i,j, iPoint;
@@ -354,32 +370,47 @@ public class VisWireMesh {
 		return true;
 	}
 	
+	private void generateWireBuffers(final GL3 gl )
+	{
+		vbosWire = new int[ 1 ];
+		vaosWire = new int[ 1 ];
+		
+		gl.glGenBuffers( 1, vbosWire, 0 );
+		vaosWire[0] = vbosWire[0];
+		gl.glGenVertexArrays( 1, vaosWire, 0 );
+		
+		//this can be done once
+		
+		gl.glBindVertexArray( vaosWire[ 0 ] );
+	
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbosWire[0] );
+		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+		gl.glEnableVertexAttribArray( 0 );
+		gl.glBindVertexArray( 0 );
+		
+		bBuffersWireGenerated = true;
+	}
+	
 	private void initGPUBufferWire( final GL3 gl )
 	{
-		initialized = true;
+
 		if(nPointsN > 1)
 		{
+			// ..:: VERTEX BUFFERS & ARRAY OBJECTS ::..
 
-			// ..:: VERTEX BUFFER ::..
-	
-			final int[] tmp = new int[ 2 ];
-			gl.glGenBuffers( 1, tmp, 0 );
-			final int vbo = tmp[ 0 ];
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+			if(!bBuffersWireGenerated)
+			{
+				generateWireBuffers( gl );
+			}	
+
+			//upload data to GPU
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbosWire[0] );
 			gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
 			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
 	
-	
-			// ..:: VERTEX ARRAY OBJECT ::..
-	
-			gl.glGenVertexArrays( 1, tmp, 0 );
-			vao = tmp[ 0 ];
-			gl.glBindVertexArray( vao );
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-			gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-			gl.glEnableVertexAttribArray( 0 );
-			gl.glBindVertexArray( 0 );
 		}
+		
+		initialized = true;
 	}
 	
 	/** given contours coordinates, returns a mesh with open ends**/
@@ -525,53 +556,72 @@ public class VisWireMesh {
 		return meshOut;
 	}
 	
+	private void generateMeshBuffers(final GL3 gl )
+	{
+		vbosMesh = new int[ 3 ];
+		vaosMesh = new int[ 3 ];
+		
+		gl.glGenBuffers( 3, vbosMesh, 0 );
+		for(int i = 0; i < 3; i++)
+			vaosMesh[i] = vbosMesh[i];
+		gl.glGenVertexArrays( 1, vaosMesh, 0 );
+		//vao = vaosMesh[ 0 ];
+		
+		//this can be done once
+		
+		gl.glBindVertexArray( vaosMesh[ 0 ] );
+		
+		for (int i = 0; i < 2; i++)
+		{
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbosMesh[ i ] );
+			gl.glVertexAttribPointer( i, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
+			gl.glEnableVertexAttribArray( i );
+		}
+				
+		gl.glBindBuffer( GL.GL_ELEMENT_ARRAY_BUFFER, vbosMesh[ 2 ] );
+		gl.glBindVertexArray( 0 );
+		
+		bBuffersMeshGenerated = true;
+	}
+	
 	/** upload MeshData to GPU **/
 	private boolean initGPUBufferMesh( GL3 gl )
 	{
-		initialized = true;
-
-		final int[] tmp = new int[ 3 ];
-		gl.glGenBuffers( 3, tmp, 0 );
-		final int meshPosVbo = tmp[ 0 ];
-		final int meshNormalVbo = tmp[ 1 ];
-		final int meshEbo = tmp[ 2 ];
-		
-		if(mesh==null)
+				
+		if(mesh == null)
 			return false;
 		else
-			if (mesh.vertices()==null)
+			if (mesh.vertices() == null)
 				return false;
+		
+		if(!bBuffersMeshGenerated)
+		{
+			generateMeshBuffers(gl);
+		}
+		
+		
+		//upload data to GPU
 
 		final FloatBuffer vertBuff = mesh.vertices().verts();
 		vertBuff.rewind();
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, meshPosVbo );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbosMesh[0] );
 		gl.glBufferData( GL.GL_ARRAY_BUFFER, vertBuff.limit() * Float.BYTES, vertBuff, GL.GL_STATIC_DRAW );
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
 
 		final FloatBuffer normals = mesh.vertices().normals();
 		normals.rewind();
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, meshNormalVbo );
+		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbosMesh[1] );
 		gl.glBufferData( GL.GL_ARRAY_BUFFER, normals.limit() * Float.BYTES, normals, GL.GL_STATIC_DRAW );
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
 
 		final IntBuffer indices = mesh.triangles().indices();
 		indices.rewind();
-		gl.glBindBuffer( GL.GL_ELEMENT_ARRAY_BUFFER, meshEbo );
+		gl.glBindBuffer( GL.GL_ELEMENT_ARRAY_BUFFER, vbosMesh[2] );
 		gl.glBufferData( GL.GL_ELEMENT_ARRAY_BUFFER, indices.limit() * Integer.BYTES, indices, GL.GL_STATIC_DRAW );
 		gl.glBindBuffer( GL.GL_ELEMENT_ARRAY_BUFFER, 0 );
-
-
-		gl.glGenVertexArrays( 1, tmp, 0 );
-		vao = tmp[ 0 ];
-		gl.glBindVertexArray( vao );
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, meshPosVbo );
-		gl.glVertexAttribPointer( 0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 0 );
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, meshNormalVbo );
-		gl.glVertexAttribPointer( 1, 3, GL_FLOAT, false, 3 * Float.BYTES, 0 );
-		gl.glEnableVertexAttribArray( 1 );
-		gl.glBindBuffer( GL.GL_ELEMENT_ARRAY_BUFFER, meshEbo );
-		gl.glBindVertexArray( 0 );
+		
+		initialized = true;
+		
 		return true; 
 	}
 
@@ -631,7 +681,7 @@ public class VisWireMesh {
 				//gl.glEnable(GL.GL_BLEND);
 				//gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA); 
 				
-				gl.glBindVertexArray( vao );			
+				gl.glBindVertexArray( vaosMesh[0] );			
 				gl.glDrawElements( GL_TRIANGLES, ( int ) nMeshTrianglesSize * 3, GL_UNSIGNED_INT, 0 );
 				gl.glBindVertexArray( 0 );
 			}
@@ -639,11 +689,8 @@ public class VisWireMesh {
 			{
 				if(BigTraceData.wireAntiAliasing)
 				{
-				    //gl.glDepthFunc( GL.GL_LESS);
 				    gl.glDepthFunc( GL.GL_ALWAYS);
-		//			gl.glEnable(GL3.GL_BLEND);
-		//			gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
-		//			gl.glDepthFunc(GL3.GL_ALWAYS);
+				    
 					if(renderType == Roi3D.OUTLINE)
 					{
 						centerLine.draw( gl, pvm );
@@ -651,7 +698,7 @@ public class VisWireMesh {
 					
 					if(renderType == Roi3D.WIRE)
 					{					
-						for (int nS = 0;nS<wireLine.size(); nS++)
+						for (int nS = 0; nS < wireLine.size(); nS++)
 						{
 							wireLine.get( nS ).draw( gl, pvm );
 						}
@@ -667,7 +714,7 @@ public class VisWireMesh {
 					progLine.getUniform3f("clipmax").set(new Vector3f(BigTraceData.nDimCurr[1][0],BigTraceData.nDimCurr[1][1],BigTraceData.nDimCurr[1][2]));
 					progLine.setUniforms( context );
 					progLine.use( context );		
-					gl.glBindVertexArray( vao );	
+					gl.glBindVertexArray( vaosWire[ 0 ] );	
 					
 					//			gl.glDepthFunc(GL3.GL_ALWAYS);
 					if(renderType == Roi3D.OUTLINE)
@@ -681,21 +728,23 @@ public class VisWireMesh {
 						int nPointIt;
 						final int nSectorN = BigTraceData.sectorN;
 	
-						gl.glLineWidth(1.0f);
+						gl.glLineWidth( 1.0f );
+						
 						//contours
-						for(nPointIt=0;nPointIt<nPointsN;nPointIt+=BigTraceData.wireCountourStep)
+						for(nPointIt = 0; nPointIt < nPointsN; nPointIt+=BigTraceData.wireCountourStep)
 						{
 							gl.glDrawArrays( GL.GL_LINE_LOOP, nPointIt*nSectorN, nSectorN);
 							//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);
 						}
 						//the last contour
-						if((nPointIt-BigTraceData.wireCountourStep)!=(nPointsN-1))
+						if((nPointIt - BigTraceData.wireCountourStep) != (nPointsN-1))
 						{
 							gl.glDrawArrays( GL.GL_LINE_LOOP, (nPointsN-1)*nSectorN, nSectorN);
 						}
 						//lines along the pipe
-						int nShift = nSectorN*nPointsN;
-						for(nPointIt=0;nPointIt<nSectorN;nPointIt+=1)
+						int nShift = nSectorN * nPointsN;
+						
+						for(nPointIt = 0; nPointIt < nSectorN; nPointIt += 1)
 						{
 							gl.glDrawArrays( GL.GL_LINE_STRIP, nShift+nPointIt*nPointsN, nPointsN);
 							//gl.glDrawArrays( GL.GL_LINE_LOOP, nSectorN, nSectorN);

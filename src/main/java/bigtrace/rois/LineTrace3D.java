@@ -34,17 +34,19 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 {
 	
 	public ArrayList<ArrayList<RealPoint>> segments;
-	public VisPointsScaled verticesVis;
-	//public VisPolyLineScaled segmentsVis;
-	public VisWireMesh segmentsVis;
+	public final VisPointsScaled verticesVis;
+	public final VisWireMesh segmentsVis;
 
 	public LineTrace3D(final Roi3DGroup preset_in, final int nTimePoint_)
 	{
 		type = Roi3D.LINE_TRACE;
+		
 		pointSize = preset_in.pointSize;
+		
 		lineThickness = preset_in.lineThickness;
 		
 		pointColor = new Color(preset_in.pointColor.getRed(),preset_in.pointColor.getGreen(),preset_in.pointColor.getBlue(),preset_in.pointColor.getAlpha());
+		
 		lineColor = new Color(preset_in.lineColor.getRed(),preset_in.lineColor.getGreen(),preset_in.lineColor.getBlue(),preset_in.lineColor.getAlpha());
 
 		nTimePoint = nTimePoint_;
@@ -57,14 +59,16 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 		verticesVis.setColor(pointColor);
 		verticesVis.setSize(pointSize);
 		verticesVis.setRenderType(renderType);
+		
 		interpolator = new CurveShapeInterpolation(type);
 		segmentsVis = new VisWireMesh();
 		segmentsVis.setColor(lineColor);
 		segmentsVis.setThickness(lineThickness);
 		segmentsVis.setRenderType(renderType);
-		name = "trace"+Integer.toString(this.hashCode());
+		name = "trace" + Integer.toString(this.hashCode());
 
 	}
+	
 	/** adds initial vertex **/
 	public void addFirstPoint(final RealPoint in_)
 	{
@@ -77,12 +81,10 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 		//check if the new point is at the same place that previous or not
 		double [] dist = new double [3];
 		LinAlgHelpers.subtract(vertices.get(vertices.size()-1).positionAsDoubleArray(), in_.positionAsDoubleArray(), dist);
-		if(LinAlgHelpers.length(dist)>0.000001)
+		if(LinAlgHelpers.length(dist) > 0.000001)
 		{		
 			vertices.add(new RealPoint(in_));
-			//verticesVis.setVertices(vertices);
 			segments.add(segments_);
-			//segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
 			updateRenderVertices();
 
 		}
@@ -113,7 +115,6 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 		{
 			segments.remove(segments.size()-1);
 			updateRenderVertices();
-			//segmentsVis = new VisPolyLineScaled(makeJointSegment( BigTraceData.shapeInterpolation),lineThickness, lineColor, renderType);
 			return true;
 		}
 		
@@ -421,11 +422,12 @@ public class LineTrace3D extends AbstractCurve3D implements WritablePolyline
 	}	
 	
 	@Override
-	public void updateRenderVertices() {
+	public void updateRenderVertices() 
+	{
 		
 		verticesVis.setVertices(vertices);
 		bMeshInit = false;
-		if(vertices.size()>1)
+		if(vertices.size() > 1)
 		{
 			interpolator.init(makeJointSegment(), BigTraceData.shapeInterpolation);
 			segmentsVis.setVertices(interpolator.getVerticesVisual(),interpolator.getTangentsVisual());
