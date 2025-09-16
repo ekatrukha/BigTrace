@@ -56,6 +56,7 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 		GridBagConstraints gbc = new GridBagConstraints();
 
 		GBCHelper.alighLeft(gbc);
+		gbc.weighty = 0.0;
 		
 		NumberField nfMaxIntFullTraceStart = new NumberField(5);
 		NumberField nfAutoMinCurvePoints = new NumberField(5);
@@ -97,11 +98,20 @@ public class PanelFullAutoTrace < T extends RealType< T > & NativeType< T > > im
 			gbc.gridy++;
 		}
 		
+		//filler
+		gbc.gridx = 0;
+		gbc.gridy++;
+		gbc.weightx = 0.01;
+		gbc.weighty = 0.2;
+		gbc.gridwidth = 2;
+		gbc.fill = GridBagConstraints.VERTICAL;
+		dialogFullAutoSettings.add(new JLabel(), gbc);
+		
 		////////////TRACING OPTIONS		
 		final PanelTracingOptions panelGeneralTrace = new PanelTracingOptions(bt);
 			
 		////////////ONE-CLICK TRACING OPTIONS		
-		final PanelOneClickTraceOptions panelOneClickOptions = new PanelOneClickTraceOptions(bt);
+		final PanelOneClickTraceOptions panelOneClickOptions = new PanelOneClickTraceOptions(bt, false);
 
 		//assemble pane
 		tabPane.addTab("AutoTrace", dialogFullAutoSettings);

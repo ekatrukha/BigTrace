@@ -73,6 +73,7 @@ import bigtrace.gui.GuiMisc;
 import bigtrace.gui.VisualBoxes;
 import bigtrace.io.ViewsIO;
 import bigtrace.math.OneClickTrace;
+import bigtrace.math.RoiTraceMask;
 import bigtrace.math.TraceBoxMath;
 import bigtrace.math.TracingBGVect;
 import bigtrace.rois.LineTrace3D;
@@ -410,9 +411,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		btData.nPointsInTraceBox = 1;
 	}
 	
-	/** calculates trace box around last vertice of provided trace.
-	 * if bRefine is true, it will refine the position of the dot
-	 * and add it to the ROI manager **/
+	/** runs One Click trace routine.  **/
 	//@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void runOneClickTrace(final RealPoint pclick, final boolean bNewTrace_)
 	{
@@ -420,6 +419,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		final IntervalView<T> traceIV =  getTraceInterval(btData.bTraceOnlyClipped);	
 
 		bInputLock = true;
+		setLockMode(true);
 		oneClickTrace = new OneClickTrace<>();
 		oneClickTrace.fullInput = traceIV;
 		oneClickTrace.bt = this;
@@ -427,7 +427,21 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		oneClickTrace.bNewTrace = bNewTrace_;
 		oneClickTrace.addPropertyChangeListener(btPanel);
 		roiManager.setOneClickTracing( true );
-		oneClickTrace.execute();
+		if(btData.bOneClickUseMask)
+		{
+			oneClickTrace.bUseMask = true;
+			final RoiTraceMask<T> mask = new RoiTraceMask<>(this);
+			mask.traceInterval = traceIV;
+			mask.addPropertyChangeListener( btPanel );
+			mask.oneclick = oneClickTrace;
+			mask.execute();
+
+			//oneClickTrace.traceMask = mask;
+		}
+		else
+		{
+			oneClickTrace.execute();
+		}
 	
 	}
 	
@@ -1455,9 +1469,10 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/tracefile_3TP-3d.tif");
 
 		
-		testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/SC_nuc10.tif");
+		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/SC_nuc10.tif");
 		//testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/FR21_SC_nuc10-1.tif");
 
+		testI.run("/home/eugene/Desktop/projects/BigTrace/BT_time_Oane/20250905_dataset/2 Easy (WT live)/SC_nuc10-2xZ_crop.tif");
 		
 		///macros test
 //		testI.run("/home/eugene/Desktop/projects/BigTrace/BigTrace_data/ExM_MT_8bit.tif");

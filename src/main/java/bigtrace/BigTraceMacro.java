@@ -33,7 +33,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		
 		extensions = new ExtensionDescriptor[11];
 		extensions[0] = ExtensionDescriptor.newDescriptor("btLoadROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
-		extensions[1] = ExtensionDescriptor.newDescriptor("btSaveROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
+		extensions[1] = ExtensionDescriptor.newDescriptor("btSaveROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING + MacroExtension.ARG_OPTIONAL);
 		extensions[2] = ExtensionDescriptor.newDescriptor("btStraighten", bt, MacroExtension.ARG_NUMBER, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING + MacroExtension.ARG_OPTIONAL);
 		extensions[3] = ExtensionDescriptor.newDescriptor("btShapeInterpolation", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_NUMBER);
 		extensions[4] = ExtensionDescriptor.newDescriptor("btIntensityInterpolation", bt, MacroExtension.ARG_STRING);
@@ -300,10 +300,15 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		{
 			Thread.sleep(1000);
 		}
-		
+		String out = "";
         if(output == null)
-        	return;
-        String out = output.toLowerCase();
+        {
+        	out = "bigtrace";
+        }
+        else
+        {
+        	out = output.toLowerCase();
+        }
         int nLoadMode = 0;
         switch (out)
         {

@@ -52,19 +52,13 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 	public void setProgressState(String state_)
 	{
 		progressState = state_;
+		firePropertyChange( "ProgressBarString", "a", "b");
+
 	}
 	
 	@Override
 	protected Void doInBackground() throws Exception 
-	{
-		
-		//full_RAI = bt.btData.getAllDataRAI();	
-		
-		//int nInitialTimePoint = bt.btData.nCurrTimepoint;	
-		
-		//int nTotTP = nLastTP - nFirstTP;
-		//int nTPCount = 0;
-		
+	{	
 		
 		oneClickTrace.bNewTrace = true;
 		oneClickTrace.bUnlockInTheEnd = false;
@@ -75,12 +69,14 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 		
 		oneClickTrace.bInit = false;
 		oneClickTrace.init();
-			
+		
+		setProgress(0);
 		for(int nTP = nFirstTP; nTP <= nLastTP; nTP++)
 		{
+			
 			bt.viewer.setTimepoint(nTP);
 			IntervalView<T> traceIV =  bt.getTraceInterval(bt.btData.bTraceOnlyClipped);	
-			mask.initTraceMask( traceIV );
+			mask.initTraceMask( traceIV, false );
 			oneClickTrace.traceMask = mask;
 			oneClickTrace.fullInput = traceIV;
 			
@@ -100,8 +96,9 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 
 				if(newMax.getA()>dAutoMinStartTraceInt)
 				{
-					oneClickTrace.startPoint = newMax.getB();					
-					setProgressState(Double.toString( newMax.getA() ));
+					oneClickTrace.startPoint = newMax.getB();			
+					setProgressState("current curve start intensity " + Double.toString( newMax.getA() ));
+
 					oneClickTrace.runTracing();
 					mask.markLocation(newMax.getB() );
 					if(!oneClickTrace.bStartLocationOccupied)
@@ -111,7 +108,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 					if(bt.roiManager.getActiveRoi() instanceof LineTrace3D)
 					{
 						final LineTrace3D newtrace = (LineTrace3D)bt.roiManager.getActiveRoi();
-						if(newtrace.getNumberOfPointsInJointSegment()<nAutoMinPointsCurve)
+						if(newtrace.getNumberOfPointsInJointSegment() < nAutoMinPointsCurve)
 						{
 							bt.roiManager.deleteActiveROI();
 						}
@@ -122,6 +119,7 @@ public class FullAutoTrace < T extends RealType< T > & NativeType< T > > extends
 					bKeepTracing = false;
 				}
 			}
+			setProgress(100*(nTP-nFirstTP+1)/(nLastTP-nFirstTP+1));
 		}
 		oneClickTrace.releaseMultiThread();
 		//System.out.println("done");

@@ -1,6 +1,9 @@
 package bigtrace.math;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
+
+import javax.swing.SwingWorker;
 
 import net.imglib2.Cursor;
 import net.imglib2.Interval;
@@ -17,22 +20,29 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 import bigtrace.BigTrace;
+import bigtrace.BigTraceBGWorker;
 import bigtrace.rois.Roi3D;
 
-public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
+public class RoiTraceMask < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
 {
     final BigTrace<T> bt;
-    IntervalView< T > traceInterval;
+    
+    public IntervalView< T > traceInterval = null;
+    
     boolean bMaskInit = false;
+    
+	private String progressState;
 
     IntervalView< NativeBoolType > traceMask;
+    
+    public OneClickTrace <T> oneclick = null;
     
     public RoiTraceMask(final BigTrace<T> bt_)
 	{
 		bt = bt_;
     }
     
-    public void initTraceMask (final IntervalView< T > traceInterval_)
+    public void initTraceMask (final IntervalView< T > traceInterval_, boolean bReportProgress)
     {
     	//current data
     	traceInterval = traceInterval_;
@@ -41,18 +51,40 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
     	ArrayImg< NativeBoolType, BooleanArray > maskArr = ArrayImgs.booleans( dim );//.unsignedBytes(dim);
     	traceMask = Views.translate(maskArr, traceInterval.minAsLongArray());
     	
-    	bMaskInit = true;
     	//fill mask with current ROI shapes
     	final ArrayList<Roi3D> rois = bt.roiManager.rois;
-    	
+    	int nTotROIs = 0;   	
+    	int nCurrRoi = 0;
+    	if(bReportProgress)
+    	{
+    		setProgressState("Creating ROI mask..");
+        	
+          	for (final Roi3D roi : rois) 
+        	{
+        		 if (roi.getTimePoint() == bt.btData.nCurrTimepoint)
+        		 {
+        			 nTotROIs++;
+        		 }
+        	}
+    	}
+    	bMaskInit = true;
     	for (final Roi3D roi : rois) 
     	{
     		 if (roi.getTimePoint() == bt.btData.nCurrTimepoint)
     		 {
     			 markROI(roi);
+    			 if(bReportProgress)
+    			 {
+    				 nCurrRoi++;
+    				 setProgress( 100*nCurrRoi/nTotROIs );
+    			 }
     		 }
     	}
-    	
+		 if(bReportProgress)
+		 {
+			 setProgressState("ROI mask created.");
+		 }
+		
     	//ImageJFunctions.show( traceMask);
     }
     
@@ -221,4 +253,56 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > >
     	}
     	return new ValuePair< >(maxVal, new RealPoint(maxLocation));
     }
+
+	@Override
+	public String getProgressState()
+	{
+		return progressState;
+	}
+	@Override
+	public void setProgressState(String state_)
+	{
+		progressState = state_;
+	}
+
+	@Override
+	protected Void doInBackground() throws Exception
+	{
+		initTraceMask ( traceInterval, true);
+		return null;
+	}
+	
+	@Override
+	public void done() 
+	{
+		//see if we have some errors
+		try {
+
+			get();
+		} 
+		catch (ExecutionException e) 
+		{
+			e.getCause().printStackTrace();
+			String msg = String.format("Unexpected problem during one-click tracing: %s", 
+					e.getCause().toString());
+			System.out.println(msg);
+		} 
+		catch (InterruptedException e) 
+		{
+			// Process e here
+		}
+		catch (Exception e)
+		{
+
+			//System.out.println("Tracing interrupted by user.");
+			setProgressState("Tracing interrupted by user.");
+			setProgress(100);	
+		}
+		if(oneclick != null)
+		{
+			oneclick.traceMask = this;
+			oneclick.execute();
+		}
+
+	}
 }

@@ -43,7 +43,7 @@ public class TraceBoxMath < T extends RealType< T > & NativeType< T > > extends 
 	@Override
 	public void setProgressState(String state_)
 	{
-		progressState=state_;
+		progressState = state_;
 	}
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override

@@ -21,20 +21,25 @@ public class PanelOneClickTraceOptions extends JPanel
 	
 	final NumberField nfIntensityThreshold = new NumberField(5);
 	
-	final JCheckBox cbIntensityStop = new JCheckBox();
+	final JCheckBox cbIntensityStop = new JCheckBox("Use intensity threshold");
 	
 	final NumberField nfPlaceVertex = new NumberField(4);
 	
 	final NumberField nfDirectionalityOneClick = new NumberField(4);
 	
-	public PanelOneClickTraceOptions(final BigTrace<?> bt_)
+	final JCheckBox cbTraceMask = new JCheckBox("Avoid (mask) existing ROIs");
+	
+	boolean bShowMaskOption = true;
+	
+	public PanelOneClickTraceOptions(final BigTrace<?> bt_, boolean bShowMaskOption_)
 	{
 		super();
 		bt = bt_;
+		bShowMaskOption = bShowMaskOption_;
 		setLayout(new GridBagLayout());
 		
 		final GridBagConstraints gbc = new GridBagConstraints();
-				
+		GBCHelper.alighLeft( gbc );
 		DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance();
 		decimalFormatSymbols.setDecimalSeparator('.');
 		DecimalFormat df = new DecimalFormat("0.000", decimalFormatSymbols);
@@ -46,28 +51,26 @@ public class PanelOneClickTraceOptions extends JPanel
 		nfIntensityThreshold.setText(df.format(bt.btData.dOCIntensityThreshold));
 		nfIntensityThreshold.setTFEnabled( bt.btData.bOCIntensityStop);
 		
-		gbc.gridx=0;
-		gbc.gridy=0;		
-		this.add(new JLabel("Intermediate vertex placement (px, >=3): "),gbc);
-		gbc.gridx++;
-		this.add(nfPlaceVertex,gbc);
+		cbTraceMask.setSelected( bt.btData.bOneClickUseMask );
 		
-		gbc.gridx=0;		
-		gbc.gridy++;
+		
+		gbc.gridx = 0;		
+		gbc.gridy = 0;
 		this.add(new JLabel("Constrain directionality (0-1): "),gbc);
 		gbc.gridx++;
 		this.add(nfDirectionalityOneClick,gbc);
 		
-		gbc.gridx=0;
+		gbc.gridx = 0;
 		gbc.gridy++;
+		gbc.gridwidth = 2;
 		//cd.anchor=GridBagConstraints.WEST;
-		this.add(new JLabel("Use intensity threshold: "),gbc);
-		gbc.gridx++;
+		//this.add(new JLabel("Use intensity threshold"),gbc);
+		//gbc.gridx++;
 		this.add(cbIntensityStop,gbc);
+		gbc.gridwidth = 1;
 		
 		cbIntensityStop.addActionListener( new ActionListener()
 				{
-
 					@Override
 					public void actionPerformed( ActionEvent arg0 )
 					{						
@@ -81,6 +84,22 @@ public class PanelOneClickTraceOptions extends JPanel
 		this.add(new JLabel("Minimum intensity: "),gbc);
 		gbc.gridx++;
 		this.add(nfIntensityThreshold,gbc);
+
+		gbc.gridx = 0;
+		gbc.gridy ++;		
+		this.add(new JLabel("Ref points placement (px, >=3): "),gbc);
+		gbc.gridx++;
+		this.add(nfPlaceVertex,gbc);
+		
+		if(bShowMaskOption)
+		{
+			gbc.gridx = 0;
+			gbc.gridy++;
+			gbc.gridwidth = 2;
+			this.add(cbTraceMask,gbc);		
+		}
+		
+
 
 	}
 	public void getSetOptions()
@@ -97,6 +116,11 @@ public class PanelOneClickTraceOptions extends JPanel
 		{
 			bt.btData.dOCIntensityThreshold = Math.max(0, Double.parseDouble(nfIntensityThreshold.getText()));
 			Prefs.set("BigTrace.dOCIntensityThreshold",bt.btData.dOCIntensityThreshold);		
+		}
+		if(bShowMaskOption)
+		{
+			bt.btData.bOneClickUseMask = cbTraceMask.isSelected();
+			Prefs.get( "BigTrace.bOneClickUseMask", bt.btData.bOneClickUseMask );			
 		}
 	}
 }

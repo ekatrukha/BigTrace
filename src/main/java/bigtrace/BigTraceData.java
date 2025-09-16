@@ -281,6 +281,9 @@ public class BigTraceData < T extends RealType< T > & NativeType< T > > {
 	
 	/** value of the intensity threshold to stop One click tracing **/
 	public double dOCIntensityThreshold;	
+	
+	/** use collision mask with existing ROIs **/
+	public boolean bOneClickUseMask = Prefs.get( "BigTrace.bOneClickUseMask", false );
 		
 	//IO default/last folder
 	

@@ -70,28 +70,29 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		nfGammaTrace.setText(df.format(bt.btData.gammaTrace));
 		nfTBAdvance.setText(df.format(bt.btData.fTraceBoxAdvanceFraction));
 			
-		gbc.gridx=0;
-		gbc.gridy=0;
+		GBCHelper.alighLeft( gbc );
+		gbc.gridx = 0;
+		gbc.gridy = 0;
 		//cd.anchor=GridBagConstraints.WEST;
 		pSemiAuto.add(new JLabel("Trace box size (px): "),gbc);
 		gbc.gridx++;
 		pSemiAuto.add(nfTraceBoxSize,gbc);
 		
-		gbc.gridx=0;
+		gbc.gridx = 0;
 		gbc.gridy++;
 		//cd.anchor=GridBagConstraints.WEST;
 		pSemiAuto.add(new JLabel("Trace box screen fraction (0-1): "),gbc);
 		gbc.gridx++;
 		pSemiAuto.add(nfTraceBoxScreenFraction,gbc);
 		
-		gbc.gridx=0;
+		gbc.gridx = 0;
 		gbc.gridy++;
 		//cd.anchor=GridBagConstraints.WEST;
 		pSemiAuto.add(new JLabel("Trace box advance [0-center..1-edge]: "),gbc);
 		gbc.gridx++;
 		pSemiAuto.add(nfTBAdvance,gbc);	
 
-		gbc.gridx=0;		
+		gbc.gridx = 0;		
 		gbc.gridy++;
 		pSemiAuto.add(new JLabel("Orientation weight(0-1): "),gbc);
 		gbc.gridx++;
@@ -132,7 +133,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
 		final PanelTracingOptions panelGeneralTrace = new PanelTracingOptions(bt);
 			
 		////////////ONE-CLICK TRACING OPTIONS		
-		final PanelOneClickTraceOptions panelOneClickOptions = new PanelOneClickTraceOptions(bt);
+		final PanelOneClickTraceOptions panelOneClickOptions = new PanelOneClickTraceOptions(bt, true);
 		
 		//assemble pane
 		tabPane.addTab("Tracing", panelGeneralTrace);

@@ -78,7 +78,7 @@ public class ViewsIO
 				writer.write("dDirectionalityOneClick,"+df3.format(bt.btData.dDirectionalityOneClick)+"\n");
 				writer.write("bOCIntensityStop,"+Integer.toString(bt.btData.bOCIntensityStop ? 1 : 0)+"\n");
 				writer.write("dOCIntensityThreshold,"+df3.format(bt.btData.dOCIntensityThreshold)+"\n");
-				for (int d=0;d<3;d++)
+				for (int d = 0; d < 3; d++)
 				{
 					writer.write("Trace sigma,"+Integer.toString( d )+ ","+ df3.format(bt.btData.sigmaTrace[d])+"\n");					
 				}

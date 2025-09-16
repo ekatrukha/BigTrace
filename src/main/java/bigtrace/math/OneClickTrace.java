@@ -474,7 +474,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 
 	public void releaseMultiThread()
 	{
-		if(es!=null)
+		if(es != null)
 			es.shutdown();
 	}
 	/** checks if the point intersects already traced part of the curve**/

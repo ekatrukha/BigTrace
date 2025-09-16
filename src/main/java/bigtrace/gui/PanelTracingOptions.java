@@ -27,7 +27,7 @@ public class PanelTracingOptions extends JPanel
 	final String [] sEstimateMode = new String [] {"MAX", "AVG", "MIN"};
 	final JComboBox<String> cbEstimateThicknessMode = new JComboBox<>(sEstimateMode);
 	final NumberField cbEstimateThicknessCoeff = new NumberField(2);
-	final JCheckBox cbEstimateThickness = new JCheckBox(" Set ROI diameter ");
+	final JCheckBox cbEstimateThickness = new JCheckBox(" Set ROI diameter ");	
 	
 	public PanelTracingOptions(final BigTrace<?> bt_)
 	{
@@ -93,6 +93,7 @@ public class PanelTracingOptions extends JPanel
 		
 		gbc.gridx = 0;
 		gbc.gridy++;
+		gbc.anchor = GridBagConstraints.WEST;
 		this.add(cbTraceOnlyClipped,gbc);
 	}
 	

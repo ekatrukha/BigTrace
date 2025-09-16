@@ -797,6 +797,13 @@ public class BigTraceControlPanel< T extends RealType< T > & NativeType< T > > e
 	            	progressBar.setString(((bigtrace.BigTraceBGWorker)(evt.getSource())).getProgressState());
 	            }
 	        }
+	        if ("ProgressBarString" == evt.getPropertyName()) 
+	        {
+	            if(evt.getSource() instanceof bigtrace.BigTraceBGWorker)
+	            {
+	            	progressBar.setString(((bigtrace.BigTraceBGWorker)(evt.getSource())).getProgressState());
+	            }
+	        }
 	        
 	        
 	        
