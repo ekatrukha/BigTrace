@@ -15,6 +15,7 @@ import java.util.Comparator;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -220,7 +221,7 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		JPanel dialAlign = new JPanel(new GridBagLayout());
 		GridBagConstraints cd = new GridBagConstraints();
 		String [] sGroupSelection = new String [bt.roiManager.groups.size()];
-		for (int i = 0; i<bt.roiManager.groups.size(); i++)
+		for (int i = 0; i < bt.roiManager.groups.size(); i++)
 		{
 			sGroupSelection[i] = bt.roiManager.groups.get( i ).getName();
 		}
@@ -334,6 +335,8 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		
 		NumberField nfBoxExpand = new NumberField(4);
 		
+		final JCheckBox cbTraceMask = new JCheckBox("Avoid (mask) existing ROIs (experimental)");
+		
 		cd.gridx = 0;
 		cd.gridy = 0;	
 		String[] sTrackDirection = { "all timepoints", "forward in time", "backward in time", "range below" };
@@ -374,6 +377,12 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 		nfBoxExpand.setIntegersOnly( true );
 		nfBoxExpand.setText(Integer.toString((int)(Prefs.get("BigTrace.nTrackExpandBox", 0))));
 		dialogTrackSettings.add(nfBoxExpand,cd);
+		cd.gridy++;
+		
+		cbTraceMask.setSelected(bt.btData.bTrackingUseMask );
+		cd.gridx = 0;
+		cd.gridwidth = 2;
+		dialogTrackSettings.add(cbTraceMask,cd);
 	
 		int reply = JOptionPane.showConfirmDialog(null, dialogTrackSettings, "Track settings", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -382,6 +391,8 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 			int nTrackDirection = trackDirectionList.getSelectedIndex();
 			Prefs.set("BigTrace.trackDirection", nTrackDirection);
 			
+			bt.btData.bTrackingUseMask = cbTraceMask.isSelected();
+			Prefs.set( "BigTrace.bTrackingUseMask", bt.btData.bTrackingUseMask  );
 			
 			this.btTracker = new CurveTracker< >(bt);
 			
@@ -438,21 +449,26 @@ public class TrackingPanel < T extends RealType< T > & NativeType< T > > extends
 	public void actionPerformed( ActionEvent e )
 	{
 		// RUN TRACKING
-		if(e.getSource() == butTrack && jlist.getSelectedIndex()>-1)
-		{
-			
-			if(!bt.bInputLock && bt.btData.nNumTimepoints > 1 && bt.roiManager.getActiveRoi().getType()==Roi3D.LINE_TRACE)
+		if(e.getSource() == butTrack)
+			if(jlist.getSelectedIndex()>-1)
 			{
-				simpleTracking();
+
+				if(!bt.bInputLock && bt.btData.nNumTimepoints > 1 && bt.roiManager.getActiveRoi().getType()==Roi3D.LINE_TRACE)
+				{
+					simpleTracking();
+				}
+				else
+				{
+					if(bt.bInputLock && butTrack.isEnabled() && btTracker!=null && !btTracker.isCancelled() && !btTracker.isDone())
+					{
+						btTracker.cancel( false );
+					}
+				}
 			}
 			else
 			{
-				if(bt.bInputLock && butTrack.isEnabled() && btTracker!=null && !btTracker.isCancelled() && !btTracker.isDone())
-				{
-					btTracker.cancel( false );
-				}
+				bt.btPanel.progressBar.setString( "Please select a start ROI first." );
 			}
-		}
 		
 		//Groups Manager
 		if(e.getSource() == butGroups)

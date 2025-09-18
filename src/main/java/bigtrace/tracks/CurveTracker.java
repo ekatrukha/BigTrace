@@ -23,6 +23,7 @@ import bigtrace.BigTrace;
 import bigtrace.BigTraceBGWorker;
 import bigtrace.BigTraceData;
 import bigtrace.math.OneClickTrace;
+import bigtrace.math.RoiTraceMask;
 import bigtrace.measure.MeasureValues;
 import bigtrace.rois.AbstractCurve3D;
 import bigtrace.rois.LineTrace3D;
@@ -31,8 +32,7 @@ import bigtrace.rois.Roi3DGroup;
 import bigtrace.volume.VolumeMisc;
 
 public class CurveTracker < T extends RealType< T > & NativeType< T > > extends SwingWorker<Void, String> implements BigTraceBGWorker
-{
-	
+{	
 	final BigTrace<T> bt;
 	
 	public int nFirstTP;
@@ -46,21 +46,19 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 	Roi3D currentRoi;
 	
 	MeasureValues oldVect;
+	
 	MeasureValues newVect;
 	
 	final OneClickTrace<T> oneClickTask = new OneClickTrace<>();
 	
 	Roi3DGroup newGroupTrack;
 	
-	//final long [][] nInt = new long [2][5];
-	
-	//Interval boxNext;
-	
-	RandomAccessibleInterval<T> full_RAI;
+	final RandomAccessibleInterval<T> full_RAI;
 	
 	private String progressState;
 	
 	JButton butTrack = null;
+	
 	ImageIcon tabIconTrain = null; 
 	
 	@Override
@@ -77,14 +75,13 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 	public CurveTracker(BigTrace<T> bt)
 	{
 		this.bt = bt;
+		full_RAI = bt.btData.getAllDataRAI();	
 	}
 	
 	@Override
 	protected Void doInBackground() throws Exception 
 	{
-		
-		
-		full_RAI = bt.btData.getAllDataRAI();		
+	
 		int nInitialTimePoint = bt.btData.nCurrTimepoint;		
 		
 		final Roi3D initialRoi =  bt.roiManager.getActiveRoi();
@@ -114,13 +111,19 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		oneClickTask.bt = this.bt;
 		oneClickTask.bInit = false;
 		
+		if(bt.btData.bTrackingUseMask)
+		{
+			oneClickTask.traceMask = new RoiTraceMask<>(bt);
+			oneClickTask.bUseMask = true;
+		}
+		
 		boolean bTracing = true;
 	
 		//tracing back in time
 		oneClickTask.bInsertROI = true;
 		oneClickTask.nInsertROIInd = bt.roiManager.activeRoi.get();
 		oneClickTask.init();
-		for(int nTP = nInitialTimePoint-1; nTP>=nFirstTP && bTracing; nTP--)
+		for(int nTP = nInitialTimePoint-1; nTP >= nFirstTP && bTracing; nTP--)
 		{
 
 			bTracing = getNextTrace(nTP);
@@ -195,6 +198,12 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
 		final IntervalView<T> traceIV =  bt.getTraceInterval(bt.btData.bTraceOnlyClipped);			
 		oneClickTask.fullInput = traceIV;
 		oneClickTask.startPoint = rpMax;
+		if(bt.btData.bTrackingUseMask)
+		{
+			oneClickTask.traceMask.initTraceMask( traceIV, true );
+			
+		}
+		
 		oneClickTask.runTracing();
 		//oneClickTask.releaseMultiThread();
 
@@ -264,7 +273,7 @@ public class CurveTracker < T extends RealType< T > & NativeType< T > > extends 
     	}
 	
 
-    	if(butTrack!= null && tabIconTrain!= null)
+    	if(butTrack != null && tabIconTrain != null)
     	{
     		butTrack.setIcon( tabIconTrain );
     		butTrack.setToolTipText( "Track" );

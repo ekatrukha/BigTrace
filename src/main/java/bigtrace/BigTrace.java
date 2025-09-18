@@ -142,7 +142,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 	/** BigTrace macro interface**/
 	public BigTraceMacro<T> btMacro;
 	
-	/** One click tracing worker**/
+	/** One Click tracing worker**/
 	OneClickTrace<T> oneClickTrace = null;
 		
 	@Override
