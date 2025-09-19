@@ -47,15 +47,16 @@ public class ViewsIO
 			try (FileWriter writer = new FileWriter(file))
 			{
 				writer.write("BigTrace_View,version," + BigTraceData.sVersion + "\n");
-				writer.write("FileNameFull,"+bt.btData.sFileNameFullImg+"\n");
-				writer.write("Render Type,"+Integer.toString( bt.btData.nRenderMethod )+"\n");
-				writer.write("Canvas BG color,"+Integer.toString( bt.btData.canvasBGColor.getRGB() )+"\n");
-				writer.write("nHalfClickSizeWindow,"+Integer.toString( bt.btData.nHalfClickSizeWindow )+"\n");
-				writer.write("Zoom Box Size,"+Integer.toString( bt.btData.nZoomBoxSize)+"\n");
-				writer.write("Zoom Box Size,"+Integer.toString( bt.btData.nZoomBoxSize)+"\n");
-				writer.write("Zoom Box Fraction,"+df3.format(bt.btData.dZoomBoxScreenFraction)+"\n");
-				writer.write("bROIDoubleClickClip,"+Integer.toString( BigTraceData.bROIDoubleClickClip ? 1 : 0 )+"\n");
-				writer.write("nROIDoubleClickClipExpand,"+Integer.toString( BigTraceData.nROIDoubleClickClipExpand )+"\n");
+				writer.write("FileNameFull," + bt.btData.sFileNameFullImg+"\n");
+				writer.write("Render Type," + Integer.toString( bt.btData.nRenderMethod )+"\n");
+				writer.write("Canvas BG color," + Integer.toString( bt.btData.canvasBGColor.getRGB() )+"\n");
+				writer.write("nHalfClickSizeWindow," + Integer.toString( bt.btData.nHalfClickSizeWindow )+"\n");
+				writer.write("Zoom Box Size," + Integer.toString( bt.btData.nZoomBoxSize)+"\n");
+				writer.write("Zoom Box Fraction," + df3.format(bt.btData.dZoomBoxScreenFraction)+"\n");
+				writer.write("bROIDoubleClickClip," + Integer.toString( BigTraceData.bROIDoubleClickClip ? 1 : 0 )+"\n");
+				writer.write("nROIDoubleClickClipExpand," + Integer.toString( BigTraceData.nROIDoubleClickClipExpand )+"\n");				
+				writer.write("bStartFullScreen," + Integer.toString( bt.btData.bStartFullScreen ? 1 : 0 )+"\n");
+
 				
 				writer.write("Intensity Interpolation,"+Integer.toString( BigTraceData.intensityInterpolation )+"\n");
 				writer.write("ROI Shape Interpolation,"+Integer.toString( BigTraceData.shapeInterpolation )+"\n");
@@ -71,17 +72,26 @@ public class ViewsIO
 				writer.write("timeRender,"+Integer.toString( BigTraceData.timeRender )+"\n");
 				writer.write("timeFade,"+Integer.toString( BigTraceData.timeFade )+"\n");
 				//tracing parameters
-				writer.write("nTraceBoxSize,"+Integer.toString( bt.btData.nTraceBoxSize )+"\n");
-				writer.write("fTraceBoxScreenFraction,"+df3.format(bt.btData.fTraceBoxScreenFraction)+"\n");
-				writer.write("fTraceBoxAdvanceFraction,"+df3.format(bt.btData.fTraceBoxAdvanceFraction)+"\n");
-				writer.write("nVertexPlacementPointN,"+Integer.toString( bt.btData.nVertexPlacementPointN )+"\n");
-				writer.write("dDirectionalityOneClick,"+df3.format(bt.btData.dDirectionalityOneClick)+"\n");
-				writer.write("bOCIntensityStop,"+Integer.toString(bt.btData.bOCIntensityStop ? 1 : 0)+"\n");
-				writer.write("dOCIntensityThreshold,"+df3.format(bt.btData.dOCIntensityThreshold)+"\n");
+				writer.write("nTraceBoxSize," + Integer.toString( bt.btData.nTraceBoxSize )+"\n");
+				writer.write("fTraceBoxScreenFraction," + df3.format(bt.btData.fTraceBoxScreenFraction)+"\n");
+				writer.write("fTraceBoxAdvanceFraction," + df3.format(bt.btData.fTraceBoxAdvanceFraction)+"\n");
+				writer.write("nVertexPlacementPointN," + Integer.toString( bt.btData.nVertexPlacementPointN )+"\n");
+				writer.write("dDirectionalityOneClick," + df3.format(bt.btData.dDirectionalityOneClick)+"\n");
+				writer.write("bOCIntensityStop," + Integer.toString(bt.btData.bOCIntensityStop ? 1 : 0)+"\n");
+				writer.write("dOCIntensityThreshold," + df3.format(bt.btData.dOCIntensityThreshold)+"\n");
 				for (int d = 0; d < 3; d++)
 				{
 					writer.write("Trace sigma,"+Integer.toString( d )+ ","+ df3.format(bt.btData.sigmaTrace[d])+"\n");					
 				}
+				
+				writer.write("bEstimateROIThicknessFromParams," + Integer.toString( bt.btData.bEstimateROIThicknessFromParams ? 1 : 0 )+"\n");
+				writer.write("dTraceROIThicknessCoeff," + df3.format( bt.btData.dTraceROIThicknessCoeff)+"\n");
+				writer.write("nTraceROIThicknessMode," + Integer.toString( bt.btData.nTraceROIThicknessMode )+"\n");
+				writer.write("bOneClickUseMask," + Integer.toString( bt.btData.bOneClickUseMask ? 1 : 0 )+"\n");
+				writer.write("bTrackingUseMask," + Integer.toString( bt.btData.bTrackingUseMask ? 1 : 0 )+"\n");
+
+				writer.write("dAutoMinStartTraceInt," + Integer.toString( (int)Prefs.get("BigTrace.dAutoMinStartTraceInt",128.0) )+"\n");
+				writer.write("nAutoMinPointsCurve," + Integer.toString( (int)Prefs.get("BigTrace.nAutoMinPointsCurve",3) )+"\n");
 				
 				writer.write("Scene, current\n");
 				bt.getCurrentScene().save( writer );
@@ -208,6 +218,10 @@ public class ViewsIO
 					bt.btData.nHalfClickSizeWindow =  Integer.parseInt( line_array[1] );
 					Prefs.set("BigTrace.nHalfClickSizeWindow", bt.btData.nHalfClickSizeWindow);
 					break;
+				case "bStartFullScreen":	
+					bt.btData.bStartFullScreen =  line_array[1].equals( "1" )? true : false;
+					Prefs.set("BigTrace.bStartFullScreen", bt.btData.bStartFullScreen);
+					break;
 				case "Camera":	
 					bt.btPanel.setCameraParameters(line_array[1], line_array[2], line_array[3]);
 					break;					
@@ -313,6 +327,35 @@ public class ViewsIO
 					bt.btData.sigmaTrace[dA] = Double.parseDouble( line_array[2] ) ;
 					Prefs.set("BigTrace."+sigmaTraceName[dA], bt.btData.sigmaTrace[dA]);
 					break;	
+				case "bEstimateROIThicknessFromParams":	
+					bt.btData.bEstimateROIThicknessFromParams =  line_array[1].equals( "1" )? true : false;
+					Prefs.set("BigTrace.bEstimateROIThicknessFromParams", bt.btData.bEstimateROIThicknessFromParams);
+					break;
+				case "dTraceROIThicknessCoeff":
+					bt.btData.dTraceROIThicknessCoeff = Double.parseDouble( line_array[1] );
+					Prefs.set("BigTrace.dTraceROIThicknessCoeff", bt.btData.dTraceROIThicknessCoeff);
+					break;
+				case "nTraceROIThicknessMode":
+					bt.btData.nTraceROIThicknessMode = Integer.parseInt( line_array[1] );
+					Prefs.set("BigTrace.nTraceROIThicknessMode", bt.btData.nTraceROIThicknessMode);
+					break;	
+				case "bOneClickUseMask":	
+					bt.btData.bOneClickUseMask =  line_array[1].equals( "1" )? true : false;
+					Prefs.set("BigTrace.bOneClickUseMask", bt.btData.bOneClickUseMask);
+					break;	
+				case "bTrackingUseMask":	
+					bt.btData.bTrackingUseMask =  line_array[1].equals( "1" )? true : false;
+					Prefs.set("BigTrace.bTrackingUseMask", bt.btData.bTrackingUseMask);
+					break;	
+				case "dAutoMinStartTraceInt":
+					final int dAutoMinStartTraceInt = Integer.parseInt( line_array[1] );
+					Prefs.set("BigTrace.dAutoMinStartTraceInt", dAutoMinStartTraceInt);
+					break;	
+				case "nAutoMinPointsCurve":
+					final int nAutoMinPointsCurve = Integer.parseInt( line_array[1] );
+					Prefs.set("BigTrace.nAutoMinPointsCurve", nAutoMinPointsCurve);
+					break;		
+					
 					
 				case "Scene":
 					 final Scene scLoad = new Scene();
