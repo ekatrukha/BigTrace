@@ -147,7 +147,7 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		return null;
 	}
 	
-	public void macroRunFullAutoTrace(final int nIntMin, final int nNumPoints, final int nFirstFrame, final int nLastFrame) throws InterruptedException
+	public void macroRunFullAutoTrace(final int nMinIntensity, final int nMinNumPoints, final int nFirstFrame, final int nLastFrame) throws InterruptedException
 	{
 		while(bt.bInputLock)
 		{
@@ -164,12 +164,12 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			nLastTP = Math.min( bt.btData.nNumTimepoints - 1, nLastTP );
 		}
 		IJ.log( "Running full autotrace with parameters:" );
-		IJ.log("Min intensity trace start:" + Integer.toString( nIntMin ));
-		IJ.log("Min # points in curve:" + Integer.toString( nNumPoints ));
+		IJ.log( "Min intensity trace start:" + Integer.toString( nMinIntensity ));
+		IJ.log( "Min # points in curve:" + Integer.toString( nMinNumPoints ));
 		IJ.log( "First time frame: " + Integer.toString( nFirstFrame ));
 		IJ.log( "Last time frame: " + Integer.toString( nLastFrame ));
 		
-		bt.roiManager.panelFullAutoTrace.launchFullAutoTrace( nIntMin, nNumPoints, nFirstFrame, nLastFrame );
+		bt.roiManager.panelFullAutoTrace.launchFullAutoTrace( nMinIntensity, nMinNumPoints, nFirstFrame, nLastFrame );
 	}
 	
 	public void macroSetTracingThickness(final double [] sigmas) throws InterruptedException
@@ -191,11 +191,15 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 
 	} 
 	
-	public void macroSetActiveChannel (final int nChannel)
+	public void macroSetActiveChannel (final int nChannel) throws InterruptedException
 	{
+		while(bt.bInputLock)
+		{
+			Thread.sleep(1000);
+		}
 		int nFinCh = Math.max(nChannel,1);
 		nFinCh = Math.min( nFinCh, bt.btData.nTotalChannels );
-		bt.roiManager.setActiveChannel( nFinCh );
+		bt.roiManager.setActiveChannel( nFinCh - 1 );
 		IJ.log( "The active tracing/measuring channel is set to " + Integer.toString( nFinCh ) );
 	}
 	

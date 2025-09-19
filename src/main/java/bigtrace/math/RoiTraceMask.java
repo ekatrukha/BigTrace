@@ -121,7 +121,7 @@ public class RoiTraceMask < T extends RealType< T > & NativeType< T > > extends 
      		if(!Intervals.contains( traceMask, point ))
      			return;
      		final long [] posLong = new long[3];
-     		for(int d=0;d<3;d++)
+     		for(int d = 0; d < 3; d++)
      		{
      			posLong[d] = Math.round( point.getFloatPosition( d ));
      		}

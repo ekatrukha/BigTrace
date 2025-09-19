@@ -980,13 +980,17 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
             }
         }
     }
+	
+	/** sets active channel for tracing and measurements (0 based) **/
 	public void setActiveChannel(int nChannel)
 	{
 		bt.btData.nChAnalysis = nChannel;
+		
 		if(this.cbActiveChannel.getSelectedIndex() != nChannel)
 		{
 			this.cbActiveChannel.setSelectedIndex(nChannel);
 		}
+		
 		if(roiMeasure.cbActiveChannel.getSelectedIndex() != nChannel)
 		{
 			roiMeasure.cbActiveChannel.setSelectedIndex(nChannel);

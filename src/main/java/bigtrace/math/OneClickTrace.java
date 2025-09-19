@@ -186,7 +186,7 @@ public class OneClickTrace < T extends RealType< T > & NativeType< T > > extends
 				bStartLocationOccupied = false;
 				if(traceMask.isOccupied( startRefinedPoint ))
 				{
-					traceMask.markInterval(  getLocalSearchArea(startPoint, 3.0f));
+					traceMask.markInterval(  getLocalSearchArea(startPoint, 2.0f));
 					bStartLocationOccupied = true;
 					return;
 				}	
