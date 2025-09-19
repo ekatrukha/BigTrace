@@ -6,7 +6,6 @@ import java.awt.GridBagLayout;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -657,7 +656,7 @@ public class RoiManager3DDialogs < T extends RealType< T > & NativeType< T > >
         
         Prefs.set("BigTrace.ImportTMColorMode", nImportColor);		
 
-       	bt.roiManager.rois = new ArrayList< >();
+       	bt.roiManager.rois.clear();
         bt.roiManager.listModel.clear();
         
         ROIsImportTrackMateBG importTask = new ROIsImportTrackMateBG();

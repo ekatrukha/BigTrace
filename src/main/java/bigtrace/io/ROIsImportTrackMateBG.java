@@ -128,9 +128,14 @@ public class ROIsImportTrackMateBG  extends SwingWorker<Void, String> implements
         }
 		
 		setProgress(100);
-		bt.roiManager.rois = allRois;
+		bt.roiManager.rois.clear();
+		for(final Roi3D roi: allRois)
+		{
+			bt.roiManager.rois.add( roi );
+		}		
+		
 		DefaultListModel<String> listModelin = new  DefaultListModel<>();
-		for (int i =0;i<allRois.size();i++)
+		for (int i = 0; i < allRois.size(); i++)
 		{
 			listModelin.addElement(allRois.get(i).getName());
 		}

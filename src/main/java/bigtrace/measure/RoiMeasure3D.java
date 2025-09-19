@@ -70,17 +70,17 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 	final BigTrace<T> bt;
 	final BigTraceData<T> btData;
 	
-	JButton butLineProfile;
-	JButton butLineAlignment;
-	JToggleButton butMeasureFile;
-	JButton butExtractBox;
-	JButton butStraighten;
-	JButton butSlice;
-	JButton butSettings;
-	JButton butMeasure;
-	JButton butMeasureAll;
-	public JList<String> jlist;
-	JScrollPane listScroller;
+	final JButton butLineProfile;
+	final JButton butLineAlignment;
+	final JToggleButton butMeasureFile;
+	final JButton butExtractBox;
+	final JButton butStraighten;
+	final JButton butSlice;
+	final JButton butSettings;
+	final JButton butMeasure;
+	final JButton butMeasureAll;
+	public final JList<String> jlist;
+	final JScrollPane listScroller;
 	
 	boolean bIgnoreClipped = Prefs.get("BigTrace.bIgnoreClipped",false);
 	
@@ -120,7 +120,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		rt = systemRT;
 		
 		btData.setInterpolationFactory();
-		JPanel panLineTools = new JPanel(new GridBagLayout());  
+		final JPanel panLineTools = new JPanel(new GridBagLayout());  
 		panLineTools.setBorder(new PanelTitle(" Tools "));
 
 		URL icon_path = this.getClass().getResource("/icons/line_profile.png");
@@ -177,39 +177,39 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		//this.setBorder(new PanelTitle(" Measurements "));
 
 		//add to the panel
-		GridBagConstraints cr = new GridBagConstraints();
-		cr.gridx = 0;
-		cr.gridy = 0;
-		panLineTools.add(butLineProfile,cr);
-		cr.gridx++;
-		panLineTools.add(butLineAlignment,cr);
-		cr.gridx++;
-		panLineTools.add(butMeasureFile,cr);
-		cr.gridx++;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		panLineTools.add(butLineProfile,gbc);
+		gbc.gridx++;
+		panLineTools.add(butLineAlignment,gbc);
+		gbc.gridx++;
+		panLineTools.add(butMeasureFile,gbc);
+		gbc.gridx++;
 		JSeparator sp = new JSeparator(SwingConstants.VERTICAL);
 		sp.setPreferredSize(new Dimension((int) (nButtonSize*0.5),nButtonSize));
-		panLineTools.add(sp,cr);
+		panLineTools.add(sp,gbc);
 		
-		cr.gridx++;
-		panLineTools.add(butExtractBox,cr);
-		cr.gridx++;
-		panLineTools.add(butStraighten,cr);
+		gbc.gridx++;
+		panLineTools.add(butExtractBox,gbc);
+		gbc.gridx++;
+		panLineTools.add(butStraighten,gbc);
 
-		cr.gridx++;
-		panLineTools.add(butSlice,cr);
+		gbc.gridx++;
+		panLineTools.add(butSlice,gbc);
 		
 		//filler
-		cr.gridx++;
-		cr.weightx = 0.01;
-		panLineTools.add(new JLabel(), cr);
-		cr.weightx = 0.0;
-		cr.gridx++;
-		panLineTools.add(butSettings,cr);
+		gbc.gridx++;
+		gbc.weightx = 0.01;
+		panLineTools.add(new JLabel(), gbc);
+		gbc.weightx = 0.0;
+		gbc.gridx++;
+		panLineTools.add(butSettings,gbc);
 
 		
-		JPanel panMeasure = new JPanel(new GridBagLayout());
+		final JPanel panMeasure = new JPanel(new GridBagLayout());
 		panMeasure.setBorder(new PanelTitle(" Measure "));
-		cr = new GridBagConstraints();
+		gbc = new GridBagConstraints();
 		
 		//synchronized ROI list
 		jlist = new JList<>(bt.roiManager.listModel);
@@ -239,49 +239,49 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 			});
 
 		//this.add(listScroller);	
-		cr.gridx=0;
-		cr.gridy=0;
-		cr.gridheight=GridBagConstraints.REMAINDER;
+		gbc.gridx=0;
+		gbc.gridy=0;
+		gbc.gridheight=GridBagConstraints.REMAINDER;
 		
-		cr.fill  = GridBagConstraints.BOTH;
-		cr.weightx=0.99;
-		cr.weighty=0.99;
-		panMeasure.add(listScroller,cr);
-		cr.weightx=0.0;
-		cr.weighty=0.0;
-		cr.fill = GridBagConstraints.NONE;
+		gbc.fill  = GridBagConstraints.BOTH;
+		gbc.weightx=0.99;
+		gbc.weighty=0.99;
+		panMeasure.add(listScroller,gbc);
+		gbc.weightx=0.0;
+		gbc.weighty=0.0;
+		gbc.fill = GridBagConstraints.NONE;
 		
 		
 		butMeasure = new JButton("Measure");
 		butMeasure.addActionListener(this);
-		cr.gridx++;
-		cr.gridy++;
-		cr.gridheight=1;
+		gbc.gridx++;
+		gbc.gridy++;
+		gbc.gridheight=1;
 
-		panMeasure.add(butMeasure,cr);
+		panMeasure.add(butMeasure,gbc);
 
 		butMeasureAll = new JButton("Measure All");
 		butMeasureAll.addActionListener(this);
-		cr.gridy++;
-		panMeasure.add(butMeasureAll,cr);
+		gbc.gridy++;
+		panMeasure.add(butMeasureAll,gbc);
 
 		// Blank/filler component
-		cr.gridx++;
-		cr.gridy++;
-		cr.weightx = 0.01;
-		cr.weighty = 0.01;
-		panMeasure.add(new JLabel(), cr);		
+		gbc.gridx++;
+		gbc.gridy++;
+		gbc.weightx = 0.01;
+		gbc.weighty = 0.01;
+		panMeasure.add(new JLabel(), gbc);		
 
 		// a solution for now
 		butMeasure.setMinimumSize(butMeasureAll.getPreferredSize());
 		butMeasure.setPreferredSize(butMeasureAll.getPreferredSize()); 
 		
 		
-		JPanel panChannel = new JPanel(new GridBagLayout());
+		final JPanel panChannel = new JPanel(new GridBagLayout());
 		panChannel.setBorder(new PanelTitle(""));
 
 		String[] nCh = new String[bt.btData.nTotalChannels];
-		for(int i=0;i<nCh.length;i++)
+		for(int i = 0;i < nCh.length; i++)
 		{
 			nCh[i] = "channel "+Integer.toString(i+1);
 		}
@@ -289,38 +289,38 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		cbActiveChannel.setSelectedIndex(0);
 		cbActiveChannel.addActionListener(this);
 		
-		cr = new GridBagConstraints();
-	    cr.gridx=0;
-		cr.gridy=0;
-		panChannel.add(new JLabel("Measure"),cr);
-		cr.gridx++;
-		panChannel.add(cbActiveChannel,cr);
+		gbc = new GridBagConstraints();
+	    gbc.gridx=0;
+		gbc.gridy=0;
+		panChannel.add(new JLabel("Measure"),gbc);
+		gbc.gridx++;
+		panChannel.add(cbActiveChannel,gbc);
 		
 		
 		//put all panels together
-		cr = new GridBagConstraints();
+		gbc = new GridBagConstraints();
 		setLayout(new GridBagLayout());
-		cr.insets=new Insets(4,4,2,2);
-		cr.gridx=0;
-		cr.gridy=0;
-		cr.fill = GridBagConstraints.HORIZONTAL;
+		gbc.insets=new Insets(4,4,2,2);
+		gbc.gridx=0;
+		gbc.gridy=0;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
 	
 		//Line Tools
-		add(panLineTools,cr);
+		add(panLineTools,gbc);
 		//roi list
-		cr.gridy++;
-		cr.weighty = 0.99;
-		cr.fill = GridBagConstraints.BOTH;
-		add(panMeasure,cr);
-		cr.weighty = 0.0;
-		cr.fill = GridBagConstraints.HORIZONTAL;
-		cr.gridy++;
-		add(panChannel,cr);
+		gbc.gridy++;
+		gbc.weighty = 0.99;
+		gbc.fill = GridBagConstraints.BOTH;
+		add(panMeasure,gbc);
+		gbc.weighty = 0.0;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridy++;
+		add(panChannel,gbc);
 		// Blank/filler component
-		cr.gridy++;
-		cr.weightx = 0.01;
-		cr.weighty = 0.01;
-		add(new JLabel(), cr);    
+		gbc.gridy++;
+		gbc.weightx = 0.01;
+		gbc.weighty = 0.01;
+		add(new JLabel(), gbc);    
 	}
 
 	/** show Measure settings dialog**/
@@ -1529,8 +1529,7 @@ public class RoiMeasure3D < T extends RealType< T > & NativeType< T > > extends 
 		// MEASUREMENT CHANNEL
 		if(e.getSource() == cbActiveChannel)
 		{
-			bt.btData.nChAnalysis=cbActiveChannel.getSelectedIndex();
-			bt.roiManager.cbActiveChannel.setSelectedIndex(bt.btData.nChAnalysis);
+			bt.roiManager.setActiveChannel( cbActiveChannel.getSelectedIndex() );
 		}
 		
 		//measurement mode for line profile and coalignment

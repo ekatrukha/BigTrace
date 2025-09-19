@@ -31,28 +31,29 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 	{
 		bt = bt_;
 		
-		extensions = new ExtensionDescriptor[11];
+		extensions = new ExtensionDescriptor[12];
 		extensions[0] = ExtensionDescriptor.newDescriptor("btLoadROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING);
 		extensions[1] = ExtensionDescriptor.newDescriptor("btSaveROIs", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING + MacroExtension.ARG_OPTIONAL);
 		extensions[2] = ExtensionDescriptor.newDescriptor("btStraighten", bt, MacroExtension.ARG_NUMBER, MacroExtension.ARG_STRING, MacroExtension.ARG_STRING + MacroExtension.ARG_OPTIONAL);
 		extensions[3] = ExtensionDescriptor.newDescriptor("btShapeInterpolation", bt, MacroExtension.ARG_STRING, MacroExtension.ARG_NUMBER);
 		extensions[4] = ExtensionDescriptor.newDescriptor("btIntensityInterpolation", bt, MacroExtension.ARG_STRING);
-		extensions[5] = ExtensionDescriptor.newDescriptor("btSetTracingThickness", bt,  MacroExtension.ARG_NUMBER, //sigmax  
+		extensions[5] = ExtensionDescriptor.newDescriptor("btSetActiveChannel", bt,  MacroExtension.ARG_NUMBER);
+		extensions[6] = ExtensionDescriptor.newDescriptor("btSetTracingThickness", bt,  MacroExtension.ARG_NUMBER, //sigmax  
 																						MacroExtension.ARG_NUMBER, //sigmay
 																						MacroExtension.ARG_NUMBER); //sigmaz
-		extensions[6] = ExtensionDescriptor.newDescriptor("btSetTracingROI", bt,  MacroExtension.ARG_STRING, //boolean  
+		extensions[7] = ExtensionDescriptor.newDescriptor("btSetTracingROI", bt,  MacroExtension.ARG_STRING, //boolean  
 																					MacroExtension.ARG_NUMBER, //coeff
 																					MacroExtension.ARG_STRING); //method
-		extensions[7] = ExtensionDescriptor.newDescriptor("btSetOneClickParameters", bt,  MacroExtension.ARG_NUMBER,  
+		extensions[8] = ExtensionDescriptor.newDescriptor("btSetOneClickParameters", bt,  MacroExtension.ARG_NUMBER,  
 				  																		  MacroExtension.ARG_NUMBER, 
 				  																		  MacroExtension.ARG_STRING + MacroExtension.ARG_OPTIONAL, 
 				  																		  MacroExtension.ARG_NUMBER + MacroExtension.ARG_OPTIONAL);		
-		extensions[8] = ExtensionDescriptor.newDescriptor("btRunFullAutoTrace", bt, MacroExtension.ARG_NUMBER,
+		extensions[9] = ExtensionDescriptor.newDescriptor("btRunFullAutoTrace", bt, MacroExtension.ARG_NUMBER,
 																					MacroExtension.ARG_NUMBER,
 																					MacroExtension.ARG_NUMBER + MacroExtension.ARG_OPTIONAL,
 																					MacroExtension.ARG_NUMBER + MacroExtension.ARG_OPTIONAL);
-		extensions[9] = ExtensionDescriptor.newDescriptor("btTest", bt);
-		extensions[10] = ExtensionDescriptor.newDescriptor("btClose", bt);
+		extensions[10] = ExtensionDescriptor.newDescriptor("btTest", bt);
+		extensions[11] = ExtensionDescriptor.newDescriptor("btClose", bt);
 		//extensions[7] = ExtensionDescriptor.newDescriptor("btTest", bt);
 		
 	}
@@ -88,6 +89,10 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 			if (name.equals("btIntensityInterpolation")) 
 			{
 				macroIntensityInterpolation( (String)args[0]);
+			}
+			if (name.equals("btSetActiveChannel")) 
+			{
+				macroSetActiveChannel( (int) Math.abs(Math.round(((Double)args[0]).doubleValue())));
 			}
 			if (name.equals("btSetTracingThickness")) 
 			{
@@ -184,6 +189,14 @@ public class BigTraceMacro < T extends RealType< T > & NativeType< T > >
 		}
 		IJ.log( out );
 
+	} 
+	
+	public void macroSetActiveChannel (final int nChannel)
+	{
+		int nFinCh = Math.max(nChannel,1);
+		nFinCh = Math.min( nFinCh, bt.btData.nTotalChannels );
+		bt.roiManager.setActiveChannel( nFinCh );
+		IJ.log( "The active tracing/measuring channel is set to " + Integer.toString( nFinCh ) );
 	}
 	
 	public void macroSetTracingROI(String sEnable, final double coeff, String sMethod) throws InterruptedException

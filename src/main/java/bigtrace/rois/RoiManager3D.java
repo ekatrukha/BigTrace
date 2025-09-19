@@ -58,13 +58,13 @@ import bigtrace.tracks.TrackingPanel;
 public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends JPanel implements ListSelectionListener, ActionListener {
 	
 
-	BigTrace <T> bt;
+	final BigTrace <T> bt;
 
 	private static final long serialVersionUID = -2843907862066423151L;
 	public static final int ADD_POINT=0, ADD_POINT_LINE=1, ADD_POINT_SEMIAUTOLINE=2, ADD_POINT_ONECLICKLINE=3, ADD_POINT_PLANE=4;
 	///public static final int SECTORS_DEF=16;
 
-	public ArrayList<Roi3D> rois =  new ArrayList<>();
+	public final ArrayList<Roi3D> rois =  new ArrayList<>();
 	public AtomicInteger activeRoi = new AtomicInteger (-1);// = -1;
 
 	public ArrayList<Roi3DGroup> groups = new ArrayList<>();
@@ -99,19 +99,19 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		public void activeRoiChanged(int nRoi);				
 	}
 	
-	JButton butDelete;
-	JButton butRename;
-	JButton butDeselect;
-	JButton butProperties;
+	final JButton butDelete;
+	final JButton butRename;
+	final JButton butDeselect;
+	final JButton butProperties;
 	public JToggleButton butShowAll;
-	JButton butSaveROIs;
-	JButton butLoadROIs;
-	JButton butROIGroups;
-	JButton butApplyGroup;
-	JButton butDisplayGroup;
+	final JButton butSaveROIs;
+	final JButton butLoadROIs;
+	final JButton butROIGroups;
+	final JButton butApplyGroup;
+	final JButton butDisplayGroup;
 
-	public JComboBox<String> cbActiveChannel;
-	JComboBox<String> cbActiveGroup;
+	public final JComboBox<String> cbActiveChannel;
+	final JComboBox<String> cbActiveGroup;
 
 	final JToggleButton roiPointMode;
 	final JToggleButton roiPolyLineMode;
@@ -122,12 +122,12 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	final JButton roiImport;
 	final JButton roiSettings;
 	
-	final public PanelFullAutoTrace< T > panelFullAutoTrace;
+	public final PanelFullAutoTrace< T > panelFullAutoTrace;
 
 	ImageIcon tabIconOCTrace;
 	ImageIcon tabIconCancel;
 	
-	private ArrayList<Listener> listeners = new ArrayList<>();
+	private final ArrayList<Listener> listeners = new ArrayList<>();
 
 		
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -644,7 +644,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 	 @Override
 	 public synchronized void removeAll()
 	 {
-		 rois =  new ArrayList< >();
+		 rois.clear();
 	 }
 	 
 	 /** Draw all ROIS **/
@@ -980,6 +980,18 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
             }
         }
     }
+	public void setActiveChannel(int nChannel)
+	{
+		bt.btData.nChAnalysis = nChannel;
+		if(this.cbActiveChannel.getSelectedIndex() != nChannel)
+		{
+			this.cbActiveChannel.setSelectedIndex(nChannel);
+		}
+		if(roiMeasure.cbActiveChannel.getSelectedIndex() != nChannel)
+		{
+			roiMeasure.cbActiveChannel.setSelectedIndex(nChannel);
+		}
+	}
 
 	//buttons
 	@Override
@@ -1049,8 +1061,7 @@ public class RoiManager3D < T extends RealType< T > & NativeType< T > > extends 
 		//ACTIVE CHANNEL
 		if(e.getSource() == cbActiveChannel)
 		{
-			bt.btData.nChAnalysis = cbActiveChannel.getSelectedIndex();
-			roiMeasure.cbActiveChannel.setSelectedIndex(bt.btData.nChAnalysis);
+			setActiveChannel(cbActiveChannel.getSelectedIndex());
 		}
 		
 		//ACTIVE PRESET
