@@ -1122,7 +1122,7 @@ public class BigTrace < T extends RealType< T > & NativeType< T > > implements P
 
 		java.awt.Point point_mouse  = viewer.getMousePosition();
 
-		if(point_mouse ==null)
+		if(point_mouse == null)
 		{
 			return null;
 		}
