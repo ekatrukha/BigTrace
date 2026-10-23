@@ -171,7 +171,7 @@ public class VisWireMesh {
 					//wireLine.clear();
 					//initMesh(point_contours);
 					nMeshTrianglesSize = 0;
-					mesh = initMeshOpenEnds(point_contours);
+					initMeshOpenEnds(point_contours);
 					//mesh = initMeshCappedEnds(point_contours,  Roi3D.scaleGlobInv(points_, BigTraceData.globCal));
 					nMeshTrianglesSize = mesh.triangles().size();
 					nPointsN = point_contours.size();
@@ -199,11 +199,11 @@ public class VisWireMesh {
 		{
 			vertices = new float [nPointsN*3];//assume 3D	
 
-			for (int i=0; i<nPointsN; i++)
+			for (int i = 0; i < nPointsN; i++)
 			{
-				for (int d=0; d<3; d++)
+				for (int d = 0; d < 3; d++)
 				{
-					vertices[i*3+d]=points.get(i).getFloatPosition(d);
+					vertices[i * 3 + d]=points.get(i).getFloatPosition(d);
 				}			
 			}
 		}
@@ -217,7 +217,7 @@ public class VisWireMesh {
 
 		final int nSectorN = btdata.sectorN;
 		nPointsN = allContours.size();
-		if(nPointsN>1)
+		if(nPointsN > 1)
 		{
 			//all vertices
 			vertices = new float [2*(nSectorN + 1)*3*nPointsN];
@@ -232,7 +232,6 @@ public class VisWireMesh {
 					{
 						vertices[vertShift + i*6 + j]     = allContours.get(iPoint-1).get(i).getFloatPosition(j);
 						vertices[vertShift + i*6 + j + 3] = allContours.get(iPoint).get(i).getFloatPosition(j);
-
 					}				
 				}
 				
@@ -241,7 +240,6 @@ public class VisWireMesh {
 				{
 					vertices[vertShift + i*6 + j]     = allContours.get(iPoint-1).get(0).getFloatPosition(j);
 					vertices[vertShift + i*6 + j + 3] = allContours.get(iPoint).get(0).getFloatPosition(j);
-
 				}
 			}
 		}
@@ -302,7 +300,6 @@ public class VisWireMesh {
 				wireLine.add( contour );
 			}
 			
-
 			for (i = 0; i < nSectorN; i++)
 			{
 				ArrayList<RealPoint> line_arr = new  ArrayList<>();
@@ -318,10 +315,6 @@ public class VisWireMesh {
 		}
 	}
 	
-//	void addLineWireLine(final ArrayList<RealPoint> line_arr, final float fWireLineThickness, final Color l_color)
-//	{
-//		
-//	}
 	public void setVerticesWireSharp( final ArrayList<ArrayList< RealPoint >> allContours)
 	{
 		int i,j, iPoint;
@@ -354,6 +347,7 @@ public class VisWireMesh {
 					}
 		}
 	}
+	
 	private boolean init( final GL3 gl )
 	{
 		bLocked  = true;
@@ -401,69 +395,66 @@ public class VisWireMesh {
 		if(nPointsN > 1)
 		{
 			// ..:: VERTEX BUFFERS & ARRAY OBJECTS ::..
-
 			if(!bBuffersWireGenerated)
 			{
 				generateWireBuffers( gl );
 			}	
-
 			//upload data to GPU
 			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbosWire[0] );
 			gl.glBufferData( GL.GL_ARRAY_BUFFER, vertices.length * Float.BYTES, FloatBuffer.wrap( vertices ), GL.GL_STATIC_DRAW );
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
-	
-		}
-		
+			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );	
+		}		
 		initialized = true;
 	}
 	
 	/** given contours coordinates, returns a mesh with open ends**/
-	private BufferMesh initMeshOpenEnds(final ArrayList<ArrayList< RealPoint >> allContours )
+	private void initMeshOpenEnds(final ArrayList<ArrayList< RealPoint >> allContours )
 	{
 	
 		BufferMesh meshOut = null;
-		int i,j, iPoint;
 		
 		final int nPointsCurveN = allContours.size();
-		if(nPointsCurveN == 0)
-			return meshOut;
 		
+		if(nPointsCurveN == 0)
+		{
+			mesh = null;
+			return;
+		}
 		final int nSectorN = allContours.get( 0 ).size();
 		
-		float [][] triangle = new float[3][3];
-		int nMeshTrianglesN = (nPointsCurveN - 1) * nSectorN * 2;
-		if(nPointsCurveN > 1)
+		final int nMeshTrianglesN = (nPointsCurveN - 1) * nSectorN * 2;
+		final int nVerticesN = nPointsCurveN * nSectorN;
+		meshOut = new BufferMesh( nVerticesN, nMeshTrianglesN , true );
+		//add vertices
+		for (int iPoint = 0; iPoint < nPointsCurveN; iPoint++)
 		{
-			//calculate total number of triangles
-			meshOut = new BufferMesh( nMeshTrianglesN * 3, nMeshTrianglesN, true );
-	
-			//all vertices
-			//vertices = new float [2*(nSectorN+1)*3*nPointsN];
-			for (iPoint = 1; iPoint < nPointsCurveN; iPoint++)
+			for (int iS = 0; iS < nSectorN; iS++)
 			{
-				//add to drawing vertices triangles
-				//nmesh.triangles().addf(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z)
-				for (i = 0; i < nSectorN; i++)
-				{
-					for (j = 0; j < 3; j++)
-					{						
-						triangle[0][j] = allContours.get(iPoint-1).get(i).getFloatPosition(j);
-						triangle[1][j] = allContours.get(iPoint-1).get((i+1) % nSectorN).getFloatPosition(j);
-						triangle[2][j] = allContours.get(iPoint).get(i).getFloatPosition(j);						
-					}						
-					addTriangle(meshOut, triangle);
-					
-					for (j = 0; j < 3; j++)
-					{						
-						triangle[0][j] = allContours.get(iPoint).get(i).getFloatPosition(j);
-						triangle[1][j] = allContours.get(iPoint-1).get((i+1)%nSectorN).getFloatPosition(j);
-						triangle[2][j] = allContours.get(iPoint).get((i+1)%nSectorN).getFloatPosition(j);						
-					}	
-					addTriangle(meshOut, triangle);
-				}
+				final RealPoint p = allContours.get(iPoint).get( iS );
+				meshOut.vertices().add( p.getFloatPosition( 0 ), p.getFloatPosition( 1 ), p.getFloatPosition( 2 ));
 			}
 		}
-		return meshOut;
+		final long [] ind = new long [3];
+		//add triangles
+		for (int iPoint = 1; iPoint < nPointsCurveN; iPoint++)
+		{
+			for (int iS = 0; iS < nSectorN; iS++)
+			{
+				ind[0] = (iPoint-1) * nSectorN + iS;
+				ind[1] = (iPoint-1) * nSectorN + (iS+1) % nSectorN;
+				ind[2] = (iPoint) * nSectorN + + iS;
+				meshOut.triangles().add(ind[0], ind[1], ind[2]);
+
+				ind[0] = (iPoint) * nSectorN + iS;
+				ind[1] = (iPoint-1) * nSectorN + (iS+1) % nSectorN;
+				ind[2] = (iPoint) * nSectorN + (iS+1) % nSectorN;
+				meshOut.triangles().add(ind[0], ind[1], ind[2]);
+			}
+		}
+		//calculate normals
+		this.mesh = new BufferMesh( nVerticesN, nMeshTrianglesN, true );
+		MeshProcessing.calculateNormals( meshOut, mesh );
+
 	}
 	
 	/** given contours and centerline coordinates, returns a mesh with capped (closed) ends**/
@@ -474,18 +465,20 @@ public class VisWireMesh {
 		int i, j, iPoint;
 		
 		final int nPointsCurveN = allContours.size();
+		
 		if(nPointsCurveN == 0)
 			return meshOut;
 		
 		final int nSectorN = allContours.get( 0 ).size();
 		
-		float [][] triangle = new float[3][3];
-		int nMeshTrianglesN = (nPointsCurveN-1) * nSectorN*2 + nSectorN*2;
-		//int nMeshTrianglesN = (nPointsN-1)*nSectorN*2;
+		final float [][] triangle = new float[3][3];
+	
+		final int nMeshTrianglesN = (nPointsCurveN - 1) * nSectorN * 2 + nSectorN * 2;
+
 		if(nPointsCurveN > 1)
 		{
 			//calculate total number of triangles
-			meshOut = new BufferMesh( nMeshTrianglesN*3, nMeshTrianglesN, true );
+			meshOut = new BufferMesh( nMeshTrianglesN * 3, nMeshTrianglesN, true );
 	
 			//all vertices
 			//vertices = new float [2*(nSectorN+1)*3*nPointsN];
@@ -773,7 +766,7 @@ public class VisWireMesh {
 	public static void addTriangleWithoutNormale(final BufferMesh mesh_in, final float[][] triangle)
 	{
 		long [] index = new long[3];
-		for (int i=0;i<3;i++)
+		for (int i = 0; i < 3; i++)
 		{			
 			index[i] = mesh_in.vertices().add(triangle[i][0],triangle[i][1],triangle[i][2]);
 		}

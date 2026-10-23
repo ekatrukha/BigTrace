@@ -573,7 +573,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	@Override
 	public < T extends RealType< T > & NativeType< T >  > Cursor< T > getSingle3DVolumeCursor( final RandomAccessibleInterval< T > input )
 	{	
-		if(input.numDimensions()!=3)
+		if(input.numDimensions() != 3)
 		{
 			System.err.println("The input for VolumeCursor should be 3D RAI!");
 		}
@@ -588,6 +588,7 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 				point_contours.set(i, Roi3D.scaleGlobInv(point_contours.get(i), btdata.globCal));
 			}
 			final BufferMesh meshx = VisWireMesh.initClosedVolumeMesh(point_contours, Roi3D.scaleGlobInv(points, btdata.globCal) );
+			
 			if(meshx == null)
 				return null;
 			volumeMesh = Meshes.removeDuplicateVertices( meshx, 2 );
@@ -602,14 +603,17 @@ public abstract class AbstractCurve3D extends AbstractRoi3D
 	public void defineTransparency()
 	{
 		bTransparent = false;
+		
 		if(pointColor.getAlpha() < Roi3D.TRANSPARENCY_THRESHOLD)
 		{
 			bTransparent = true;
 		}
+		
 		if(btdata.surfaceRender == BigTraceData.SURFACE_SILHOUETTE)
 		{
 			bTransparent = true;
 		}
+		
 		if(this.renderType == Roi3D.WIRE && btdata.wireAntiAliasing)
 		{
 			bTransparent = true;
